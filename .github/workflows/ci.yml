@@ -124,6 +124,21 @@ jobs:
   # The runtime path must stay importable with no third-party packages: adapters are
   # copied verbatim into other projects, so an accidental dependency breaks exactly
   # the consumers this library exists for. Cheaper to assert than to discover.
+  # The vendor example pages are generated from the real code paths, so a behaviour change
+  # that nobody regenerated leaves documentation asserting something the library no longer
+  # does. Same script the test suite runs, for the reason given on the stdlib-only job.
+  examples:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - name: Generated examples match the library
+        run: python examples/generate.py --check
+
   stdlib-only:
     runs-on: ubuntu-latest
     steps:
