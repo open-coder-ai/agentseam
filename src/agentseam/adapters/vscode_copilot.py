@@ -123,17 +123,23 @@ def respond(decision, event):
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
+#: Canonical -> vendor event, for installing. Module level so `install` can see which
+#: events an adapter is able to wire; an inline map made that invisible, and an event the
+#: matrix claimed but this could not name was dropped from the config without a word.
+REVERSE_EVENT_MAP = {
+    PRE_TOOL: "preToolUse",
+    POST_TOOL: "postToolUse",
+    TOOL_FAILURE: "postToolUseFailure",
+    PROMPT_SUBMIT: "userPromptSubmitted",
+    SESSION_START: "sessionStart",
+    SESSION_END: "sessionEnd",
+}
+
+
 def hook_config(canonical_events, command, matcher=None):
-    reverse = {
-        PRE_TOOL: "preToolUse",
-        POST_TOOL: "postToolUse",
-        PROMPT_SUBMIT: "userPromptSubmitted",
-        SESSION_START: "sessionStart",
-        SESSION_END: "sessionEnd",
-    }
     hooks = []
     for ev in canonical_events:
-        name = reverse.get(ev)
+        name = REVERSE_EVENT_MAP.get(ev)
         if name:
             entry = {"event": name, "command": command}
             if matcher:

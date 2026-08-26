@@ -5,7 +5,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import agentseam as A
+import pytest  # noqa: E402
+
+import agentseam as A  # noqa: E402
 
 
 def test_every_row_carries_verification_provenance():
@@ -111,3 +113,36 @@ def test_unadapted_agents_still_have_instruction_files():
     for agent, row in A.MATRIX.items():
         if row["tier"] == TIER_UNADAPTED:
             assert instructions.paths(agent), agent
+
+
+@pytest.mark.parametrize("agent", sorted(A.adapters.ADAPTERS))
+def test_every_event_the_matrix_claims_can_actually_be_wired(agent):
+    """A matrix row claiming an event its adapter cannot install is a claim with no mechanism.
+
+    Claude Code's row claimed `file_changed` and `instructions_loaded` for a long time while
+    its adapter had no name for either, so `install` for them wrote nothing and said nothing.
+    Both events are real -- FileChanged and InstructionsLoaded -- so the fix was the mapping,
+    not a narrower claim. This test is what makes the next one impossible to miss.
+    """
+    claimed = set(A.MATRIX[agent]["events"])
+    wireable = set(A.adapters.get(agent).REVERSE_EVENT_MAP)
+    assert claimed <= wireable, "cannot wire: %s" % sorted(claimed - wireable)
+
+
+@pytest.mark.parametrize("agent", sorted(A.adapters.ADAPTERS))
+def test_nothing_is_wireable_that_the_matrix_does_not_claim(agent):
+    """The other direction: an installable event with no matrix row is coverage nobody can see."""
+    claimed = set(A.MATRIX[agent]["events"])
+    wireable = set(A.adapters.get(agent).REVERSE_EVENT_MAP)
+    assert wireable <= claimed, "wireable but unclaimed: %s" % sorted(wireable - claimed)
+
+
+def test_install_refuses_an_event_it_cannot_wire(tmp_path):
+    """Silently writing a config that omits the event you asked for is the worst outcome."""
+    from agentseam import install as install_mod
+
+    with pytest.raises(ValueError) as exc:
+        install_mod.install("windsurf", ["pre_tool", "subagent_start"], "guard.py", str(tmp_path))
+    assert "subagent_start" in str(exc.value)
+    # And it names what *is* possible, so the error is actionable.
+    assert "pre_tool" in str(exc.value)
