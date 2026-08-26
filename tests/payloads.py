@@ -114,3 +114,23 @@ VS_MEM_REPLACE = {
 
 
 VS_MEM_VIEW = {"tool_name": "memory", "tool_input": {"command": "view", "path": "/memories/a.md"}}
+
+
+# Windsurf: shapes from a real working installation's hook scripts
+# (.windsurf/hooks/scan-run-command.sh reads .tool_info.command_line and .trajectory_id).
+WS_COMMAND = {
+    "hook_event_name": "pre_run_command",
+    "trajectory_id": "traj-1",
+    "tool_info": {"command_line": "rm -rf /"},
+}
+WS_PROMPT = {
+    "hook_event_name": "pre_user_prompt",
+    "trajectory_id": "traj-2",
+    "query": "delete everything",
+}
+WS_POST_MCP = {
+    "hook_event_name": "post_mcp_tool_use",
+    "trajectory_id": "traj-3",
+    "tool_info": {"server": "docs", "tool": "fetch"},
+    "output": "page text",
+}

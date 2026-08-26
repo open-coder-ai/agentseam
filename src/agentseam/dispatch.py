@@ -46,9 +46,13 @@ def degrade(decision, event, agent=None):
     agent = agent or event.agent
     cap = capability(agent, event.event)
     if decision.outcome == REWRITE and not cap["rewrite"]:
-        return Decision.ask(
-            decision.reason or "input requires modification before it can run", evidence=decision.evidence
-        )
+        # Record what this was before it was reduced. Without it, a second degradation
+        # downstream reports the wrong cause: an adapter that also cannot `ask` would
+        # tell the user confirmation was unavailable, for something that was never a
+        # confirmation request.
+        evidence = dict(decision.evidence)
+        evidence["degraded_from"] = REWRITE
+        return Decision.ask(decision.reason or "input requires modification before it can run", evidence=evidence)
     return decision
 
 

@@ -11,7 +11,7 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (allow / deny / ask / rewrite).
 - Capability matrix as data, with per-row verification provenance and honest
   enforcement levels (enforced / best-effort / detect / none).
-- Adapters: Claude Code, Cursor, VS Code Copilot, Gemini CLI, OpenAI Codex CLI.
+- Adapters: Claude Code, Cursor, VS Code Copilot, Gemini CLI, OpenAI Codex CLI, Windsurf.
 - Dispatcher with honest degradation: a `rewrite` on an agent that cannot rewrite
   becomes `ask`, never a silent pass-through.
 - Idempotent, ownership-marked hook installation; surgical uninstall.
