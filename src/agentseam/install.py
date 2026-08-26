@@ -118,8 +118,19 @@ def _resolve(mod, repo_root, owner):
 
 
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam"):
-    """Wire `command` for `events` into `agent`'s config. Returns the path written."""
+    """Wire `command` for `events` into `agent`'s config. Returns the path written.
+
+    Raises ValueError for an event this agent cannot be wired for, rather than writing a
+    config that quietly omits it. Asking to gate an event and getting a silent no-op is the
+    failure this library exists to prevent, so it must not be how its own installer behaves.
+    """
     mod = adapters.get(agent)
+    unwireable = [e for e in events if e not in getattr(mod, "REVERSE_EVENT_MAP", {})]
+    if unwireable:
+        raise ValueError(
+            "%s has no hook for: %s (it can be wired for: %s)"
+            % (agent, ", ".join(sorted(unwireable)), ", ".join(sorted(mod.REVERSE_EVENT_MAP)))
+        )
     path = _resolve(mod, repo_root, owner)  # e.g. .github/hooks/*.json
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         _write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher)), owner)

@@ -102,17 +102,21 @@ def respond(decision, event):
     return "", 0
 
 
+#: Canonical -> vendor event, for installing. Module level so `install` can see what this
+#: adapter is able to wire rather than dropping the rest silently.
+REVERSE_EVENT_MAP = {
+    PROMPT_SUBMIT: "pre_user_prompt",
+    PRE_TOOL: "pre_run_command",
+    POST_TOOL: "post_mcp_tool_use",
+    STOP: "post_cascade_response",
+}
+
+
 def hook_config(canonical_events, command, matcher=None):
     """{"hooks": {"<event>": [{"command": ...}]}} -- matchers are not supported."""
-    reverse = {
-        PROMPT_SUBMIT: "pre_user_prompt",
-        PRE_TOOL: "pre_run_command",
-        POST_TOOL: "post_mcp_tool_use",
-        STOP: "post_cascade_response",
-    }
     hooks = {}
     for ev in canonical_events:
-        name = reverse.get(ev)
+        name = REVERSE_EVENT_MAP.get(ev)
         if name:
             hooks.setdefault(name, []).append({"command": command})
     return {"hooks": hooks}

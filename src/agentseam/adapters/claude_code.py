@@ -10,6 +10,8 @@ from __future__ import annotations
 from ..contract import (
     ASK,
     DENY,
+    FILE_CHANGED,
+    INSTRUCTIONS_LOADED,
     POST_TOOL,
     PRE_COMPACT,
     PRE_TOOL,
@@ -38,6 +40,13 @@ EVENT_MAP = {
     "PreCompact": PRE_COMPACT,
     "SubagentStart": SUBAGENT_START,
     "SubagentStop": SUBAGENT_STOP,
+    # Both were claimed by the matrix long before they were mapped here, so an install for
+    # them wired nothing at all and said nothing about it. FileChanged fires when a watched
+    # file changes on disk (the matcher names the files); InstructionsLoaded fires when a
+    # CLAUDE.md or .claude/rules/*.md is read into context, at session start and again
+    # whenever one is loaded lazily.
+    "InstructionsLoaded": INSTRUCTIONS_LOADED,
+    "FileChanged": FILE_CHANGED,
 }
 REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
