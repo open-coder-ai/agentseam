@@ -9,6 +9,7 @@ import sys
 
 from . import __version__, adapters
 from . import install as install_mod
+from . import instructions as instructions_mod
 from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
@@ -83,6 +84,32 @@ def _cmd_uninstall(args):
     return 0
 
 
+def _cmd_instructions(args):
+    if args.list:
+        found = instructions_mod.discover(args.repo)
+        if not found:
+            print("no instruction files found")
+            return 0
+        for agent in sorted(found):
+            print("%-16s %s" % (agent, ", ".join(found[agent])))
+        return 0
+    text = args.text if args.text is not None else sys.stdin.read()
+    if not text.strip():
+        print("nothing to write (pass --text or pipe text on stdin)", file=sys.stderr)
+        return 2
+    try:
+        results = instructions_mod.write(text, args.agents, args.repo, dry_run=args.dry_run)
+    except KeyError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+    decided = instructions_mod.plan(args.agents, args.repo)
+    for path in sorted(results):
+        print("%-9s %s" % (results[path], path))
+    if decided["covered"]:
+        print("covered by %s: %s" % (instructions_mod.SHARED_FILE, ", ".join(decided["covered"])))
+    return 0
+
+
 def main(argv=None):
     # A CLI that dies on `| head` is a broken CLI: SIGPIPE arrives as BrokenPipeError
     # in Python, and the interpreter also complains at shutdown unless stdout is
@@ -121,6 +148,14 @@ def _main(argv=None):
     i.add_argument("--matcher", help="vendor tool matcher, e.g. 'Write|Edit'")
     i.add_argument("--repo", default=".")
     i.set_defaults(fn=_cmd_install)
+
+    ins = sub.add_parser("instructions", help="write standing instructions to every agent's file")
+    ins.add_argument("--text", help="instruction text; omit to read stdin")
+    ins.add_argument("--agents", nargs="*", help="target agents (default: all)")
+    ins.add_argument("--repo", default=".")
+    ins.add_argument("--dry-run", action="store_true")
+    ins.add_argument("--list", action="store_true", help="show what exists instead of writing")
+    ins.set_defaults(fn=_cmd_instructions)
 
     u = sub.add_parser("uninstall", help="remove only agentseam's entries")
     u.add_argument("agent", help="agent name, or 'all'")

@@ -16,6 +16,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   becomes `ask`, never a silent pass-through.
 - Idempotent, ownership-marked hook installation; surgical uninstall.
 - CLI: `agents`, `matrix`, `doctor`, `install`, `uninstall`.
+- Instruction files (primitive 2): the 14-agent map, `plan`/`write`/`remove`/`discover`,
+  and an `instructions` CLI command. Writes a marker-delimited managed block so
+  human-authored content is never clobbered, and prefers the shared AGENTS.md over
+  per-agent copies.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main
