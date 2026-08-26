@@ -11,6 +11,11 @@ permissions: read-all
 
 jobs:
   analysis:
+    # Both of these publish SARIF to code scanning, which requires GitHub
+    # Advanced Security -- unavailable on a private repository, where the job
+    # fails on the upload rather than on any finding. Gated rather than deleted
+    # so it starts working by itself the day this repo goes public.
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     permissions:
       security-events: write
