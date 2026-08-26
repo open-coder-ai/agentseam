@@ -145,3 +145,34 @@ def test_every_packaging_agent_is_an_agent_the_matrix_knows():
     assert set(PACKAGING) <= set(MATRIX)
     assert set(UNRECORDED) <= set(MATRIX)
     assert set(ALSO_READS) <= set(MATRIX)
+
+
+def test_every_matrix_agent_is_accounted_for():
+    """Recorded plus unrecorded must equal the matrix, exactly. See the permissions twin.
+
+    Without this, an agent that joins the matrix is silently absent here, and silence in
+    this module reads as "nothing to package" rather than "nobody looked".
+    """
+    from agentseam.matrix_data import MATRIX
+
+    assert set(PACKAGING) | set(UNRECORDED) == set(MATRIX)
+
+
+def test_an_agent_is_never_both_recorded_and_unrecorded():
+    assert not set(PACKAGING) & set(UNRECORDED)
+
+
+def test_no_unrecorded_reason_is_empty():
+    assert all(reason.strip() for reason in UNRECORDED.values())
+
+
+def test_proven_but_unlocated_parts_are_distinguished_from_absent_ones():
+    """ "We could not find the layout" and "there is no such thing" are different answers.
+
+    Where a vendor's own hook documentation proves subagents or skills exist, the reason
+    says so -- otherwise the row would quietly understate the agent.
+    """
+    for agent in ("antigravity", "codex_cli", "cursor", "devin", "grok", "kimi_code"):
+        assert "exist" in UNRECORDED[agent], agent
+    for agent in ("aider", "junie", "replit", "zed"):
+        assert "exist" not in UNRECORDED[agent], agent

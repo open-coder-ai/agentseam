@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Primitives 3 and 4 knew nothing about nine agents the matrix knows, including four that
+  had gained hook adapters since those modules were written. They were absent from both
+  the recorded and the unrecorded tables, which reads as "nothing to say here" when the
+  truth is "nobody looked" — the exact failure those modules exist to prevent. Both tables
+  are now exhaustive, and a test asserts recorded + unrecorded == the matrix, so an agent
+  joining the matrix fails until somebody records what its config and packaging can do.
 - Gemini CLI claimed any payload whose event name it recognised, including `SessionStart`
   — which Claude Code, Devin and Kimi Code all spell the same way. A Kimi payload was
   therefore claimed by two adapters at once. Adapters now decline a payload that names a

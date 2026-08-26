@@ -6,6 +6,7 @@ import argparse
 import json
 import os
 import sys
+import textwrap
 
 from . import __version__, adapters
 from . import install as install_mod
@@ -130,16 +131,34 @@ def _parse_rule(spec):
         raise argparse.ArgumentTypeError(str(exc))
 
 
+def _print_unrecorded(rows, label):
+    """Render the agents we have nothing recorded for, wrapped so the reasons stay readable.
+
+    Printed rather than omitted: an agent missing from the listing would read as one we do
+    not know about, when in fact we know about it and have not established this part.
+    """
+    if not rows:
+        return
+    print("\nno %s recorded (named rather than omitted):" % label)
+    width = max(len(name) for name in rows)
+    for name in sorted(rows):
+        body = textwrap.wrap(rows[name], 96 - width)
+        print("  %-*s  %s" % (width, name, body[0] if body else ""))
+        for line in body[1:]:
+            print("  %-*s  %s" % (width, "", line))
+
+
 def _cmd_permissions(args):
     """Show each agent's permission surface, or render a policy and report what it loses."""
     if not args.rule:
         for name in permissions_mod.agents():
             row = permissions_mod.capability(name)
-            says = ", ".join("%s=%s" % (a, row["actions"][a] or "(cannot express)") for a in ("allow", "ask", "deny"))
             print("%-16s %-18s %s" % (name, row["shape"], permissions_mod.config_files(name)[0]["path"]))
-            print("%-16s %s" % ("", says))
-        for name, why in sorted(permissions_mod.UNRECORDED.items()):
-            print("%-16s %s" % (name, why))
+            # One action per line: Codex's prefix_rule spellings run past a terminal width
+            # when joined, and a wrapped key name is harder to read than three short rows.
+            for action in ("allow", "ask", "deny"):
+                print("%-16s   %-5s %s" % ("", action, row["actions"][action] or "(cannot express)"))
+        _print_unrecorded(permissions_mod.UNRECORDED, "permission model")
         return 0
 
     rc = 0
@@ -171,8 +190,7 @@ def _cmd_packaging(args):
         print("%-16s %s" % (name, row["unit"] or "no bundle format — parts are found by location"))
         for part in packaging_mod.PARTS:
             print("%-16s   %-9s %s" % ("", part, row["parts"][part] or "(no equivalent)"))
-    for name, why in sorted(packaging_mod.UNRECORDED.items()):
-        print("%-16s %s" % (name, why))
+    _print_unrecorded(packaging_mod.UNRECORDED, "packaging format")
 
     print("\nwrite once, works for several:")
     for part in packaging_mod.PARTS:

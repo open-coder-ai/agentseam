@@ -127,14 +127,35 @@ ALSO_READS = {
     },
 }
 
-#: Agents whose packaging format is not recorded, and why. Codex is the interesting one:
-#: its approval config has a skill_approval flag, so skills demonstrably exist -- what could
-#: not be established from here is where they live. Saying "no packaging" would be false.
+#: Every agent the matrix knows that has no packaging format recorded here, and why.
+#:
+#: Exhaustive on purpose, and enforced by a test: recorded plus unrecorded must equal the
+#: matrix exactly. A missing agent reads as "nothing to package here" when the truth is
+#: "nobody looked", and that is the one thing this module must never say by accident.
+#:
+#: Several of these are *not* blanks. Where a vendor's own hook documentation proves that
+#: skills or subagents exist -- a SubagentStop event, a define_subagent tool, a loader that
+#: mentions skills -- that is recorded, because "we could not find the layout" and "there is
+#: no such thing" are different answers and only one of them is true.
 UNRECORDED = {
+    "aider": "no packaging format established here",
+    "antigravity": "subagents provably exist -- define_subagent and invoke_subagent are tools it "
+    "offers, and its file reader takes an IsSkillFile argument -- but the on-disk layout was "
+    "not established here",
     "codex_cli": "skills exist -- the approval config gates skill script execution -- but the "
     "layout documentation redirects to a host this environment's egress policy blocks",
     "cursor": "plugins exist -- hooks can be installed through them, and workspaceOpen "
     "returns pluginPaths for the workspace -- but the directory layout was not established "
     "here, so there is nothing to render",
+    "devin": "skills provably exist -- its hook loader is documented as following the same "
+    "discovery rules as skills and rules -- but their layout was not read here",
+    "grok": "subagents provably exist (SubagentStart and SubagentStop hook events), and it has an "
+    "extensions system, but neither layout was established here",
+    "junie": "no packaging format established here",
+    "kimi_code": "subagents provably exist (a SubagentStop hook event, and a documented agents "
+    "and sub-agents feature) but their layout was not read here",
+    "replit": "no packaging format established here",
+    "tabnine": "no packaging format established here; vendor documentation is unreachable from this environment",
     "windsurf": "vendor documentation unreachable from the environment this was written in",
+    "zed": "no packaging format established here",
 }

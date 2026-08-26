@@ -140,3 +140,34 @@ def test_every_agent_with_a_permission_model_is_an_agent_the_matrix_knows():
 
     assert set(CAPABILITY) <= set(MATRIX)
     assert set(UNRECORDED) <= set(MATRIX)
+
+
+def test_every_matrix_agent_is_accounted_for():
+    """Recorded plus unrecorded must equal the matrix, exactly.
+
+    This is the invariant the module is for. An agent missing from both tables reads as
+    "nothing to say here" when the truth is "nobody looked" -- and four agents sat in that
+    state after their adapters landed, because nothing forced the tables to keep up. Adding
+    an agent to the matrix now fails here until somebody records what its config can say,
+    or states plainly that it is unknown.
+    """
+    from agentseam.matrix_data import MATRIX
+
+    assert set(CAPABILITY) | set(UNRECORDED) == set(MATRIX)
+
+
+def test_an_agent_is_never_both_recorded_and_unrecorded():
+    assert not set(CAPABILITY) & set(UNRECORDED)
+
+
+def test_no_unrecorded_reason_is_empty():
+    """A blank reason is worse than no row: it looks answered."""
+    assert all(reason.strip() for reason in UNRECORDED.values())
+
+
+def test_a_missing_hook_surface_is_not_recorded_as_a_missing_permission_model():
+    """Two unrelated facts. Aider and Zed expose no hooks; that says nothing about what
+    their config files can restrict, and the reasons say so rather than conflating them.
+    """
+    for agent in ("aider", "zed"):
+        assert "independent of its lack of a hook surface" in UNRECORDED[agent]
