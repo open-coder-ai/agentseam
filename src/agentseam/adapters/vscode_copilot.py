@@ -42,14 +42,25 @@ MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
 FILE_WRITE_TOOLS = ("create_file", "edit_file", "apply_patch")
 
 
+#: Turn-scoped fields OpenAI Codex CLI sends and VS Code never does.
+_CODEX_MARKERS = ("turn_id", "permission_mode")
+
+#: Cursor's base hook schema, present on every one of its events.
+_CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id", "workspace_roots")
+
+
 def claims(raw):
     if not isinstance(raw, dict):
         return False
-    # Codex CLI uses the same camelCase event names. It also sends turn-scoped fields
-    # that VS Code never does, and those are the only thing separating the two payloads
-    # -- without this guard both adapters claim the event, detection goes ambiguous, and
-    # the dispatcher silently allows a write it was asked to gate.
-    if any(k in raw for k in ("turn_id", "permission_mode", "model")):
+    # Codex CLI and Cursor both spell their events in the same camelCase, and neither
+    # difference is in the event name -- so the only thing separating the three payloads is
+    # the fields the other two carry. Without this guard two adapters claim the event,
+    # detection goes ambiguous, and the dispatcher allows a write it was asked to gate.
+    #
+    # Each vendor gets more than one marker on purpose. Resting on a single field means
+    # resting on another vendor never dropping it: Cursor's `model` alone kept these two
+    # apart until a payload without it turned up, and both adapters claimed it.
+    if any(k in raw for k in _CODEX_MARKERS + _CURSOR_MARKERS):
         return False
     name = raw.get("hook_event_name") or raw.get("hookEventName")
     if name in ("preToolUse", "postToolUse", "userPromptSubmitted", "sessionStart", "sessionEnd"):

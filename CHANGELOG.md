@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- VS Code Copilot's adapter told itself apart from Cursor only by fields belonging to
+  Cursor's schema, and rested on `model` in particular — so a Cursor payload without it
+  was claimed by both, which makes detection ambiguous and lets the dispatcher allow what
+  it was gating. Found while writing the vendor examples, whose scenario omitted the
+  field. Each vendor now has several markers rather than one.
 - Primitives 3 and 4 knew nothing about nine agents the matrix knows, including four that
   had gained hook adapters since those modules were written. They were absent from both
   the recorded and the unrecorded tables, which reads as "nothing to say here" when the
@@ -80,6 +85,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - TOML config support in `install`: a marker-delimited block appended to the user's
   settings file, with every byte outside it preserved. Kimi Code's `[[hooks]]` live in
   `config.toml` alongside everything else the user configures.
+- Generated vendor examples: `examples/generated/` has a page per adapted agent showing
+  the same situation — an agent about to write a secret into a file it reads back — in
+  that vendor's dialect: the config `install` writes, the normalized event, and every
+  decision on the way back including the ones reduced because the agent cannot express
+  them. Produced by `examples/generate.py` from the real code paths, with a test and a CI
+  job that fail on drift.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main
