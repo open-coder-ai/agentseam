@@ -135,6 +135,31 @@ MATRIX = {
         "hookSpecificOutput.tool_input; exit 2 also blocks. Write tools are write_file/replace. "
         "Fail mode is not documented as closed, so pre_tool is rated best-effort rather than enforced.",
     },
+    "codex_cli": {
+        "display": "OpenAI Codex CLI",
+        "tier": TIER_FULL,
+        "config": ".codex/hooks.json",
+        "verified": {
+            "version": "source @ main 2026-08-26",
+            "date": "2026-08-26",
+            "method": "vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts",
+        },
+        "events": {
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(),
+            PROMPT_SUBMIT: _cap(block=True),
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            PRE_COMPACT: _cap(),
+            STOP: _cap(block=True),
+            SUBAGENT_START: _cap(),
+            SUBAGENT_STOP: _cap(),
+        },
+        "notes": "Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase "
+        "event names and extra turn-scoped fields (turn_id, model, permission_mode). Deny is "
+        "sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which "
+        "collapses exit 2 into 1, so an exit-code deny does not survive that platform.",
+    },
     # --- honest floor: agents with no usable hook surface -----------------------
     "zed": {
         "display": "Zed",
