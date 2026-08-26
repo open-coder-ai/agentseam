@@ -113,7 +113,16 @@ def _remove_block(path, owner):
 
 
 def _resolve(mod, repo_root, owner):
-    path = os.path.join(repo_root, mod.CONFIG_PATH)
+    """Where this agent's config lives.
+
+    A CONFIG_PATH beginning with `~` is user-scoped and deliberately so -- Junie ignores
+    hooks from a repository-controlled config, so a project file there would never fire.
+    Joining it under repo_root produced a literal `./~/` directory: a config written
+    somewhere no agent reads, indistinguishable at capture time from a vendor whose hooks
+    do not work.
+    """
+    config = mod.CONFIG_PATH
+    path = os.path.expanduser(config) if config.startswith("~") else os.path.join(repo_root, config)
     return path.replace("*", owner) if "*" in path else path
 
 

@@ -95,3 +95,19 @@ def test_cursor_install_writes_the_generic_gate_with_fail_closed(tmp_path):
     assert entry["command"] == "guard.py"
     assert entry["failClosed"] is True
     assert I.uninstall("cursor", root) is True
+
+
+def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkeypatch):
+    """`~/...` means the user's home, not a directory literally named `~` in the repo.
+
+    `_resolve` joined every CONFIG_PATH onto repo_root, so Junie's user-scoped path became
+    `./~/.junie/config.json` -- a real file, written where no agent will ever read it. At
+    capture time that is indistinguishable from a vendor whose hooks do not fire, which is
+    the worst way to be wrong: it reads as evidence against the vendor.
+    """
+    monkeypatch.setenv("HOME", str(tmp_path))
+    written = I.install("junie", ["pre_tool"], "guard.py", str(tmp_path))
+
+    assert not (tmp_path / "~").exists(), "created a directory literally named ~"
+    assert Path(written) == tmp_path / ".junie" / "config.json"
+    assert I.installed("junie", str(tmp_path))
