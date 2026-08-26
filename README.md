@@ -47,6 +47,11 @@ post_tool            none            detect          detect          detect     
   fire `afterFileEdit`, after the write already landed)
 - **none** — no hook surface at all (Zed, Aider). Said out loud rather than papered over.
 
+`unadapted` is a fourth, deliberately separate state: agentseam has no hook adapter for
+that agent yet. It is a claim about *us*, not about the agent — those agents still receive
+instruction files, they just cannot have their tool calls gated here. Collapsing the two
+would either slander an agent that does expose hooks or overstate our own coverage.
+
 A `Decision.rewrite(...)` on an agent that cannot rewrite degrades to `ask`, never to a
 silent pass-through. `agentseam doctor` reports what is wired on this machine and flags
 capability rows that have not been re-verified in 90 days.
@@ -103,9 +108,10 @@ pip install agentseam
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` |
 | Windsurf | block via exit code only; **no file-write event** | `.windsurf/hooks.json` |
-| Zed, Aider | no hook surface | — |
+| Zed, Aider | no hook surface at all | — |
+| Antigravity, Devin, Grok, Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
 
-Goose, Junie, Crush, OpenCode: adapters planned; the
+Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.
 
 ## Design
