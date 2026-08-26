@@ -1,0 +1,8 @@
+# Default owners for everything in the repo.
+* @open-coder-ai
+
+# Claim-deciding surfaces: the matrix decides what downstream tools may promise
+# their users, and adapters decide whether a deny actually reaches the agent.
+/src/agentseam/matrix.py @open-coder-ai
+/src/agentseam/adapters/ @open-coder-ai
+/src/agentseam/dispatch.py @open-coder-ai

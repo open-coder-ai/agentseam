@@ -1,0 +1,28 @@
+name: Stale
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93  # v11
+        with:
+          days-before-stale: 60
+          days-before-close: 14
+          # Matrix corrections are evidence about the world changing under us; they do
+          # not become less true by sitting, so they are never auto-closed.
+          exempt-issue-labels: "matrix,priority,security,adapter"
+          exempt-pr-labels: "matrix,priority,security"
+          stale-issue-message: >-
+            No activity for 60 days. Comment to keep it open, or it closes in 14 days.
+          stale-pr-message: >-
+            No activity for 60 days. Comment or push to keep it open, or it closes in 14 days.

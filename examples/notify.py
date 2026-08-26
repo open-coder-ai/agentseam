@@ -6,22 +6,25 @@
 Highest-breadth hook use case in the wild, normally re-written per agent. Here it is
 agent-agnostic in ten lines.
 """
+
 import subprocess
 import sys
 
 sys.path.insert(0, "src")
-from agentseam import Decision, run                       # noqa: E402
+from agentseam import Decision, run  # noqa: E402
 
 
 def notify(title, message):
-    for cmd in (["notify-send", title, message],
-                ["osascript", "-e", 'display notification "%s" with title "%s"' % (message, title)]):
+    for cmd in (
+        ["notify-send", title, message],
+        ["osascript", "-e", 'display notification "%s" with title "%s"' % (message, title)],
+    ):
         try:
             subprocess.run(cmd, check=False, capture_output=True)
             return
         except FileNotFoundError:
             continue
-    print("%s: %s" % (title, message), file=sys.stderr)    # fallback: stderr
+    print("%s: %s" % (title, message), file=sys.stderr)  # fallback: stderr
 
 
 def handler(event):

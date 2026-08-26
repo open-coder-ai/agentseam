@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: "Also run Windows and macOS (billed at 2x and 10x). Tags do this automatically."
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Every PR commit must carry a Signed-off-by trailer (DCO -- see CONTRIBUTING.md).
+  dco:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check Signed-off-by on every PR commit
+        env:
+          # Through the environment a branch name is data; expanded directly into the
+          # shell it is code injection waiting for a branch named with metacharacters.
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --quiet origin "$BASE_REF"
+          missing=0
+          while read -r sha; do
+            if ! git log -1 --format=%B "$sha" | grep -qi '^Signed-off-by: .\+ <.\+@.\+>'; then
+              echo "::error::commit $sha has no Signed-off-by trailer"
+              missing=1
+            fi
+          done < <(git rev-list "origin/$BASE_REF..HEAD")
+          exit "$missing"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux-only by default; Actions minutes are billed 2x on Windows and 10x on
+        # macOS. The other platforms are not deleted because the defects that justify
+        # them are platform-specific (path handling, line endings, shell invocation),
+        # and a release must never be cut having been tested on Linux alone -- so a
+        # v* tag always runs the full matrix without anyone having to remember.
+        os: [ubuntu-latest]
+        # 3.9 is the floor the package claims; 3.13 surfaces deprecations early.
+        python-version: ["3.9", "3.11", "3.13"]
+        include: >-
+          ${{ fromJSON(
+            (startsWith(github.ref, 'refs/tags/v') || inputs.full_matrix)
+            && '[{"os":"windows-latest","python-version":"3.11"},{"os":"macos-latest","python-version":"3.11"}]'
+            || '[]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+      - name: CLI smoke
+        shell: bash
+        run: |
+          agentseam --version
+          agentseam agents
+          agentseam matrix | head -3
+          agentseam doctor --repo .
+
+  # The runtime path must stay importable with no third-party packages: adapters are
+  # copied verbatim into other projects, so an accidental dependency breaks exactly
+  # the consumers this library exists for. Cheaper to assert than to discover.
+  stdlib-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - name: Import with user site-packages disabled
+        env:
+          PYTHONNOUSERSITE: "1"
+        run: |
+          python -c "
+          import sys; sys.path.insert(0, 'src')
+          import agentseam
+          bad = [m for m in sys.modules
+                 if not m.startswith(('agentseam', '_')) and m not in sys.stdlib_module_names]
+          assert not bad, 'non-stdlib imports pulled in: %s' % bad
+          print('stdlib-only import OK', agentseam.__version__)"

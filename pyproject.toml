@@ -19,6 +19,12 @@ classifiers = [
 ]
 dependencies = []                      # stdlib only, on purpose: adapters must stay vendorable
 
+[project.urls]
+Homepage = "https://github.com/open-coder-ai/agentseam"
+Source = "https://github.com/open-coder-ai/agentseam"
+Issues = "https://github.com/open-coder-ai/agentseam/issues"
+Changelog = "https://github.com/open-coder-ai/agentseam/blob/main/CHANGELOG.md"
+
 [project.scripts]
 agentseam = "agentseam.cli:main"
 
@@ -27,3 +33,17 @@ dev = ["pytest>=7"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+# Layout is governed by `ruff format`; long diagnostic strings are allowed.
+ignore = ["E501"]

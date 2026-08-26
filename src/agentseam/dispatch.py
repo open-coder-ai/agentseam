@@ -19,7 +19,7 @@ import json
 import sys
 
 from . import adapters
-from .contract import ALLOW, DENY, ASK, REWRITE, Decision
+from .contract import REWRITE, Decision
 from .matrix import capability
 
 
@@ -46,8 +46,9 @@ def degrade(decision, event, agent=None):
     agent = agent or event.agent
     cap = capability(agent, event.event)
     if decision.outcome == REWRITE and not cap["rewrite"]:
-        return Decision.ask(decision.reason or "input requires modification before it can run",
-                            evidence=decision.evidence)
+        return Decision.ask(
+            decision.reason or "input requires modification before it can run", evidence=decision.evidence
+        )
     return decision
 
 

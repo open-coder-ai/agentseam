@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from agentseam import install as I
 from agentseam import adapters
+from agentseam import install as I
 
 
 def test_install_creates_config(tmp_path):
@@ -29,8 +29,11 @@ def test_install_is_idempotent(tmp_path):
 def test_uninstall_leaves_user_hooks_intact(tmp_path):
     cfg = tmp_path / ".claude" / "settings.json"
     cfg.parent.mkdir(parents=True)
-    cfg.write_text(json.dumps({"hooks": {"PreToolUse": [
-        {"matcher": "Bash", "hooks": [{"type": "command", "command": "user-own.sh"}]}]}}))
+    cfg.write_text(
+        json.dumps(
+            {"hooks": {"PreToolUse": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "user-own.sh"}]}]}}
+        )
+    )
 
     I.install("claude_code", ["pre_tool"], "python3 h.py", str(tmp_path))
     assert len(json.loads(cfg.read_text())["hooks"]["PreToolUse"]) == 2

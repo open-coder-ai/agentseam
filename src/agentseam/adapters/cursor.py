@@ -9,8 +9,7 @@ Verified against Cursor's own hook example repo (hooks.json + scripts + test fix
 
 from __future__ import annotations
 
-from ..contract import (Event, ASK, DENY, REWRITE, PRE_TOOL, POST_TOOL, PROMPT_SUBMIT,
-                        SESSION_START, STOP, PRE_COMPACT)
+from ..contract import ASK, DENY, POST_TOOL, PRE_COMPACT, PRE_TOOL, PROMPT_SUBMIT, REWRITE, SESSION_START, STOP, Event
 
 AGENT = "cursor"
 
@@ -24,6 +23,7 @@ EVENT_MAP = {
     "stop": STOP,
     "preCompact": PRE_COMPACT,
 }
+
 
 # Cursor does not always name the event in the payload; these shapes identify it.
 def claims(raw):
@@ -53,7 +53,8 @@ def parse(raw):
         joined = "\n".join(str(e.get("new_string", "")) for e in raw["edits"])
         content = joined or None
     return Event(
-        AGENT, event,
+        AGENT,
+        event,
         tool=name,
         command=raw.get("command"),
         path=raw.get("file_path"),
@@ -66,6 +67,7 @@ def parse(raw):
 
 def respond(decision, event):
     import json as _json
+
     vendor_event = event.tool or ""
     post_write = vendor_event.startswith("after")
     if post_write:
@@ -92,8 +94,13 @@ def respond(decision, event):
 
 
 def hook_config(canonical_events, command, matcher=None):
-    reverse = {PRE_TOOL: "beforeShellExecution", POST_TOOL: "afterFileEdit",
-               PROMPT_SUBMIT: "beforeSubmitPrompt", SESSION_START: "sessionStart", STOP: "stop"}
+    reverse = {
+        PRE_TOOL: "beforeShellExecution",
+        POST_TOOL: "afterFileEdit",
+        PROMPT_SUBMIT: "beforeSubmitPrompt",
+        SESSION_START: "sessionStart",
+        STOP: "stop",
+    }
     hooks = {}
     for ev in canonical_events:
         name = reverse.get(ev)

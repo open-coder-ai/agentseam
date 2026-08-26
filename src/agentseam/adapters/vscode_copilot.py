@@ -11,17 +11,30 @@ The difference that matters: a memory write here is the `memory` tool
 
 from __future__ import annotations
 
-from ..contract import (Event, ASK, DENY, REWRITE, PRE_TOOL, POST_TOOL, TOOL_FAILURE,
-                        PROMPT_SUBMIT, SESSION_START, SESSION_END)
+from ..contract import (
+    ASK,
+    DENY,
+    POST_TOOL,
+    PRE_TOOL,
+    PROMPT_SUBMIT,
+    REWRITE,
+    SESSION_END,
+    SESSION_START,
+    TOOL_FAILURE,
+    Event,
+)
 
 AGENT = "vscode_copilot"
 
 EVENT_MAP = {
-    "preToolUse": PRE_TOOL, "PreToolUse": PRE_TOOL,
-    "postToolUse": POST_TOOL, "PostToolUse": POST_TOOL,
+    "preToolUse": PRE_TOOL,
+    "PreToolUse": PRE_TOOL,
+    "postToolUse": POST_TOOL,
+    "PostToolUse": POST_TOOL,
     "postToolUseFailure": TOOL_FAILURE,
     "userPromptSubmitted": PROMPT_SUBMIT,
-    "sessionStart": SESSION_START, "sessionEnd": SESSION_END,
+    "sessionStart": SESSION_START,
+    "sessionEnd": SESSION_END,
 }
 
 MEMORY_TOOLS = ("memory", "copilot_memory")
@@ -55,7 +68,8 @@ def parse(raw):
         content = ti.get("content") or ti.get("newText") or ti.get("new_str")
     name = raw.get("hook_event_name") or raw.get("hookEventName") or "preToolUse"
     return Event(
-        AGENT, EVENT_MAP.get(name, PRE_TOOL),
+        AGENT,
+        EVENT_MAP.get(name, PRE_TOOL),
         tool=tool,
         command=ti.get("command") if tool not in MEMORY_TOOLS else None,
         path=path,
@@ -76,6 +90,7 @@ def is_memory_write(event):
 
 def respond(decision, event):
     import json as _json
+
     out = {"hookEventName": "PreToolUse"}
     if decision.outcome == DENY:
         out["permissionDecision"] = "deny"
@@ -92,9 +107,13 @@ def respond(decision, event):
 
 
 def hook_config(canonical_events, command, matcher=None):
-    reverse = {PRE_TOOL: "preToolUse", POST_TOOL: "postToolUse",
-               PROMPT_SUBMIT: "userPromptSubmitted", SESSION_START: "sessionStart",
-               SESSION_END: "sessionEnd"}
+    reverse = {
+        PRE_TOOL: "preToolUse",
+        POST_TOOL: "postToolUse",
+        PROMPT_SUBMIT: "userPromptSubmitted",
+        SESSION_START: "sessionStart",
+        SESSION_END: "sessionEnd",
+    }
     hooks = []
     for ev in canonical_events:
         name = reverse.get(ev)

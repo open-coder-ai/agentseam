@@ -1,0 +1,39 @@
+# CodeRabbit configuration. Mirrors the review policy in CONTRIBUTING.md: the
+# claim-deciding surfaces get the slow path, everything else gets a normal review.
+language: en-US
+
+reviews:
+  profile: chill
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "src/agentseam/matrix.py"
+      instructions: >
+        This file decides what downstream tools may promise their users. Be suspicious
+        of any edit that WIDENS a capability claim (none->detect->best-effort->enforced)
+        without a mechanism behind it, and of any `verified` record that does not name a
+        version, a date, and a method. Narrowing a claim is a bug fix; widening one needs
+        evidence in the PR.
+    - path: "src/agentseam/adapters/**"
+      instructions: >
+        Adapters decide whether a `deny` actually reaches the agent. Check the payload
+        field paths and the response dialect against the vendor's real format, not just
+        the diff's internal consistency. Flag any path where a decision could be silently
+        dropped, and any place a payload value is treated as code or shell input.
+    - path: "src/agentseam/dispatch.py"
+      instructions: >
+        The degradation rules live here. A `rewrite` on an agent that cannot rewrite must
+        become `ask`, never a silent pass-through of the original input; a failure to
+        parse must not turn into a spurious deny of an unrelated action.
+    - path: "src/agentseam/install.py"
+      instructions: >
+        This writes into users' agent config files. Verify installs stay idempotent and
+        that uninstall removes only entries carrying our ownership marker -- destroying a
+        user's own hooks is the worst thing this library could do.
+
+chat:
+  auto_reply: true

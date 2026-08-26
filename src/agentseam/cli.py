@@ -7,7 +7,8 @@ import json
 import os
 import sys
 
-from . import __version__, adapters, install as install_mod
+from . import __version__, adapters
+from . import install as install_mod
 from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
@@ -36,6 +37,7 @@ def _cmd_matrix(args):
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
     from datetime import date
+
     today = date.today()
     rc = 0
     for name in sorted(MATRIX):
@@ -53,9 +55,10 @@ def _cmd_doctor(args):
         stale = " STALE" if age is not None and age > 90 else ""
         if stale:
             rc = 1
-        print("%-16s wired=%-5s verified=%s (%s days ago)%s"
-              % (name, "yes" if wired else "no", verified["date"],
-                 age if age is not None else "?", stale))
+        print(
+            "%-16s wired=%-5s verified=%s (%s days ago)%s"
+            % (name, "yes" if wired else "no", verified["date"], age if age is not None else "?", stale)
+        )
     return rc
 
 
@@ -128,5 +131,5 @@ def _main(argv=None):
     return args.fn(args)
 
 
-if __name__ == "__main__":       # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover
     sys.exit(main())

@@ -7,9 +7,22 @@ exit 2 also blocks. Verified live against Claude Code 2.1.245 (2026-08-25).
 
 from __future__ import annotations
 
-from ..contract import (Event, ALLOW, ASK, DENY, REWRITE, PRE_TOOL, POST_TOOL,
-                        PROMPT_SUBMIT, SESSION_START, SESSION_END, STOP, PRE_COMPACT,
-                        SUBAGENT_START, SUBAGENT_STOP, TOOL_FAILURE)
+from ..contract import (
+    ASK,
+    DENY,
+    POST_TOOL,
+    PRE_COMPACT,
+    PRE_TOOL,
+    PROMPT_SUBMIT,
+    REWRITE,
+    SESSION_END,
+    SESSION_START,
+    STOP,
+    SUBAGENT_START,
+    SUBAGENT_STOP,
+    TOOL_FAILURE,
+    Event,
+)
 
 AGENT = "claude_code"
 
@@ -52,6 +65,7 @@ def parse(raw):
     out = raw.get("tool_output")
     if isinstance(out, (dict, list)):
         import json as _json
+
         out = _json.dumps(out)
     return Event(
         AGENT,
@@ -87,6 +101,7 @@ def respond(decision, event):
     else:
         out["permissionDecision"] = "allow"
     import json as _json
+
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 

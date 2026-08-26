@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/open-coder-ai/agentseam/security/advisories/new
+    about: Report privately. Do not open a public issue for exploitable findings.
+  - name: Question or support
+    url: https://github.com/open-coder-ai/agentseam/blob/main/SUPPORT.md
+    about: How to get help.
