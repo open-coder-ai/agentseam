@@ -16,7 +16,7 @@ Keeping them in a separate file is a reminder that they are inherited, not estab
 
 from __future__ import annotations
 
-from .matrix_terms import TIER_NONE, TIER_UNADAPTED
+from .matrix_terms import BASIS_DOCS, BASIS_INHERITED, TIER_NONE, TIER_UNADAPTED
 
 GAPS = {
     "replit": {
@@ -24,6 +24,7 @@ GAPS = {
         "tier": TIER_UNADAPTED,
         "config": None,
         "verified": {
+            "basis": BASIS_INHERITED,
             "version": "n/a",
             "date": "2026-08-26",
             "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
@@ -37,6 +38,7 @@ GAPS = {
         "tier": TIER_UNADAPTED,
         "config": None,
         "verified": {
+            "basis": BASIS_INHERITED,
             "version": "n/a",
             "date": "2026-08-26",
             "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
@@ -50,6 +52,7 @@ GAPS = {
         "tier": TIER_UNADAPTED,
         "config": None,
         "verified": {
+            "basis": BASIS_INHERITED,
             "version": "n/a",
             "date": "2026-08-26",
             "method": "not yet researched from a primary source here; a Junie CLI hook surface is reported but unverified",
@@ -62,7 +65,12 @@ GAPS = {
         "display": "Zed",
         "tier": TIER_NONE,
         "config": None,
-        "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs + open extensibility issues"},
+        "verified": {
+            "basis": BASIS_DOCS,
+            "version": "2026-08",
+            "date": "2026-08-26",
+            "method": "docs + open extensibility issues",
+        },
         "events": {},
         "notes": "No user hooks. Only declarative agent.tool_permissions rules. "
         "No deny path for an external handler — say so rather than stretch.",
@@ -71,7 +79,12 @@ GAPS = {
         "display": "Aider",
         "tier": TIER_NONE,
         "config": None,
-        "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs/config reference"},
+        "verified": {
+            "basis": BASIS_DOCS,
+            "version": "2026-08",
+            "date": "2026-08-26",
+            "method": "docs/config reference",
+        },
         "events": {},
         "notes": "No lifecycle hooks. Only --lint-cmd/--test-cmd post-edit steps. "
         "Observation possible via git hooks; no interception.",

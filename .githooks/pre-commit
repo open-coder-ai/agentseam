@@ -15,7 +15,7 @@ set -e
 
 # Only the sources the pages are generated from. Editing a test or a README changes nothing
 # about the output, and regenerating on every commit would be noise.
-if ! git diff --cached --name-only | grep -qE '^(src/agentseam/|examples/(generate|scenarios)\.py$)'; then
+if ! git diff --cached --name-only | grep -qE '^(src/agentseam/|examples/(generate|scenarios|vendor_payloads)\.py$)'; then
     exit 0
 fi
 

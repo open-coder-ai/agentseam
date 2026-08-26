@@ -146,3 +146,34 @@ def test_install_refuses_an_event_it_cannot_wire(tmp_path):
     assert "subagent_start" in str(exc.value)
     # And it names what *is* possible, so the error is actionable.
     assert "pre_tool" in str(exc.value)
+
+
+@pytest.mark.parametrize("agent", sorted(A.MATRIX))
+def test_every_row_says_what_kind_of_evidence_it_rests_on(agent):
+    """`method` says what was read; `basis` says what kind of thing it was.
+
+    An adopter needs the second to know how much weight a row carries, and free text is not
+    something you can filter on. The vocabulary is closed so a new row cannot invent a
+    reassuring-sounding basis of its own.
+    """
+    from agentseam.matrix import BASES
+
+    assert A.MATRIX[agent]["verified"]["basis"] in BASES
+
+
+def test_only_rows_actually_observed_claim_a_live_run():
+    """The honest shape of this project's evidence, stated rather than implied.
+
+    Most rows are read from vendor documentation. That is a claim about what a vendor says,
+    not an observation of what their build does, and this test exists so the distinction
+    cannot quietly erode into everything looking equally verified.
+    """
+    from agentseam.matrix import BASIS_INHERITED, BASIS_LIVE, basis
+
+    live = sorted(a for a in A.MATRIX if basis(a) == BASIS_LIVE)
+    assert live == ["claude_code"]
+    # And the weakest basis is confined to rows with no adapter, where it cannot mislead
+    # anyone into trusting a capability claim.
+    for agent in A.MATRIX:
+        if basis(agent) == BASIS_INHERITED:
+            assert agent not in A.adapters.ADAPTERS, agent

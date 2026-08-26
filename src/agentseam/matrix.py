@@ -8,6 +8,9 @@ from __future__ import annotations
 
 from .matrix_data import MATRIX
 from .matrix_terms import (
+    BASES,
+    BASIS_INHERITED,
+    BASIS_LIVE,
     FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
@@ -27,6 +30,10 @@ __all__ = [
     "enforcement_level",
     "agents",
     "adapted_agents",
+    "basis",
+    "BASES",
+    "BASIS_INHERITED",
+    "BASIS_LIVE",
     "FAIL_CLOSED",
     "FAIL_CONFIGURABLE",
     "FAIL_OPEN",
@@ -74,6 +81,17 @@ def enforcement_level(agent, event):
     if row and event in row["events"]:
         return "detect"
     return "none"
+
+
+def basis(agent):
+    """What KIND of evidence this agent's row rests on, from the closed `BASES` vocabulary.
+
+    An adopter should read this before trusting a row. `vendor-docs` means the claim is
+    about what the vendor *says*, not an observation of what their build does -- and it is
+    the most common basis here. Verify against your own installation before relying on it.
+    """
+    row = MATRIX.get(agent)
+    return row["verified"].get("basis") if row else None
 
 
 def agents():
