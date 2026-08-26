@@ -30,6 +30,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   native fragment and every rule the agent has no faithful way to state, so a policy can
   never silently render into something weaker; `agentseam permissions` exits non-zero
   when a rule would not have been enforced.
+- Packaging (primitive 3): per-agent bundle layouts, a `Bundle`/`Part` model, and
+  `plan()` rendering a bundle into the exact files each agent expects. `same_path_for()`
+  reports the parts whose path is identical across formats (skills, subagents and hooks
+  are byte-identical between a Claude Code plugin and a Gemini CLI extension; commands
+  are not), and `also_reads()` records the folders one agent reads from another's layout.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main
