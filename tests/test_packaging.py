@@ -172,7 +172,7 @@ def test_proven_but_unlocated_parts_are_distinguished_from_absent_ones():
     Where a vendor's own hook documentation proves subagents or skills exist, the reason
     says so -- otherwise the row would quietly understate the agent.
     """
-    for agent in ("antigravity", "codex_cli", "cursor", "devin", "grok", "kimi_code"):
+    for agent in ("antigravity", "codex_cli", "cursor", "devin", "grok", "junie", "kimi_code"):
         assert "exist" in UNRECORDED[agent], agent
-    for agent in ("aider", "junie", "replit", "zed"):
+    for agent in ("aider", "replit", "zed"):
         assert "exist" not in UNRECORDED[agent], agent

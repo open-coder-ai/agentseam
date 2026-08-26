@@ -78,19 +78,23 @@ def test_unadapted_is_distinct_from_no_surface():
     assert A.enforcement_level("replit", A.PRE_TOOL) == "none"
     # ...but the reason differs, and the notes say so.
     assert "no user hooks" in A.MATRIX["zed"]["notes"].lower()
-    assert "no hook adapter" in A.MATRIX["replit"]["notes"].lower()
+    assert "no hook surface found" in A.MATRIX["replit"]["notes"].lower()
 
 
 def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
-    """Every agent whose vendor documentation has been read so far had MORE surface than
-    the inherited row claimed -- Devin's said "no pre-tool-use surface" and was false.
-    So these rows are tracked as unverified, and this test names the ones still standing.
+    """Every inherited row that has since been checked had MORE surface than it claimed --
+    Devin's said "no pre-tool-use surface" and was false, Kimi's was false in all three of
+    its clauses. This names the ones still carrying an unverified inheritance.
+
+    Replit is no longer among them: its documentation was searched and no hook surface was
+    found, which is a checked answer rather than an inherited one, so its basis moved to
+    vendor-docs even though the tier did not change.
     """
     from agentseam.matrix import TIER_UNADAPTED
     from agentseam.matrix_gaps import GAPS
 
     unverified = sorted(a for a, row in GAPS.items() if row["tier"] == TIER_UNADAPTED)
-    assert unverified == ["junie", "replit", "tabnine"]
+    assert unverified == ["replit"]
 
 
 def test_adapted_agents_matches_the_adapter_registry():

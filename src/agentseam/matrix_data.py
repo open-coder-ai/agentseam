@@ -19,12 +19,9 @@ from .contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
 )
+from .matrix_evidence import EVIDENCE
 from .matrix_notes import NOTES
 from .matrix_terms import (
-    BASIS_DOCS,
-    BASIS_LIVE,
-    BASIS_SOURCE,
-    BASIS_THIRD_PARTY,
     FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
@@ -38,12 +35,7 @@ MATRIX = {
         "display": "Claude Code",
         "tier": TIER_FULL,
         "config": ".claude/settings.json",
-        "verified": {
-            "basis": BASIS_LIVE,
-            "version": "2.1.245",
-            "date": "2026-08-25",
-            "method": "live headless run + official hooks reference",
-        },
+        "verified": EVIDENCE["claude_code"],
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CLOSED),
             POST_TOOL: _cap(),
@@ -64,12 +56,7 @@ MATRIX = {
         "display": "Cursor",
         "tier": TIER_FULL,
         "config": ".cursor/hooks.json",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "1.7+",
-            "date": "2026-08-26",
-            "method": "vendor hooks documentation read directly (event list, per-event schemas, exit codes)",
-        },
+        "verified": EVIDENCE["cursor"],
         "events": {
             # preToolUse is generic -- it fires for every tool, not just shell -- and its
             # response carries updated_input, so this is a real block-and-rewrite gate.
@@ -92,12 +79,7 @@ MATRIX = {
         "display": "Kimi Code CLI",
         "tier": TIER_BLOCK,
         "config": "config.toml",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "CLI",
-            "date": "2026-08-26",
-            "method": "vendor hooks documentation read directly (event table, return values, config fields)",
-        },
+        "verified": EVIDENCE["kimi_code"],
         "events": {
             PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(),
@@ -112,16 +94,41 @@ MATRIX = {
         },
         "notes": NOTES["kimi_code"],
     },
+    "junie": {
+        "display": "Junie CLI",
+        "tier": TIER_FULL,
+        "config": "~/.junie/config.json",
+        "verified": EVIDENCE["junie"],
+        "events": {
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+        },
+        "notes": NOTES["junie"],
+    },
+    "tabnine": {
+        "display": "Tabnine CLI",
+        "tier": TIER_BLOCK,
+        "config": ".tabnine/agent/settings.json",
+        "verified": EVIDENCE["tabnine"],
+        "events": {
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
+            PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+            PRE_COMPACT: _cap(),
+        },
+        "notes": NOTES["tabnine"],
+    },
     "vscode_copilot": {
         "display": "GitHub Copilot (VS Code agent mode / CLI)",
         "tier": TIER_FULL,
         "config": ".github/hooks/*.json",  # also ~/.copilot/hooks/*.json for the CLI
-        "verified": {
-            "basis": BASIS_SOURCE,
-            "version": "1.110+",
-            "date": "2026-08-26",
-            "method": "microsoft/vscode source: languageModelToolsService.invokeTool + hookCommandTypes",
-        },
+        "verified": EVIDENCE["vscode_copilot"],
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CLOSED),
             POST_TOOL: _cap(),
@@ -136,12 +143,7 @@ MATRIX = {
         "display": "Grok CLI",
         "tier": TIER_BLOCK,
         "config": ".grok/hooks/agentseam.json",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "CLI",
-            "date": "2026-08-26",
-            "method": "vendor hooks documentation read directly (events, script contract, exit codes)",
-        },
+        "verified": EVIDENCE["grok"],
         "events": {
             PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(),
@@ -160,12 +162,7 @@ MATRIX = {
         "display": "Antigravity",
         "tier": TIER_BLOCK,
         "config": ".agents/hooks.json",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "2.0 / CLI",
-            "date": "2026-08-26",
-            "method": "vendor hooks documentation read directly (per-event schemas and decision vocabulary)",
-        },
+        "verified": EVIDENCE["antigravity"],
         "events": {
             PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(),
@@ -177,12 +174,7 @@ MATRIX = {
         "display": "Gemini CLI",
         "tier": TIER_FULL,
         "config": ".gemini/settings.json",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "docs @ main 2026-08-26",
-            "date": "2026-08-26",
-            "method": "vendor hooks reference (docs/hooks/reference.md in google-gemini/gemini-cli), read from a clone",
-        },
+        "verified": EVIDENCE["gemini_cli"],
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(block=True),
@@ -198,12 +190,7 @@ MATRIX = {
         "display": "OpenAI Codex CLI",
         "tier": TIER_FULL,
         "config": ".codex/hooks.json",
-        "verified": {
-            "basis": BASIS_SOURCE,
-            "version": "source @ main 2026-08-26",
-            "date": "2026-08-26",
-            "method": "vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts",
-        },
+        "verified": EVIDENCE["codex_cli"],
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(),
@@ -221,13 +208,7 @@ MATRIX = {
         "display": "Windsurf (Cascade)",
         "tier": TIER_BLOCK,
         "config": ".windsurf/hooks.json",
-        "verified": {
-            "basis": BASIS_THIRD_PARTY,
-            "version": "hooks.json schema as shipped 2026-08",
-            "date": "2026-08-26",
-            "method": "a real working installation (.windsurf/hooks.json + hook scripts) in "
-            "PaloAltoNetworks/prisma-airs-integrations; vendor docs unreachable from this network",
-        },
+        "verified": EVIDENCE["windsurf"],
         "events": {
             PROMPT_SUBMIT: _cap(block=True),
             PRE_TOOL: _cap(block=True),
@@ -240,12 +221,7 @@ MATRIX = {
         "display": "Devin",
         "tier": TIER_FULL,
         "config": ".devin/hooks.v1.json",
-        "verified": {
-            "basis": BASIS_DOCS,
-            "version": "CLI",
-            "date": "2026-08-26",
-            "method": "vendor hooks documentation read directly (events, output format, exit codes)",
-        },
+        "verified": EVIDENCE["devin"],
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
             POST_TOOL: _cap(),

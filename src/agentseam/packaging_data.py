@@ -151,7 +151,9 @@ UNRECORDED = {
     "discovery rules as skills and rules -- but their layout was not read here",
     "grok": "subagents provably exist (SubagentStart and SubagentStop hook events), and it has an "
     "extensions system, but neither layout was established here",
-    "junie": "no packaging format established here",
+    "junie": "extensions provably exist and ship hooks at hooks/hooks.json in the Claude "
+    "plugin layout, with ${JUNIE_EXTENSION_ROOT} aliasing ${CLAUDE_PLUGIN_ROOT} -- but the "
+    "rest of the extension layout, and how skills and commands sit in it, was not read here",
     "kimi_code": "subagents provably exist (a SubagentStop hook event, and a documented agents "
     "and sub-agents feature) but their layout was not read here",
     "replit": "no packaging format established here",

@@ -67,7 +67,9 @@ def claims(raw):
         # snake_case fields -- and names itself only in client_type.
         if raw.get("client_type") not in (None, "claude_code"):
             return False
-        return "turn_id" not in raw and "prompt_id" not in raw
+        # Junie reuses this whole event vocabulary on purpose -- it says so -- and sends
+        # project_path, which Claude Code does not. Without this the two are one payload.
+        return "turn_id" not in raw and "prompt_id" not in raw and "project_path" not in raw
     return False
 
 

@@ -9,6 +9,29 @@ The prose is the part that grows, and it grows every time a vendor is read prope
 from __future__ import annotations
 
 NOTES = {
+    "junie": "Strongest gate here: PreToolUse returns allow/ask/block and carries "
+    "updatedInput, so block, ask and rewrite are all native. Its event names and field "
+    "names are Claude Code's by design; project_path is what separates the two payloads. "
+    "Project-local hooks in <project>/.junie/config.json are IGNORED by default for "
+    "safety, so a guardrail committed to a repo does not run for a teammate who clones it "
+    "-- the user file is the only location that takes effect without --config-location. "
+    "PermissionRequest inverts the usual default: a hook exiting 0 without a blocking "
+    "decision approves the action and skips the dialog the user would have seen. "
+    "StopFailure is observability-only and fires on LLM/API failures, not tool failures, "
+    "so it is not tool_failure and is left unmapped. Non-zero exits other than 2 are "
+    "warnings and execution proceeds, so this fails OPEN.",
+    "tabnine": "Eleven events, six of which can block -- including AfterTool, which most "
+    "agents treat as observation only. Event names are Gemini CLI's exactly; the only "
+    "documented separator is `timestamp` in Tabnine's base schema, which identifies "
+    "Tabnine but cannot exclude Gemini, so detect() declines these payloads and the agent "
+    "must be named explicitly. Fails OPEN unusually broadly: any exit code other than 0 "
+    "or 2 proceeds, AND stdout that is not valid JSON is treated as a systemMessage and "
+    "the action is ALLOWED -- so a chatty or crashed hook is a permitted action. Rewrite "
+    "is advertised in the vendor overview but the field carrying it was not in the "
+    "documentation read here, so no rewrite is claimed.",
+    "replit": "No hook surface found in the vendor documentation. Recorded as not-found "
+    "rather than absent: this is a hosted agent, and the search was of published docs, not "
+    "of a running instance. Instruction files still reach it.",
     "antigravity": "Richest decision vocabulary here -- allow, deny, ask, force_ask and deny_unless_prior_grant -- but no rewrite, since permissionOverrides widens permissions rather than changing arguments. The payload carries NO event name, so the event is inferred from shape, and PreToolUse/PostToolUse differ only by an `error` field documented as empty rather than absent; ties go to PreToolUse because the opposite guess would skip the gate. PreInvocation and PostInvocation have identical payloads and are unmapped. Fail mode is not documented, so the weaker claim (open) is recorded rather than a guess in our own favour.",
     "claude_code": "Richest surface (~30 events). Blocks via exit 2 or hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only).",
     "codex_cli": "Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase event names and extra turn-scoped fields (turn_id, model, permission_mode). Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform.",
