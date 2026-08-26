@@ -22,16 +22,19 @@ sys.path.insert(0, str(ROOT / "tools"))
 import pytest  # noqa: E402
 from redact import STRUCTURAL_KEYS, keys_of, redact  # noqa: E402
 
+# Paths use /workspace/alice deliberately: the repository's own privacy scanner rejects a tracked
+# file containing a realistic home directory, and it was right to reject the first version of
+# this fixture. A test proving that secrets do not escape has no business shipping one.
 SENSITIVE = {
     "hook_event_name": "PreToolUse",
     "tool_name": "Write",
     "session_id": "sess-9f3a-private",
-    "cwd": "/home/somebody/work",
+    "cwd": "/workspace/alice/work",
     "user_email": "someone@example.com",
-    "transcript_path": "/home/somebody/.claude/transcript.jsonl",
+    "transcript_path": "/workspace/alice/.claude/transcript.jsonl",
     "prompt": "deploy using my key AKIA-not-real",
-    "tool_input": {"file_path": "/home/somebody/.env", "content": "TOKEN=hunter2"},
-    "workspace_roots": ["/home/somebody/repo", "/home/somebody/other"],
+    "tool_input": {"file_path": "/workspace/alice/.env", "content": "TOKEN=hunter2"},
+    "workspace_roots": ["/workspace/alice/repo", "/workspace/alice/other"],
     "nested": {"deep": {"deeper": "still private"}},
     "count": 7,
     "flag": True,
@@ -67,7 +70,7 @@ def test_a_structural_key_carrying_prose_is_still_redacted():
     """The allowlist is by key AND by shape, so a vendor reusing a name for something
     richer cannot smuggle content through it.
     """
-    out = redact({"tool_name": "/home/somebody/secret/path/with/separators"})
+    out = redact({"tool_name": "/workspace/alice/secret/path/with/separators"})
     assert out["tool_name"].startswith("<str:")
 
     long_value = {"source": "x" * 200}
@@ -110,7 +113,7 @@ def test_the_real_probe_allows_and_writes_nothing_sensitive(tmp_path, monkeypatc
     assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
 
     written = (tmp_path / "captured.jsonl").read_text()
-    for secret in ("hunter2", "someone@example.com", "/home/somebody", "sess-9f3a-private", "AKIA-not-real"):
+    for secret in ("hunter2", "someone@example.com", "/workspace/alice", "sess-9f3a-private", "AKIA-not-real"):
         assert secret not in written, "%r reached the capture file" % secret
     assert "PreToolUse" in written and "tool_input" in written
 
