@@ -1,0 +1,89 @@
+"""The dispatcher: stdin -> Event -> your handler -> vendor dialect -> stdout/exit.
+
+This is the whole runtime surface for a consumer. Write one function, wire it to any
+agent, and agentshim speaks each vendor's protocol for you.
+
+    from agentshim import run, Decision
+
+    def handler(event):
+        if event.event == "pre_tool" and "secret" in (event.content or ""):
+            return Decision.deny("no secrets in memory files")
+        return Decision.allow()
+
+    run(handler)          # reads stdin, writes the right dialect, exits correctly
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+
+from . import adapters
+from .contract import ALLOW, DENY, ASK, REWRITE, Decision
+from .matrix import capability
+
+
+class UnsupportedDecision(Exception):
+    """Raised when a handler asks for something the agent cannot do at this event."""
+
+
+def _coerce(result):
+    if result is None:
+        return Decision.allow()
+    if isinstance(result, Decision):
+        return result
+    raise TypeError("handler must return a Decision or None, got %r" % (type(result),))
+
+
+def degrade(decision, event, agent=None):
+    """Reduce a decision to what the agent can actually honor, honestly.
+
+    rewrite -> ask (when the agent cannot rewrite): never silently pass the original
+    input through, because the handler asked for it to be changed.
+    deny at a non-blocking event stays deny; the adapter renders it as a detection so
+    the caller can see it was not prevented.
+    """
+    agent = agent or event.agent
+    cap = capability(agent, event.event)
+    if decision.outcome == REWRITE and not cap["rewrite"]:
+        return Decision.ask(decision.reason or "input requires modification before it can run",
+                            evidence=decision.evidence)
+    return decision
+
+
+def handle(raw, handler, agent=None):
+    """Pure core: raw payload + handler -> (stdout_text, exit_code, event, decision).
+
+    Testable without touching stdin/stdout, which is how the test suite replays real
+    vendor fixtures.
+    """
+    name = agent or adapters.detect(raw)
+    if not name:
+        # Unknown shape: allow and say nothing. A dispatcher that fails closed on
+        # payloads it does not recognise would break every agent it does not know.
+        return "", 0, None, Decision.allow("unrecognized payload")
+    mod = adapters.get(name)
+    event = mod.parse(raw)
+    decision = degrade(_coerce(handler(event)), event, name)
+    text, code = mod.respond(decision, event)
+    return text, code, event, decision
+
+
+def run(handler, agent=None, stdin=None, stdout=None, exit=True):
+    """Read one payload from stdin, dispatch, emit the vendor response, exit."""
+    stream = stdin or sys.stdin
+    out = stdout or sys.stdout
+    try:
+        raw = json.load(stream)
+    except Exception:
+        # Malformed input is not the agent's fault to pay for: allow, stay silent.
+        if exit:
+            sys.exit(0)
+        return 0
+    text, code, _event, _decision = handle(raw, handler, agent)
+    if text:
+        out.write(text)
+        out.flush()
+    if exit:
+        sys.exit(code)
+    return code
