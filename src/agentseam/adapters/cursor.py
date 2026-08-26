@@ -44,6 +44,7 @@ from ..contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
     Event,
+    degraded_from,
 )
 
 AGENT = "cursor"
@@ -223,7 +224,12 @@ def respond(decision, event):
             payload = {"permission": "ask"}
         else:
             payload = {"permission": "deny"}
-            reason = _because(reason, "%s cannot prompt for confirmation, so this is a block" % name)
+            note = (
+                "%s cannot modify a tool call" % name
+                if degraded_from(decision) == REWRITE
+                else "%s cannot prompt for confirmation" % name
+            )
+            reason = _because(reason, "%s, so this is a block" % note)
     else:
         payload = {"permission": "allow"}
 

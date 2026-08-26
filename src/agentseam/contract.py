@@ -141,3 +141,14 @@ class Decision:
 
     def __repr__(self):  # pragma: no cover - debugging aid
         return "Decision(%s, %r)" % (self.outcome, self.reason)
+
+
+def degraded_from(decision):
+    """What this decision was before the dispatcher reduced it, or None.
+
+    An adapter explaining why an outcome changed shape has to read this, not the outcome
+    it was handed. A rewrite reduced to `ask` and then blocked by an agent that cannot
+    prompt would otherwise be reported as a confirmation request that failed -- and it was
+    never a confirmation request.
+    """
+    return (decision.evidence or {}).get("degraded_from")

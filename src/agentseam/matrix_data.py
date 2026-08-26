@@ -129,6 +129,58 @@ MATRIX = {
         "parses Claude settings.json via hookClaudeCompat. Memory writes arrive as the "
         "'memory' tool (create/str_replace/insert), not file edits.",
     },
+    "grok": {
+        "display": "Grok CLI",
+        "tier": TIER_BLOCK,
+        "config": ".grok/hooks/agentseam.json",
+        "verified": {
+            "version": "CLI",
+            "date": "2026-08-26",
+            "method": "vendor hooks documentation read directly (events, script contract, exit codes)",
+        },
+        "events": {
+            PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(),
+            TOOL_FAILURE: _cap(),
+            PROMPT_SUBMIT: _cap(),
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            SUBAGENT_START: _cap(),
+            SUBAGENT_STOP: _cap(),
+            STOP: _cap(),
+            PRE_COMPACT: _cap(),
+        },
+        "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. "
+        "No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN "
+        "-- timeouts, crashes and malformed output are recorded and the call proceeds. "
+        "Payload fields are camelCase (hookEventName, toolName) while event values stay "
+        "PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. "
+        "Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust "
+        "(/hooks-trust or --trust) before they run, so a written config is not yet a live one.",
+    },
+    "antigravity": {
+        "display": "Antigravity",
+        "tier": TIER_BLOCK,
+        "config": ".agents/hooks.json",
+        "verified": {
+            "version": "2.0 / CLI",
+            "date": "2026-08-26",
+            "method": "vendor hooks documentation read directly (per-event schemas and decision vocabulary)",
+        },
+        "events": {
+            PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(),
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+        },
+        "notes": "Richest decision vocabulary here -- allow, deny, ask, force_ask and "
+        "deny_unless_prior_grant -- but no rewrite, since permissionOverrides widens "
+        "permissions rather than changing arguments. The payload carries NO event name, so "
+        "the event is inferred from shape, and PreToolUse/PostToolUse differ only by an "
+        "`error` field documented as empty rather than absent; ties go to PreToolUse because "
+        "the opposite guess would skip the gate. PreInvocation and PostInvocation have "
+        "identical payloads and are unmapped. Fail mode is not documented, so the weaker "
+        "claim (open) is recorded rather than a guess in our own favour.",
+    },
     "gemini_cli": {
         "display": "Gemini CLI",
         "tier": TIER_FULL,

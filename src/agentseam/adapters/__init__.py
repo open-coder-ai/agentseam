@@ -6,14 +6,16 @@ here plus a matrix row; no consumer changes.
 
 from __future__ import annotations
 
-from . import claude_code, codex_cli, cursor, devin, gemini_cli, vscode_copilot, windsurf
+from . import antigravity, claude_code, codex_cli, cursor, devin, gemini_cli, grok, vscode_copilot, windsurf
 
 ADAPTERS = {
+    antigravity.AGENT: antigravity,
     claude_code.AGENT: claude_code,
     codex_cli.AGENT: codex_cli,
     cursor.AGENT: cursor,
     devin.AGENT: devin,
     gemini_cli.AGENT: gemini_cli,
+    grok.AGENT: grok,
     vscode_copilot.AGENT: vscode_copilot,
     windsurf.AGENT: windsurf,
 }

@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Adapters explaining a degraded outcome read `Decision.evidence["degraded_from"]` rather
+  than the outcome they were handed, via a new `contract.degraded_from()`. A rewrite that
+  the dispatcher reduced to `ask`, then blocked by an agent that cannot prompt, was being
+  reported as a failed confirmation request — and it was never a confirmation request.
+  Affected Cursor, Devin, Grok and Antigravity.
 - Detection collision: Codex CLI claimed any payload carrying `model`, which Cursor's base
   hook schema sends on every event — so every real Cursor payload was ambiguous between
   the two adapters, and an unidentified payload is allowed through. Codex now claims only
@@ -55,6 +60,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   hook format, writing `.devin/hooks.v1.json`.
 - New `enforceable` enforcement level and `FAIL_CONFIGURABLE` fail mode, for a surface
   that fails open by default but can be told to fail closed.
+- Grok CLI adapter: block on PreToolUse (its only blocking event), fail-open, no rewrite.
+  Detected by its unique pairing of a camelCase `hookEventName` key with PascalCase values.
+- Antigravity adapter: block on PreToolUse and refusal-to-stop on Stop. Its payload carries
+  no event name at all, so the event is inferred from shape, with ties broken toward the
+  gate.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main
