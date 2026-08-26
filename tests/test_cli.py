@@ -72,3 +72,12 @@ def test_permissions_rejects_a_malformed_rule():
     out = _run(["permissions", "--rule", "shell"])
     assert out.returncode == 2
     assert "action:capability" in out.stderr
+
+
+def test_packaging_shows_the_layouts_and_what_is_shared():
+    out = _run(["packaging"])
+    assert out.returncode == 0
+    assert "skills/{name}/SKILL.md" in out.stdout
+    assert "write once, works for several" in out.stdout
+    assert "also reads another agent's" in out.stdout
+    assert "codex_cli" in out.stdout  # named as unrecorded, with the reason

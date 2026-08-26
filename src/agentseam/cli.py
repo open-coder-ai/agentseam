@@ -10,6 +10,7 @@ import sys
 from . import __version__, adapters
 from . import install as install_mod
 from . import instructions as instructions_mod
+from . import packaging as packaging_mod
 from . import permissions as permissions_mod
 from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
@@ -163,6 +164,27 @@ def _cmd_permissions(args):
     return rc
 
 
+def _cmd_packaging(args):
+    """Show where each agent looks for skills, subagents and commands -- and what it shares."""
+    for name in packaging_mod.agents():
+        row = packaging_mod.layout(name)
+        print("%-16s %s" % (name, row["unit"] or "no bundle format — parts are found by location"))
+        for part in packaging_mod.PARTS:
+            print("%-16s   %-9s %s" % ("", part, row["parts"][part] or "(no equivalent)"))
+    for name, why in sorted(packaging_mod.UNRECORDED.items()):
+        print("%-16s %s" % (name, why))
+
+    print("\nwrite once, works for several:")
+    for part in packaging_mod.PARTS:
+        for template, names in sorted(packaging_mod.same_path_for(part).items()):
+            if len(names) > 1:
+                print("  %-9s %-26s %s" % (part, template, ", ".join(names)))
+    for agent in sorted(packaging_mod.ALSO_READS):
+        for part, folders in sorted(packaging_mod.also_reads(agent).items()):
+            print("  %s also reads another agent's %s from: %s" % (agent, part, ", ".join(folders)))
+    return 0
+
+
 def main(argv=None):
     # A CLI that dies on `| head` is a broken CLI: SIGPIPE arrives as BrokenPipeError
     # in Python, and the interpreter also complains at shutdown unless stdout is
@@ -214,6 +236,9 @@ def _main(argv=None):
     perm.add_argument("--rule", action="append", type=_parse_rule, metavar="ACTION:CAPABILITY[:SPEC]")
     perm.add_argument("--agents", nargs="*", help="target agents (default: all with a recorded model)")
     perm.set_defaults(fn=_cmd_permissions)
+
+    pkg = sub.add_parser("packaging", help="where each agent looks for skills, subagents and commands")
+    pkg.set_defaults(fn=_cmd_packaging)
 
     u = sub.add_parser("uninstall", help="remove only agentseam's entries")
     u.add_argument("agent", help="agent name, or 'all'")
