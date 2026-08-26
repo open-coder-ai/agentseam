@@ -86,3 +86,13 @@ def test_governance_files_exist():
         "AGENTS.md",
     ):
         assert (ROOT / name).exists(), "missing %s" % name
+
+
+def test_import_pulls_in_only_stdlib():
+    """Runtime counterpart to the AST check: catches a lazy import inside a function.
+
+    Runs the exact script CI runs, so the two cannot drift apart again.
+    """
+    from check_stdlib_only import offending_imports
+
+    assert not offending_imports()
