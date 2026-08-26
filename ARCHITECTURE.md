@@ -88,8 +88,7 @@ these: it allows, silently, and still returns the event so a caller can log the 
 
 An adapter is a module with `AGENT`, `CONFIG_PATH`, `claims()`, `parse()`, `respond()`, and
 `hook_config()` — the six the interface test requires. Adding an agent is a module plus a
-matrix row. No consumer changes,
-no dispatcher changes, no `if agent == ...` anywhere.
+matrix row: no consumer changes, no dispatcher changes, no `if agent == ...` anywhere.
 
 `test_every_adapter_implements_the_interface` and `test_every_adapter_has_a_matrix_row`
 keep that true, because a rule this load-bearing erodes the first time somebody is in a
@@ -152,7 +151,7 @@ Every primitive has cases the target cannot represent. The rule is the same in a
 From SECURITY.md: **claim inflation is a security bug.** No capability claim without a
 mechanism. That is a principle, and principles decay, so most of it is mechanical.
 
-### Coverage tiers, and why there are five words
+### Coverage tiers, and why there are six words
 
 `matrix_terms.py` defines the vocabulary separately from the rows, because *deciding what a
 word may mean* is a different activity from *claiming it about an agent* — and the words
@@ -179,14 +178,16 @@ A closed vocabulary you can filter on: `live-run`, `vendor-source`, `vendor-docs
 `third-party-install`, `inherited`. Free-text `method` says what was read; `basis` says what
 class of claim it is.
 
-**Only Claude Code's row is `live-run`.** Every other adapter rests on vendor documentation
-— a claim about what a vendor *says*, not an observation of what their build does.
-`test_only_rows_actually_observed_claim_a_live_run` keeps that from drifting upward, which
-is the direction claims drift.
+**Only Claude Code's row is `live-run`.** Two rows rest on the vendor's own source
+(Codex CLI, VS Code Copilot) and one on a third-party installation (Windsurf); the remaining
+eleven rest on vendor documentation — a claim about what a vendor *says*, not an observation
+of what their build does. `test_only_rows_actually_observed_claim_a_live_run` keeps that from
+drifting upward, which is the direction claims drift.
 
-There is a measured reason to distrust inherited rows specifically. Every inherited row
-later checked against a vendor's own docs claimed **less** surface than the agent actually
-has — Devin ("no pre-tool-use surface": false), Grok, Antigravity, Kimi Code (false in all
+There is a measured reason to distrust inherited rows specifically. No row carries that
+basis today, because every row that once did has since been checked — and every one of them,
+when checked against the vendor's own docs, turned out to claim **less** surface than the
+agent actually has — Devin ("no pre-tool-use surface": false), Grok, Antigravity, Kimi Code (false in all
 three clauses), Junie, Tabnine. Replit is the sole checked negative. `inherited` means
 treat it as a lead, not a fact.
 
