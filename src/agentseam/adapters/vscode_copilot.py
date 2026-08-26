@@ -45,6 +45,12 @@ FILE_WRITE_TOOLS = ("create_file", "edit_file", "apply_patch")
 def claims(raw):
     if not isinstance(raw, dict):
         return False
+    # Codex CLI uses the same camelCase event names. It also sends turn-scoped fields
+    # that VS Code never does, and those are the only thing separating the two payloads
+    # -- without this guard both adapters claim the event, detection goes ambiguous, and
+    # the dispatcher silently allows a write it was asked to gate.
+    if any(k in raw for k in ("turn_id", "permission_mode", "model")):
+        return False
     name = raw.get("hook_event_name") or raw.get("hookEventName")
     if name in ("preToolUse", "postToolUse", "userPromptSubmitted", "sessionStart", "sessionEnd"):
         return True

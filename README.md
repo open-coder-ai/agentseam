@@ -78,9 +78,10 @@ pip install agentseam
 | VS Code Copilot | block + rewrite | `.github/hooks/*.json` |
 | Cursor | block (shell/MCP), detect (file edits) | `.cursor/hooks.json` |
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` |
+| OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` |
 | Zed, Aider | no hook surface | — |
 
-Codex CLI, Windsurf, Goose, Junie, Crush, OpenCode: adapters planned; the
+Windsurf, Goose, Junie, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.
 
 ## Design
