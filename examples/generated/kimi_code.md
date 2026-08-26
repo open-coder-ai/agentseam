@@ -30,7 +30,7 @@ Twenty events, of which exactly three block: PreToolUse, UserPromptSubmit and St
 
 One handler wired for every hook this agent supports.
 
-`config.toml`
+`~/.kimi-code/config.toml`
 
 ```toml
 [[hooks]]

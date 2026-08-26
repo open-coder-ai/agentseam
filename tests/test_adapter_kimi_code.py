@@ -72,29 +72,40 @@ def test_a_command_with_quotes_survives_the_toml_round_trip():
     assert 'command = "sh -c \\"echo hi\\""' in toml
 
 
-def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_path):
-    """config.toml is the user's whole CLI configuration, not a hooks file."""
-    root = Path(tmp_path)
+def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_path, monkeypatch):
+    """config.toml is the user's whole CLI configuration, not a hooks file.
+
+    It is also user-scoped -- ~/.kimi-code/config.toml -- so HOME is what decides where it
+    lands, not the repository we happen to be standing in.
+    """
+    monkeypatch.setenv("HOME", str(tmp_path))
+    config = Path(tmp_path) / ".kimi-code" / "config.toml"
+    config.parent.mkdir(parents=True)
     original = '[model]\nname = "kimi-k2"\n\n[[hooks]]\nevent = "Stop"\ncommand = "mine.sh"\n'
-    (root / "config.toml").write_text(original)
+    config.write_text(original)
 
-    I.install("kimi_code", ["pre_tool"], "guard.py", str(root))
-    after = (root / "config.toml").read_text()
+    I.install("kimi_code", ["pre_tool"], "guard.py", str(tmp_path))
+    after = config.read_text()
     assert original.strip() in after
-    assert "guard.py" in after and I.installed("kimi_code", str(root))
+    assert "guard.py" in after and I.installed("kimi_code", str(tmp_path))
 
-    assert I.uninstall("kimi_code", str(root)) is True
-    assert (root / "config.toml").read_text().strip() == original.strip()
-    assert I.installed("kimi_code", str(root)) is False
+    assert I.uninstall("kimi_code", str(tmp_path)) is True
+    assert config.read_text().strip() == original.strip()
+    assert I.installed("kimi_code", str(tmp_path)) is False
 
 
-def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path):
-    root = str(tmp_path)
-    I.install("kimi_code", ["pre_tool"], "first.py", root)
-    I.install("kimi_code", ["pre_tool"], "second.py", root)
-    text = (Path(root) / "config.toml").read_text()
+def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path, monkeypatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    I.install("kimi_code", ["pre_tool"], "first.py", str(tmp_path))
+    I.install("kimi_code", ["pre_tool"], "second.py", str(tmp_path))
+    text = (Path(tmp_path) / ".kimi-code" / "config.toml").read_text()
     assert text.count(I.BEGIN) == 1
     assert "second.py" in text and "first.py" not in text
+
+
+def test_the_config_is_user_scoped_not_repository_scoped():
+    """Kimi reads one settings file per user; a repo-local config.toml is read by nothing."""
+    assert A.adapters.get("kimi_code").CONFIG_PATH.startswith("~/")
 
 
 def test_kimi_blocks_but_fails_open_and_the_notes_say_not_to_rely_on_it():

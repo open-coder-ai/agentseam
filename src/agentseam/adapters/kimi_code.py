@@ -152,7 +152,7 @@ def respond(decision, event):
     return _json.dumps({"hookSpecificOutput": body}), 0
 
 
-CONFIG_PATH = "config.toml"
+CONFIG_PATH = "~/.kimi-code/config.toml"
 
 #: install() writes a marker-delimited block instead of rewriting the document, because
 #: this file is the user's whole CLI configuration rather than a hooks file.
