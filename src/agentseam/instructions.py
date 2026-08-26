@@ -36,7 +36,11 @@ INSTRUCTION_FILES = {
     "claude_code": {"files": ["CLAUDE.md", ".claude/CLAUDE.md"], "shared": False, "imports": "@AGENTS.md"},
     "codex_cli": {"files": ["AGENTS.md", "codex.md"], "shared": True, "imports": None},
     "cursor": {"files": [".cursor/rules/agentseam.mdc", ".cursorrules"], "shared": True, "imports": None},
-    "vscode_copilot": {"files": [".github/copilot-instructions.md"], "shared": True, "imports": None},
+    "vscode_copilot": {
+        "files": [".github/copilot-instructions.md", ".github/agents/agentseam.agent.md"],
+        "shared": True,
+        "imports": None,
+    },
     "gemini_cli": {"files": ["GEMINI.md", ".gemini/GEMINI.md"], "shared": True, "imports": None},
     "windsurf": {"files": [".windsurf/rules/agentseam.md", ".windsurfrules"], "shared": True, "imports": None},
     "aider": {"files": ["CONVENTIONS.md"], "shared": True, "imports": None},
@@ -47,6 +51,7 @@ INSTRUCTION_FILES = {
     "kimi_code": {"files": [".kimi-code/AGENTS.md"], "shared": True, "imports": None},
     "replit": {"files": ["replit.md"], "shared": False, "imports": None},
     "tabnine": {"files": ["guidelines.md"], "shared": False, "imports": None},
+    "antigravity": {"files": [".agents/rules/agentseam.md"], "shared": False, "imports": None},
 }
 
 

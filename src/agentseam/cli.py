@@ -17,7 +17,7 @@ from .matrix import MATRIX, enforcement_level
 def _cmd_agents(args):
     for name in sorted(MATRIX):
         row = MATRIX[name]
-        print("%-16s %-14s %s" % (name, row["tier"], row["config"] or "(no hook surface)"))
+        print("%-16s %-14s %s" % (name, row["tier"], row["config"] or "(no hook config)"))
     return 0
 
 
@@ -45,6 +45,11 @@ def _cmd_doctor(args):
         row = MATRIX[name]
         if row["tier"] == "none":
             print("%-16s no hook surface — %s" % (name, row["notes"].split(".")[0]))
+            continue
+        if row["tier"] == "unadapted":
+            # Known agent, no hook adapter here. Asking install_mod about it would raise;
+            # more importantly the useful answer is "instruction files only", not an error.
+            print("%-16s no hook adapter — instruction files only" % name)
             continue
         wired = install_mod.installed(name, args.repo)
         verified = row["verified"]

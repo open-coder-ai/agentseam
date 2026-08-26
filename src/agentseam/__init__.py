@@ -38,7 +38,7 @@ from .contract import (
     Event,
 )
 from .dispatch import degrade, handle, run
-from .matrix import MATRIX, agents, can_block, can_rewrite, capability, enforcement_level
+from .matrix import MATRIX, adapted_agents, agents, can_block, can_rewrite, capability, enforcement_level
 
 __version__ = "0.1.0"
 
@@ -61,6 +61,7 @@ __all__ = [
     "can_block",
     "can_rewrite",
     "enforcement_level",
+    "adapted_agents",
     "SESSION_START",
     "SESSION_END",
     "PROMPT_SUBMIT",
