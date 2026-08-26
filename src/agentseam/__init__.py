@@ -15,7 +15,7 @@ actually enforce.
     run(handler)
 """
 
-from . import adapters
+from . import adapters, instructions
 from .contract import (
     ALLOW,
     ASK,
@@ -50,6 +50,7 @@ __all__ = [
     "Decision",
     "EVENTS",
     "adapters",
+    "instructions",
     "ALLOW",
     "DENY",
     "ASK",

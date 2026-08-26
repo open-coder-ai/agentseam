@@ -64,6 +64,29 @@ Not just guardrails. Anything that wants to watch or shape an agent's life:
 | **Process gates** | TDD enforcement, "tests before push" |
 | **Context injection** | inject memory/instructions at session start |
 
+## One set of instructions, every agent
+
+Multi-agent repos hand-maintain a drawer of near-identical files — CLAUDE.md, AGENTS.md,
+`.cursor/rules/*`, `.github/copilot-instructions.md`, GEMINI.md, `.windsurfrules`,
+`codex.md` — and they drift.
+
+```bash
+agentseam instructions --text "Prefer pnpm. Tests live beside source."
+```
+
+```
+updated   AGENTS.md
+created   CLAUDE.md
+created   .junie/guidelines.md
+...
+covered by AGENTS.md: aider, codex_cli, cursor, gemini_cli, kimi_code, vscode_copilot, windsurf, zed
+```
+
+14 agents reached with 7 files, because 8 of them read `AGENTS.md` natively and a second
+copy would only drift. Content is written as a marker-delimited block, so anything a
+human wrote in those files is preserved untouched — and `instructions --list` shows what
+a repo is already telling its agents.
+
 ## Install
 
 ```bash
