@@ -113,6 +113,28 @@ MATRIX = {
         "parses Claude settings.json via hookClaudeCompat. Memory writes arrive as the "
         "'memory' tool (create/str_replace/insert), not file edits.",
     },
+    "gemini_cli": {
+        "display": "Gemini CLI",
+        "tier": TIER_FULL,
+        "config": ".gemini/settings.json",
+        "verified": {
+            "version": "docs @ main 2026-08-26",
+            "date": "2026-08-26",
+            "method": "vendor hooks reference (docs/hooks/reference.md in google-gemini/gemini-cli), read from a clone",
+        },
+        "events": {
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(block=True),
+            PROMPT_SUBMIT: _cap(block=True),
+            STOP: _cap(block=True),
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            PRE_COMPACT: _cap(),
+        },
+        "notes": "Top-level `decision: allow|deny` + `reason` (not nested); rewrite merges via "
+        "hookSpecificOutput.tool_input; exit 2 also blocks. Write tools are write_file/replace. "
+        "Fail mode is not documented as closed, so pre_tool is rated best-effort rather than enforced.",
+    },
     # --- honest floor: agents with no usable hook surface -----------------------
     "zed": {
         "display": "Zed",
