@@ -190,13 +190,37 @@ CAPABILITY = {
     },
 }
 
-#: Agents with a hook adapter but no permission model recorded here. Naming them is the
-#: point: silence would read as "no permission surface exists", which is a claim we have
-#: not earned. Both vendors publish docs this environment's egress policy blocks.
+#: Every agent the matrix knows that has no permission model recorded here, and why.
+#:
+#: The list is exhaustive on purpose, and a test enforces that: recorded plus unrecorded
+#: must equal the matrix exactly. An agent simply *missing* from both is the failure this
+#: module exists to prevent -- it reads as "nothing to say here" when the truth is "nobody
+#: looked". Four agents sat in that state until this table was completed.
+#:
+#: Note what is deliberately NOT inferred. An agent with no hook surface (Aider, Zed) may
+#: still have a permission config; the two are unrelated, and treating "cannot hook" as
+#: "cannot restrict" would be a different claim than the one we are entitled to make.
 UNRECORDED = {
+    "aider": "no permission model established here. Note this is independent of its lack of "
+    "a hook surface: not being able to gate tool calls says nothing about what its config "
+    "file can restrict",
+    "antigravity": "a permission system provably exists -- its hooks return permissionOverrides, "
+    'its decisions respect a user\'s "Always Allow", and it exposes list_permissions and '
+    "ask_permission as tools -- but the config schema behind it was not read here",
     "cursor": "its hook surface is now recorded (see the matrix), and hooks are a permission "
     "mechanism -- but the settings-file allow/deny model is a separate thing, and that "
     "documentation was not available here",
+    "devin": "a permission system provably exists -- its hooks carry a PermissionRequest event "
+    "and the vendor lists modifying permissions as a use case -- but its config was not read here",
+    "grok": "a permission system provably exists -- a PermissionDenied hook event fires when it "
+    "denies a tool call -- but its config was not read here",
+    "junie": "no permission model established here",
+    "kimi_code": "a permission system provably exists, and its own hooks documentation points at "
+    'it as the real barrier ("rely on permission approvals and manual confirmation") -- but '
+    "the approval config schema was not read here",
+    "replit": "no permission model established here",
+    "tabnine": "no permission model established here; vendor documentation is unreachable from this environment",
     "windsurf": "vendor documentation unreachable from the environment this was written in; "
     "no permission model claimed rather than one guessed",
+    "zed": "no permission model established here. As with Aider, this is independent of its lack of a hook surface",
 }

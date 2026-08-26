@@ -125,9 +125,16 @@ agentseam hands back the rule unrendered with the reason instead, and the comman
 non-zero. Put it in CI and you find out that your policy doesn't survive the trip to an
 agent *before* you rely on it.
 
-The same honesty applies to the gaps we have in ourselves: Cursor and Windsurf are listed
-with no permission model at all, because their documentation was unreachable from the
-machine this was written on and a guessed model is worse than an admitted blank.
+The same honesty applies to the gaps we have in ourselves. Every agent the matrix knows
+appears here — either with a recorded model, or named with the reason there isn't one, and
+a test enforces that the two sets add up to the matrix exactly. A silently absent agent
+would read as "nothing to say here" when the truth is "nobody looked".
+
+The reasons distinguish two things that are easy to blur: an agent whose permission system
+*provably exists* but whose schema we haven't read (Antigravity, Devin, Grok, Kimi Code all
+prove it through their own hook events) versus one where nothing is established at all. And
+a missing hook surface is never recorded as a missing permission model — Aider and Zed
+expose no hooks, which says nothing about what their config files can restrict.
 
 ## Bundles: mostly the same directory, twice
 

@@ -55,7 +55,15 @@ def test_permissions_lists_every_surface_including_the_ones_we_cannot_claim():
     out = _run(["permissions"])
     assert out.returncode == 0
     assert "cannot express" in out.stdout  # VS Code has no deny to offer
-    assert "cursor" in out.stdout  # named as unrecorded, not quietly omitted
+    assert "no permission model recorded" in out.stdout
+    # Every agent the matrix knows appears, recorded or named as unrecorded.
+    for agent in ("cursor", "aider", "zed", "junie", "kimi_code"):
+        assert agent in out.stdout, agent
+
+
+def test_long_unrecorded_reasons_are_wrapped_rather_than_run_off_the_terminal():
+    out = _run(["permissions"])
+    assert max(len(line) for line in out.stdout.splitlines()) <= 100
 
 
 def test_permissions_exits_nonzero_when_a_rule_would_not_be_enforced():
