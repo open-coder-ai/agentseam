@@ -36,7 +36,12 @@ def clone(tmp_path):
         shutil.rmtree(target / rel, ignore_errors=True)
         shutil.copytree(ROOT / rel, target / rel, ignore=shutil.ignore_patterns("__pycache__"))
     assert _run(GIT + ["add", "-A"], target).returncode == 0
-    assert _run(GIT + ["commit", "-q", "-m", "sync working tree", "--no-gpg-sign"], target).returncode == 0
+    # Only commit when the copy actually changed something. On a clean checkout -- which is
+    # every CI run -- the working tree already matches HEAD and `git commit` exits 1 with
+    # "nothing to commit". Asserting success there passes locally with uncommitted work in
+    # progress and fails the moment the tree is clean, which is the worst way round.
+    if _run(["git", "status", "--porcelain"], target).stdout.strip():
+        assert _run(GIT + ["commit", "-q", "-m", "sync working tree", "--no-gpg-sign"], target).returncode == 0
     assert _run(["git", "config", "core.hooksPath", ".githooks"], target).returncode == 0
     return target
 
