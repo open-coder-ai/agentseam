@@ -79,9 +79,10 @@ pip install agentseam
 | Cursor | block (shell/MCP), detect (file edits) | `.cursor/hooks.json` |
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` |
+| Windsurf | block via exit code only; **no file-write event** | `.windsurf/hooks.json` |
 | Zed, Aider | no hook surface | — |
 
-Windsurf, Goose, Junie, Crush, OpenCode: adapters planned; the
+Goose, Junie, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.
 
 ## Design

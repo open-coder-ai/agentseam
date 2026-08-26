@@ -160,6 +160,27 @@ MATRIX = {
         "sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which "
         "collapses exit 2 into 1, so an exit-code deny does not survive that platform.",
     },
+    "windsurf": {
+        "display": "Windsurf (Cascade)",
+        "tier": TIER_BLOCK,
+        "config": ".windsurf/hooks.json",
+        "verified": {
+            "version": "hooks.json schema as shipped 2026-08",
+            "date": "2026-08-26",
+            "method": "a real working installation (.windsurf/hooks.json + hook scripts) in "
+            "PaloAltoNetworks/prisma-airs-integrations; vendor docs unreachable from this network",
+        },
+        "events": {
+            PROMPT_SUBMIT: _cap(block=True),
+            PRE_TOOL: _cap(block=True),
+            POST_TOOL: _cap(),
+            STOP: _cap(),
+        },
+        "notes": "Exit code 2 is the ONLY block signal: no stdout decision protocol, no machine-readable "
+        "reason, no rewrite. Critically there is NO file-write event -- prompt, terminal and MCP "
+        "hooks only -- so a write to a memory file is invisible to a hook on this agent. "
+        "Fail mode is undocumented, so blocking rates best-effort rather than enforced.",
+    },
     # --- honest floor: agents with no usable hook surface -----------------------
     "zed": {
         "display": "Zed",

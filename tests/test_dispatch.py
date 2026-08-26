@@ -99,3 +99,30 @@ def test_no_two_adapters_claim_the_same_payload():
         if len(claimants) != 1:
             ambiguous[label] = claimants
     assert not ambiguous, "payloads claimed by != 1 adapter: %s" % ambiguous
+
+
+def test_degradation_records_its_origin():
+    """A twice-degraded decision must still report the original cause.
+
+    rewrite -> ask (no rewrite support) -> block (no ask support) is a real chain on
+    Windsurf. Without recording the origin, the user is told confirmation was
+    unavailable for something that was never a confirmation request.
+    """
+    from payloads import WS_COMMAND
+
+    event = A.adapters.get("windsurf").parse(WS_COMMAND)
+    degraded = A.degrade(Decision.rewrite({"command": "true"}, "redact the token"), event)
+    assert degraded.outcome == A.ASK
+    assert degraded.evidence["degraded_from"] == A.REWRITE
+
+    text, code, _, _ = A.handle(WS_COMMAND, lambda e: Decision.rewrite({"command": "true"}, "redact the token"))
+    assert code == 2
+    assert "cannot rewrite" in text and "redact the token" in text
+
+
+def test_plain_ask_is_not_reported_as_a_rewrite():
+    from payloads import WS_COMMAND
+
+    text, code, _, _ = A.handle(WS_COMMAND, lambda e: Decision.ask("needs review"))
+    assert code == 2
+    assert "cannot prompt for confirmation" in text
