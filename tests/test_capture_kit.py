@@ -130,3 +130,22 @@ def test_a_probe_over_unparseable_input_still_allows(tmp_path, monkeypatch):
     probe.write_text(capture._probe_source())
     result = subprocess.run([sys.executable, str(probe)], input="not json at all", capture_output=True, text=True)
     assert result.returncode == 0
+
+
+def test_every_adapter_can_be_detected():
+    """A footprint per adapter, or `detect` silently cannot find agents we support.
+
+    Junie and Tabnine were adapted after the capture kit was written and were missing here,
+    so `capture.py detect` reported them absent on a machine that had them -- which reads as
+    "you do not have it" rather than "we never looked".
+    """
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+    import capture
+
+    from agentseam import adapters
+
+    missing = sorted(set(adapters.ADAPTERS) - set(capture.FOOTPRINTS))
+    assert not missing, "adapters with no detection footprint: %s" % ", ".join(missing)

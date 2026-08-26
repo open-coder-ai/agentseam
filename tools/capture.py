@@ -50,6 +50,8 @@ FOOTPRINTS = {
     "antigravity": ("~/.gemini/antigravity", ".agents"),
     "vscode_copilot": ("~/.copilot", ".github/hooks"),
     "windsurf": ("~/.codeium/windsurf", ".windsurf"),
+    "junie": ("~/.junie", ".junie"),
+    "tabnine": ("~/.tabnine", ".tabnine"),
 }
 
 
