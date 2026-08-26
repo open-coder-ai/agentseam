@@ -25,6 +25,11 @@ from .contract import (
 #   "open"   -> the action proceeds (a policy claiming enforcement here is overclaiming)
 FAIL_CLOSED = "closed"
 FAIL_OPEN = "open"
+#: The agent fails open by default but can be told to fail closed per hook (Cursor's
+#: `failClosed: true`). Neither existing value tells the truth about that: "open" would
+#: understate a surface a user can make airtight, and "closed" would claim a default that
+#: is not there. What a consumer may claim depends on how the hook was installed.
+FAIL_CONFIGURABLE = "configurable"
 
 # tier: how much of the surface the adapter can serve.
 TIER_FULL = "block+rewrite"
@@ -72,25 +77,36 @@ MATRIX = {
     },
     "cursor": {
         "display": "Cursor",
-        "tier": TIER_BLOCK,
+        "tier": TIER_FULL,
         "config": ".cursor/hooks.json",
         "verified": {
             "version": "1.7+",
-            "date": "2026-08-25",
-            "method": "official hook examples repo (scripts + test fixtures)",
+            "date": "2026-08-26",
+            "method": "vendor hooks documentation read directly (event list, per-event schemas, exit codes)",
         },
         "events": {
-            # beforeShellExecution / beforeMCPExecution: true pre-execution block.
-            PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
-            # afterFileEdit fires AFTER the write lands: detect, never prevent.
+            # preToolUse is generic -- it fires for every tool, not just shell -- and its
+            # response carries updated_input, so this is a real block-and-rewrite gate.
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CONFIGURABLE),
             POST_TOOL: _cap(),
-            PROMPT_SUBMIT: _cap(),
+            TOOL_FAILURE: _cap(),
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_CONFIGURABLE),
             SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            SUBAGENT_START: _cap(),
+            SUBAGENT_STOP: _cap(),
             STOP: _cap(),
             PRE_COMPACT: _cap(),
+            # afterFileEdit lands after the write and supports no output fields at all.
+            FILE_CHANGED: _cap(),
         },
-        "notes": "Fail-OPEN by default (set failClosed:true per hook). No beforeFileEdit: "
-        "file writes are audit-only; only shell/MCP calls gate pre-execution.",
+        "notes": "Fails OPEN by default; failClosed:true per hook definition makes it fail "
+        "closed, and agentseam sets it on every gate it installs. `ask` is accepted by the "
+        "preToolUse schema but not enforced today, so the adapter denies instead of "
+        "returning a prompt that would behave as a pass; beforeShellExecution and "
+        "beforeMCPExecution do honour ask. Separate Tab hooks (beforeTabFileRead, "
+        "afterTabFileEdit) gate inline completions, and workspaceOpen fires outside any "
+        "session with no canonical event here. Cursor also loads Claude Code-format hooks.",
     },
     "vscode_copilot": {
         "display": "GitHub Copilot (VS Code agent mode / CLI)",
@@ -181,119 +197,37 @@ MATRIX = {
         "hooks only -- so a write to a memory file is invisible to a hook on this agent. "
         "Fail mode is undocumented, so blocking rates best-effort rather than enforced.",
     },
-    # --- known agents with no hook adapter here (instruction files still work) -----
-    # Support level taken from the sibling project's shipped surface matrix, which gives
-    # these agents ambient-rule/git/CI surfaces only -- no pre-tool-use hook. Recorded as
-    # unadapted rather than none because that is a statement about agentseam, and none of
-    # these was independently re-checked for a hook surface here.
     "devin": {
         "display": "Devin",
-        "tier": TIER_UNADAPTED,
-        "config": None,
+        "tier": TIER_FULL,
+        "config": ".devin/hooks.v1.json",
         "verified": {
-            "version": "n/a",
+            "version": "CLI",
             "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
+            "method": "vendor hooks documentation read directly (events, output format, exit codes)",
         },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "grok": {
-        "display": "Grok",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
+        "events": {
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(),
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+            PRE_COMPACT: _cap(),
         },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "kimi_code": {
-        "display": "Kimi Code",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "replit": {
-        "display": "Replit",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "tabnine": {
-        "display": "Tabnine",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "antigravity": {
-        "display": "Antigravity",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "junie": {
-        "display": "JetBrains Junie",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "not yet researched from a primary source here; a Junie CLI hook surface is reported but unverified",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    # --- honest floor: agents with no usable hook surface -----------------------
-    "zed": {
-        "display": "Zed",
-        "tier": TIER_NONE,
-        "config": None,
-        "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs + open extensibility issues"},
-        "events": {},
-        "notes": "No user hooks. Only declarative agent.tool_permissions rules. "
-        "No deny path for an external handler — say so rather than stretch.",
-    },
-    "aider": {
-        "display": "Aider",
-        "tier": TIER_NONE,
-        "config": None,
-        "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs/config reference"},
-        "events": {},
-        "notes": "No lifecycle hooks. Only --lint-cmd/--test-cmd post-edit steps. "
-        "Observation possible via git hooks; no interception.",
+        "notes": "Speaks Claude Code's hook format almost exactly, and reads .claude/"
+        "settings.json for hooks by default -- so a repo with Claude Code hooks is already "
+        'running them under Devin. A block is top-level {"decision": "block"}, not '
+        "permissionDecision. There is no ask in the vocabulary. Non-zero exit codes other "
+        "than 2 are logged without blocking, so this fails OPEN. A SessionStart payload is "
+        "indistinguishable from Claude Code's, and detect() refuses to guess between them.",
     },
 }
+
+
+# The gap rows are maintained in their own module but belong to one table: a consumer
+# asking about a known agent should get its row, not a KeyError that reads as though the
+# agent were unheard of.
+from .matrix_gaps import GAPS  # noqa: E402  (below MATRIX so the import resolves)
+
+MATRIX.update(GAPS)

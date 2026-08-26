@@ -6,16 +6,23 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from payloads import (  # noqa: E402
+from payloads import (
     CC_BASH,
     CC_EDIT,
     CC_MULTI,
     CC_POST,
     CC_WRITE,
     CU_EDIT,
+    CU_PRE_TOOL,
+    CU_READ,
     CU_SHELL,
+    CU_SUBMIT,
     CX_SHELL,
     CX_WRITE,
+    DV_PERMISSION,
+    DV_PRE_TOOL,
+    DV_PROMPT,
+    DV_WRITE,  # noqa: E402
     GM_AFTER,
     GM_REPLACE,
     GM_SHELL,
@@ -92,6 +99,13 @@ def test_no_two_adapters_claim_the_same_payload():
         "GM_AFTER": GM_AFTER,
         "CX_WRITE": CX_WRITE,
         "CX_SHELL": CX_SHELL,
+        "CU_PRE_TOOL": CU_PRE_TOOL,
+        "CU_READ": CU_READ,
+        "CU_SUBMIT": CU_SUBMIT,
+        "DV_PRE_TOOL": DV_PRE_TOOL,
+        "DV_WRITE": DV_WRITE,
+        "DV_PROMPT": DV_PROMPT,
+        "DV_PERMISSION": DV_PERMISSION,
     }
     ambiguous = {}
     for label, raw in fixtures.items():
