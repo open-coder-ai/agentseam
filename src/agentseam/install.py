@@ -50,8 +50,7 @@ def _mark(obj, owner):
 def _strip_owned(obj, owner):
     """Remove entries we own; leave everything else untouched."""
     if isinstance(obj, list):
-        return [_strip_owned(v, owner) for v in obj
-                if not (isinstance(v, dict) and v.get(MARKER) == owner)]
+        return [_strip_owned(v, owner) for v in obj if not (isinstance(v, dict) and v.get(MARKER) == owner)]
     if isinstance(obj, dict):
         return {k: _strip_owned(v, owner) for k, v in obj.items() if k != MARKER}
     return obj
@@ -72,9 +71,9 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     """Wire `command` for `events` into `agent`'s config. Returns the path written."""
     mod = adapters.get(agent)
     path = os.path.join(repo_root, mod.CONFIG_PATH)
-    if "*" in path:                      # e.g. .github/hooks/*.json
+    if "*" in path:  # e.g. .github/hooks/*.json
         path = path.replace("*", owner)
-    existing = _strip_owned(_load(path), owner)      # idempotent: drop our old entries
+    existing = _strip_owned(_load(path), owner)  # idempotent: drop our old entries
     fragment = _mark(mod.hook_config(events, command, matcher=matcher), owner)
     _dump(path, _merge(existing, fragment))
     return path

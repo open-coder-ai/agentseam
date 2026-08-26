@@ -25,17 +25,27 @@ def deny_all(e):
 
 
 # --------------------------------------------------------------- claude code
-CC_WRITE = {"hook_event_name": "PreToolUse", "tool_name": "Write", "session_id": "s1",
-            "tool_use_id": "t1", "cwd": "/repo",
-            "tool_input": {"file_path": "CLAUDE.md", "content": "team uses pnpm"}}
-CC_EDIT = {"hook_event_name": "PreToolUse", "tool_name": "Edit", "session_id": "s1",
-           "tool_input": {"file_path": "MEMORY.md", "new_string": "fact"}}
-CC_MULTI = {"hook_event_name": "PreToolUse", "tool_name": "MultiEdit",
-            "tool_input": {"file_path": "a.md", "edits": [{"new_string": "one"}, {"new_string": "two"}]}}
-CC_BASH = {"hook_event_name": "PreToolUse", "tool_name": "Bash",
-           "tool_input": {"command": "rm -rf /"}}
-CC_POST = {"hook_event_name": "PostToolUse", "tool_name": "WebFetch", "tool_use_id": "w1",
-           "tool_output": "page text"}
+CC_WRITE = {
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Write",
+    "session_id": "s1",
+    "tool_use_id": "t1",
+    "cwd": "/repo",
+    "tool_input": {"file_path": "CLAUDE.md", "content": "team uses pnpm"},
+}
+CC_EDIT = {
+    "hook_event_name": "PreToolUse",
+    "tool_name": "Edit",
+    "session_id": "s1",
+    "tool_input": {"file_path": "MEMORY.md", "new_string": "fact"},
+}
+CC_MULTI = {
+    "hook_event_name": "PreToolUse",
+    "tool_name": "MultiEdit",
+    "tool_input": {"file_path": "a.md", "edits": [{"new_string": "one"}, {"new_string": "two"}]},
+}
+CC_BASH = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}
+CC_POST = {"hook_event_name": "PostToolUse", "tool_name": "WebFetch", "tool_use_id": "w1", "tool_output": "page text"}
 
 
 def test_claude_parses_all_write_shapes():
@@ -76,7 +86,7 @@ def test_cursor_file_edit_is_detect_only():
     """Cursor has no beforeFileEdit: a deny must surface as post-write detection."""
     text, code, event, _ = A.handle(CU_EDIT, deny_all)
     assert event.event == A.POST_TOOL
-    assert code == 2                                  # flagged, not blocked
+    assert code == 2  # flagged, not blocked
     assert "cannot block" in json.loads(text)["user_message"]
 
 
@@ -86,11 +96,15 @@ def test_cursor_clean_edit_is_silent():
 
 
 # ------------------------------------------------------------ vscode copilot
-VS_MEM_CREATE = {"tool_name": "memory", "session_id": "v1",
-                 "tool_input": {"command": "create", "path": "/memories/repo/p.md", "file_text": "pref"}}
-VS_MEM_REPLACE = {"tool_name": "copilot_memory",
-                  "tool_input": {"command": "str_replace", "path": "/memories/a.md",
-                                 "old_str": "a", "new_str": "b"}}
+VS_MEM_CREATE = {
+    "tool_name": "memory",
+    "session_id": "v1",
+    "tool_input": {"command": "create", "path": "/memories/repo/p.md", "file_text": "pref"},
+}
+VS_MEM_REPLACE = {
+    "tool_name": "copilot_memory",
+    "tool_input": {"command": "str_replace", "path": "/memories/a.md", "old_str": "a", "new_str": "b"},
+}
 VS_MEM_VIEW = {"tool_name": "memory", "tool_input": {"command": "view", "path": "/memories/a.md"}}
 
 
@@ -99,7 +113,7 @@ def test_vscode_memory_tool_shapes():
     assert mod.parse(VS_MEM_CREATE).content == "pref"
     assert mod.parse(VS_MEM_REPLACE).content == "b"
     assert mod.is_memory_write(mod.parse(VS_MEM_CREATE)) is True
-    assert mod.is_memory_write(mod.parse(VS_MEM_VIEW)) is False   # view writes nothing
+    assert mod.is_memory_write(mod.parse(VS_MEM_VIEW)) is False  # view writes nothing
 
 
 def test_vscode_speaks_claude_contract():
@@ -120,8 +134,10 @@ def test_unknown_payload_allows_silently():
 
 def test_one_handler_runs_on_every_agent():
     """The core promise: identical handler, correct dialect everywhere."""
+
     def handler(e):
         return Decision.deny("secret") if "SECRET" in (e.content or "") else Decision.allow()
+
     outcomes = {}
     for raw in (CC_WRITE, VS_MEM_CREATE, CU_EDIT):
         poisoned = json.loads(json.dumps(raw))

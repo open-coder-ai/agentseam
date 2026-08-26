@@ -1,0 +1,63 @@
+name: Security checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  # Workflow files are code with credentials attached; zizmor audits them for the
+  # known-dangerous patterns (untrusted checkout, template injection, over-broad tokens).
+  zizmor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      # Run zizmor directly rather than via its action: the action uploads SARIF to
+      # GitHub Advanced Security, which a private repository does not have, so the
+      # job failed on the upload even when the scan itself found nothing. zizmor
+      # exits non-zero on findings on its own, which is the signal we actually want.
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - name: Run zizmor
+        run: |
+          pip install zizmor
+          # --offline: zizmor's online audits call the GitHub API to check whether an
+          # action tag has moved, which needs a token and can fail the job for a
+          # network reason rather than a security one. Every action here is already
+          # SHA-pinned and watched weekly by dependabot, so the offline audits are
+          # the ones carrying real signal for this repo.
+          zizmor --offline --format plain .
+
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - name: Run actionlint
+        run: |
+          bash <(curl -sSf https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint -color
+
+  semgrep:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - name: Semgrep with the project rules
+        run: |
+          pip install semgrep
+          semgrep --config .semgrep/agentseam.yml --error --quiet src/ tests/

@@ -9,8 +9,7 @@ ENV = {"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin:/usr/local/bin"}
 
 
 def _run(args, **kw):
-    return subprocess.run([sys.executable, "-m", "agentseam.cli", *args],
-                          capture_output=True, text=True, env=ENV, **kw)
+    return subprocess.run([sys.executable, "-m", "agentseam.cli", *args], capture_output=True, text=True, env=ENV, **kw)
 
 
 def test_matrix_renders():
@@ -21,8 +20,9 @@ def test_matrix_renders():
 
 def test_matrix_survives_a_closed_pipe():
     """`agentseam matrix | head -3` must exit cleanly, not traceback."""
-    proc = subprocess.run("%s -m agentseam.cli matrix | head -3" % sys.executable,
-                          shell=True, capture_output=True, text=True, env=ENV)
+    proc = subprocess.run(
+        "%s -m agentseam.cli matrix | head -3" % sys.executable, shell=True, capture_output=True, text=True, env=ENV
+    )
     assert proc.returncode == 0
     assert "BrokenPipeError" not in proc.stderr, proc.stderr
 
@@ -30,6 +30,7 @@ def test_matrix_survives_a_closed_pipe():
 def test_agents_and_json_matrix():
     assert "claude_code" in _run(["agents"]).stdout
     import json
+
     data = json.loads(_run(["matrix", "--json"]).stdout)
     assert data["claude_code"]["tier"] == "block+rewrite"
 

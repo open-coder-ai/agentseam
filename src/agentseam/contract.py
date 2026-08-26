@@ -24,11 +24,22 @@ INSTRUCTIONS_LOADED = "instructions_loaded"
 FILE_CHANGED = "file_changed"
 
 EVENTS = (
-    SESSION_START, SESSION_END, PROMPT_SUBMIT, PRE_TOOL, POST_TOOL, TOOL_FAILURE,
-    PRE_COMPACT, STOP, SUBAGENT_START, SUBAGENT_STOP, INSTRUCTIONS_LOADED, FILE_CHANGED,
+    SESSION_START,
+    SESSION_END,
+    PROMPT_SUBMIT,
+    PRE_TOOL,
+    POST_TOOL,
+    TOOL_FAILURE,
+    PRE_COMPACT,
+    STOP,
+    SUBAGENT_START,
+    SUBAGENT_STOP,
+    INSTRUCTIONS_LOADED,
+    FILE_CHANGED,
 )
 
 # --- normalized envelope --------------------------------------------------------
+
 
 class Event:
     """One agent lifecycle event, normalized.
@@ -38,20 +49,45 @@ class Event:
     being blocked by our vocabulary.
     """
 
-    __slots__ = ("agent", "event", "tool", "command", "path", "content", "output",
-                 "prompt", "session_id", "tool_use_id", "cwd", "raw")
+    __slots__ = (
+        "agent",
+        "event",
+        "tool",
+        "command",
+        "path",
+        "content",
+        "output",
+        "prompt",
+        "session_id",
+        "tool_use_id",
+        "cwd",
+        "raw",
+    )
 
-    def __init__(self, agent, event, *, tool=None, command=None, path=None,
-                 content=None, output=None, prompt=None, session_id=None,
-                 tool_use_id=None, cwd=None, raw=None):
+    def __init__(
+        self,
+        agent,
+        event,
+        *,
+        tool=None,
+        command=None,
+        path=None,
+        content=None,
+        output=None,
+        prompt=None,
+        session_id=None,
+        tool_use_id=None,
+        cwd=None,
+        raw=None,
+    ):
         self.agent = agent
         self.event = event
         self.tool = tool
-        self.command = command      # shell command, when the tool carries one
-        self.path = path            # target file, when the tool writes one
-        self.content = content      # file text being written (pre_tool on write tools)
-        self.output = output        # tool result (post_tool)
-        self.prompt = prompt        # user prompt text (prompt_submit)
+        self.command = command  # shell command, when the tool carries one
+        self.path = path  # target file, when the tool writes one
+        self.content = content  # file text being written (pre_tool on write tools)
+        self.output = output  # tool result (post_tool)
+        self.prompt = prompt  # user prompt text (prompt_submit)
         self.session_id = session_id
         self.tool_use_id = tool_use_id
         self.cwd = cwd

@@ -1,0 +1,141 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      full_matrix:
+        description: "Also run Windows and macOS (billed at 2x and 10x). Tags do this automatically."
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  # Every PR commit must carry a Signed-off-by trailer (DCO -- see CONTRIBUTING.md).
+  dco:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Check Signed-off-by on every PR commit
+        env:
+          # No `git fetch` here: persist-credentials:false leaves the checkout without
+          # credentials, so fetching fails with "could not read Username". fetch-depth:0
+          # already put the base commit in the local history, so the event's base SHA is
+          # enough. Passed through the environment rather than interpolated into the
+          # shell, so no ${{ }} value is ever evaluated as code.
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          missing=0
+          while read -r sha; do
+            if ! git log -1 --format=%B "$sha" | grep -qi '^Signed-off-by: .\+ <.\+@.\+>'; then
+              echo "::error::commit $sha has no Signed-off-by trailer"
+              missing=1
+            fi
+          # --no-merges: on a pull_request event the checkout HEAD is GitHub's own
+          # synthetic merge commit (authored by web-flow), which can never carry a
+          # sign-off. DCO applies to authored commits, not the platform's merge.
+          done < <(git rev-list --no-merges "$BASE_SHA..HEAD")
+          exit "$missing"
+
+  # Commit messages and PR bodies are as public as the diff and much easier to leak
+  # into -- container paths, session identifiers, personal addresses. Checked here
+  # because the local test can only see the history it has.
+  no-private-data:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Scan commit messages for local or personal data
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          pattern='/home/[A-Za-z0-9._-]+/|/Users/[A-Za-z0-9._-]+/|session_[0-9A-Za-z]{12,}|claude\.ai/code/session|/tmp/claude-[0-9]|@(gmail|yahoo|hotmail|outlook|protonmail)\.'
+          found=0
+          while read -r sha; do
+            if git log -1 --format=%B "$sha" | grep -qiE "$pattern"; then
+              # Name the commit, never echo the match: a log line is a publication too.
+              echo "::error::commit $sha contains local or personal data in its message"
+              found=1
+            fi
+          done < <(git rev-list --no-merges "$BASE_SHA..HEAD")
+          exit "$found"
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Linux-only by default; Actions minutes are billed 2x on Windows and 10x on
+        # macOS. The other platforms are not deleted because the defects that justify
+        # them are platform-specific (path handling, line endings, shell invocation),
+        # and a release must never be cut having been tested on Linux alone -- so a
+        # v* tag always runs the full matrix without anyone having to remember.
+        os: [ubuntu-latest]
+        # 3.9 is the floor the package claims; 3.13 surfaces deprecations early.
+        python-version: ["3.9", "3.11", "3.13"]
+        include: >-
+          ${{ fromJSON(
+            (startsWith(github.ref, 'refs/tags/v') || inputs.full_matrix)
+            && '[{"os":"windows-latest","python-version":"3.11"},{"os":"macos-latest","python-version":"3.11"}]'
+            || '[]') }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+      - name: CLI smoke
+        shell: bash
+        run: |
+          agentseam --version
+          agentseam agents
+          agentseam matrix | head -3
+          agentseam doctor --repo .
+
+  # The runtime path must stay importable with no third-party packages: adapters are
+  # copied verbatim into other projects, so an accidental dependency breaks exactly
+  # the consumers this library exists for. Cheaper to assert than to discover.
+  stdlib-only:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      # The same script the test suite runs, on purpose: the first version of this
+      # check was inline here, drifted from the local test, and shipped a red pipeline.
+      - name: Import with user site-packages disabled
+        env:
+          PYTHONNOUSERSITE: "1"
+        run: python tests/check_stdlib_only.py

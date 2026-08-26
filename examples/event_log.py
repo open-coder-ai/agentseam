@@ -7,13 +7,14 @@
 One timeline for Claude Code + Cursor + Copilot in the same repo: something no
 single-agent logger can produce. Feed it to OTel, DuckDB, or just grep it.
 """
+
 import json
 import os
 import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, "src")
-from agentseam import Decision, run                       # noqa: E402
+from agentseam import Decision, run  # noqa: E402
 
 LOG = os.environ.get("AGENTSEAM_LOG", os.path.expanduser("~/.agentseam/events.jsonl"))
 

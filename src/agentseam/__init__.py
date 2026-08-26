@@ -15,22 +15,62 @@ actually enforce.
     run(handler)
 """
 
-from .contract import (Event, Decision, EVENTS, ALLOW, DENY, ASK, REWRITE,
-                       SESSION_START, SESSION_END, PROMPT_SUBMIT, PRE_TOOL, POST_TOOL,
-                       TOOL_FAILURE, PRE_COMPACT, STOP, SUBAGENT_START, SUBAGENT_STOP,
-                       INSTRUCTIONS_LOADED, FILE_CHANGED)
-from .dispatch import run, handle, degrade
-from .matrix import (MATRIX, agents, capability, can_block, can_rewrite,
-                     enforcement_level)
 from . import adapters
+from .contract import (
+    ALLOW,
+    ASK,
+    DENY,
+    EVENTS,
+    FILE_CHANGED,
+    INSTRUCTIONS_LOADED,
+    POST_TOOL,
+    PRE_COMPACT,
+    PRE_TOOL,
+    PROMPT_SUBMIT,
+    REWRITE,
+    SESSION_END,
+    SESSION_START,
+    STOP,
+    SUBAGENT_START,
+    SUBAGENT_STOP,
+    TOOL_FAILURE,
+    Decision,
+    Event,
+)
+from .dispatch import degrade, handle, run
+from .matrix import MATRIX, agents, can_block, can_rewrite, capability, enforcement_level
 
 __version__ = "0.1.0"
 
 __all__ = [
-    "run", "handle", "degrade", "Event", "Decision", "EVENTS", "adapters",
-    "ALLOW", "DENY", "ASK", "REWRITE",
-    "MATRIX", "agents", "capability", "can_block", "can_rewrite", "enforcement_level",
-    "SESSION_START", "SESSION_END", "PROMPT_SUBMIT", "PRE_TOOL", "POST_TOOL",
-    "TOOL_FAILURE", "PRE_COMPACT", "STOP", "SUBAGENT_START", "SUBAGENT_STOP",
-    "INSTRUCTIONS_LOADED", "FILE_CHANGED", "__version__",
+    "run",
+    "handle",
+    "degrade",
+    "Event",
+    "Decision",
+    "EVENTS",
+    "adapters",
+    "ALLOW",
+    "DENY",
+    "ASK",
+    "REWRITE",
+    "MATRIX",
+    "agents",
+    "capability",
+    "can_block",
+    "can_rewrite",
+    "enforcement_level",
+    "SESSION_START",
+    "SESSION_END",
+    "PROMPT_SUBMIT",
+    "PRE_TOOL",
+    "POST_TOOL",
+    "TOOL_FAILURE",
+    "PRE_COMPACT",
+    "STOP",
+    "SUBAGENT_START",
+    "SUBAGENT_STOP",
+    "INSTRUCTIONS_LOADED",
+    "FILE_CHANGED",
+    "__version__",
 ]

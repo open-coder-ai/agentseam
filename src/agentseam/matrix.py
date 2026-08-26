@@ -11,9 +11,20 @@ field is required and `agentseam doctor` reports staleness.
 
 from __future__ import annotations
 
-from .contract import (FILE_CHANGED, POST_TOOL, PRE_COMPACT, PRE_TOOL, PROMPT_SUBMIT,
-                       SESSION_END, SESSION_START, STOP, SUBAGENT_START, SUBAGENT_STOP,
-                       TOOL_FAILURE, INSTRUCTIONS_LOADED)
+from .contract import (
+    FILE_CHANGED,
+    INSTRUCTIONS_LOADED,
+    POST_TOOL,
+    PRE_COMPACT,
+    PRE_TOOL,
+    PROMPT_SUBMIT,
+    SESSION_END,
+    SESSION_START,
+    STOP,
+    SUBAGENT_START,
+    SUBAGENT_STOP,
+    TOOL_FAILURE,
+)
 
 # fail_mode: what the AGENT does when the hook crashes/times out.
 #   "closed" -> the action is blocked (safe)
@@ -37,7 +48,11 @@ MATRIX = {
         "display": "Claude Code",
         "tier": TIER_FULL,
         "config": ".claude/settings.json",
-        "verified": {"version": "2.1.245", "date": "2026-08-25", "method": "live headless run + official hooks reference"},
+        "verified": {
+            "version": "2.1.245",
+            "date": "2026-08-25",
+            "method": "live headless run + official hooks reference",
+        },
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CLOSED),
             POST_TOOL: _cap(),
@@ -53,13 +68,17 @@ MATRIX = {
             FILE_CHANGED: _cap(),
         },
         "notes": "Richest surface (~30 events). Blocks via exit 2 or "
-                 "hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only).",
+        "hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only).",
     },
     "cursor": {
         "display": "Cursor",
         "tier": TIER_BLOCK,
         "config": ".cursor/hooks.json",
-        "verified": {"version": "1.7+", "date": "2026-08-25", "method": "official hook examples repo (scripts + test fixtures)"},
+        "verified": {
+            "version": "1.7+",
+            "date": "2026-08-25",
+            "method": "official hook examples repo (scripts + test fixtures)",
+        },
         "events": {
             # beforeShellExecution / beforeMCPExecution: true pre-execution block.
             PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
@@ -71,13 +90,17 @@ MATRIX = {
             PRE_COMPACT: _cap(),
         },
         "notes": "Fail-OPEN by default (set failClosed:true per hook). No beforeFileEdit: "
-                 "file writes are audit-only; only shell/MCP calls gate pre-execution.",
+        "file writes are audit-only; only shell/MCP calls gate pre-execution.",
     },
     "vscode_copilot": {
         "display": "VS Code Copilot (agent mode)",
         "tier": TIER_FULL,
         "config": ".github/hooks/*.json",
-        "verified": {"version": "1.110+", "date": "2026-08-26", "method": "microsoft/vscode source: languageModelToolsService.invokeTool + hookCommandTypes"},
+        "verified": {
+            "version": "1.110+",
+            "date": "2026-08-26",
+            "method": "microsoft/vscode source: languageModelToolsService.invokeTool + hookCommandTypes",
+        },
         "events": {
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CLOSED),
             POST_TOOL: _cap(),
@@ -87,23 +110,27 @@ MATRIX = {
             SESSION_END: _cap(),
         },
         "notes": "Same PreToolUse contract as Claude Code (permissionDecision/updatedInput) and "
-                 "parses Claude settings.json via hookClaudeCompat. Memory writes arrive as the "
-                 "'memory' tool (create/str_replace/insert), not file edits.",
+        "parses Claude settings.json via hookClaudeCompat. Memory writes arrive as the "
+        "'memory' tool (create/str_replace/insert), not file edits.",
     },
     # --- honest floor: agents with no usable hook surface -----------------------
     "zed": {
-        "display": "Zed", "tier": TIER_NONE, "config": None,
+        "display": "Zed",
+        "tier": TIER_NONE,
+        "config": None,
         "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs + open extensibility issues"},
         "events": {},
         "notes": "No user hooks. Only declarative agent.tool_permissions rules. "
-                 "No deny path for an external handler — say so rather than stretch.",
+        "No deny path for an external handler — say so rather than stretch.",
     },
     "aider": {
-        "display": "Aider", "tier": TIER_NONE, "config": None,
+        "display": "Aider",
+        "tier": TIER_NONE,
+        "config": None,
         "verified": {"version": "2026-08", "date": "2026-08-26", "method": "docs/config reference"},
         "events": {},
         "notes": "No lifecycle hooks. Only --lint-cmd/--test-cmd post-edit steps. "
-                 "Observation possible via git hooks; no interception.",
+        "Observation possible via git hooks; no interception.",
     },
 }
 

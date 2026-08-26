@@ -1,0 +1,55 @@
+# agentseam custom Semgrep rules. Each rule encodes a standing invariant of this
+# codebase, so the class it names cannot ship again. Add a rule when an incident
+# closes; never delete one without a decision record.
+rules:
+  - id: agentseam-no-eval-exec
+    languages: [python]
+    severity: ERROR
+    message: >
+      eval/exec is banned here. This code runs in the path of every tool call an
+      agent makes, on payloads an attacker can influence.
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: exec(...)
+
+  - id: agentseam-no-shell-true
+    languages: [python]
+    severity: ERROR
+    message: >
+      shell=True hands a string to a shell. Vendor payloads are attacker-influenced
+      data (a tool result can contain anything); pass an argv list instead.
+    patterns:
+      - pattern: subprocess.$FN(..., shell=True, ...)
+
+  - id: agentseam-no-network-in-runtime
+    languages: [python]
+    severity: ERROR
+    message: >
+      No network calls in the runtime path. agentseam sits inline in a developer's
+      agent loop and makes no outbound requests; telemetry here would be a betrayal
+      of that. (Consumers may do what they like in their own handlers.)
+    paths:
+      include: ["src/agentseam/*"]
+      exclude: ["src/agentseam/cli.py"]
+    patterns:
+      - pattern-either:
+          - pattern: import requests
+          - pattern: import urllib.request
+          - pattern: import httpx
+          - pattern: import socket
+
+  - id: agentseam-no-third-party-import-in-runtime
+    languages: [python]
+    severity: ERROR
+    message: >
+      The runtime path is stdlib-only: adapters are vendored as single files into
+      other projects, so a third-party import breaks the consumers this exists for.
+    paths:
+      include: ["src/agentseam/*"]
+    patterns:
+      - pattern-either:
+          - pattern: import yaml
+          - pattern: import pydantic
+          - pattern: import jsonschema
+          - pattern: import click
