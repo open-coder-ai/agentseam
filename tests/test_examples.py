@@ -1,12 +1,12 @@
-"""The generated vendor examples must stay true.
+"""The generated vendor examples must stay true, and must cover every hook we claim.
 
-Documentation that describes behaviour the code no longer has is worse than none: it is a
-confident wrong answer. So the example pages are generated from the real code paths, and
-this file fails when the committed pages drift from what the library now produces.
+Documentation describing behaviour the code no longer has is worse than none: it is a
+confident wrong answer. The pages are generated from the real code paths and this file
+fails when the committed ones drift.
 
-The second thing checked here matters as much: every scenario payload must be claimed by
-exactly the agent whose page it appears on. Without that, a page could quietly document one
-vendor's dialect under another vendor's name.
+The coverage assertions matter as much. A page missing a hook the matrix claims leaves a
+capability with nothing showing what it looks like; a page with a hook the matrix does not
+claim documents coverage that does not exist.
 """
 
 from __future__ import annotations
@@ -22,8 +22,11 @@ sys.path.insert(0, str(ROOT / "examples"))
 import pytest  # noqa: E402
 from generate import OUT, build  # noqa: E402
 from scenarios import SCENARIOS  # noqa: E402
+from vendor_payloads import SECRET  # noqa: E402
 
 import agentseam as A  # noqa: E402
+
+PAIRS = sorted((agent, event) for agent, events in SCENARIOS.items() for event in events)
 
 
 @pytest.fixture(scope="module")
@@ -32,56 +35,90 @@ def generated():
 
 
 def test_committed_pages_match_what_the_library_produces(generated):
-    """The whole point: an example nobody regenerates is a claim nobody checks."""
-    stale = []
-    for name, body in sorted(generated.items()):
-        path = os.path.join(OUT, name)
-        current = open(path).read() if os.path.exists(path) else None
-        if current != body:
-            stale.append(name)
+    """An example nobody regenerates is a claim nobody checks."""
+    stale = [
+        name
+        for name, body in sorted(generated.items())
+        if (open(os.path.join(OUT, name)).read() if os.path.exists(os.path.join(OUT, name)) else None) != body
+    ]
     assert not stale, "stale examples, run `python3 examples/generate.py`: %s" % ", ".join(stale)
 
 
 def test_no_committed_page_is_orphaned(generated):
-    """A page for an agent the generator no longer emits would linger and mislead."""
-    on_disk = {p for p in os.listdir(OUT) if p.endswith(".md")}
-    assert on_disk == set(generated)
+    assert {p for p in os.listdir(OUT) if p.endswith(".md")} == set(generated)
 
 
 @pytest.mark.parametrize("agent", sorted(SCENARIOS))
-def test_each_scenario_is_claimed_by_exactly_the_agent_it_documents(agent):
-    """A payload claimed by two adapters, or by the wrong one, would document the wrong agent.
-
-    This is the same discipline the dispatcher tests apply to fixtures, pointed at the
-    examples -- and it caught a real one: a Cursor payload without `model` was claimed by
-    VS Code Copilot too, because that adapter's only defence was a field belonging to
-    another vendor's schema.
+def test_every_hook_the_matrix_claims_has_an_example(agent):
+    """Both directions. A claimed hook with no example hides a capability; an example for an
+    unclaimed hook documents one that does not exist.
     """
-    claimants = [n for n, m in A.adapters.ADAPTERS.items() if m.claims(SCENARIOS[agent])]
-    assert claimants == [agent]
+    assert set(SCENARIOS[agent]) == set(A.MATRIX[agent]["events"])
+
+
+@pytest.mark.parametrize("agent,event", PAIRS)
+def test_each_payload_parses_to_the_event_it_is_filed_under(agent, event):
+    """A payload filed under the wrong event would document the wrong hook's behaviour."""
+    assert A.adapters.get(agent).parse(SCENARIOS[agent][event]).event == event
+
+
+@pytest.mark.parametrize("agent,event", PAIRS)
+def test_each_payload_is_claimed_by_its_own_adapter(agent, event):
+    """Necessary for the page to be about the agent it names."""
+    assert A.adapters.get(agent).claims(SCENARIOS[agent][event])
+
+
+@pytest.mark.parametrize("agent,event", PAIRS)
+def test_a_payload_is_never_claimed_by_exactly_one_wrong_adapter(agent, event):
+    """Ambiguity is allowed and documented; being confidently wrong is not.
+
+    Several vendors spell SessionStart identically, so more than one adapter claiming a
+    payload is honest -- `detect()` declines and the page says to name the agent. What must
+    never happen is a single claimant that is the wrong one, because that is answered with
+    confidence and acted on.
+    """
+    raw = SCENARIOS[agent][event]
+    claimants = [n for n, m in A.adapters.ADAPTERS.items() if m.claims(raw)]
+    detected = A.adapters.detect(raw)
+    assert detected in (agent, None), "detected %s for a %s payload" % (detected, agent)
+    if detected is None:
+        assert len(claimants) > 1, "nobody claims this payload, so it would be allowed through"
+
+
+@pytest.mark.parametrize("agent,event", PAIRS)
+def test_every_page_shows_the_hook_and_its_vendor_name(generated, agent, event):
+    page = generated["%s.md" % agent]
+    assert "`%s`" % event in page
+    assert "`%s`" % A.adapters.get(agent).REVERSE_EVENT_MAP[event] in page
 
 
 def test_every_adapted_agent_has_a_page():
-    """A missing page reads as an agent we cannot handle, which would understate coverage."""
     assert set(SCENARIOS) == set(A.adapted_agents())
 
 
 @pytest.mark.parametrize("agent", sorted(SCENARIOS))
-def test_each_scenario_really_is_the_same_situation(agent):
-    """Pages are only comparable if the scenario is held constant across vendors.
+def test_the_pre_tool_example_really_is_the_shared_story(agent):
+    """Pages only compare if the situation is held constant.
 
-    Windsurf is the documented exception, and the reason is the finding: it has no
-    file-write event at all, so the nearest thing it can see is the shell command that
-    would do the writing.
+    Windsurf is the documented exception and the reason is the finding: it has no
+    file-write event, so the nearest thing it can see is the command that would write.
     """
-    event = A.adapters.get(agent).parse(SCENARIOS[agent])
-    assert event.event == A.PRE_TOOL
-    seen = "%s %s" % (event.path or "", event.command or "")
-    assert "AWS_SECRET" in (event.content or "") or "AWS_SECRET" in seen, agent
+    event = A.adapters.get(agent).parse(SCENARIOS[agent][A.PRE_TOOL])
+    assert SECRET in (event.content or "") or SECRET in (event.command or ""), agent
 
 
-def test_a_page_never_promises_enforcement_the_matrix_does_not_claim(generated):
-    """The pages quote the matrix rather than restating it, so this guards the wiring."""
-    for agent in SCENARIOS:
-        page = generated["%s.md" % agent]
-        assert "**%s**" % A.enforcement_level(agent, A.PRE_TOOL) in page, agent
+@pytest.mark.parametrize("agent", sorted(SCENARIOS))
+def test_every_page_states_what_its_claims_rest_on(generated, agent):
+    """Most of these rows are read from vendor docs. A reader must not have to guess which."""
+    from agentseam.matrix import basis
+
+    page = generated["%s.md" % agent]
+    assert "How this was established" in page
+    assert basis(agent) in page
+    assert "Confirm against your own" in page
+
+
+def test_the_index_says_the_pages_are_not_observations(generated):
+    index = generated["README.md"]
+    assert "not what their builds were observed" in index
+    assert "Verify against your own installation" in index

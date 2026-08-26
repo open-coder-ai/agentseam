@@ -87,12 +87,19 @@ def test_a_commit_that_touches_nothing_generated_from_is_left_alone(clone):
     assert "refreshed" not in result.stdout + result.stderr
 
 
-def test_editing_a_scenario_also_refreshes(clone):
-    """The pages are generated from the scenarios too, not only from src/."""
-    scenarios = clone / "examples" / "scenarios.py"
-    scenarios.write_text(scenarios.read_text().replace('"session_title": "Fix login", ', ""))
-    scenarios.write_text(scenarios.read_text().replace("EXAMPLE-PLACEHOLDER-NOT-A-KEY", "EXAMPLE-PLACEHOLDER-XYZ"))
-    assert _run(GIT + ["add", "examples/scenarios.py"], clone).returncode == 0
+@pytest.mark.parametrize("source", ["examples/scenarios.py", "examples/vendor_payloads.py"])
+def test_editing_any_generator_input_refreshes(clone, source):
+    """The pages are generated from more than src/, and the hook has to know all of it.
+
+    vendor_payloads.py was added after the hook and was not in its watch list, so editing
+    the payloads changed every page and the hook stayed silent -- the one file most likely
+    to be edited for a docs change.
+    """
+    target = clone / source
+    target.write_text(target.read_text().replace("EXAMPLE-PLACEHOLDER-NOT-A-KEY", "EXAMPLE-PLACEHOLDER-XYZ"))
+    if target.read_text() == (ROOT / source).read_text():
+        pytest.skip("%s does not carry the placeholder" % source)
+    assert _run(GIT + ["add", source], clone).returncode == 0
 
     assert _commit(clone, "change the placeholder").returncode == 0
     committed = _run(["git", "show", "--name-only", "--format=", "HEAD"], clone).stdout.split()

@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- VS Code Copilot could parse `postToolUseFailure` and the matrix claimed `tool_failure`,
+  but the hand-kept list in `claims()` had never included it — so real tool-failure payloads
+  were claimed by no adapter, and an unidentified payload is allowed through. The claimable
+  set is now derived from `EVENT_MAP` rather than kept by hand.
+- The pre-commit hook did not watch `examples/vendor_payloads.py`, the file most likely to
+  be edited for a docs change.
 - VS Code Copilot's adapter told itself apart from Cursor only by fields belonging to
   Cursor's schema, and rested on `model` in particular — so a Cursor payload without it
   was claimed by both, which makes detection ambiguous and lets the dispatcher allow what
@@ -96,6 +102,13 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `git config core.hooksPath .githooks`; CI remains the guarantee.
 - `examples/generate.py --check` now prints a unified diff of what changed, so a red
   pipeline shows which behaviour moved without checking the branch out.
+- Vendor example pages now cover **every hook each agent supports** (79 sections across 10
+  agents), not one per agent: the payload, the normalized event, and what a decision
+  produces there. Every page states what its claims rest on and tells adopters to verify
+  against their own installation.
+- `verified.basis` on every matrix row: a closed vocabulary (`live-run`, `vendor-source`,
+  `vendor-docs`, `third-party-install`, `inherited`) saying what KIND of evidence a row
+  rests on, queryable via `matrix.basis()`. Only Claude Code rests on a live run.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

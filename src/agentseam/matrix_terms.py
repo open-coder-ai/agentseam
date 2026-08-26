@@ -34,3 +34,16 @@ TIER_UNADAPTED = "unadapted"
 
 def _cap(block=False, rewrite=False, fail=FAIL_OPEN):
     return {"block": block, "rewrite": rewrite, "fail_mode": fail}
+
+
+# --- how a row's claims were established ----------------------------------------
+# Free-text `verified.method` says *what* was read; `verified.basis` says what KIND of
+# evidence it is, in a closed vocabulary you can filter on. The distinction matters to an
+# adopter: a claim read from a vendor's documentation is a claim about what the vendor says,
+# not an observation of what their build does. Only one row here rests on a live run.
+BASIS_LIVE = "live-run"  # observed against a running agent
+BASIS_SOURCE = "vendor-source"  # read from the vendor's own source code
+BASIS_DOCS = "vendor-docs"  # read from the vendor's documentation
+BASIS_THIRD_PARTY = "third-party-install"  # a shipped installation somebody else published
+BASIS_INHERITED = "inherited"  # carried over unverified; treat as a lead, not a fact
+BASES = (BASIS_LIVE, BASIS_SOURCE, BASIS_DOCS, BASIS_THIRD_PARTY, BASIS_INHERITED)

@@ -49,6 +49,17 @@ _CODEX_MARKERS = ("turn_id", "permission_mode")
 _CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id", "workspace_roots")
 
 
+#: The event names that identify VS Code Copilot, derived from EVENT_MAP rather than kept
+#: by hand -- the hand-kept list had drifted, leaving postToolUseFailure parseable and
+#: claimed by the matrix but claimed by no adapter, so those payloads went unidentified and
+#: an unidentified payload is allowed through.
+#:
+#: camelCase only. EVENT_MAP also holds PascalCase aliases so a payload spelled Claude
+#: Code's way still parses, but claiming on those would take Claude Code's own payloads --
+#: parse tolerance and identification are different jobs.
+_CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
+
+
 def claims(raw):
     if not isinstance(raw, dict):
         return False
@@ -62,8 +73,7 @@ def claims(raw):
     # apart until a payload without it turned up, and both adapters claimed it.
     if any(k in raw for k in _CODEX_MARKERS + _CURSOR_MARKERS):
         return False
-    name = raw.get("hook_event_name") or raw.get("hookEventName")
-    if name in ("preToolUse", "postToolUse", "userPromptSubmitted", "sessionStart", "sessionEnd"):
+    if (raw.get("hook_event_name") or raw.get("hookEventName")) in _CLAIMABLE:
         return True
     # memory-tool payloads are unmistakable
     ti = raw.get("tool_input") or {}

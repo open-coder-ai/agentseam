@@ -19,7 +19,12 @@ from .contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
 )
+from .matrix_notes import NOTES
 from .matrix_terms import (
+    BASIS_DOCS,
+    BASIS_LIVE,
+    BASIS_SOURCE,
+    BASIS_THIRD_PARTY,
     FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
@@ -34,6 +39,7 @@ MATRIX = {
         "tier": TIER_FULL,
         "config": ".claude/settings.json",
         "verified": {
+            "basis": BASIS_LIVE,
             "version": "2.1.245",
             "date": "2026-08-25",
             "method": "live headless run + official hooks reference",
@@ -52,14 +58,14 @@ MATRIX = {
             INSTRUCTIONS_LOADED: _cap(),
             FILE_CHANGED: _cap(),
         },
-        "notes": "Richest surface (~30 events). Blocks via exit 2 or "
-        "hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only).",
+        "notes": NOTES["claude_code"],
     },
     "cursor": {
         "display": "Cursor",
         "tier": TIER_FULL,
         "config": ".cursor/hooks.json",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "1.7+",
             "date": "2026-08-26",
             "method": "vendor hooks documentation read directly (event list, per-event schemas, exit codes)",
@@ -80,19 +86,14 @@ MATRIX = {
             # afterFileEdit lands after the write and supports no output fields at all.
             FILE_CHANGED: _cap(),
         },
-        "notes": "Fails OPEN by default; failClosed:true per hook definition makes it fail "
-        "closed, and agentseam sets it on every gate it installs. `ask` is accepted by the "
-        "preToolUse schema but not enforced today, so the adapter denies instead of "
-        "returning a prompt that would behave as a pass; beforeShellExecution and "
-        "beforeMCPExecution do honour ask. Separate Tab hooks (beforeTabFileRead, "
-        "afterTabFileEdit) gate inline completions, and workspaceOpen fires outside any "
-        "session with no canonical event here. Cursor also loads Claude Code-format hooks.",
+        "notes": NOTES["cursor"],
     },
     "kimi_code": {
         "display": "Kimi Code CLI",
         "tier": TIER_BLOCK,
         "config": "config.toml",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "CLI",
             "date": "2026-08-26",
             "method": "vendor hooks documentation read directly (event table, return values, config fields)",
@@ -109,21 +110,14 @@ MATRIX = {
             STOP: _cap(block=True, fail=FAIL_OPEN),
             PRE_COMPACT: _cap(),
         },
-        "notes": "Twenty events, of which exactly three block: PreToolUse, UserPromptSubmit "
-        "and Stop. The rest are documented as fire-and-forget, so a decision returned there "
-        "changes nothing. Accepts Claude Code's hookSpecificOutput.permissionDecision shape, "
-        "and exit 2 blocks too -- but the JSON form carries the reason back into the model's "
-        "context. No rewrite. Config is TOML ([[hooks]] in config.toml, four fields only; a "
-        "fifth makes the whole file fail to load), so installation appends a "
-        "marker-delimited block rather than rewriting the user's settings. Fails OPEN, and "
-        "the vendor says outright that hooks here are not a sole security barrier. Only "
-        "client_type separates its payloads from Claude Code's.",
+        "notes": NOTES["kimi_code"],
     },
     "vscode_copilot": {
         "display": "GitHub Copilot (VS Code agent mode / CLI)",
         "tier": TIER_FULL,
         "config": ".github/hooks/*.json",  # also ~/.copilot/hooks/*.json for the CLI
         "verified": {
+            "basis": BASIS_SOURCE,
             "version": "1.110+",
             "date": "2026-08-26",
             "method": "microsoft/vscode source: languageModelToolsService.invokeTool + hookCommandTypes",
@@ -136,15 +130,14 @@ MATRIX = {
             SESSION_START: _cap(),
             SESSION_END: _cap(),
         },
-        "notes": "Same PreToolUse contract as Claude Code (permissionDecision/updatedInput) and "
-        "parses Claude settings.json via hookClaudeCompat. Memory writes arrive as the "
-        "'memory' tool (create/str_replace/insert), not file edits.",
+        "notes": NOTES["vscode_copilot"],
     },
     "grok": {
         "display": "Grok CLI",
         "tier": TIER_BLOCK,
         "config": ".grok/hooks/agentseam.json",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "CLI",
             "date": "2026-08-26",
             "method": "vendor hooks documentation read directly (events, script contract, exit codes)",
@@ -161,19 +154,14 @@ MATRIX = {
             STOP: _cap(),
             PRE_COMPACT: _cap(),
         },
-        "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. "
-        "No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN "
-        "-- timeouts, crashes and malformed output are recorded and the call proceeds. "
-        "Payload fields are camelCase (hookEventName, toolName) while event values stay "
-        "PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. "
-        "Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust "
-        "(/hooks-trust or --trust) before they run, so a written config is not yet a live one.",
+        "notes": NOTES["grok"],
     },
     "antigravity": {
         "display": "Antigravity",
         "tier": TIER_BLOCK,
         "config": ".agents/hooks.json",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "2.0 / CLI",
             "date": "2026-08-26",
             "method": "vendor hooks documentation read directly (per-event schemas and decision vocabulary)",
@@ -183,20 +171,14 @@ MATRIX = {
             POST_TOOL: _cap(),
             STOP: _cap(block=True, fail=FAIL_OPEN),
         },
-        "notes": "Richest decision vocabulary here -- allow, deny, ask, force_ask and "
-        "deny_unless_prior_grant -- but no rewrite, since permissionOverrides widens "
-        "permissions rather than changing arguments. The payload carries NO event name, so "
-        "the event is inferred from shape, and PreToolUse/PostToolUse differ only by an "
-        "`error` field documented as empty rather than absent; ties go to PreToolUse because "
-        "the opposite guess would skip the gate. PreInvocation and PostInvocation have "
-        "identical payloads and are unmapped. Fail mode is not documented, so the weaker "
-        "claim (open) is recorded rather than a guess in our own favour.",
+        "notes": NOTES["antigravity"],
     },
     "gemini_cli": {
         "display": "Gemini CLI",
         "tier": TIER_FULL,
         "config": ".gemini/settings.json",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "docs @ main 2026-08-26",
             "date": "2026-08-26",
             "method": "vendor hooks reference (docs/hooks/reference.md in google-gemini/gemini-cli), read from a clone",
@@ -210,15 +192,14 @@ MATRIX = {
             SESSION_END: _cap(),
             PRE_COMPACT: _cap(),
         },
-        "notes": "Top-level `decision: allow|deny` + `reason` (not nested); rewrite merges via "
-        "hookSpecificOutput.tool_input; exit 2 also blocks. Write tools are write_file/replace. "
-        "Fail mode is not documented as closed, so pre_tool is rated best-effort rather than enforced.",
+        "notes": NOTES["gemini_cli"],
     },
     "codex_cli": {
         "display": "OpenAI Codex CLI",
         "tier": TIER_FULL,
         "config": ".codex/hooks.json",
         "verified": {
+            "basis": BASIS_SOURCE,
             "version": "source @ main 2026-08-26",
             "date": "2026-08-26",
             "method": "vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts",
@@ -234,16 +215,14 @@ MATRIX = {
             SUBAGENT_START: _cap(),
             SUBAGENT_STOP: _cap(),
         },
-        "notes": "Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase "
-        "event names and extra turn-scoped fields (turn_id, model, permission_mode). Deny is "
-        "sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which "
-        "collapses exit 2 into 1, so an exit-code deny does not survive that platform.",
+        "notes": NOTES["codex_cli"],
     },
     "windsurf": {
         "display": "Windsurf (Cascade)",
         "tier": TIER_BLOCK,
         "config": ".windsurf/hooks.json",
         "verified": {
+            "basis": BASIS_THIRD_PARTY,
             "version": "hooks.json schema as shipped 2026-08",
             "date": "2026-08-26",
             "method": "a real working installation (.windsurf/hooks.json + hook scripts) in "
@@ -255,16 +234,14 @@ MATRIX = {
             POST_TOOL: _cap(),
             STOP: _cap(),
         },
-        "notes": "Exit code 2 is the ONLY block signal: no stdout decision protocol, no machine-readable "
-        "reason, no rewrite. Critically there is NO file-write event -- prompt, terminal and MCP "
-        "hooks only -- so a write to a memory file is invisible to a hook on this agent. "
-        "Fail mode is undocumented, so blocking rates best-effort rather than enforced.",
+        "notes": NOTES["windsurf"],
     },
     "devin": {
         "display": "Devin",
         "tier": TIER_FULL,
         "config": ".devin/hooks.v1.json",
         "verified": {
+            "basis": BASIS_DOCS,
             "version": "CLI",
             "date": "2026-08-26",
             "method": "vendor hooks documentation read directly (events, output format, exit codes)",
@@ -278,12 +255,7 @@ MATRIX = {
             STOP: _cap(block=True, fail=FAIL_OPEN),
             PRE_COMPACT: _cap(),
         },
-        "notes": "Speaks Claude Code's hook format almost exactly, and reads .claude/"
-        "settings.json for hooks by default -- so a repo with Claude Code hooks is already "
-        'running them under Devin. A block is top-level {"decision": "block"}, not '
-        "permissionDecision. There is no ask in the vocabulary. Non-zero exit codes other "
-        "than 2 are logged without blocking, so this fails OPEN. A SessionStart payload is "
-        "indistinguishable from Claude Code's, and detect() refuses to guess between them.",
+        "notes": NOTES["devin"],
     },
 }
 
