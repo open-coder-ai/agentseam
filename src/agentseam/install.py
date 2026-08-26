@@ -14,6 +14,12 @@ from . import adapters
 
 MARKER = "_agentseam"
 
+# TOML configs are the user's whole settings document rather than a hooks file, and the
+# stdlib can read TOML but not write it. So those get the treatment instruction files
+# already use: a marker-delimited block we own, with every byte outside it preserved.
+BEGIN = "# >>> agentseam >>>"
+END = "# <<< agentseam <<<"
+
 
 def _load(path):
     if not os.path.exists(path):
@@ -67,12 +73,57 @@ def _merge(base, addition):
     return base
 
 
+def _block_bounds(text, owner):
+    begin, end = "%s %s" % (BEGIN, owner), "%s %s" % (END, owner)
+    start, stop = text.find(begin), text.find(end)
+    if start == -1 or stop == -1 or stop < start:
+        return None
+    return start, stop + len(end)
+
+
+def _write_block(path, body, owner):
+    """Replace our block, or append one. Everything outside it is left byte-for-byte."""
+    text = ""
+    if os.path.exists(path):
+        with open(path) as fh:
+            text = fh.read()
+    block = "%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)
+    bounds = _block_bounds(text, owner)
+    if bounds:
+        text = text[: bounds[0]] + block + text[bounds[1] :]
+    else:
+        text = (text.rstrip("\n") + "\n\n" if text.strip() else "") + block + "\n"
+    parent = os.path.dirname(path)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(path, "w") as fh:
+        fh.write(text)
+
+
+def _remove_block(path, owner):
+    with open(path) as fh:
+        text = fh.read()
+    bounds = _block_bounds(text, owner)
+    if not bounds:
+        return False
+    cleaned = (text[: bounds[0]].rstrip("\n") + "\n" + text[bounds[1] :].lstrip("\n")).strip("\n")
+    with open(path, "w") as fh:
+        fh.write(cleaned + "\n" if cleaned else "")
+    return True
+
+
+def _resolve(mod, repo_root, owner):
+    path = os.path.join(repo_root, mod.CONFIG_PATH)
+    return path.replace("*", owner) if "*" in path else path
+
+
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam"):
     """Wire `command` for `events` into `agent`'s config. Returns the path written."""
     mod = adapters.get(agent)
-    path = os.path.join(repo_root, mod.CONFIG_PATH)
-    if "*" in path:  # e.g. .github/hooks/*.json
-        path = path.replace("*", owner)
+    path = _resolve(mod, repo_root, owner)  # e.g. .github/hooks/*.json
+    if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
+        _write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher)), owner)
+        return path
     existing = _strip_owned(_load(path), owner)  # idempotent: drop our old entries
     fragment = _mark(mod.hook_config(events, command, matcher=matcher), owner)
     _dump(path, _merge(existing, fragment))
@@ -82,11 +133,11 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
 def uninstall(agent, repo_root=".", owner="agentseam"):
     """Remove only our entries. Returns True when the file changed."""
     mod = adapters.get(agent)
-    path = os.path.join(repo_root, mod.CONFIG_PATH)
-    if "*" in path:
-        path = path.replace("*", owner)
+    path = _resolve(mod, repo_root, owner)
     if not os.path.exists(path):
         return False
+    if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
+        return _remove_block(path, owner)
     before = _load(path)
     after = _strip_owned(before, owner)
     if after == before:
@@ -98,7 +149,10 @@ def uninstall(agent, repo_root=".", owner="agentseam"):
 def installed(agent, repo_root=".", owner="agentseam"):
     """True when our witness is present in this agent's config."""
     mod = adapters.get(agent)
-    path = os.path.join(repo_root, mod.CONFIG_PATH)
-    if "*" in path:
-        path = path.replace("*", owner)
+    path = _resolve(mod, repo_root, owner)
+    if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
+        if not os.path.exists(path):
+            return False
+        with open(path) as fh:
+            return _block_bounds(fh.read(), owner) is not None
     return owner in json.dumps(_load(path))

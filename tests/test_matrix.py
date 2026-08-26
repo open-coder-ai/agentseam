@@ -88,7 +88,7 @@ def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
     from agentseam.matrix_gaps import GAPS
 
     unverified = sorted(a for a, row in GAPS.items() if row["tier"] == TIER_UNADAPTED)
-    assert unverified == ["junie", "kimi_code", "replit", "tabnine"]
+    assert unverified == ["junie", "replit", "tabnine"]
 
 
 def test_adapted_agents_matches_the_adapter_registry():

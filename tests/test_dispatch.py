@@ -34,6 +34,10 @@ from payloads import (
     GM_REPLACE,
     GM_SHELL,
     GM_WRITE,
+    KM_NOTIFY,
+    KM_POST,
+    KM_SHELL,
+    KM_WRITE,
     VS_MEM_CREATE,
     VS_MEM_REPLACE,
     VS_MEM_VIEW,
@@ -120,6 +124,10 @@ def test_no_two_adapters_claim_the_same_payload():
         "AG_WRITE": AG_WRITE,
         "AG_POST_TOOL": AG_POST_TOOL,
         "AG_STOP": AG_STOP,
+        "KM_SHELL": KM_SHELL,
+        "KM_WRITE": KM_WRITE,
+        "KM_POST": KM_POST,
+        "KM_NOTIFY": KM_NOTIFY,
     }
     ambiguous = {}
     for label, raw in fixtures.items():
@@ -154,3 +162,18 @@ def test_plain_ask_is_not_reported_as_a_rewrite():
     text, code, _, _ = A.handle(WS_COMMAND, lambda e: Decision.ask("needs review"))
     assert code == 2
     assert "cannot prompt for confirmation" in text
+
+
+def test_a_payload_naming_another_client_is_not_claimed_by_lookalikes():
+    """SessionStart is spelled identically by Claude Code, Gemini CLI, Devin and Kimi Code.
+
+    Only Kimi carries proof of which it is, so the general rule is that a positive
+    self-identification beats a shared event name. Without it, both lookalikes claim the
+    payload, detection goes ambiguous, and the dispatcher allows what it was gating.
+    """
+    kimi_session_start = {"hook_event_name": "SessionStart", "client_type": "kimi_code_cli", "session_id": "s"}
+    assert A.adapters.detect(kimi_session_start) == "kimi_code"
+
+    # Strip the proof and it is genuinely ambiguous again -- which is the honest answer.
+    anonymous = {k: v for k, v in kimi_session_start.items() if k != "client_type"}
+    assert A.adapters.detect(anonymous) is None

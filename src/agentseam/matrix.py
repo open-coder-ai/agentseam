@@ -6,11 +6,11 @@ actually has: what may I honestly claim about this agent at this event?
 
 from __future__ import annotations
 
-from .matrix_data import (
+from .matrix_data import MATRIX
+from .matrix_terms import (
     FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
-    MATRIX,
     TIER_BLOCK,
     TIER_FULL,
     TIER_NONE,

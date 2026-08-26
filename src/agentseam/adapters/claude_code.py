@@ -53,6 +53,10 @@ def claims(raw):
         # Codex reuses tool_input but adds turn identifiers, and Devin reuses the whole
         # event vocabulary but adds a per-turn prompt_id. Claiming either would make
         # detect() ambiguous, and an unidentified payload is allowed through.
+        # Kimi Code CLI is Claude Code's envelope exactly -- same PascalCase events, same
+        # snake_case fields -- and names itself only in client_type.
+        if raw.get("client_type") not in (None, "claude_code"):
+            return False
         return "turn_id" not in raw and "prompt_id" not in raw
     return False
 

@@ -181,7 +181,8 @@ pip install agentseam
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` |
 | Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/*.json` |
 | Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` |
-| Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
+| Kimi Code CLI | block on 3 of its 20 events (fail-open) | `config.toml` |
+| Junie, Replit, Tabnine | no hook adapter yet — instruction files work | — |
 
 Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.
