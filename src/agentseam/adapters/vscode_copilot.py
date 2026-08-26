@@ -21,6 +21,7 @@ from ..contract import (
     SESSION_END,
     SESSION_START,
     TOOL_FAILURE,
+    UNKNOWN,
     Event,
 )
 
@@ -96,7 +97,10 @@ def parse(raw):
     name = raw.get("hook_event_name") or raw.get("hookEventName") or "preToolUse"
     return Event(
         AGENT,
-        EVENT_MAP.get(name, PRE_TOOL),
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        EVENT_MAP.get(name, UNKNOWN),
         tool=tool,
         command=ti.get("command") if tool not in MEMORY_TOOLS else None,
         path=path,

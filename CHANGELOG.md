@@ -7,6 +7,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- An unmapped vendor event was answered four different ways across the adapters, and the
+  most common was the worst: five relabelled it as the nearest canonical event, so a
+  `TeammateIdle` payload reached a handler as `pre_tool` and invited a pre-tool policy to be
+  evaluated against something that was not one. Two returned a non-canonical value and two
+  raised, taking the hook down (and most agents fail open on a crashed hook). Every adapter
+  now reports `contract.UNKNOWN`, which sits outside `EVENTS` so a handler matching the
+  vocabulary cannot match it by accident, and the dispatcher allows without calling the
+  handler at all.
 - VS Code Copilot could parse `postToolUseFailure` and the matrix claimed `tool_failure`,
   but the hand-kept list in `claims()` had never included it — so real tool-failure payloads
   were claimed by no adapter, and an unidentified payload is allowed through. The claimable
@@ -109,6 +117,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `verified.basis` on every matrix row: a closed vocabulary (`live-run`, `vendor-source`,
   `vendor-docs`, `third-party-install`, `inherited`) saying what KIND of evidence a row
   rests on, queryable via `matrix.basis()`. Only Claude Code rests on a live run.
+- `tools/capture.py`: record what an agent really sends and compare it against what the
+  adapter claims, so a `vendor-docs` row can become a `live-run` one. The probe always
+  allows, and payloads are reduced to shape before anything touches disk, so the capture
+  file is safe to share. `tools/VERIFY.md` is the runbook.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

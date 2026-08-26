@@ -19,7 +19,7 @@ import json
 import sys
 
 from . import adapters
-from .contract import REWRITE, Decision
+from .contract import REWRITE, UNKNOWN, Decision
 from .matrix import capability
 
 
@@ -69,6 +69,13 @@ def handle(raw, handler, agent=None):
         return "", 0, None, Decision.allow("unrecognized payload")
     mod = adapters.get(name)
     event = mod.parse(raw)
+    if event.event == UNKNOWN:
+        # A vendor event no adapter maps. The handler is not called: it reasons about the
+        # canonical vocabulary, and handing it something outside that vocabulary invites a
+        # decision made on a false premise. Allow and say nothing, exactly as for a payload
+        # we could not identify at all -- and `event` still comes back, so a caller that
+        # wants to log the surprise can.
+        return "", 0, event, Decision.allow("unmapped vendor event")
     decision = degrade(_coerce(handler(event)), event, name)
     text, code = mod.respond(decision, event)
     return text, code, event, decision

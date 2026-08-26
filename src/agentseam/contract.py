@@ -23,6 +23,16 @@ SUBAGENT_STOP = "subagent_stop"
 INSTRUCTIONS_LOADED = "instructions_loaded"
 FILE_CHANGED = "file_changed"
 
+#: Not a lifecycle event: the honest answer when a vendor sends something this adapter has
+#: no mapping for. Deliberately outside EVENTS, so a handler matching on the vocabulary can
+#: never match it by accident.
+#:
+#: The alternative was what several adapters used to do -- fall back to the nearest
+#: canonical event -- which reports an unknown event as `pre_tool` and invites a guardrail
+#: to evaluate a pre-tool policy against something that is not one. New vendor events appear
+#: without warning; being told is the only safe outcome.
+UNKNOWN = "unknown"
+
 EVENTS = (
     SESSION_START,
     SESSION_END,

@@ -44,6 +44,7 @@ from ..contract import (
     SUBAGENT_START,
     SUBAGENT_STOP,
     TOOL_FAILURE,
+    UNKNOWN,
     Event,
     degraded_from,
 )
@@ -106,7 +107,10 @@ def parse(raw):
         out = _json.dumps(out)
     return Event(
         AGENT,
-        EVENT_MAP[raw["hook_event_name"]],
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=raw.get("tool_name"),
         command=ti.get("command"),
         path=ti.get("file_path") or ti.get("path"),

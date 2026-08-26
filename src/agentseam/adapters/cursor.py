@@ -43,6 +43,7 @@ from ..contract import (
     SUBAGENT_START,
     SUBAGENT_STOP,
     TOOL_FAILURE,
+    UNKNOWN,
     Event,
     degraded_from,
 )
@@ -137,11 +138,11 @@ def _content_of(raw):
 
 def parse(raw):
     name = raw.get("hook_event_name")
-    if name not in EVENT_MAP:
-        if "file_path" in raw and isinstance(raw.get("edits"), list):
-            name = "afterFileEdit"
-        else:
-            name = "beforeShellExecution"
+    if name is None:
+        # Cursor does not always name the event, so shape decides -- but only when there is
+        # no name. A name we do not recognise is a new event, and guessing at one is how an
+        # unknown event gets reported as the gate.
+        name = "afterFileEdit" if isinstance(raw.get("edits"), list) else "beforeShellExecution"
     ti = raw.get("tool_input")
     ti = ti if isinstance(ti, dict) else {}
     command = raw.get("command") or ti.get("command")
@@ -151,7 +152,10 @@ def parse(raw):
     path = raw.get("file_path") or ti.get("file_path") or ti.get("path")
     return Event(
         AGENT,
-        EVENT_MAP[name],
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        EVENT_MAP.get(name, UNKNOWN),
         tool=raw.get("tool_name") or name,
         command=command,
         path=path,

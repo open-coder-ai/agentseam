@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import json as _json
 
-from ..contract import ASK, DENY, POST_TOOL, PRE_TOOL, REWRITE, STOP, Event, degraded_from
+from ..contract import ASK, DENY, POST_TOOL, PRE_TOOL, REWRITE, STOP, UNKNOWN, Event, degraded_from
 
 AGENT = "antigravity"
 
@@ -90,7 +90,10 @@ def parse(raw):
             break
     return Event(
         AGENT,
-        {"PreToolUse": PRE_TOOL, "PostToolUse": POST_TOOL, "Stop": STOP}.get(name, PRE_TOOL),
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        {"PreToolUse": PRE_TOOL, "PostToolUse": POST_TOOL, "Stop": STOP}.get(name, UNKNOWN),
         tool=call.get("name"),
         command=args.get(_COMMAND_ARG),
         path=path,

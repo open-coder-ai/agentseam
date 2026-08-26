@@ -25,6 +25,7 @@ from ..contract import (
     SESSION_END,
     SESSION_START,
     STOP,
+    UNKNOWN,
     Event,
 )
 
@@ -78,7 +79,10 @@ def parse(raw):
         content = ti.get("content") or ti.get("new_string") or ti.get("new_str")
     return Event(
         AGENT,
-        EVENT_MAP.get(raw.get("hook_event_name")),
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=tool,
         command=ti.get("command"),
         path=ti.get("file_path") or ti.get("absolute_path") or ti.get("path"),

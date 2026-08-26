@@ -192,6 +192,23 @@ python3 examples/generate.py           # rewrite the pages
 python3 examples/generate.py --check   # what CI runs
 ```
 
+## Verify a claim against your own agent
+
+Only Claude Code's row rests on a live run. If you have another of these agents installed,
+an hour turns its row from "the vendor says so" into evidence:
+
+```bash
+python3 tools/capture.py detect
+python3 tools/capture.py install --agent cursor
+# ... use the agent for a minute ...
+python3 tools/capture.py report
+python3 tools/capture.py uninstall --agent cursor
+```
+
+The probe always allows, so it cannot interfere with real work, and payloads are reduced to
+shape before anything touches disk — keys and types survive, values do not. See
+[tools/VERIFY.md](tools/VERIFY.md).
+
 ## Install
 
 ```bash
