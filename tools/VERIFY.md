@@ -1,7 +1,7 @@
 # Verifying an adapter against a real agent
 
-Nine of the ten adapters here were built from vendor documentation and have never had a real
-payload put through them. The matrix says so — `agentseam matrix --json` reports a `basis`
+Eleven of the twelve adapters here were built from vendor documentation or source and have
+never had a real payload put through them. The matrix says so — `agentseam matrix --json` reports a `basis`
 per agent, and only Claude Code's is `live-run`. Docs go stale and field names get misread,
 and nothing in this repository would notice.
 
