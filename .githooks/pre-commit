@@ -1,0 +1,36 @@
+#!/bin/sh
+# Refresh the generated vendor examples when a commit touches what they are generated from.
+#
+# The pages under examples/generated/ are produced from the real code paths, so a change to
+# an adapter or to the matrix silently invalidates them. CI catches that, but finding out
+# from a red pipeline is a wasted round trip -- this puts the regenerated files in the same
+# commit as the change that caused them.
+#
+# Enable once per clone:
+#     git config core.hooksPath .githooks
+#
+# Not a substitute for the CI check: hooks are not cloned, and --no-verify skips them. This
+# is the convenience; `examples/generate.py --check` in CI is the guarantee.
+set -e
+
+# Only the sources the pages are generated from. Editing a test or a README changes nothing
+# about the output, and regenerating on every commit would be noise.
+if ! git diff --cached --name-only | grep -qE '^(src/agentseam/|examples/(generate|scenarios)\.py$)'; then
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "pre-commit: python3 not found, skipping example refresh" >&2
+    echo "pre-commit: run 'python3 examples/generate.py' before pushing, or CI will fail" >&2
+    exit 0
+fi
+
+before=$(git diff --cached --name-only -- examples/generated)
+python3 examples/generate.py >/dev/null
+git add examples/generated
+
+# Report only when the commit actually gained something, so a no-op stays silent.
+after=$(git diff --cached --name-only -- examples/generated)
+if [ "$before" != "$after" ]; then
+    echo "pre-commit: refreshed examples/generated and added it to this commit"
+fi
