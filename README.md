@@ -92,6 +92,39 @@ copy would only drift. Content is written as a marker-delimited block, so anythi
 human wrote in those files is preserved untouched — and `instructions --list` shows what
 a repo is already telling its agents.
 
+## One policy, four incompatible permission languages
+
+Every agent has a settings file with an allow/deny model, and no two of them are the same
+kind of object. Claude Code evaluates an ordered rule list. Gemini CLI keeps tool-name
+allowlists. Codex runs a Starlark program over command prefixes. VS Code holds a map of
+auto-approve patterns. They do **not** have the same expressive power.
+
+```bash
+agentseam permissions --rule 'deny:shell:curl *' --rule 'allow:shell:npm test'
+```
+
+```
+# claude_code -> .claude/settings.json
+{"permissions": {"allow": ["Bash(npm test)"], "deny": ["Bash(curl *)"]}}
+
+# vscode_copilot -> .vscode/settings.json
+{"chat.tools.terminal.autoApprove": {"npm test": true}}
+# unrepresentable: Rule('deny', 'shell', 'curl *') -- this map has no deny: setting a
+# pattern false withholds auto-approval but still lets a human approve the command
+```
+
+That second block is the point. VS Code's auto-approve map takes `false` for a pattern,
+which reads like a denylist and is not one — the command still runs once a human clicks
+through. (The `github.copilot.chat.agent.terminal.denyList` key it replaced never blocked
+either.) Rendering a "deny" there would hand you a guardrail that stops nothing, so
+agentseam hands back the rule unrendered with the reason instead, and the command exits
+non-zero. Put it in CI and you find out that your policy doesn't survive the trip to an
+agent *before* you rely on it.
+
+The same honesty applies to the gaps we have in ourselves: Cursor and Windsurf are listed
+with no permission model at all, because their documentation was unreachable from the
+machine this was written on and a guessed model is worse than an admitted blank.
+
 ## Install
 
 ```bash

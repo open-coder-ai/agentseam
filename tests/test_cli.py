@@ -49,3 +49,26 @@ def test_install_rejects_unknown_event(tmp_path):
 def test_doctor_runs(tmp_path):
     out = _run(["doctor", "--repo", str(tmp_path)])
     assert "claude_code" in out.stdout and "no hook surface" in out.stdout
+
+
+def test_permissions_lists_every_surface_including_the_ones_we_cannot_claim():
+    out = _run(["permissions"])
+    assert out.returncode == 0
+    assert "cannot express" in out.stdout  # VS Code has no deny to offer
+    assert "cursor" in out.stdout  # named as unrecorded, not quietly omitted
+
+
+def test_permissions_exits_nonzero_when_a_rule_would_not_be_enforced():
+    """The exit code is the CI-usable answer: did my policy survive the trip to this agent?"""
+    enforced = _run(["permissions", "--rule", "deny:shell:curl *", "--agents", "claude_code"])
+    assert enforced.returncode == 0
+
+    lost = _run(["permissions", "--rule", "deny:shell:curl *", "--agents", "vscode_copilot"])
+    assert lost.returncode == 1
+    assert "unrepresentable" in lost.stdout
+
+
+def test_permissions_rejects_a_malformed_rule():
+    out = _run(["permissions", "--rule", "shell"])
+    assert out.returncode == 2
+    assert "action:capability" in out.stderr

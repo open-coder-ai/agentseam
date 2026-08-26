@@ -24,6 +24,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and an `instructions` CLI command. Writes a marker-delimited managed block so
   human-authored content is never clobbered, and prefers the shared AGENTS.md over
   per-agent copies.
+- Permission config (primitive 4): per-agent config-file map with precedence, a
+  capability model recording which of allow/ask/deny each agent's config can actually
+  express, capability-based `Rule`s, and per-agent renderers. `plan()` returns both the
+  native fragment and every rule the agent has no faithful way to state, so a policy can
+  never silently render into something weaker; `agentseam permissions` exits non-zero
+  when a rule would not have been enforced.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

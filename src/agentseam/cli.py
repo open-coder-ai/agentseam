@@ -10,6 +10,7 @@ import sys
 from . import __version__, adapters
 from . import install as install_mod
 from . import instructions as instructions_mod
+from . import permissions as permissions_mod
 from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
@@ -115,6 +116,53 @@ def _cmd_instructions(args):
     return 0
 
 
+def _parse_rule(spec):
+    """`action:capability[:specifier]` -- e.g. `deny:shell:curl *`."""
+    parts = spec.split(":", 2)
+    if len(parts) < 2:
+        raise argparse.ArgumentTypeError("rule must be action:capability[:specifier], got %r" % (spec,))
+    action, capability = parts[0], parts[1]
+    specifier = parts[2] if len(parts) == 3 else None
+    try:
+        return permissions_mod.Rule(action, capability, specifier)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc))
+
+
+def _cmd_permissions(args):
+    """Show each agent's permission surface, or render a policy and report what it loses."""
+    if not args.rule:
+        for name in permissions_mod.agents():
+            row = permissions_mod.capability(name)
+            says = ", ".join("%s=%s" % (a, row["actions"][a] or "(cannot express)") for a in ("allow", "ask", "deny"))
+            print("%-16s %-18s %s" % (name, row["shape"], permissions_mod.config_files(name)[0]["path"]))
+            print("%-16s %s" % ("", says))
+        for name, why in sorted(permissions_mod.UNRECORDED.items()):
+            print("%-16s %s" % (name, why))
+        return 0
+
+    rc = 0
+    targets = args.agents or permissions_mod.agents()
+    for name in targets:
+        try:
+            rendered = permissions_mod.plan(name, args.rule)
+        except KeyError as exc:
+            print("%s: %s" % (name, exc.args[0].split(": ", 1)[-1]))
+            rc = 1
+            continue
+        body = rendered.fragment
+        print("# %s -> %s" % (name, rendered.path))
+        print(body if isinstance(body, str) else json.dumps(body, indent=2, sort_keys=True))
+        for gap in rendered.unrepresentable:
+            print("# unrepresentable: %r -- %s" % (gap.rule, gap.reason))
+        if not rendered.complete:
+            rc = 1
+        print()
+    # A non-zero exit is the useful answer in CI: it means at least one rule you wrote
+    # would not have been enforced on at least one agent you ship to.
+    return rc
+
+
 def main(argv=None):
     # A CLI that dies on `| head` is a broken CLI: SIGPIPE arrives as BrokenPipeError
     # in Python, and the interpreter also complains at shutdown unless stdout is
@@ -161,6 +209,11 @@ def _main(argv=None):
     ins.add_argument("--dry-run", action="store_true")
     ins.add_argument("--list", action="store_true", help="show what exists instead of writing")
     ins.set_defaults(fn=_cmd_instructions)
+
+    perm = sub.add_parser("permissions", help="each agent's permission surface; render a policy into it")
+    perm.add_argument("--rule", action="append", type=_parse_rule, metavar="ACTION:CAPABILITY[:SPEC]")
+    perm.add_argument("--agents", nargs="*", help="target agents (default: all with a recorded model)")
+    perm.set_defaults(fn=_cmd_permissions)
 
     u = sub.add_parser("uninstall", help="remove only agentseam's entries")
     u.add_argument("agent", help="agent name, or 'all'")
