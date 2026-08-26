@@ -133,6 +133,8 @@ ALSO_READS = {
 UNRECORDED = {
     "codex_cli": "skills exist -- the approval config gates skill script execution -- but the "
     "layout documentation redirects to a host this environment's egress policy blocks",
-    "cursor": "vendor documentation unreachable from the environment this was written in",
+    "cursor": "plugins exist -- hooks can be installed through them, and workspaceOpen "
+    "returns pluginPaths for the workspace -- but the directory layout was not established "
+    "here, so there is nothing to render",
     "windsurf": "vendor documentation unreachable from the environment this was written in",
 }

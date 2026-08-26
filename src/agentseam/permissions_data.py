@@ -194,8 +194,9 @@ CAPABILITY = {
 #: point: silence would read as "no permission surface exists", which is a claim we have
 #: not earned. Both vendors publish docs this environment's egress policy blocks.
 UNRECORDED = {
-    "cursor": "vendor documentation unreachable from the environment this was written in; "
-    "no permission model claimed rather than one guessed",
+    "cursor": "its hook surface is now recorded (see the matrix), and hooks are a permission "
+    "mechanism -- but the settings-file allow/deny model is a separate thing, and that "
+    "documentation was not available here",
     "windsurf": "vendor documentation unreachable from the environment this was written in; "
     "no permission model claimed rather than one guessed",
 }

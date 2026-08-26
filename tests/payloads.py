@@ -44,6 +44,27 @@ CC_WRITE = {
 
 CU_EDIT = {"file_path": ".cursor/rules/style.md", "edits": [{"new_string": "use named exports"}]}
 
+# Cursor's base schema puts conversation_id / cursor_version / workspace_roots on every
+# event. They are load-bearing in the fixtures: `preToolUse` is spelled identically by
+# OpenAI Codex CLI, so without a Cursor marker the payload belongs to nobody.
+CU_BASE = {
+    "conversation_id": "conv-1",
+    "generation_id": "gen-1",
+    "model": "claude-opus-4-7-thinking-max",
+    "cursor_version": "1.7.2",
+    "workspace_roots": ["/repo"],
+}
+CU_PRE_TOOL = dict(
+    CU_BASE,
+    hook_event_name="preToolUse",
+    tool_name="Write",
+    tool_input={"file_path": "CLAUDE.md", "content": "AWS_SECRET=..."},
+    tool_use_id="tu-1",
+    cwd="/repo",
+)
+CU_READ = dict(CU_BASE, hook_event_name="beforeReadFile", file_path="/repo/.env", content="TOKEN=1")
+CU_SUBMIT = dict(CU_BASE, hook_event_name="beforeSubmitPrompt", prompt="ship it")
+
 
 CU_SHELL = {"command": "echo x >> CLAUDE.md", "cwd": "/repo"}
 
@@ -134,3 +155,33 @@ WS_POST_MCP = {
     "tool_info": {"server": "docs", "tool": "fetch"},
     "output": "page text",
 }
+
+
+# --- Devin CLI ------------------------------------------------------------------
+# Claude Code's event vocabulary and payload shape, plus a per-turn prompt_id. That id is
+# the only thing separating the two, which is why it appears in every fixture that has one.
+DV_PRE_TOOL = {
+    "hook_event_name": "PreToolUse",
+    "tool_name": "exec",
+    "tool_input": {"command": "rm -rf /"},
+    "session_id": "3f8d1c2a",
+    "prompt_id": "b71e9d40",
+}
+DV_WRITE = {
+    "hook_event_name": "PreToolUse",
+    "tool_name": "write_file",
+    "tool_input": {"file_path": "AGENTS.md", "content": "AWS_SECRET=..."},
+    "session_id": "3f8d1c2a",
+    "prompt_id": "b71e9d40",
+}
+DV_PROMPT = {
+    "hook_event_name": "UserPromptSubmit",
+    "prompt": "deploy to prod",
+    "session_id": "3f8d1c2a",
+    "prompt_id": "b71e9d41",
+}
+#: Devin-only event: proof of Devin without needing prompt_id.
+DV_PERMISSION = {"hook_event_name": "PermissionRequest", "tool_name": "exec", "session_id": "3f8d1c2a"}
+#: Documented as carrying no prompt_id, because it fires before the first user prompt --
+#: which makes it byte-identical to Claude Code's SessionStart.
+DV_SESSION_START = {"hook_event_name": "SessionStart", "session_id": "3f8d1c2a"}

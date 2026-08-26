@@ -50,8 +50,10 @@ def claims(raw):
     if not isinstance(raw, dict):
         return False
     if raw.get("hook_event_name") in EVENT_MAP:
-        # Codex reuses tool_input but adds turn identifiers; don't claim those.
-        return "turn_id" not in raw
+        # Codex reuses tool_input but adds turn identifiers, and Devin reuses the whole
+        # event vocabulary but adds a per-turn prompt_id. Claiming either would make
+        # detect() ambiguous, and an unidentified payload is allowed through.
+        return "turn_id" not in raw and "prompt_id" not in raw
     return False
 
 

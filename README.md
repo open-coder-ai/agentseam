@@ -45,6 +45,10 @@ post_tool            none            detect          detect          detect     
 - **best-effort** — it blocks, but fails *open* (Cursor's default: a crashed hook allows)
 - **detect** — you see it after the fact; prevention is not available (Cursor file edits
   fire `afterFileEdit`, after the write already landed)
+- **enforceable** — it blocks and *can* be told to fail closed, but doesn't by default
+  (Cursor's `failClosed: true`). "best-effort" would understate a surface you can make
+  airtight; "enforced" would claim a default that isn't there. agentseam's installer asks
+  for fail-closed on every gate it writes
 - **none** — no hook surface at all (Zed, Aider). Said out loud rather than papered over.
 
 `unadapted` is a fourth, deliberately separate state: agentseam has no hook adapter for
@@ -169,12 +173,13 @@ pip install agentseam
 |---|---|---|
 | Claude Code | block + rewrite | `.claude/settings.json` |
 | VS Code Copilot | block + rewrite | `.github/hooks/*.json` |
-| Cursor | block (shell/MCP), detect (file edits) | `.cursor/hooks.json` |
+| Cursor | block + rewrite (all tools, fail-open by default) | `.cursor/hooks.json` |
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` |
 | Windsurf | block via exit code only; **no file-write event** | `.windsurf/hooks.json` |
 | Zed, Aider | no hook surface at all | — |
-| Antigravity, Devin, Grok, Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
+| Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` |
+| Antigravity, Grok, Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
 
 Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.

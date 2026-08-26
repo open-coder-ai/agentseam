@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from .matrix_data import (
     FAIL_CLOSED,
+    FAIL_CONFIGURABLE,
     FAIL_OPEN,
     MATRIX,
     TIER_BLOCK,
@@ -27,6 +28,7 @@ __all__ = [
     "agents",
     "adapted_agents",
     "FAIL_CLOSED",
+    "FAIL_CONFIGURABLE",
     "FAIL_OPEN",
     "TIER_FULL",
     "TIER_BLOCK",
@@ -55,14 +57,19 @@ def can_rewrite(agent, event):
 def enforcement_level(agent, event):
     """The honest word for what a consumer may claim at this surface.
 
-    enforced  - the agent blocks, and fails closed if our hook dies
-    best-effort - the agent blocks, but fails open (a crash silently allows)
-    detect    - we see it after the fact; prevention is not available
-    none      - no surface at all
+    enforced    - the agent blocks, and fails closed if our hook dies
+    enforceable - it blocks, and can be told to fail closed, but does not by default. What
+                  a consumer may claim therefore depends on how the hook was installed;
+                  agentseam's own installer asks for fail-closed on every gate it writes
+    best-effort - it blocks, but fails open (a crash silently allows)
+    detect      - we see it after the fact; prevention is not available
+    none        - no surface at all
     """
     cap = capability(agent, event)
     if cap["block"]:
-        return "enforced" if cap["fail_mode"] == FAIL_CLOSED else "best-effort"
+        if cap["fail_mode"] == FAIL_CLOSED:
+            return "enforced"
+        return "enforceable" if cap["fail_mode"] == FAIL_CONFIGURABLE else "best-effort"
     row = MATRIX.get(agent)
     if row and event in row["events"]:
         return "detect"

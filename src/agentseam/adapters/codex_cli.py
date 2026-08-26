@@ -6,8 +6,10 @@ app-server-protocol/schema/typescript/v2/HookEventName.ts).
 
 Codex speaks the Claude-family decision shape — hookSpecificOutput.permissionDecision
 with allow/deny/ask — but names its events in camelCase and adds turn-scoped fields
-(turn_id, model, permission_mode) that Claude Code does not send. Those extra fields
-are how an adapter tells the two apart when the payload is otherwise identical.
+(turn_id, permission_mode) that Claude Code does not send. Those extra fields are how an
+adapter tells the two apart when the payload is otherwise identical. It also shares its
+camelCase event names with Cursor, which is why the marker has to be a field Cursor never
+sends rather than merely one Claude Code omits.
 """
 
 from __future__ import annotations
@@ -48,12 +50,17 @@ REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
 
 def claims(raw):
-    """Codex's PreToolUse carries turn_id and permission_mode; Claude Code's does not."""
+    """Codex's preToolUse carries turn_id and permission_mode; Claude Code's does not.
+
+    `model` used to count as a third marker and no longer does: Cursor's base hook schema
+    sends `model` on every event, so claiming on it made every real Cursor payload
+    ambiguous between the two adapters -- and an unidentified payload is allowed through.
+    """
     if not isinstance(raw, dict):
         return False
     if raw.get("hook_event_name") not in EVENT_MAP:
         return False
-    return "turn_id" in raw or "permission_mode" in raw or "model" in raw
+    return "turn_id" in raw or "permission_mode" in raw
 
 
 def parse(raw):
