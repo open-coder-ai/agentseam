@@ -230,7 +230,9 @@ pip install agentseam
 | Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/*.json` |
 | Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` |
 | Kimi Code CLI | block on 3 of its 20 events (fail-open) | `config.toml` |
-| Junie, Replit, Tabnine | no hook adapter yet — instruction files work | — |
+| Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` |
+| Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` |
+| Replit | no hook surface found in its docs — instruction files work | — |
 
 Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.

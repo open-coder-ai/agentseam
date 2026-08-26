@@ -14,7 +14,9 @@ from . import (
     devin,
     gemini_cli,
     grok,
+    junie,
     kimi_code,
+    tabnine,
     vscode_copilot,
     windsurf,
 )
@@ -27,7 +29,9 @@ ADAPTERS = {
     devin.AGENT: devin,
     gemini_cli.AGENT: gemini_cli,
     grok.AGENT: grok,
+    junie.AGENT: junie,
     kimi_code.AGENT: kimi_code,
+    tabnine.AGENT: tabnine,
     vscode_copilot.AGENT: vscode_copilot,
     windsurf.AGENT: windsurf,
 }

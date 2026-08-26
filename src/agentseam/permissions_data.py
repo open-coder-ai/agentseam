@@ -214,7 +214,9 @@ UNRECORDED = {
     "and the vendor lists modifying permissions as a use case -- but its config was not read here",
     "grok": "a permission system provably exists -- a PermissionDenied hook event fires when it "
     "denies a tool call -- but its config was not read here",
-    "junie": "no permission model established here",
+    "junie": "a permission system provably exists -- PermissionRequest is one of its hook "
+    "events, and it lists the tool categories the dialog covers -- but the settings that "
+    "govern it were not read here",
     "kimi_code": "a permission system provably exists, and its own hooks documentation points at "
     'it as the real barrier ("rely on permission approvals and manual confirmation") -- but '
     "the approval config schema was not read here",

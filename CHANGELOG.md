@@ -121,6 +121,13 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   adapter claims, so a `vendor-docs` row can become a `live-run` one. The probe always
   allows, and payloads are reduced to shape before anything touches disk, so the capture
   file is safe to share. `tools/VERIFY.md` is the runbook.
+- Junie CLI adapter: block, ask AND rewrite are all native on PreToolUse -- the only agent
+  besides Claude Code needing no degradation at the gate.
+- Tabnine CLI adapter: block on six of its eleven events, including AfterTool, which most
+  agents treat as observation only.
+- Replit's row moved from `inherited` to `vendor-docs`: its documentation was searched and
+  no hook surface was found. Recorded as not-found rather than absent, since the search was
+  of published docs and not of a running instance.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

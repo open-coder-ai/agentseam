@@ -38,6 +38,8 @@ FAILURE = "1 test failed"
 #: can be one. Windsurf has no file-write event at all, which its own entry handles.
 _WRITE_TOOL = {
     "claude_code": "Write",
+    "junie": "Write",
+    "tabnine": "Write",
     "codex_cli": "Write",
     "cursor": "Write",
     "devin": "write_file",
@@ -103,6 +105,12 @@ def _claude_shaped(agent, event, vendor_event, base, camel=False):
 #: Base envelope per vendor, from each one's documented common fields.
 BASES = {
     "claude_code": {"session_id": "example", "cwd": "/repo"},
+    # `timestamp` is Tabnine's base-schema field and the only documented thing separating
+    # its payloads from Gemini CLI's identically-named events.
+    "tabnine": {"session_id": "example", "cwd": "/repo", "timestamp": "2026-08-26T00:00:00.000Z"},
+    # `project_path` is what separates Junie from Claude Code, whose event names it reuses
+    # deliberately so a hook script can be shared.
+    "junie": {"session_id": "example", "cwd": "/repo", "project_path": "/repo"},
     "codex_cli": {
         "session_id": "example",
         "turn_id": "turn-1",
