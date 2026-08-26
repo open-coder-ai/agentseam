@@ -34,6 +34,7 @@ from .contract import (
     SUBAGENT_START,
     SUBAGENT_STOP,
     TOOL_FAILURE,
+    UNKNOWN,
     Decision,
     Event,
 )
@@ -76,5 +77,6 @@ __all__ = [
     "SUBAGENT_STOP",
     "INSTRUCTIONS_LOADED",
     "FILE_CHANGED",
+    "UNKNOWN",
     "__version__",
 ]

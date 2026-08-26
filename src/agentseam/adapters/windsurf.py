@@ -17,7 +17,7 @@ promise:
 
 from __future__ import annotations
 
-from ..contract import ASK, DENY, POST_TOOL, PRE_TOOL, PROMPT_SUBMIT, REWRITE, STOP, Event
+from ..contract import ASK, DENY, POST_TOOL, PRE_TOOL, PROMPT_SUBMIT, REWRITE, STOP, UNKNOWN, Event
 
 AGENT = "windsurf"
 
@@ -44,15 +44,19 @@ def claims(raw):
 
 def parse(raw):
     name = raw.get("hook_event_name")
-    if name not in EVENT_MAP:
-        # Infer from payload shape when the event name is absent: a command means the
-        # terminal hook, otherwise treat it as the prompt hook.
+    if name is None:
+        # Shape decides only when the name is absent: a command means the terminal hook,
+        # otherwise the prompt hook. A name we do not recognise is a new event, and must
+        # not be answered as though it were one of these.
         info = raw.get("tool_info") or {}
         name = "pre_run_command" if info.get("command_line") else "pre_user_prompt"
     info = raw.get("tool_info") or {}
     return Event(
         AGENT,
-        EVENT_MAP[name],
+        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the
+        # wrong policy against it.
+        EVENT_MAP.get(name, UNKNOWN),
         tool=name,
         command=info.get("command_line"),
         path=raw.get("path") or info.get("path"),
