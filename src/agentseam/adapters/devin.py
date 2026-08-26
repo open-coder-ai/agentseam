@@ -42,6 +42,7 @@ from ..contract import (
     SESSION_START,
     STOP,
     Event,
+    degraded_from,
 )
 
 AGENT = "devin"
@@ -130,7 +131,12 @@ def respond(decision, event):
         # what a request for confirmation meant.
         reason = decision.reason or "blocked by policy"
         if decision.outcome == ASK:
-            reason = "%s (Devin cannot prompt for confirmation, so this is a block)" % reason
+            note = (
+                "Devin cannot modify a tool call"
+                if degraded_from(decision) == REWRITE
+                else "Devin cannot prompt for confirmation"
+            )
+            reason = "%s (%s, so this is a block)" % (reason, note)
         return _json.dumps({"decision": "block", "reason": reason}), 0
 
     if decision.reason and name in _CONTEXT_EVENTS:

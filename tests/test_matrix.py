@@ -70,13 +70,25 @@ def test_unadapted_is_distinct_from_no_surface():
     from agentseam.matrix import TIER_NONE, TIER_UNADAPTED
 
     assert A.MATRIX["zed"]["tier"] == TIER_NONE
-    assert A.MATRIX["antigravity"]["tier"] == TIER_UNADAPTED
+    assert A.MATRIX["replit"]["tier"] == TIER_UNADAPTED
     # Both mean "cannot gate here", so the enforcement answer is the same...
     assert A.enforcement_level("zed", A.PRE_TOOL) == "none"
-    assert A.enforcement_level("antigravity", A.PRE_TOOL) == "none"
+    assert A.enforcement_level("replit", A.PRE_TOOL) == "none"
     # ...but the reason differs, and the notes say so.
     assert "no user hooks" in A.MATRIX["zed"]["notes"].lower()
-    assert "no hook adapter" in A.MATRIX["antigravity"]["notes"].lower()
+    assert "no hook adapter" in A.MATRIX["replit"]["notes"].lower()
+
+
+def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
+    """Every agent whose vendor documentation has been read so far had MORE surface than
+    the inherited row claimed -- Devin's said "no pre-tool-use surface" and was false.
+    So these rows are tracked as unverified, and this test names the ones still standing.
+    """
+    from agentseam.matrix import TIER_UNADAPTED
+    from agentseam.matrix_gaps import GAPS
+
+    unverified = sorted(a for a, row in GAPS.items() if row["tier"] == TIER_UNADAPTED)
+    assert unverified == ["junie", "kimi_code", "replit", "tabnine"]
 
 
 def test_adapted_agents_matches_the_adapter_registry():

@@ -7,6 +7,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from payloads import (
+    AG_POST_TOOL,
+    AG_PRE_TOOL,
+    AG_STOP,
+    AG_WRITE,
     CC_BASH,
     CC_EDIT,
     CC_MULTI,
@@ -23,6 +27,9 @@ from payloads import (
     DV_PRE_TOOL,
     DV_PROMPT,
     DV_WRITE,  # noqa: E402
+    GK_POST,
+    GK_SHELL,
+    GK_WRITE,
     GM_AFTER,
     GM_REPLACE,
     GM_SHELL,
@@ -106,6 +113,13 @@ def test_no_two_adapters_claim_the_same_payload():
         "DV_WRITE": DV_WRITE,
         "DV_PROMPT": DV_PROMPT,
         "DV_PERMISSION": DV_PERMISSION,
+        "GK_SHELL": GK_SHELL,
+        "GK_WRITE": GK_WRITE,
+        "GK_POST": GK_POST,
+        "AG_PRE_TOOL": AG_PRE_TOOL,
+        "AG_WRITE": AG_WRITE,
+        "AG_POST_TOOL": AG_POST_TOOL,
+        "AG_STOP": AG_STOP,
     }
     ambiguous = {}
     for label, raw in fixtures.items():

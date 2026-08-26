@@ -179,7 +179,9 @@ pip install agentseam
 | Windsurf | block via exit code only; **no file-write event** | `.windsurf/hooks.json` |
 | Zed, Aider | no hook surface at all | — |
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` |
-| Antigravity, Grok, Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
+| Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/*.json` |
+| Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` |
+| Junie, Kimi Code, Replit, Tabnine | no hook adapter yet — instruction files work | — |
 
 Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a module plus a matrix row.

@@ -19,19 +19,6 @@ from __future__ import annotations
 from .matrix_data import TIER_NONE, TIER_UNADAPTED
 
 GAPS = {
-    "grok": {
-        "display": "Grok",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
     "kimi_code": {
         "display": "Kimi Code",
         "tier": TIER_UNADAPTED,
@@ -60,19 +47,6 @@ GAPS = {
     },
     "tabnine": {
         "display": "Tabnine",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
-    "antigravity": {
-        "display": "Antigravity",
         "tier": TIER_UNADAPTED,
         "config": None,
         "verified": {
