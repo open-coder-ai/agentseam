@@ -7,6 +7,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Gemini CLI claimed any payload whose event name it recognised, including `SessionStart`
+  — which Claude Code, Devin and Kimi Code all spell the same way. A Kimi payload was
+  therefore claimed by two adapters at once. Adapters now decline a payload that names a
+  different client: a positive self-identification beats a shared event name.
 - Adapters explaining a degraded outcome read `Decision.evidence["degraded_from"]` rather
   than the outcome they were handed, via a new `contract.degraded_from()`. A rewrite that
   the dispatcher reduced to `ask`, then blocked by an agent that cannot prompt, was being
@@ -65,6 +69,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Antigravity adapter: block on PreToolUse and refusal-to-stop on Stop. Its payload carries
   no event name at all, so the event is inferred from shape, with ties broken toward the
   gate.
+- Kimi Code CLI adapter: block on PreToolUse, UserPromptSubmit and Stop — the only three
+  of its twenty events whose return value reaches the main flow. Fail-open, no rewrite.
+- TOML config support in `install`: a marker-delimited block appended to the user's
+  settings file, with every byte outside it preserved. Kimi Code's `[[hooks]]` live in
+  `config.toml` alongside everything else the user configures.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

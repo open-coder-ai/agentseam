@@ -19,34 +19,14 @@ from .contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
 )
-
-# fail_mode: what the AGENT does when the hook crashes/times out.
-#   "closed" -> the action is blocked (safe)
-#   "open"   -> the action proceeds (a policy claiming enforcement here is overclaiming)
-FAIL_CLOSED = "closed"
-FAIL_OPEN = "open"
-#: The agent fails open by default but can be told to fail closed per hook (Cursor's
-#: `failClosed: true`). Neither existing value tells the truth about that: "open" would
-#: understate a surface a user can make airtight, and "closed" would claim a default that
-#: is not there. What a consumer may claim depends on how the hook was installed.
-FAIL_CONFIGURABLE = "configurable"
-
-# tier: how much of the surface the adapter can serve.
-TIER_FULL = "block+rewrite"
-TIER_BLOCK = "block"
-TIER_OBSERVE = "observe"
-TIER_NONE = "none"
-#: Known agent, no hook adapter in agentseam. Distinct from TIER_NONE, which is a claim
-#: about the AGENT (it exposes nothing to hook). This one is a claim about US, and it
-#: matters: a user can still push instruction files to these agents, they just cannot
-#: gate tool calls here yet. Collapsing the two would either slander the agent or
-#: overstate our coverage.
-TIER_UNADAPTED = "unadapted"
-
-
-def _cap(block=False, rewrite=False, fail=FAIL_OPEN):
-    return {"block": block, "rewrite": rewrite, "fail_mode": fail}
-
+from .matrix_terms import (
+    FAIL_CLOSED,
+    FAIL_CONFIGURABLE,
+    FAIL_OPEN,
+    TIER_BLOCK,
+    TIER_FULL,
+    _cap,
+)
 
 MATRIX = {
     "claude_code": {
@@ -107,6 +87,37 @@ MATRIX = {
         "beforeMCPExecution do honour ask. Separate Tab hooks (beforeTabFileRead, "
         "afterTabFileEdit) gate inline completions, and workspaceOpen fires outside any "
         "session with no canonical event here. Cursor also loads Claude Code-format hooks.",
+    },
+    "kimi_code": {
+        "display": "Kimi Code CLI",
+        "tier": TIER_BLOCK,
+        "config": "config.toml",
+        "verified": {
+            "version": "CLI",
+            "date": "2026-08-26",
+            "method": "vendor hooks documentation read directly (event table, return values, config fields)",
+        },
+        "events": {
+            PRE_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            POST_TOOL: _cap(),
+            TOOL_FAILURE: _cap(),
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
+            SESSION_START: _cap(),
+            SESSION_END: _cap(),
+            SUBAGENT_START: _cap(),
+            SUBAGENT_STOP: _cap(),
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+            PRE_COMPACT: _cap(),
+        },
+        "notes": "Twenty events, of which exactly three block: PreToolUse, UserPromptSubmit "
+        "and Stop. The rest are documented as fire-and-forget, so a decision returned there "
+        "changes nothing. Accepts Claude Code's hookSpecificOutput.permissionDecision shape, "
+        "and exit 2 blocks too -- but the JSON form carries the reason back into the model's "
+        "context. No rewrite. Config is TOML ([[hooks]] in config.toml, four fields only; a "
+        "fifth makes the whole file fail to load), so installation appends a "
+        "marker-delimited block rather than rewriting the user's settings. Fails OPEN, and "
+        "the vendor says outright that hooks here are not a sole security barrier. Only "
+        "client_type separates its payloads from Claude Code's.",
     },
     "vscode_copilot": {
         "display": "GitHub Copilot (VS Code agent mode / CLI)",

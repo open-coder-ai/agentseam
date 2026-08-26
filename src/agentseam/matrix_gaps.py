@@ -16,22 +16,9 @@ Keeping them in a separate file is a reminder that they are inherited, not estab
 
 from __future__ import annotations
 
-from .matrix_data import TIER_NONE, TIER_UNADAPTED
+from .matrix_terms import TIER_NONE, TIER_UNADAPTED
 
 GAPS = {
-    "kimi_code": {
-        "display": "Kimi Code",
-        "tier": TIER_UNADAPTED,
-        "config": None,
-        "verified": {
-            "version": "n/a",
-            "date": "2026-08-26",
-            "method": "sibling project's shipped surface matrix (no pre-tool-use surface); not re-verified here",
-        },
-        "events": {},
-        "notes": "No hook adapter in agentseam. Instruction files are supported "
-        "(see agentseam.instructions); tool calls cannot be gated here yet.",
-    },
     "replit": {
         "display": "Replit",
         "tier": TIER_UNADAPTED,

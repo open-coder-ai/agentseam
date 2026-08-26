@@ -239,3 +239,18 @@ AG_POST_TOOL = dict(AG_BASE, toolCall={"name": "run_command", "args": {"CommandL
 AG_STOP = dict(AG_BASE, executionNum=1, terminationReason="model_stop", error="", fullyIdle=True)
 #: PreInvocation and PostInvocation are documented as carrying identical fields.
 AG_INVOCATION = dict(AG_BASE, invocationNum=3, initialNumSteps=10)
+
+# --- Kimi Code CLI --------------------------------------------------------------
+# Claude Code's envelope exactly -- PascalCase events, snake_case fields, tool_input --
+# with one field naming the agent. Remove `client_type` and these become Claude Code's.
+KM_BASE = {"session_id": "km-1", "session_title": "Fix login", "client_type": "kimi_code_cli", "cwd": "/repo"}
+KM_SHELL = dict(KM_BASE, hook_event_name="PreToolUse", tool_name="Bash", tool_input={"command": "rm -rf /"})
+KM_WRITE = dict(
+    KM_BASE,
+    hook_event_name="PreToolUse",
+    tool_name="Write",
+    tool_input={"file_path": "AGENTS.md", "content": "AWS_SECRET=..."},
+)
+#: Documented as observation-only: the main flow proceeds whatever the script returns.
+KM_POST = dict(KM_BASE, hook_event_name="PostToolUse", tool_name="Bash", tool_input={"command": "npm test"})
+KM_NOTIFY = dict(KM_BASE, hook_event_name="SessionStart", source="startup")

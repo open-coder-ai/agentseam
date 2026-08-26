@@ -55,8 +55,18 @@ WRITE_TOOLS = ("write_file", "replace")
 SHELL_TOOLS = ("run_shell_command",)
 
 
+#: Agents that name themselves in the payload. A payload naming a different client is not
+#: ours, whatever its event is called -- SessionStart and SessionEnd are spelled the same
+#: way by Claude Code, Devin and Kimi Code, and only Kimi carries proof of which it is.
+#: Claude Code's adapter applies the same rule; the general form is that a positive
+#: self-identification beats a shared event name.
+_OWN_CLIENT_TYPES = (None, "gemini_cli", "gemini")
+
+
 def claims(raw):
-    return isinstance(raw, dict) and raw.get("hook_event_name") in EVENT_MAP
+    if not isinstance(raw, dict) or raw.get("hook_event_name") not in EVENT_MAP:
+        return False
+    return raw.get("client_type") in _OWN_CLIENT_TYPES
 
 
 def parse(raw):
