@@ -6,8 +6,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from agentshim import install as I
-from agentshim import adapters
+from agentseam import install as I
+from agentseam import adapters
 
 
 def test_install_creates_config(tmp_path):

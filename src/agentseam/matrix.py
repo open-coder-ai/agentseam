@@ -6,7 +6,7 @@ that a policy is enforced, which is how honest coverage tiers stay honest.
 
 `verified` records the agent version and date the row was last checked against
 primary sources. A row nobody has re-verified is a claim aging in the dark, so the
-field is required and `agentshim doctor` reports staleness.
+field is required and `agentseam doctor` reports staleness.
 """
 
 from __future__ import annotations

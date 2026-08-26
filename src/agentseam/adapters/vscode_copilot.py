@@ -106,4 +106,4 @@ def hook_config(canonical_events, command, matcher=None):
     return {"version": 1, "hooks": hooks}
 
 
-CONFIG_PATH = ".github/hooks/agentshim.json"
+CONFIG_PATH = ".github/hooks/agentseam.json"

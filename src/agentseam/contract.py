@@ -73,7 +73,7 @@ class Decision:
     """What a handler wants to happen. Adapters translate this to vendor dialect.
 
     `evidence` is an optional payload-free dict a consumer can carry through to its
-    own log; agentshim never writes it anywhere itself.
+    own log; agentseam never writes it anywhere itself.
     """
 
     __slots__ = ("outcome", "reason", "updated_input", "evidence")

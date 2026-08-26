@@ -1,11 +1,11 @@
-"""agentshim — the primitives layer for every coding agent.
+"""agentseam — the primitives layer for every coding agent.
 
 Write one handler; run it on Claude Code, Cursor, VS Code Copilot and friends.
-agentshim owns the per-agent differences: payload shapes, response dialects, config
+agentseam owns the per-agent differences: payload shapes, response dialects, config
 file formats, and an explicit capability matrix that says what each agent can
 actually enforce.
 
-    from agentshim import run, Decision
+    from agentseam import run, Decision
 
     def handler(event):
         if event.event == "pre_tool" and event.command == "rm -rf /":

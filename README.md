@@ -1,4 +1,4 @@
-# agentshim
+# agentseam
 
 **Write one handler. Run it on every coding agent.**
 
@@ -7,11 +7,11 @@ its own hook system: different event names, different payload shapes, different 
 "no", different config files. So every tool built on top gets written once per agent, or
 targets one agent and stops there.
 
-agentshim is the layer underneath: one normalized event, one decision type, and an explicit
+agentseam is the layer underneath: one normalized event, one decision type, and an explicit
 map of what each agent can *actually* do.
 
 ```python
-from agentshim import run, Decision
+from agentseam import run, Decision
 
 def handler(event):
     if event.event == "pre_tool" and "AKIA" in (event.content or ""):
@@ -22,7 +22,7 @@ run(handler)
 ```
 
 ```bash
-agentshim install all "python3 my_handler.py" --events pre_tool
+agentseam install all "python3 my_handler.py" --events pre_tool
 ```
 
 That handler now runs on Claude Code, Cursor, and VS Code Copilot — each getting its native
@@ -34,7 +34,7 @@ Agents are not equally capable, and pretending otherwise is how a "policy" silen
 The capability matrix is data, not marketing:
 
 ```
-$ agentshim matrix
+$ agentseam matrix
                      aider           claude_code     cursor          vscode_copilot  zed
 prompt_submit        none            enforced        detect          detect          none
 pre_tool             none            enforced        best-effort     enforced        none
@@ -48,7 +48,7 @@ post_tool            none            detect          detect          detect     
 - **none** — no hook surface at all (Zed, Aider). Said out loud rather than papered over.
 
 A `Decision.rewrite(...)` on an agent that cannot rewrite degrades to `ask`, never to a
-silent pass-through. `agentshim doctor` reports what is wired on this machine and flags
+silent pass-through. `agentseam doctor` reports what is wired on this machine and flags
 capability rows that have not been re-verified in 90 days.
 
 ## What it is for
@@ -67,7 +67,7 @@ Not just guardrails. Anything that wants to watch or shape an agent's life:
 ## Install
 
 ```bash
-pip install agentshim
+pip install agentseam
 ```
 
 ## Supported agents

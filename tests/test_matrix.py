@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-import agentshim as A
+import agentseam as A
 
 
 def test_every_row_carries_verification_provenance():

@@ -1,9 +1,9 @@
 """The dispatcher: stdin -> Event -> your handler -> vendor dialect -> stdout/exit.
 
 This is the whole runtime surface for a consumer. Write one function, wire it to any
-agent, and agentshim speaks each vendor's protocol for you.
+agent, and agentseam speaks each vendor's protocol for you.
 
-    from agentshim import run, Decision
+    from agentseam import run, Decision
 
     def handler(event):
         if event.event == "pre_tool" and "secret" in (event.content or ""):

@@ -1,9 +1,10 @@
-"""agentshim CLI: inspect the matrix, wire hooks, audit a machine."""
+"""agentseam CLI: inspect the matrix, wire hooks, audit a machine."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from . import __version__, adapters, install as install_mod
@@ -80,7 +81,23 @@ def _cmd_uninstall(args):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="agentshim", description=__doc__)
+    # A CLI that dies on `| head` is a broken CLI: SIGPIPE arrives as BrokenPipeError
+    # in Python, and the interpreter also complains at shutdown unless stdout is
+    # redirected away from the closed pipe.
+    try:
+        return _main(argv)
+    except BrokenPipeError:
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except OSError:
+            pass
+        return 0
+    except KeyboardInterrupt:
+        return 130
+
+
+def _main(argv=None):
+    p = argparse.ArgumentParser(prog="agentseam", description=__doc__)
     p.add_argument("--version", action="version", version=__version__)
     sub = p.add_subparsers(dest="cmd", required=True)
 
@@ -102,7 +119,7 @@ def main(argv=None):
     i.add_argument("--repo", default=".")
     i.set_defaults(fn=_cmd_install)
 
-    u = sub.add_parser("uninstall", help="remove only agentshim's entries")
+    u = sub.add_parser("uninstall", help="remove only agentseam's entries")
     u.add_argument("agent", help="agent name, or 'all'")
     u.add_argument("--repo", default=".")
     u.set_defaults(fn=_cmd_uninstall)

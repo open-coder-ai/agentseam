@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agentshim"
+name = "agentseam"
 version = "0.1.0"
 description = "The primitives layer for every coding agent — one handler API over per-agent hooks, instruction files, plugin packaging, and config."
 readme = "README.md"
@@ -20,7 +20,7 @@ classifiers = [
 dependencies = []                      # stdlib only, on purpose: adapters must stay vendorable
 
 [project.scripts]
-agentshim = "agentshim.cli:main"
+agentseam = "agentseam.cli:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=7"]

@@ -12,7 +12,7 @@ import os
 
 from . import adapters
 
-MARKER = "_agentshim"
+MARKER = "_agentseam"
 
 
 def _load(path):
@@ -68,7 +68,7 @@ def _merge(base, addition):
     return base
 
 
-def install(agent, events, command, repo_root=".", matcher=None, owner="agentshim"):
+def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam"):
     """Wire `command` for `events` into `agent`'s config. Returns the path written."""
     mod = adapters.get(agent)
     path = os.path.join(repo_root, mod.CONFIG_PATH)
@@ -80,7 +80,7 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentshi
     return path
 
 
-def uninstall(agent, repo_root=".", owner="agentshim"):
+def uninstall(agent, repo_root=".", owner="agentseam"):
     """Remove only our entries. Returns True when the file changed."""
     mod = adapters.get(agent)
     path = os.path.join(repo_root, mod.CONFIG_PATH)
@@ -96,7 +96,7 @@ def uninstall(agent, repo_root=".", owner="agentshim"):
     return True
 
 
-def installed(agent, repo_root=".", owner="agentshim"):
+def installed(agent, repo_root=".", owner="agentseam"):
     """True when our witness is present in this agent's config."""
     mod = adapters.get(agent)
     path = os.path.join(repo_root, mod.CONFIG_PATH)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Append every agent lifecycle event to one JSONL stream — across all your agents.
 
-    agentshim install all "python3 examples/event_log.py" \
+    agentseam install all "python3 examples/event_log.py" \
         --events pre_tool post_tool session_start stop
 
 One timeline for Claude Code + Cursor + Copilot in the same repo: something no
@@ -13,9 +13,9 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, "src")
-from agentshim import Decision, run                       # noqa: E402
+from agentseam import Decision, run                       # noqa: E402
 
-LOG = os.environ.get("AGENTSHIM_LOG", os.path.expanduser("~/.agentshim/events.jsonl"))
+LOG = os.environ.get("AGENTSEAM_LOG", os.path.expanduser("~/.agentseam/events.jsonl"))
 
 
 def handler(event):
