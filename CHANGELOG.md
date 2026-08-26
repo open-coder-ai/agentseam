@@ -53,6 +53,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Cursor degradation messages replaced the handler's own reason instead of adding to it.
 
 ### Added
+- `ARCHITECTURE.md`, hand-written: the layering boundary between primitives and policy,
+  why `UNKNOWN` sits outside the event vocabulary, why detection must never guess between
+  two adapters (with the four collisions found so far), how lossy translation is reported
+  in all four primitives, and what each constraint costs. Deliberately not generated —
+  the drift check that keeps `examples/generated` honest works because that output is
+  deterministic, and prose is not.
 - Canonical 12-event lifecycle vocabulary, normalized `Event`, and `Decision`
   (allow / deny / ask / rewrite).
 - Capability matrix as data, with per-row verification provenance and honest

@@ -91,6 +91,14 @@ CI checks every commit on a PR. Forgot one?
 git commit --amend -s --no-edit && git push --force-with-lease
 ```
 
+## Before you change anything structural
+
+Read [ARCHITECTURE.md](ARCHITECTURE.md). It is hand-written and covers the reasoning the
+code cannot state for itself: the layering boundary, why `UNKNOWN` sits outside the event
+vocabulary, why detection must never guess between two adapters, and what each coverage
+tier is defending against. If your change alters any of that, update the document in the
+same PR — nothing regenerates it.
+
 ## Review policy
 
 Adapters and the matrix get the slow path: they decide what downstream tools may claim.
