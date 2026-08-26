@@ -12,3 +12,14 @@
 *.json text eol=lf
 *.txt text eol=lf
 *.toml text eol=lf
+
+# The vendor example pages are produced by examples/generate.py, never edited by hand.
+# Marking them collapses them in GitHub diffs, so a review shows the behaviour change
+# rather than the eleven pages that followed from it -- and they stay reviewable by
+# expanding, which is the right default for output you are meant to check but not read
+# line by line.
+examples/generated/*.md linguist-generated=true
+
+# The hook has no extension, so the *.sh rule above misses it. A CRLF checkout would
+# make it fail with `bad interpreter` on the machine that enabled it.
+.githooks/* text eol=lf

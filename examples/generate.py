@@ -13,6 +13,7 @@ which turns the examples into a claim CI checks rather than documentation that r
 
 from __future__ import annotations
 
+import difflib
 import json
 import os
 import sys
@@ -201,8 +202,23 @@ def main(argv=None):
             current = open(path).read() if os.path.exists(path) else None
             if current != body:
                 drift.append(name)
+                # Show the difference rather than just naming the file: a reader of a red
+                # pipeline should be able to see what behaviour changed without checking
+                # the branch out and running anything.
+                sys.stderr.writelines(
+                    difflib.unified_diff(
+                        (current or "").splitlines(keepends=True),
+                        body.splitlines(keepends=True),
+                        fromfile="committed/%s" % name,
+                        tofile="generated/%s" % name,
+                    )
+                )
         if drift:
-            sys.stderr.write("examples are stale, run examples/generate.py: %s\n" % ", ".join(drift))
+            sys.stderr.write(
+                "\nexamples are stale: %s\n"
+                "run `python3 examples/generate.py` and commit the result, or enable the\n"
+                "hook that does it for you: `git config core.hooksPath .githooks`\n" % ", ".join(drift)
+            )
             return 1
         print("examples up to date (%d files)" % len(files))
         return 0

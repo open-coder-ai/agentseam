@@ -91,6 +91,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   decision on the way back including the ones reduced because the agent cannot express
   them. Produced by `examples/generate.py` from the real code paths, with a test and a CI
   job that fail on drift.
+- `.githooks/pre-commit` regenerates the vendor examples when a commit touches what they
+  are generated from, so the pages land in the same commit as the change. Enable with
+  `git config core.hooksPath .githooks`; CI remains the guarantee.
+- `examples/generate.py --check` now prints a unified diff of what changed, so a red
+  pipeline shows which behaviour moved without checking the branch out.
 - Examples: cross-agent event log, cross-agent notifier.
 
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main

@@ -40,10 +40,31 @@ If it does, the abstraction is wrong; say so in the PR and we fix the abstractio
 
 ```bash
 pip install -e ".[dev]"
+git config core.hooksPath .githooks   # once per clone -- see below
 pytest -q                 # the suite
 ruff check . && ruff format --check .
 agentseam matrix          # eyeball the honesty table
 ```
+
+### The generated examples refresh themselves
+
+`examples/generated/` is produced from the real code paths, so a change to an adapter or to
+the matrix invalidates it. Enabling `core.hooksPath` puts the regenerated pages in the same
+commit as the change that caused them, which is where they belong -- reviewing a behaviour
+change next to its effect on every vendor is most of the value.
+
+The hook only fires for commits touching `src/agentseam/` or the generator's own inputs, so
+a docs commit stays untouched. If you skip it, or commit with `--no-verify`, CI catches the
+drift and prints the diff.
+
+```bash
+python3 examples/generate.py           # refresh by hand
+python3 examples/generate.py --check   # what CI runs
+```
+
+Hooks are not cloned and `--no-verify` skips them, so this is the convenience and the CI
+job is the guarantee. Both run the same script, for the reason the stdlib-only check does:
+a second implementation of a check drifts from the first and ships a red pipeline.
 
 ## Constraints that are not negotiable
 
