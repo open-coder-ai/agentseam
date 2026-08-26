@@ -248,4 +248,7 @@ capability research is done and each is a module plus a matrix row.
 - **The matrix carries provenance.** Every row records the version and date it was
   verified, and how.
 
+[ARCHITECTURE.md](ARCHITECTURE.md) explains why those choices, what they cost, and the bug
+classes they exist to prevent.
+
 Apache-2.0.
