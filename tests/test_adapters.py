@@ -150,3 +150,70 @@ def test_one_handler_runs_on_every_agent():
         _t, _c, event, decision = A.handle(poisoned, handler)
         outcomes[event.agent] = decision.outcome
     assert outcomes == {"claude_code": "deny", "vscode_copilot": "deny", "cursor": "deny"}
+
+
+# --------------------------------------------------------------- gemini cli
+# Payload shapes from the vendor's own hooks reference (docs/hooks/reference.md).
+GM_WRITE = {
+    "hook_event_name": "BeforeTool",
+    "tool_name": "write_file",
+    "session_id": "g1",
+    "cwd": "/repo",
+    "tool_input": {"file_path": "GEMINI.md", "content": "team prefers pnpm"},
+}
+GM_REPLACE = {
+    "hook_event_name": "BeforeTool",
+    "tool_name": "replace",
+    "tool_input": {"file_path": "GEMINI.md", "new_string": "updated fact"},
+}
+GM_SHELL = {
+    "hook_event_name": "BeforeTool",
+    "tool_name": "run_shell_command",
+    "tool_input": {"command": "rm -rf /"},
+}
+GM_AFTER = {"hook_event_name": "AfterTool", "tool_name": "write_file", "tool_output": "ok"}
+
+
+def test_gemini_parses_its_own_tool_names():
+    mod = A.adapters.get("gemini_cli")
+    assert mod.parse(GM_WRITE).content == "team prefers pnpm"
+    assert mod.parse(GM_REPLACE).content == "updated fact"
+    assert mod.parse(GM_SHELL).command == "rm -rf /"
+    assert mod.parse(GM_AFTER).event == A.POST_TOOL
+
+
+def test_gemini_deny_is_top_level_not_nested():
+    """Gemini puts decision at the top level; nesting it Claude-style would no-op."""
+    text, code, _, _ = A.handle(GM_WRITE, deny_all)
+    payload = json.loads(text)
+    assert payload["decision"] == "deny"
+    assert payload["reason"] == "test-deny"
+    assert "hookSpecificOutput" not in payload
+    assert code == 0
+
+
+def test_gemini_rewrite_uses_hook_specific_tool_input():
+    text, _, _, _ = A.handle(GM_WRITE, lambda e: Decision.rewrite({"content": "redacted"}))
+    assert json.loads(text)["hookSpecificOutput"]["tool_input"] == {"content": "redacted"}
+
+
+def test_gemini_ask_degrades_to_deny_with_explanation():
+    """No interactive confirmation exists in this protocol; never silently allow."""
+    text, _, _, _ = A.handle(GM_WRITE, lambda e: Decision.ask("needs a human"))
+    payload = json.loads(text)
+    assert payload["decision"] == "deny"
+    assert "confirmation required" in payload["reason"]
+
+
+def test_gemini_allow():
+    assert json.loads(A.handle(GM_WRITE, allow_all)[0])["decision"] == "allow"
+
+
+def test_one_handler_covers_gemini_too():
+    def handler(e):
+        return Decision.deny("secret") if "SECRET" in (e.content or "") else Decision.allow()
+
+    poisoned = json.loads(json.dumps(GM_WRITE))
+    poisoned["tool_input"]["content"] = "SECRET"
+    _t, _c, event, decision = A.handle(poisoned, handler)
+    assert event.agent == "gemini_cli" and decision.outcome == "deny"
