@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from agentseam import adapters
@@ -111,3 +113,63 @@ def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkey
     assert not (tmp_path / "~").exists(), "created a directory literally named ~"
     assert Path(written) == tmp_path / ".junie" / "config.json"
     assert I.installed("junie", str(tmp_path))
+
+
+def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
+    """The data-loss bug: _load returned {} on any parse failure, so install merged its
+    fragment into an empty object and wrote that back -- wiping the user's whole config.
+
+    For Junie, config.json IS the CLI configuration, so a stray byte cost everything. A
+    UTF-8 BOM (Windows editors add one) is the common trigger and is not corruption, so it
+    must be tolerated; genuine corruption must stop install, never overwrite.
+    """
+    monkeypatch.setenv("HOME", str(tmp_path))
+    cfg = tmp_path / ".junie" / "config.json"
+    cfg.parent.mkdir()
+
+    # A BOM-prefixed real config: tolerated, preserved, and wired.
+    cfg.write_bytes(b"\xef\xbb\xbf" + json.dumps({"theme": "dark", "customModel": "keep-me"}).encode())
+    I.install("junie", ["pre_tool"], "guard.py")
+    after = json.loads(cfg.read_text())
+    assert after["customModel"] == "keep-me" and after["theme"] == "dark", "user settings were destroyed"
+    assert "hooks" in after, "the hook was not wired"
+
+    # Genuine corruption: install refuses rather than clobbering.
+    cfg.write_text("{ this is not json ,,, }")
+    with pytest.raises(I.ConfigUnreadable):
+        I.install("junie", ["pre_tool"], "guard.py")
+    assert cfg.read_text() == "{ this is not json ,,, }", "a config we could not parse was overwritten"
+
+    # An undecodable encoding (UTF-16) is unreadable, not corruption-in-JSON, but must take
+    # the same preserve-and-report path rather than crashing with a raw UnicodeDecodeError.
+    cfg.write_bytes(json.dumps({"keep": "me"}).encode("utf-16"))
+    with pytest.raises(I.ConfigUnreadable):
+        I.install("junie", ["pre_tool"], "guard.py")
+    assert cfg.read_bytes()[:2] == b"\xff\xfe", "a UTF-16 config was overwritten"
+
+
+def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
+    """installed() is a read-only question; a corrupt file means "not known to be there",
+    not a crash. uninstall() is where an unreadable file must stop instead."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    cfg = tmp_path / ".junie" / "config.json"
+    cfg.parent.mkdir()
+    cfg.write_text("{ broken ,,, }")
+
+    assert I.installed("junie") is False
+    with pytest.raises(I.ConfigUnreadable):
+        I.uninstall("junie")
+    assert cfg.read_text() == "{ broken ,,, }", "uninstall must not rewrite a file it cannot parse"
+
+
+def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatch):
+    """The TOML branch of installed() must uphold the same "never raises" contract as the
+    JSON branch: a config that exists but is not UTF-8 (a UTF-16 file, a stray byte) means
+    "not known to be there", not a crash. It read the file with no guard before."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    cfg = tmp_path / ".kimi-code" / "config.toml"
+    cfg.parent.mkdir()
+    cfg.write_bytes('event = "x"'.encode("utf-16"))
+
+    assert I.installed("kimi_code") is False
+    assert cfg.read_bytes()[:2] == b"\xff\xfe", "a read-only query must not touch the file"

@@ -7,6 +7,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
+  failure, so the fragment was merged into an empty object and written back, discarding
+  everything the file held. For Junie, whose `config.json` is the whole CLI configuration
+  rather than a hooks-only file, a single stray byte -- a UTF-8 BOM from a Windows editor, a
+  trailing comma, a half-saved edit -- cost the user their entire config. `_load` now
+  tolerates a BOM (utf-8-sig, mirroring the runtime stdin fix) and raises `ConfigUnreadable`
+  on anything still unparseable rather than returning `{}`, so `install` and `uninstall`
+  stop and preserve the file instead of overwriting it. `installed()` stays a safe query and
+  reports "not present" rather than raising -- including its TOML branch, which read the file
+  with no guard and so crashed the query on a non-UTF-8 or unreadable config. This protected
+  every JSON-config agent, not just Junie.
 - Claude Code's `NotebookEdit` is listed in `WRITE_TOOLS`, so the adapter claims to gate it,
   but its cell body arrives as `new_source` -- a field `parse()` never read -- so
   `Event.content` was `None` and a content policy (secret scan, memory guard) saw nothing at
