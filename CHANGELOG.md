@@ -12,6 +12,47 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   fact..."}` detection record its sibling `postToolUse` gets for the identical fact (the
   call already happened). A policy flagging failed commands lost its only signal on Cursor.
   `examples/generated/cursor.md` regenerated.
+- The matrix's `codex_cli` note still listed `model` among the fields that separate its
+  payload from Claude Code's, while `codex_cli.claims()`'s own docstring says the opposite:
+  `model` stopped counting as a discriminator because Cursor sends it too, and claiming on
+  it made every real Cursor payload ambiguous. A maintainer trusting the (source-of-truth)
+  note over the code could re-add `model` to `claims()` and reintroduce that exact
+  regression. Reworded to match what the code actually does.
+  `examples/generated/codex_cli.md` regenerated.
+- Codex CLI's `respond()` dropped `decision.reason` on a REWRITE: the emitted JSON carried
+  only `allow` + `updatedInput`, unlike `claude_code.respond` which already includes
+  `permissionDecisionReason` when a rewrite has one. A handler explaining WHY a write was
+  altered (e.g. "secret redacted; use env var") reached Codex with the changed content and
+  no explanation. `examples/generated/codex_cli.md` regenerated.
+- `tools/redact.py`'s `MAX_ENUM_LEN=48` destroyed real MCP tool names: `mcp__<server>__<tool>`
+  routinely exceeds 48 characters, so a capture session gating MCP calls lost WHICH tool
+  fired -- reduced to `<str:NN>` -- on exactly the surface several matrix rows most need
+  verified. Tool-name-shaped keys (`tool_name`, `toolName`, `name`, `mcp_server_name`) now
+  get a 128-char cap; other structural keys, and actual prose reusing one of these key
+  names, are unaffected.
+- Windsurf's two MCP events (`pre_mcp_tool_use`/`post_mcp_tool_use`) stored the constant
+  vendor event name in `event.tool` instead of the MCP tool identity, so a cross-agent
+  handler written as `event.tool in RISKY_TOOLS` (works on `claude_code`/`devin`) could
+  never match a Windsurf MCP call -- `event.tool` was always the same string. `event.tool`
+  now carries `<server>/<tool>` for these two events (per the real installation's own
+  payload shape). Blocking and the vendor event name in log messages, which used to be
+  read off `event.tool`, are now derived from `event.raw` instead so this does not regress.
+  Separately, `install('windsurf', ['pre_tool'])` wired only `pre_run_command` --
+  `pre_mcp_tool_use`, a documented BLOCKING gate mapped to the same canonical `PRE_TOOL`,
+  was never wired by anything, so a `pre_tool` policy silently covered shell commands but
+  not MCP tool calls. `hook_config` now wires both. `examples/generated/windsurf.md`
+  regenerated.
+- Claude Code's `InstructionsLoaded` and `FileChanged` carry no `tool_input` at all --
+  `file_path` (and, for `InstructionsLoaded`, `content`) sit at the top level instead, per
+  the project's own recorded example payloads. `parse()` only ever read from `tool_input`,
+  so `event.path` (and `event.content`) were always `None` for both events -- a policy
+  gating instruction-file loads or watched-file changes by path or content never fired.
+  `examples/generated/claude_code.md` regenerated to reflect the fix.
+- Kimi Code and Junie both claim Claude Code's wire protocol exactly (their own docstrings
+  say so), but `parse()` in each read only `content`/`new_string` -- so MultiEdit's
+  `edits[].new_string` and NotebookEdit's `new_source`/`notebook_path` were dropped, and a
+  content policy that already works on claude_code's MultiEdit/NotebookEdit went blind on
+  these two. Mirrors the fallback chain claude_code.parse already uses.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration

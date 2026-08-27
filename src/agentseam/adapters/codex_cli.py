@@ -110,6 +110,8 @@ def respond(decision, event):
     elif decision.outcome == REWRITE:
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
+        if decision.reason:
+            out["permissionDecisionReason"] = decision.reason
     else:
         out["permissionDecision"] = "allow"
     return _json.dumps({"hookSpecificOutput": out}), 0

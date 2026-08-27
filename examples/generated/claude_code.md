@@ -543,6 +543,8 @@ which normalizes to:
 
 ```
 event    = instructions_loaded
+path     = CLAUDE.md
+content  = Prefer pnpm. Tests live beside source.
 ```
 
 A `Decision.deny()` here produces:
@@ -574,6 +576,7 @@ which normalizes to:
 
 ```
 event    = file_changed
+path     = AGENTS.md
 ```
 
 A `Decision.deny()` here produces:
