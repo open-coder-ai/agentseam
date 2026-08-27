@@ -100,6 +100,18 @@ def test_cursor_clean_edit_is_silent():
     assert (text, code) == ("", 0)
 
 
+def test_post_tool_use_failure_gets_the_same_detection_record_as_its_sibling():
+    """postToolUseFailure was missing from _POST_HOC, so a deny/ask at a failed tool call
+    returned silence instead of the additional_context record postToolUse itself gets --
+    the identical fact (the call already happened) went unrecorded on its failure twin."""
+    raw = dict(CU_PRE_TOOL, hook_event_name="postToolUseFailure")
+    text, code, event, _ = A.handle(raw, deny_all)
+    assert event.event == A.TOOL_FAILURE
+    assert code == 0
+    body = json.loads(text)
+    assert "cannot prevent it" in body["additional_context"]
+
+
 def test_installed_gates_ask_to_fail_closed():
     """Cursor fails open by default; a crashed gate would silently permit what it guards."""
     config = A.adapters.get("cursor").hook_config([A.PRE_TOOL, A.FILE_CHANGED], "handler.py")

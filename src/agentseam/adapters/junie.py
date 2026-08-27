@@ -84,13 +84,20 @@ def claims(raw):
 def parse(raw):
     ti = raw.get("tool_input")
     ti = ti if isinstance(ti, dict) else {}
+    # The docstring stakes everything on Junie's field names following Claude Code's wire
+    # protocol exactly, so MultiEdit's edits[].new_string and NotebookEdit's new_source get
+    # the same fallback chain claude_code.parse uses -- not a guess, a claim we already made.
+    content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
+    if content is None and isinstance(ti.get("edits"), list):
+        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"])
+        content = joined or None
     return Event(
         AGENT,
         EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=raw.get("tool_name"),
         command=ti.get("command"),
-        path=ti.get("file_path") or ti.get("path"),
-        content=ti.get("content") or ti.get("new_string"),
+        path=ti.get("file_path") or ti.get("path") or ti.get("notebook_path"),
+        content=content,
         output=raw.get("last_assistant_message"),
         prompt=raw.get("prompt"),
         session_id=raw.get("session_id"),

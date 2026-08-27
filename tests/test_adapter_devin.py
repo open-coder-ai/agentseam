@@ -95,3 +95,15 @@ def test_devin_pre_tool_is_best_effort_because_it_fails_open():
     """Only exit 2 blocks; other non-zero codes are logged and the action proceeds."""
     assert A.can_block("devin", A.PRE_TOOL)
     assert A.enforcement_level("devin", A.PRE_TOOL) == "best-effort"
+
+
+def test_post_compaction_is_not_bent_into_pre_compact():
+    """PostCompaction fires AFTER compaction. Folding it into canonical PRE_COMPACT would
+    let a handler wired there believe it can flush or snapshot context before compaction --
+    the reason pre_compact exists -- when the context it wanted to save is already gone by
+    the time the hook runs. Left unmapped rather than claiming a "before" gate that is
+    actually "after"."""
+    mod = A.adapters.get("devin")
+    assert A.PRE_COMPACT not in mod.REVERSE_EVENT_MAP
+    assert mod.parse({"hook_event_name": "PostCompaction", "prompt_id": "turn-1"}).event == A.UNKNOWN
+    assert A.PRE_COMPACT not in A.MATRIX["devin"]["events"]
