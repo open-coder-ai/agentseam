@@ -90,6 +90,18 @@ def test_permission_request_is_answered_explicitly_because_silence_approves():
     assert json.loads(A.handle(raw, lambda e: Decision.deny("no"), agent="junie")[0])["decision"] == "deny"
 
 
+def test_permission_request_is_not_bundled_into_a_pre_tool_install():
+    """PermissionRequest approves by default; PreToolUse denies by default. Both map to
+    canonical pre_tool, but install('junie', ['pre_tool']) must wire only PreToolUse --
+    bundling the two would hand a consumer a second, higher-stakes gate with inverted
+    semantics they never asked for. Deliberate, not a coverage gap; documented in the
+    module docstring and the matrix note."""
+    mod = A.adapters.get("junie")
+    config = mod.hook_config([A.PRE_TOOL], "handler.py")
+    assert list(config["hooks"]) == ["PreToolUse"]
+    assert "PermissionRequest" not in config["hooks"]
+
+
 def test_stop_speaks_retry_not_permission():
     raw = dict(SCENARIOS["junie"][A.STOP])
     body = json.loads(A.handle(raw, lambda e: Decision.deny("tests still failing"), agent="junie")[0])

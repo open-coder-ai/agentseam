@@ -18,6 +18,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   never plumbed into `event.tool_use_id`, which stayed `None` on the one agent that names a
   correlation field at all. A handler timing a gate decision against its post-tool result, or
   verifying a denied call produced no output, had nothing to key on.
+- Junie's `PermissionRequest` -- the event whose inverted default (silence approves) is the
+  adapter's headline hazard -- cannot be wired by `install()` on its own, since it shares
+  canonical `pre_tool` with `PreToolUse` and `REVERSE_EVENT_MAP` names only one vendor event
+  per canonical one. Nothing said this was deliberate rather than a coverage gap. Documented
+  in the docstring and matrix note: bundling the two under one `pre_tool` install would hand
+  a consumer an approve-by-default gate they did not ask for, so it must be wired by hand.
 - **Claude Code's matrix row claimed `enforced` -- the strongest claim in the whole
   vocabulary -- at `pre_tool` and `prompt_submit` with no basis anywhere in this project**:
   not the docstring, not the note, not the evidence record, not the CHANGELOG. Every other
