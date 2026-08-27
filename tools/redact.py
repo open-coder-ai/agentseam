@@ -62,9 +62,18 @@ STRUCTURAL_KEYS = frozenset(
 MAX_ENUM_LEN = 48
 _SEPARATORS = ("/", "\\", "@", "\n", " ")
 
+#: A tool name is an identifier, not prose, but an MCP tool name (`mcp__<server>__<tool>`)
+#: routinely runs past MAX_ENUM_LEN -- a capture session gating MCP calls would then lose
+#: WHICH tool fired on exactly the surface the matrix most needs verified. These keys get a
+#: longer cap; they are still checked for separators, so a value that is actually prose
+#: still falls back to a length.
+_TOOL_NAME_KEYS = frozenset({"tool_name", "toolName", "name", "mcp_server_name"})
+MAX_TOOL_NAME_LEN = 128
 
-def _is_enumlike(value):
-    return isinstance(value, str) and 0 < len(value) <= MAX_ENUM_LEN and not any(sep in value for sep in _SEPARATORS)
+
+def _is_enumlike(value, key=None):
+    cap = MAX_TOOL_NAME_LEN if key in _TOOL_NAME_KEYS else MAX_ENUM_LEN
+    return isinstance(value, str) and 0 < len(value) <= cap and not any(sep in value for sep in _SEPARATORS)
 
 
 def _type_of(value):
@@ -99,7 +108,7 @@ def redact(value, key=None):
         return shaped
     if isinstance(value, bool) or isinstance(value, (int, float)) or value is None:
         return value
-    if key in STRUCTURAL_KEYS and _is_enumlike(value):
+    if key in STRUCTURAL_KEYS and _is_enumlike(value, key=key):
         return value
     return _type_of(value)
 

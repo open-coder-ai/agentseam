@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `tools/redact.py`'s `MAX_ENUM_LEN=48` destroyed real MCP tool names: `mcp__<server>__<tool>`
+  routinely exceeds 48 characters, so a capture session gating MCP calls lost WHICH tool
+  fired -- reduced to `<str:NN>` -- on exactly the surface several matrix rows most need
+  verified. Tool-name-shaped keys (`tool_name`, `toolName`, `name`, `mcp_server_name`) now
+  get a 128-char cap; other structural keys, and actual prose reusing one of these key
+  names, are unaffected.
 - Windsurf's two MCP events (`pre_mcp_tool_use`/`post_mcp_tool_use`) stored the constant
   vendor event name in `event.tool` instead of the MCP tool identity, so a cross-agent
   handler written as `event.tool in RISKY_TOOLS` (works on `claude_code`/`devin`) could
