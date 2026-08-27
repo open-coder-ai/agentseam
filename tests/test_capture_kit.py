@@ -172,3 +172,30 @@ def test_a_redacted_placeholder_is_never_reported_as_a_version(tmp_path, monkeyp
     )
     capture.cmd_report(argparse.Namespace())
     assert "agent version" not in capsys.readouterr().out
+
+
+def test_key_paths_are_attributed_to_the_event_that_carried_them(tmp_path, monkeypatch, capsys):
+    """A union across the session cannot say which event carries which key.
+
+    That ambiguity blocked four follow-ups from one live run -- whether `tool_output`
+    exists on failures, and which events carry `session_id`, could not be answered without
+    another capture, even though every record on disk knew its own event name.
+    """
+    import argparse
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    rows = [
+        {"agent": "cursor", "payload": {"hook_event_name": "preToolUse", "session_id": "<str:3>"}},
+        {"agent": "cursor", "payload": {"hook_event_name": "postToolUseFailure", "error_message": "<str:9>"}},
+    ]
+    (tmp_path / "captured.1.jsonl").write_text("".join(json.dumps(r) + "\n" for r in rows))
+    capture.cmd_report(argparse.Namespace())
+    out = capsys.readouterr().out
+
+    pre = out.index("preToolUse:")
+    fail = out.index("postToolUseFailure:")
+    assert out.index("session_id") > pre, "session_id must sit under the event that carried it"
+    assert fail < out.index("error_message") < pre, "error_message belongs under postToolUseFailure only"
