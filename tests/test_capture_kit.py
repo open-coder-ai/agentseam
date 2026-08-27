@@ -1,12 +1,9 @@
-"""The capture kit's redaction is the part that must not be wrong.
+"""The capture kit: installing the probe, spotting conflicts, and reporting what it caught.
 
-It runs on a contributor's own machine, over payloads that can hold a prompt, a file being
-written, a home directory or an email, and produces a file meant to be pasted into a PR. A
-redactor that misses something has already leaked by the time anyone reads it.
-
-So these tests assert the strong property rather than spot-checking known-sensitive keys:
-**no string from the input may appear in the output**, except the short protocol enums on a
-named allowlist."""
+The probe's own behaviour lives in test_capture_probe.py; redaction in test_redaction.py.
+What is left here is the wiring -- which configs get written, which of them fire the same
+probe twice, and whether the report says something true about what came back.
+"""
 
 from __future__ import annotations
 
@@ -21,106 +18,6 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 # Paths use /workspace/alice deliberately: the repository's own privacy scanner rejects a tracked
 # file containing a realistic home directory, and it was right to reject the first version of
-
-SENSITIVE = {
-    "hook_event_name": "PreToolUse",
-    "tool_name": "Write",
-    "session_id": "sess-9f3a-private",
-    "cwd": "/workspace/alice/work",
-    "user_email": "someone@example.com",
-    "transcript_path": "/workspace/alice/.claude/transcript.jsonl",
-    "prompt": "deploy using my key AKIA-not-real",
-    "tool_input": {"file_path": "/workspace/alice/.env", "content": "TOKEN=hunter2"},
-    "workspace_roots": ["/workspace/alice/repo", "/workspace/alice/other"],
-    "nested": {"deep": {"deeper": "still private"}},
-    "count": 7,
-    "flag": True,
-}
-
-
-def test_the_real_probe_allows_and_writes_nothing_sensitive(tmp_path, monkeypatch):
-    """End to end against the generated probe, because that is what runs on a real machine.
-
-    Inspecting the source would only prove the source looks right. This runs it over a
-    payload full of things that must not travel and reads back what landed on disk.
-    """
-    import subprocess
-
-    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
-    sys.modules.pop("capture", None)
-    import capture
-
-    probe = tmp_path / "probe.py"
-    probe.write_text(capture._probe_source())
-
-    result = subprocess.run([sys.executable, str(probe)], input=json.dumps(SENSITIVE), capture_output=True, text=True)
-    assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
-
-    written = "".join(open(shard).read() for shard in capture._capture_files())
-    for secret in ("hunter2", "someone@example.com", "/workspace/alice", "sess-9f3a-private", "AKIA-not-real"):
-        assert secret not in written, "%r reached the capture file" % secret
-    assert "PreToolUse" in written and "tool_input" in written
-
-
-def test_a_probe_over_unparseable_input_still_allows(tmp_path, monkeypatch):
-    """A vendor sending something unexpected must not break the session being verified."""
-    import subprocess
-
-    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
-    sys.modules.pop("capture", None)
-    import capture
-
-    probe = tmp_path / "probe.py"
-    probe.write_text(capture._probe_source())
-    result = subprocess.run([sys.executable, str(probe)], input="not json at all", capture_output=True, text=True)
-    assert result.returncode == 0
-
-
-def _run_probe(tmp_path, monkeypatch, data, agent=("cursor",)):
-    import subprocess
-
-    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
-    sys.modules.pop("capture", None)
-    import capture
-
-    probe = tmp_path / "probe.py"
-    probe.write_text(capture._probe_source())
-    result = subprocess.run([sys.executable, str(probe), *agent], input=data, capture_output=True)
-    assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
-    # Through the loader, not a fixed filename: the probe writes a per-process shard.
-    rows = capture._load()
-    return rows[0] if rows else None
-
-
-def test_a_bom_or_utf16_payload_still_parses(tmp_path, monkeypatch):
-    """The exact failure a live Cursor run on Windows produced: the console locale turned a
-    UTF-8 BOM into mojibake and a whole session was recorded only as lengths. Chock's gate
-    hit the same byte-for-byte failure and its fix -- read bytes, decode utf-8-sig -- is
-    ported here and pinned."""
-    payload = json.dumps({"hook_event_name": "beforeShellExecution", "command": "echo hi"})
-    for data in (b"\xef\xbb\xbf" + payload.encode("utf-8"), payload.encode("utf-16")):
-        row = _run_probe(tmp_path, monkeypatch, data)
-        assert row["payload"].get("hook_event_name") == "beforeShellExecution", row
-        for shard in tmp_path.glob("captured*.jsonl"):
-            shard.unlink()
-
-
-def test_unparseable_input_records_why_not_just_how_much(tmp_path, monkeypatch):
-    """A length alone cannot be diagnosed; 115 payloads of a real run proved it. The probe
-    now records shape-only facts -- encoding, BOM, first character class, line counts --
-    and still nothing of the content."""
-    row = _run_probe(tmp_path, monkeypatch, b"Content-Length: 42\r\n\r\nnot json")
-    diag = row["payload"]["__unparsed__"]
-    assert diag["encoding"] == "utf-8-sig" and diag["bom"] == "none"
-    assert diag["first_char"] == "letter" and diag["json_lines"] == 0
-    assert "Content-Length" not in json.dumps(row)
-
-
-def test_the_probe_knows_which_agent_it_records(tmp_path, monkeypatch):
-    """Attribution rides argv: install wires it, so the report can hold the payloads
-    against the right adapter instead of filing everything under '?'."""
-    row = _run_probe(tmp_path, monkeypatch, b"{}", agent=("junie",))
-    assert row["agent"] == "junie"
 
 
 def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeypatch):
@@ -153,36 +50,6 @@ def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeyp
     assert install_mod.installed("cursor", str(tmp_path))
 
 
-def _probe_stdout(tmp_path, monkeypatch, data, agent):
-    import subprocess
-
-    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
-    sys.modules.pop("capture", None)
-    import capture
-
-    probe = tmp_path / "probe.py"
-    probe.write_text(capture._probe_source())
-    result = subprocess.run([sys.executable, str(probe), agent], input=data, capture_output=True)
-    assert result.returncode == 0, result.stderr
-    return result.stdout.decode()
-
-
-def test_the_probe_answers_a_permission_gate_in_the_agents_own_dialect(tmp_path, monkeypatch):
-    """Exit 0 is not an answer everywhere. Witnessed live: Cursor's beforeShellExecution
-    got no output from the silent probe and REJECTED the user's real command -- the exact
-    interference the probe promises never to cause. It now allows in-dialect."""
-    payload = json.dumps({"hook_event_name": "beforeShellExecution", "command": "x", "cwd": "/w"})
-    out = _probe_stdout(tmp_path, monkeypatch, payload.encode(), "cursor")
-    assert json.loads(out) == {"permission": "allow"}
-
-
-def test_the_probe_stays_silent_where_silence_is_the_protocol(tmp_path, monkeypatch):
-    """Observational hooks document no output fields; inventing one risks the opposite bug."""
-    payload = json.dumps({"hook_event_name": "afterFileEdit", "file_path": "/w/x.py", "edits": []})
-    assert _probe_stdout(tmp_path, monkeypatch, payload.encode(), "cursor") == ""
-    assert _probe_stdout(tmp_path, monkeypatch, b"not json", "cursor") == ""
-
-
 def test_every_adapter_can_be_detected():
     """A footprint per adapter, or `detect` silently cannot find agents we support.
 
@@ -202,61 +69,61 @@ def test_every_adapter_can_be_detected():
     assert not missing, "adapters with no detection footprint: %s" % ", ".join(missing)
 
 
-def test_concurrent_probes_never_tear_a_record(tmp_path, monkeypatch):
-    """Cursor runs subagents in parallel, so several probes append at once.
+def _install(agent, repo, tmp_path, monkeypatch):
+    import argparse
 
-    Witnessed live: a shared append target produced two records split mid-string and the
-    report died on the first fragment, taking 122 good records with it. Per-process shards
-    remove the sharing rather than narrowing the window; this fires 64 probes concurrently
-    with payloads large enough to make a buffered append tear.
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path / ".capture"))
+    sys.modules.pop("capture", None)
+    import capture
+
+    capture.cmd_install(argparse.Namespace(agent=agent, repo=str(repo)))
+    return capture
+
+
+def test_two_installs_in_one_repo_are_reported_as_a_conflict(tmp_path, monkeypatch, capsys):
+    """Witnessed live: 27 payloads labelled `cursor` beside 26 labelled `?`, near 1:1.
+
+    Cursor also loads Claude Code-format hooks, so a leftover .claude/settings.json entry
+    fires the same probe on the same events -- once with the agent argument install wired,
+    once without. Half the evidence then cannot be held against any adapter, and nothing in
+    the kit said why.
     """
-    import concurrent.futures
-    import subprocess
+    import argparse
+
+    capture = _install("cursor", tmp_path, tmp_path, monkeypatch)
+    assert capture.cmd_conflicts(argparse.Namespace(repo=str(tmp_path))) == 0
+
+    _install("claude_code", tmp_path, tmp_path, monkeypatch)
+    capsys.readouterr()
+    assert capture.cmd_conflicts(argparse.Namespace(repo=str(tmp_path))) == 1, "conflict not reported"
+    out = capsys.readouterr().out
+    assert "cursor" in out and "claude_code" in out and "twice" in out
+
+
+def test_install_warns_when_another_config_here_already_fires_the_probe(tmp_path, monkeypatch, capsys):
+    """The warning belongs at install time, while it is still cheap to act on."""
+    _install("cursor", tmp_path, tmp_path, monkeypatch)
+    capsys.readouterr()
+    _install("claude_code", tmp_path, tmp_path, monkeypatch)
+    assert "WARNING" in capsys.readouterr().out
+
+
+def test_an_unlabelled_payload_is_not_reported_as_an_unknown_agent(tmp_path, monkeypatch, capsys):
+    """`?` is not a vendor.
+
+    Calling it "no adapter for this agent yet" reads as a discovery when it is a labelling
+    miss, and sends the reader looking for a thirteenth agent that does not exist.
+    """
+    import argparse
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
     sys.modules.pop("capture", None)
     import capture
 
-    probe = tmp_path / "probe.py"
-    probe.write_text(capture._probe_source())
-    payload = json.dumps(
-        {
-            "hook_event_name": "preToolUse",
-            "conversation_id": "c",
-            "generation_id": "g",
-            "cursor_version": "1.0",
-            "workspace_roots": ["/w"],
-            "tool_name": "Bash",
-            "tool_input": {"command": "x" * 3000, "cwd": "/w"},
-        }
-    ).encode()
-
-    def fire(_):
-        return subprocess.run([sys.executable, str(probe), "cursor"], input=payload, capture_output=True).returncode
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
-        assert set(pool.map(fire, range(64))) == {0}
-
-    rows = capture._load()
-    assert capture._load.torn == 0, "%d record(s) torn by concurrent writes" % capture._load.torn
-    assert len(rows) == 64, "expected 64 records, got %d" % len(rows)
-
-
-def test_a_torn_line_is_skipped_and_counted_not_fatal(tmp_path, monkeypatch):
-    """The other half of the same failure: a capture already torn must still report.
-
-    Losing 122 good records to one bad line is the wrong trade, and dropping it silently
-    would present a partial capture as a complete one.
-    """
-    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
-    sys.modules.pop("capture", None)
-    import capture
-
-    whole_a = json.dumps({"agent": "cursor", "payload": {"hook_event_name": "stop"}})
-    whole_b = json.dumps({"agent": "cursor", "payload": {"hook_event_name": "sessionStart"}})
-    # The literal tail of a record torn mid-string, as seen in the live capture.
-    fragment = 'er_email": "<str:29>", "workspace_roots": ["<str:40>"]}}'
-    (tmp_path / "captured.jsonl").write_text("\n".join([whole_a, fragment, whole_b]) + "\n")
-
-    rows = capture._load()
-    assert len(rows) == 2 and capture._load.torn == 1
+    (tmp_path / "captured.1.jsonl").write_text(
+        json.dumps({"agent": "?", "payload": {"hook_event_name": "preToolUse"}}) + "\n"
+    )
+    capture.cmd_report(argparse.Namespace())
+    out = capsys.readouterr().out
+    assert "NOT a second vendor" in out
+    assert "No adapter for this agent yet" not in out

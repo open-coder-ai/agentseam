@@ -97,6 +97,11 @@ def cmd_install(args):
     print("probe:  %s" % path)
     print("wired:  %s" % written)
     print("events: %s" % ", ".join(events))
+    others = [a for a in _installed_configs(args.repo) if a != args.agent]
+    if others:
+        print("\nWARNING: these configs in this repo also fire the probe: %s" % ", ".join(others))
+        print("Agents read each other's config files, so one action can fire the probe twice")
+        print("and half the records will be labelled '?'. Uninstall them first.")
     print("\nNow use %s normally for a minute -- open it, have it read a file, run a command," % args.agent)
     print("write something, end the session. Then: python3 tools/capture.py report")
     return 0
@@ -143,6 +148,37 @@ def _load():
 _load.torn = 0
 
 
+UNLABELLED = "?"
+
+
+def _installed_configs(repo_root):
+    """Every agent whose config in this repo currently carries our probe."""
+    return [agent for agent in sorted(adapters.ADAPTERS) if install_mod.installed(agent, repo_root, owner=OWNER)]
+
+
+def cmd_conflicts(args):
+    """Say which configs fire our probe, and warn when more than one will.
+
+    Agents read each other's config files -- Cursor loads Claude Code-format hooks, VS Code
+    reads several of Claude Code's folders. Two installs in one repo therefore means the same
+    hook fires twice for one action, and the payloads split across two labels for no reason a
+    reader could guess.
+    """
+    found = _installed_configs(args.repo)
+    if not found:
+        print("No agentseam capture probe is installed in %s" % os.path.abspath(args.repo))
+        return 0
+    for agent in found:
+        print("  %-16s %s" % (agent, install_mod.config_path(agent, args.repo)))
+    if len(found) > 1:
+        print("\nMore than one config here fires the probe. Agents read each other's files")
+        print("(Cursor loads Claude Code-format hooks), so one action can fire it twice --")
+        print("which is what produces payloads labelled '?' alongside labelled ones.")
+        print("Uninstall the ones you are not verifying: python3 tools/capture.py uninstall --agent <name>")
+        return 1
+    return 0
+
+
 def cmd_report(args):
     """Compare what arrived against what the adapter expects, and say which won."""
     rows = _load()
@@ -165,7 +201,16 @@ def cmd_report(args):
     for agent in sorted(by_agent):
         payloads = by_agent[agent]
         print("## %s (%d payloads)\n" % (agent, len(payloads)))
-        if agent not in adapters.ADAPTERS:
+        if agent == UNLABELLED:
+            print(
+                "NOT a second vendor: these are payloads whose probe ran without an agent\n"
+                "argument, so nothing could be held against an adapter. The usual cause is a\n"
+                "second config firing the same probe -- Cursor also loads Claude Code-format\n"
+                "hooks, so a leftover .claude/settings.json entry makes every event fire twice,\n"
+                "once labelled and once not. Run `capture.py conflicts` to see which configs\n"
+                "in this repo carry our probe.\n"
+            )
+        elif agent not in adapters.ADAPTERS:
             print("No adapter for this agent yet -- the shapes below are the whole finding.\n")
         mod = adapters.ADAPTERS.get(agent)
         seen_events, unclaimed, unparsed = set(), 0, []
@@ -217,6 +262,9 @@ def main(argv=None):
         s.add_argument("--repo", default=".")
         s.set_defaults(fn=fn)
     sub.add_parser("report", help="compare captures against what we claim").set_defaults(fn=cmd_report)
+    conflicts = sub.add_parser("conflicts", help="which configs here fire the probe")
+    conflicts.add_argument("--repo", default=".")
+    conflicts.set_defaults(fn=cmd_conflicts)
     args = p.parse_args(argv)
     return args.fn(args)
 

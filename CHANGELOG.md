@@ -6,7 +6,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- `capture.py conflicts` names every config in a repo that fires the probe, and exits
+  non-zero when more than one does. `install` warns about the same thing while it is still
+  cheap to act on.
+
 ### Fixed
+- The report called an unlabelled payload "No adapter for this agent yet", which reads as a
+  thirteenth vendor when it is a labelling miss. Witnessed live: 27 payloads labelled
+  `cursor` beside 26 labelled `?`, near 1:1 -- because Cursor also loads Claude Code-format
+  hooks, so a leftover `.claude/settings.json` entry fired the same probe on the same events
+  without the agent argument. The report now says so and points at `conflicts`.
 - Concurrent probes tore records in half. Cursor runs subagents in parallel -- its payloads
   carry `is_parallel_worker`, `subagent_id` and a `subagentStart` event -- so several probe
   processes appended to one capture file at once and their buffered writes interleaved.

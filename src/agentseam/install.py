@@ -126,6 +126,16 @@ def _resolve(mod, repo_root, owner):
     return path.replace("*", owner) if "*" in path else path
 
 
+def config_path(agent, repo_root=".", owner="agentseam"):
+    """Where this agent's hook config lives, resolved the way install resolves it.
+
+    Exposed because callers keep needing the answer -- a tool reporting what is wired has to
+    name the file -- and re-deriving it from CONFIG_PATH loses the `~` and `*` handling that
+    `_resolve` already gets right.
+    """
+    return _resolve(adapters.get(agent), repo_root, owner)
+
+
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam"):
     """Wire `command` for `events` into `agent`'s config. Returns the path written.
 
