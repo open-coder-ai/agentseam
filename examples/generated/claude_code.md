@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.claude/settings.json` |
 | evidence | `live-run` — live headless run + official hooks reference |
 
-Richest surface (~30 events). Blocks via exit 2 or hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only).
+Richest surface (~30 events). Blocks via exit 2 or hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only). Live capture 2026-08-27 found detection broken against current builds: Claude Code now sends prompt_id, which this adapter treated as proof a payload was Devin's, so 38 of 42 real payloads were claimed by Devin instead and a deny rendered in the wrong dialect. Fixed by discriminating on fields observed from Claude Code rather than on a field it was assumed to lack.
 
 ## What `agentseam install` writes
 

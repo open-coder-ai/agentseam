@@ -45,6 +45,7 @@ from ..contract import (
     Event,
     degraded_from,
 )
+from .claude_code import looks_like_claude_code
 
 AGENT = "devin"
 
@@ -89,7 +90,12 @@ def claims(raw):
     name = raw.get("hook_event_name")
     if name in _DEVIN_ONLY:
         return True
-    return name in EVENT_MAP and "prompt_id" in raw
+    # `prompt_id` was the whole discriminator, and it stopped being one: a live capture
+    # showed Claude Code sending it on nearly every event, at which point this adapter
+    # claimed 38 of 42 real Claude Code payloads and detect() handed them over without
+    # ambiguity -- a deny then rendered in Devin's dialect, which Claude Code ignores.
+    # So defer whenever a field we have actually observed from Claude Code is present.
+    return name in EVENT_MAP and "prompt_id" in raw and not looks_like_claude_code(raw)
 
 
 def parse(raw):

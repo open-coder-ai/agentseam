@@ -55,6 +55,32 @@ REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 
 
+#: Fields observed in real Claude Code payloads (live capture, v3.17.8 era, 2026-08-27) that
+#: no other adapter's documented envelope lists. Positive evidence, not inferred absence --
+#: which is the distinction that broke detection here. `prompt_id` was once treated as proof
+#: a payload was NOT Claude Code's; Claude Code now sends it on nearly every event, so that
+#: negative test rejected 38 of 42 real payloads and handed them to Devin instead.
+OBSERVED_MARKERS = (
+    "transcript_path",
+    "permission_mode",
+    "stop_hook_active",
+    "agent_transcript_path",
+    "background_tasks",
+    "session_crons",
+    "custom_instructions",
+    "effort",
+)
+
+
+def looks_like_claude_code(raw):
+    """True when the payload carries a field only Claude Code has been seen to send.
+
+    Imported by the adapters that share this envelope, so the discriminator lives in one
+    place and cannot drift into two disagreeing copies.
+    """
+    return isinstance(raw, dict) and any(marker in raw for marker in OBSERVED_MARKERS)
+
+
 def claims(raw):
     """True when this payload looks like Claude Code's shape."""
     if not isinstance(raw, dict):
@@ -69,7 +95,14 @@ def claims(raw):
             return False
         # Junie reuses this whole event vocabulary on purpose -- it says so -- and sends
         # project_path, which Claude Code does not. Without this the two are one payload.
-        return "turn_id" not in raw and "prompt_id" not in raw and "project_path" not in raw
+        if "turn_id" in raw or "project_path" in raw:
+            return False
+        # `prompt_id` used to be treated as proof this was Devin's payload, not ours. Claude
+        # Code now sends it too, so the field alone settles nothing: it is only Devin's when
+        # nothing we have actually observed from Claude Code is alongside it.
+        if "prompt_id" in raw and not looks_like_claude_code(raw):
+            return False
+        return True
     return False
 
 
