@@ -28,6 +28,7 @@ from ..contract import (
     UNKNOWN,
     Event,
 )
+from .claude_code import looks_like_claude_code
 
 AGENT = "gemini_cli"
 
@@ -63,11 +64,29 @@ SHELL_TOOLS = ("run_shell_command",)
 #: self-identification beats a shared event name.
 _OWN_CLIENT_TYPES = (None, "gemini_cli", "gemini")
 
+#: Positive nameplates other vendors sharing this envelope actually send. Gemini's own
+#: payload is a strict SUBSET of theirs -- it has no field of its own to claim on -- so
+#: claiming whenever no foreign `client_type` is present made this adapter swallow every
+#: unlabelled payload in the corpus: 13 of the 15 shipping payloads that resolve to the
+#: wrong adapter, including all four of Tabnine's gating events, whose deny then vanished
+#: entirely under auto-detection. Absence of somebody else's nameplate is not evidence
+#: about us. Defer to any adapter holding positive proof.
+_FOREIGN_MARKERS = (
+    "timestamp",  # tabnine.MARKER
+    "project_path",  # junie.MARKER
+    "prompt_id",  # devin
+    "turn_id",  # codex_cli
+)
+
 
 def claims(raw):
     if not isinstance(raw, dict) or raw.get("hook_event_name") not in EVENT_MAP:
         return False
-    return raw.get("client_type") in _OWN_CLIENT_TYPES
+    if raw.get("client_type") not in _OWN_CLIENT_TYPES:
+        return False
+    if any(marker in raw for marker in _FOREIGN_MARKERS) or looks_like_claude_code(raw):
+        return False
+    return True
 
 
 def parse(raw):

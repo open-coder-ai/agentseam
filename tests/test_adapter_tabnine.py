@@ -18,18 +18,29 @@ def _at(event, **over):
     return dict(SCENARIOS["tabnine"][event], **over)
 
 
-def test_its_payloads_are_ambiguous_with_gemini_and_we_say_so_rather_than_guess():
-    """Every Tabnine event name is Gemini CLI's. `timestamp` identifies Tabnine but cannot
-    exclude Gemini, whose full base schema is not established here -- so both claim, detect
-    declines, and the caller must name the agent. A confident wrong answer would be worse.
+def test_its_gating_events_resolve_to_it_rather_than_being_swallowed():
+    """This used to be ambiguous with Gemini, and the ambiguity was not survivable.
+
+    Every Tabnine event name is Gemini CLI's, and Gemini claimed anything without a foreign
+    `client_type` -- reasoning from the absence of somebody else's nameplate. So both
+    claimed, detect() declined, and the dispatcher ALLOWED: a deny at pre_tool,
+    prompt_submit or stop produced silence under auto-detection. `timestamp` is Tabnine's
+    documented base-schema field; Gemini now defers to it, as it does to every other
+    vendor's positive nameplate.
+
+    The residual risk is stated rather than hidden: Gemini's own base schema is not
+    established, so if a real Gemini build also sends `timestamp`, its payloads would now
+    be claimed by Tabnine -- the same error mirrored. That trade is deliberate. Tabnine's
+    gates being dead is certain; the mirror is hypothetical and needs a Gemini capture.
     """
-    raw = _at(A.PRE_TOOL)
-    claimants = sorted(n for n, m in A.adapters.ADAPTERS.items() if m.claims(raw))
-    assert claimants == ["gemini_cli", "tabnine"]
-    assert A.adapters.detect(raw) is None
-    # Naming the agent is the documented way through, and it works.
-    _t, _c, event, _d = A.handle(raw, lambda e: Decision.allow(), agent="tabnine")
-    assert event.agent == "tabnine" and event.event == A.PRE_TOOL
+    for event in (A.PRE_TOOL, A.PROMPT_SUBMIT, A.STOP):
+        raw = _at(event)
+        claimants = sorted(n for n, m in A.adapters.ADAPTERS.items() if m.claims(raw))
+        assert claimants == ["tabnine"], "%s claimed by %s" % (event, claimants)
+        assert A.adapters.detect(raw) == "tabnine"
+
+    text, _code, ev, _d = A.handle(_at(A.PRE_TOOL), lambda e: Decision.deny("no"))
+    assert ev.agent == "tabnine" and "deny" in text, "the deny must survive auto-detection: %r" % text
 
 
 def test_the_marker_is_required_to_claim():

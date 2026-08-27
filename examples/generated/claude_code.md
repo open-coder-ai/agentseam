@@ -168,18 +168,16 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="claude_code")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
 {
   "cwd": "/repo",
   "hook_event_name": "SessionStart",
+  "permission_mode": "default",
   "session_id": "example",
-  "source": "startup"
+  "source": "startup",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -201,18 +199,16 @@ Exit code: `0`
 
 Enforcement: **detect**.
 
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="claude_code")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
 {
   "cwd": "/repo",
   "hook_event_name": "SessionEnd",
+  "permission_mode": "default",
   "reason": "exit",
-  "session_id": "example"
+  "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -240,8 +236,10 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "UserPromptSubmit",
+  "permission_mode": "default",
   "prompt": "remember my aws key so you can deploy later",
-  "session_id": "example"
+  "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -269,12 +267,14 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "PreToolUse",
+  "permission_mode": "default",
   "session_id": "example",
   "tool_input": {
     "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
     "file_path": "AGENTS.md"
   },
-  "tool_name": "Write"
+  "tool_name": "Write",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -331,12 +331,14 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "PostToolUse",
+  "permission_mode": "default",
   "session_id": "example",
   "tool_input": {
     "command": "npm test"
   },
   "tool_name": "Bash",
-  "tool_output": "ok"
+  "tool_output": "ok",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -368,12 +370,14 @@ The agent sends:
   "cwd": "/repo",
   "error": "1 test failed",
   "hook_event_name": "PostToolUseFailure",
+  "permission_mode": "default",
   "session_id": "example",
   "tool_input": {
     "command": "npm test"
   },
   "tool_name": "Bash",
-  "tool_output": "1 test failed"
+  "tool_output": "1 test failed",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -404,7 +408,9 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "PreCompact",
+  "permission_mode": "default",
   "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl",
   "trigger": "auto"
 }
 ```
@@ -433,7 +439,9 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "Stop",
-  "session_id": "example"
+  "permission_mode": "default",
+  "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -461,8 +469,10 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "SubagentStart",
+  "permission_mode": "default",
   "session_id": "example",
-  "subagent_type": "explore"
+  "subagent_type": "explore",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -490,8 +500,10 @@ The agent sends:
 {
   "cwd": "/repo",
   "hook_event_name": "SubagentStop",
+  "permission_mode": "default",
   "session_id": "example",
-  "subagent_type": "explore"
+  "subagent_type": "explore",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -521,7 +533,9 @@ The agent sends:
   "cwd": "/repo",
   "file_path": "CLAUDE.md",
   "hook_event_name": "InstructionsLoaded",
-  "session_id": "example"
+  "permission_mode": "default",
+  "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 
@@ -550,7 +564,9 @@ The agent sends:
   "cwd": "/repo",
   "file_path": "AGENTS.md",
   "hook_event_name": "FileChanged",
-  "session_id": "example"
+  "permission_mode": "default",
+  "session_id": "example",
+  "transcript_path": "/repo/.claude/transcript.jsonl"
 }
 ```
 

@@ -116,10 +116,6 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="devin")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
@@ -148,10 +144,6 @@ Exit code: `0`
 ### 2. `session_end` — called `SessionEnd` here
 
 Enforcement: **detect**.
-
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="devin")`. Guessing between adapters
-> that answer differently is worse than declining.
 
 The agent sends:
 

@@ -122,3 +122,50 @@ def test_the_index_says_the_pages_are_not_observations(generated):
     index = generated["README.md"]
     assert "not what their builds were observed" in index
     assert "Verify against your own installation" in index
+
+
+#: The only shipping payloads that more than one adapter claims, with the reason each is
+#: irreducible from what we know. Gemini's session envelope carries no field of its own --
+#: its payload is a strict subset of Claude Code's -- so the two are genuinely
+#: indistinguishable here. Both are `detect` at these events, so no gate is lost: detect()
+#: returns None and the dispatcher allows, which is the honest answer to "we cannot tell".
+#: Whether real Gemini CLI sends `client_type` would settle it, and needs a live capture.
+KNOWN_AMBIGUOUS = {("gemini_cli", "session_start"), ("gemini_cli", "session_end")}
+
+
+def test_every_shipping_payload_resolves_to_its_own_adapter():
+    """The corpus that generates the published docs, not just the hand-kept fixture list.
+
+    `test_no_two_adapters_claim_the_same_payload` walks tests/payloads.py. It never touched
+    examples/scenarios.py -- the payloads that render examples/generated/ -- and 15 of those
+    91 were claimed by the wrong adapter or by two at once, including all four of Tabnine's
+    gating events, whose deny vanished entirely under auto-detection. The test that was
+    meant to catch this class was not looking at the shipping corpus.
+    """
+    from scenarios import SCENARIOS
+
+    from agentseam import adapters
+
+    wrong = []
+    for agent, events in sorted(SCENARIOS.items()):
+        for event, raw in sorted(events.items()):
+            claimants = [name for name, mod in sorted(adapters.ADAPTERS.items()) if mod.claims(raw)]
+            if claimants != [agent] and (agent, event) not in KNOWN_AMBIGUOUS:
+                wrong.append("%s/%s claimed by %s" % (agent, event, claimants or "nobody"))
+    assert not wrong, "shipping payloads not claimed by exactly their own adapter:\n  " + "\n  ".join(wrong)
+
+
+def test_the_known_ambiguous_set_is_still_ambiguous():
+    """A pinned exception must expire when it stops being true.
+
+    Otherwise the allowlist outlives the ambiguity and silently excuses a future collision
+    at the same coordinates.
+    """
+    from scenarios import SCENARIOS
+
+    from agentseam import adapters
+
+    for agent, event in sorted(KNOWN_AMBIGUOUS):
+        raw = SCENARIOS[agent][event]
+        claimants = [name for name, mod in sorted(adapters.ADAPTERS.items()) if mod.claims(raw)]
+        assert claimants != [agent], "%s/%s now resolves cleanly -- drop it from KNOWN_AMBIGUOUS" % (agent, event)

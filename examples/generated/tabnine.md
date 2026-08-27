@@ -125,10 +125,6 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
-> Also claimed by **claude_code, gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
@@ -157,10 +153,6 @@ Exit code: `0`
 
 Enforcement: **detect**.
 
-> Also claimed by **claude_code, gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
@@ -188,10 +180,6 @@ Exit code: `0`
 ### 3. `prompt_submit` — called `BeforeAgent` here
 
 Enforcement: **best-effort**.
-
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
 
 The agent sends:
 
@@ -222,10 +210,6 @@ Exit code: `0`
 ### 4. `pre_tool` — called `BeforeTool` here
 
 Enforcement: **best-effort**.
-
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
 
 The agent sends:
 
@@ -292,10 +276,6 @@ Exit code: `0`
 
 Enforcement: **best-effort**.
 
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
@@ -333,10 +313,6 @@ Exit code: `0`
 
 Enforcement: **detect**.
 
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
-
 The agent sends:
 
 ```json
@@ -364,10 +340,6 @@ Exit code: `0`
 ### 7. `stop` — called `AfterAgent` here
 
 Enforcement: **best-effort**.
-
-> Also claimed by **gemini_cli**, so `detect()` declines this payload and the agent has
-> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
-> that answer differently is worse than declining.
 
 The agent sends:
 

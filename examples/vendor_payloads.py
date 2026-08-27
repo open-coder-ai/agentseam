@@ -104,7 +104,16 @@ def _claude_shaped(agent, event, vendor_event, base, camel=False):
 
 #: Base envelope per vendor, from each one's documented common fields.
 BASES = {
-    "claude_code": {"session_id": "example", "cwd": "/repo"},
+    # transcript_path and permission_mode are on every Claude Code payload the live capture
+    # of 3.17.8 recorded, and they are what tells this envelope apart from the four vendors
+    # that copy it. A base without them is a docs-era shape that agreed with a broken
+    # discriminator all the way to production -- see CHANGELOG, "handed to Devin".
+    "claude_code": {
+        "session_id": "example",
+        "cwd": "/repo",
+        "transcript_path": "/repo/.claude/transcript.jsonl",
+        "permission_mode": "default",
+    },
     # `timestamp` is Tabnine's base-schema field and the only documented thing separating
     # its payloads from Gemini CLI's identically-named events.
     "tabnine": {"session_id": "example", "cwd": "/repo", "timestamp": "2026-08-26T00:00:00.000Z"},

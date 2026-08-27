@@ -7,6 +7,22 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **13 of the 15 shipping payloads that render the published vendor pages resolved to the
+  wrong adapter, and Tabnine's gates were dead.** Gemini CLI claimed on
+  `client_type in (None, ...)` -- the absence of somebody else's nameplate -- and its own
+  payload is a strict subset of the four vendors that share its event names, so it swallowed
+  every unlabelled payload. A `deny` at Tabnine's `pre_tool`, `prompt_submit` or `stop`
+  produced *silence* under auto-detection. Gemini now defers to any adapter holding positive
+  proof (Tabnine's `timestamp`, Junie's `project_path`, Devin's `prompt_id`, Codex's
+  `turn_id`, Claude Code's observed markers), and Claude Code defers to `timestamp` for the
+  same reason it already deferred to the other two. The shipping Claude Code payloads now
+  carry `transcript_path` and `permission_mode`, which every live payload had -- without
+  them the corpus could not exercise the discrimination the adapter relies on, which is how
+  a docs-era corpus agreed with a broken rule all the way to production.
+- The collision test walked `tests/payloads.py` and never `examples/scenarios.py`, so the
+  corpus that generates the published docs was unchecked. It is checked now, with the two
+  genuinely irreducible cases pinned and a second test that fails if a pinned exception
+  stops being true.
 - `agentseam install all` crashed with a traceback and wired nothing -- including both
   commands the example docstrings document. At least one of twelve agents lacks a hook for
   any given event set, and `install()` raising for an unwireable event is deliberate; `all`
