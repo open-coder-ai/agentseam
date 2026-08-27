@@ -48,10 +48,11 @@ def _load(path):
     except OSError as exc:
         raise ConfigUnreadable("cannot read %s: %s" % (path, exc)) from exc
     except UnicodeError as exc:
-        # A file that is not UTF-8/UTF-8-BOM (e.g. UTF-16) decodes to nothing here. Wrap it
-        # as ConfigUnreadable like a JSON error, so it is preserved and reported through the
-        # one path rather than crashing install/uninstall -- and installed(), which only
-        # catches ConfigUnreadable -- with a raw UnicodeDecodeError. (Caught by Copilot.)
+        # A file that is not UTF-8/UTF-8-BOM (e.g. UTF-16) raises while decoding here. Wrap it
+        # as ConfigUnreadable, like a JSON error, so it is preserved and reported through the
+        # one path -- keeping the exception type consistent -- rather than crashing
+        # install/uninstall, and installed() (which catches only ConfigUnreadable), with a raw
+        # UnicodeDecodeError.
         raise ConfigUnreadable("%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)) from exc
     if not text.strip():
         return {}  # an empty file is not corruption; treat it as a fresh config
