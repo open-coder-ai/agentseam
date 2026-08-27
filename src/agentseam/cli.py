@@ -78,11 +78,23 @@ def _cmd_install(args):
         print("unknown event(s): %s" % ", ".join(unknown), file=sys.stderr)
         return 2
     targets = sorted(adapters.ADAPTERS) if args.agent == "all" else [args.agent]
+    skipped = 0
     for agent in targets:
         lvl = ", ".join("%s=%s" % (e, enforcement_level(agent, e)) for e in events)
-        path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
+        try:
+            path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
+        except ValueError as exc:
+            # install() raising is deliberate (an event it cannot wire must not be dropped
+            # silently), but for `all` one agent's gap must not take down the eleven that
+            # can be wired: both documented example commands crashed with a traceback and
+            # wired NOTHING, because at least one of twelve agents lacks a hook for any
+            # given event set. Mirror the permissions primitive instead -- do what can be
+            # done, name what cannot, exit non-zero so CI still notices.
+            print("skipped %-14s %s" % (agent, exc), file=sys.stderr)
+            skipped += 1
+            continue
         print("wired %-16s -> %s   [%s]" % (agent, path, lvl))
-    return 0
+    return 1 if skipped else 0
 
 
 def _cmd_uninstall(args):

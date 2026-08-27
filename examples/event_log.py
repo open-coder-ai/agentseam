@@ -6,6 +6,10 @@
 
 One timeline for Claude Code + Cursor + Copilot in the same repo: something no
 single-agent logger can produce. Feed it to OTel, DuckDB, or just grep it.
+
+With this event set, 8 of the 12 adapters wire; antigravity, junie, vscode_copilot and
+windsurf are skipped whole with the reason printed, and the command exits non-zero so a
+script can notice. An agent either wires for every requested event or not at all.
 """
 
 import json
