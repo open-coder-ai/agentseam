@@ -12,7 +12,7 @@ This module owns the map and the writing. Two rules shape the design:
     and leaves the rest of the file exactly as it was.
   * **Prefer the shared file.** AGENTS.md is read natively by a large and growing set of
     agents. Writing one AGENTS.md and pointing the stragglers at it beats maintaining
-    fourteen copies, so `plan()` says which agents are covered by the shared file and
+    fifteen copies, so `plan()` says which agents are covered by the shared file and
     which genuinely need their own.
 """
 
