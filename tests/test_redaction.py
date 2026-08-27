@@ -67,6 +67,20 @@ def test_the_protocol_enums_do_survive():
     assert out["tool_name"] == "Write"
 
 
+def test_a_long_mcp_tool_name_survives_but_long_prose_in_the_same_key_does_not():
+    """mcp__<server>__<tool> routinely exceeds the general 48-char enum cap, so a capture
+    session gating MCP calls lost WHICH tool fired -- exactly the surface several matrix
+    rows most need verified. Tool-name-shaped keys get a longer cap, but the key is still
+    checked for separators/length so actual prose in the same key still falls back."""
+    long_tool = "mcp__github__list_repository_collaborators_and_members_extended"
+    assert len(long_tool) > 48
+    out = redact({"tool_name": long_tool})
+    assert out["tool_name"] == long_tool
+
+    out = redact({"tool_name": "x" * 200})
+    assert out["tool_name"].startswith("<str:")
+
+
 def test_a_structural_key_carrying_prose_is_still_redacted():
     """The allowlist is by key AND by shape, so a vendor reusing a name for something
     richer cannot smuggle content through it.
