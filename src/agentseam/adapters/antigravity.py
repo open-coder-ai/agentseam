@@ -100,6 +100,11 @@ def parse(raw):
         content=_content_of(args),
         output=raw.get("error") or None,
         session_id=raw.get("conversationId"),
+        # The docstring's own pre/post correlation key -- PreToolUse and PostToolUse carry
+        # the same stepIdx. Left unplumbed, a handler correlating a gate decision with its
+        # post-tool result (timing, verifying a denied call produced no output, per-call
+        # audit trails) found tool_use_id always None on the one agent that names one.
+        tool_use_id=str(raw["stepIdx"]) if "stepIdx" in raw else None,
         cwd=args.get("Cwd") or (roots[0] if roots else None),
         raw=raw,
     )
@@ -114,7 +119,18 @@ def respond(decision, event):
 
     if name == "Stop":
         # "continue" re-enters the execution loop; any other value lets the stop happen.
-        if decision.outcome in (DENY, ASK, REWRITE):
+        # ASK and REWRITE need the same degradation annotation the gate branch below gives
+        # them -- without it, "continue" with the handler's raw reason reads as though the
+        # handler asked to keep working, when it actually asked for confirmation or a
+        # change Stop cannot express either of.
+        if decision.outcome == ASK:
+            note = "Antigravity cannot modify a tool call" if degraded_from(decision) == REWRITE else "Antigravity cannot prompt at Stop"
+            reason = _because(decision.reason, note)
+            return _json.dumps({"decision": "continue", "reason": reason}), 0
+        if decision.outcome == REWRITE:
+            reason = _because(decision.reason, "Antigravity cannot modify a tool call")
+            return _json.dumps({"decision": "continue", "reason": reason}), 0
+        if decision.outcome == DENY:
             return _json.dumps({"decision": "continue", "reason": decision.reason or "policy requires more work"}), 0
         return _json.dumps({"decision": "stop"}), 0
 
