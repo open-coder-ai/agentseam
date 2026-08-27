@@ -140,6 +140,13 @@ def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
         I.install("junie", ["pre_tool"], "guard.py")
     assert cfg.read_text() == "{ this is not json ,,, }", "a config we could not parse was overwritten"
 
+    # An undecodable encoding (UTF-16) is unreadable, not corruption-in-JSON, but must take
+    # the same preserve-and-report path rather than crashing with a raw UnicodeDecodeError.
+    cfg.write_bytes(json.dumps({"keep": "me"}).encode("utf-16"))
+    with pytest.raises(I.ConfigUnreadable):
+        I.install("junie", ["pre_tool"], "guard.py")
+    assert cfg.read_bytes()[:2] == b"\xff\xfe", "a UTF-16 config was overwritten"
+
 
 def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
     """installed() is a read-only question; a corrupt file means "not known to be there",
