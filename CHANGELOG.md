@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Claude Code's `InstructionsLoaded` and `FileChanged` carry no `tool_input` at all --
+  `file_path` (and, for `InstructionsLoaded`, `content`) sit at the top level instead, per
+  the project's own recorded example payloads. `parse()` only ever read from `tool_input`,
+  so `event.path` (and `event.content`) were always `None` for both events -- a policy
+  gating instruction-file loads or watched-file changes by path or content never fired.
+  `examples/generated/claude_code.md` regenerated to reflect the fix.
 - Kimi Code and Junie both claim Claude Code's wire protocol exactly (their own docstrings
   say so), but `parse()` in each read only `content`/`new_string` -- so MultiEdit's
   `edits[].new_string` and NotebookEdit's `new_source`/`notebook_path` were dropped, and a
