@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Cursor's `postToolUseFailure` was missing from `_POST_HOC`, so a deny/ask at a failed
+  tool call returned silence instead of the `{"additional_context": "observed after the
+  fact..."}` detection record its sibling `postToolUse` gets for the identical fact (the
+  call already happened). A policy flagging failed commands lost its only signal on Cursor.
+  `examples/generated/cursor.md` regenerated.
 - The matrix's `codex_cli` note still listed `model` among the fields that separate its
   payload from Claude Code's, while `codex_cli.claims()`'s own docstring says the opposite:
   `model` stopped counting as a discriminator because Cursor sends it too, and claiming on
