@@ -44,6 +44,26 @@ def test_observation_only_events_stay_silent():
         assert (text, code) == ("", 0)
 
 
+def test_multiedit_and_notebookedit_content_reach_a_content_policy():
+    """The docstring stakes everything on this envelope being Claude Code's exactly (same
+    tool_input) -- so a policy that already works on claude_code's MultiEdit/NotebookEdit
+    must not go blind here just because client_type marks it as Kimi."""
+    multiedit = dict(KM_WRITE)
+    multiedit["tool_name"] = "MultiEdit"
+    multiedit["tool_input"] = {
+        "file_path": "AGENTS.md",
+        "edits": [{"old_string": "x", "new_string": "AWS_SECRET_ACCESS_KEY=akia"}],
+    }
+    _, _, event, _ = A.handle(multiedit, deny_all)
+    assert "AWS_SECRET_ACCESS_KEY" in event.content
+
+    notebook = dict(KM_WRITE)
+    notebook["tool_name"] = "NotebookEdit"
+    notebook["tool_input"] = {"notebook_path": "nb.ipynb", "new_source": "SECRET=akia"}
+    _, _, event, _ = A.handle(notebook, deny_all)
+    assert event.path == "nb.ipynb" and "SECRET" in event.content
+
+
 def test_a_degraded_rewrite_names_the_rewrite_not_a_confirmation():
     text, _, _, _ = A.handle(KM_SHELL, lambda e: Decision.rewrite({"command": "true"}, "redact it"))
     reason = json.loads(text)["hookSpecificOutput"]["permissionDecisionReason"]

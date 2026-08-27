@@ -101,7 +101,13 @@ def claims(raw):
 def parse(raw):
     ti = raw.get("tool_input")
     ti = ti if isinstance(ti, dict) else {}
-    content = ti.get("content") or ti.get("new_string") or None
+    # The docstring stakes everything on this envelope being Claude Code's exactly (same
+    # tool_input), so MultiEdit's edits[].new_string and NotebookEdit's new_source get the
+    # same fallback chain claude_code.parse uses -- not a guess, a claim we already made.
+    content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
+    if content is None and isinstance(ti.get("edits"), list):
+        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"])
+        content = joined or None
     out = raw.get("tool_output")
     if isinstance(out, (dict, list)):
         out = _json.dumps(out)
@@ -113,7 +119,7 @@ def parse(raw):
         EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=raw.get("tool_name"),
         command=ti.get("command"),
-        path=ti.get("file_path") or ti.get("path"),
+        path=ti.get("file_path") or ti.get("path") or ti.get("notebook_path"),
         content=content,
         output=out,
         prompt=raw.get("prompt"),
