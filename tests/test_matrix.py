@@ -48,10 +48,36 @@ def test_cursor_file_writes_are_gated_before_the_write_and_observed_after():
     assert not A.can_block("cursor", A.FILE_CHANGED)
 
 
-def test_full_tier_agents_enforce_and_rewrite():
+def test_full_tier_agents_can_block_and_rewrite():
+    """block+rewrite is a capability claim, not a fail-mode one -- both hold regardless of
+    whether a crashed hook fails open or closed."""
     for agent in ("claude_code", "vscode_copilot"):
-        assert A.enforcement_level(agent, A.PRE_TOOL) == "enforced"
+        assert A.can_block(agent, A.PRE_TOOL)
         assert A.can_rewrite(agent, A.PRE_TOOL)
+
+
+def test_vscode_copilot_pre_tool_is_enforced():
+    assert A.enforcement_level("vscode_copilot", A.PRE_TOOL) == "enforced"
+
+
+def test_claude_code_pre_tool_is_best_effort_not_enforced():
+    """pre_tool and prompt_submit rested on FAIL_CLOSED -- 'enforced', the strongest claim
+    in the whole vocabulary -- with no basis anywhere in this project: not the docstring,
+    not the note, not the evidence record, not the CHANGELOG. Every other agent's fail-mode
+    claim is justified in its note; this was the one unsupported exception. Downgraded to
+    the honest default (FAIL_OPEN) pending a live observation that would justify closing it
+    back up -- the same rule antigravity's row already follows ('the weaker claim is
+    recorded rather than a guess in our own favour')."""
+    assert A.enforcement_level("claude_code", A.PRE_TOOL) == "best-effort"
+    assert A.enforcement_level("claude_code", A.PROMPT_SUBMIT) == "best-effort"
+
+
+def test_claude_code_pre_compact_is_detect_only():
+    """block=True at pre_compact had no basis either -- the hooks reference at the time
+    this adapter was written suggests PreCompact's exit 2 writes to stderr without blocking
+    anything. Downgraded to detect rather than claim a gate that may not exist."""
+    assert A.enforcement_level("claude_code", A.PRE_COMPACT) == "detect"
+    assert not A.can_block("claude_code", A.PRE_COMPACT)
 
 
 def test_rewrite_degrades_to_ask_where_unsupported():

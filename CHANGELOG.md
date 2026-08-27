@@ -7,6 +7,15 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **Claude Code's matrix row claimed `enforced` -- the strongest claim in the whole
+  vocabulary -- at `pre_tool` and `prompt_submit` with no basis anywhere in this project**:
+  not the docstring, not the note, not the evidence record, not the CHANGELOG. Every other
+  agent's fail-mode claim is justified in its note; this was the one unsupported exception,
+  and a consumer filtering for `enforcement_level == "enforced"` to pick a sole barrier
+  would trust a guard that, if it crashed, may silently allow the very thing it was
+  installed to stop. Downgraded to `FAIL_OPEN` (`best-effort`) pending a live observation
+  that would justify closing it back up. `pre_compact`'s `block=True` had the same problem
+  and is now `detect`-only. `examples/generated/claude_code.md` regenerated.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
