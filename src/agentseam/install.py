@@ -78,14 +78,28 @@ def _dump(path, data):
 
 
 def _mark(obj, owner):
-    """Tag every hook entry we own so uninstall is surgical."""
+    """Tag every hook entry we own so uninstall is surgical.
+
+    Only a dict reached as a LIST ITEM gets tagged -- that is where every adapter's owned
+    entries actually live, whether that item is a leaf command object (cursor, windsurf) or a
+    matcher/hooks group wrapping one (claude_code, junie, gemini_cli, grok, devin,
+    antigravity, tabnine). The top-level container a caller passes in (`{"hooks": {...}}`,
+    `{"version": 1, "hooks": [...]}`, `{GROUP: group}`) is reached by the initial call, not as
+    a list item, so it is never tagged -- some vendors' hook-config parsers reject unknown
+    top-level fields outright. Witnessed live installing here (Codex CLI, 2026-08-27):
+    "unknown field `_agentseam`, expected `description` or `hooks`", which silently drops
+    every hook in the file -- the whole file failed to load, not just our entry. A
+    known-independently vendor bug, not a one-off: openai/codex#30397 documents Codex < 0.143.0
+    rejecting the entire hooks file over an unexpected top-level `description` key the exact
+    same way (fixed in #30229), which is why chock's own Codex emitter never writes one either.
+    """
     if isinstance(obj, dict):
-        if "command" in obj or "hooks" in obj:
-            obj[MARKER] = owner
         for v in obj.values():
             _mark(v, owner)
     elif isinstance(obj, list):
         for v in obj:
+            if isinstance(v, dict):
+                v[MARKER] = owner
             _mark(v, owner)
     return obj
 
