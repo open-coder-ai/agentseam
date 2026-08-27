@@ -229,7 +229,6 @@ MATRIX = {
             SESSION_START: _cap(),
             SESSION_END: _cap(),
             STOP: _cap(block=True, fail=FAIL_OPEN),
-            PRE_COMPACT: _cap(),
         },
         "notes": NOTES["devin"],
     },

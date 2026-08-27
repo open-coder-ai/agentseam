@@ -45,6 +45,11 @@ One handler wired for every hook this agent supports.
         "command": "python3 guard.py"
       }
     ],
+    "pre_mcp_tool_use": [
+      {
+        "command": "python3 guard.py"
+      }
+    ],
     "pre_run_command": [
       {
         "command": "python3 guard.py"
@@ -173,7 +178,7 @@ which normalizes to:
 
 ```
 event    = post_tool
-tool     = post_mcp_tool_use
+tool     = docs/fetch
 output   = page text
 ```
 

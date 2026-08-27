@@ -19,7 +19,7 @@ without notice. Verify against your own installation before relying on any of it
 | [Claude Code](claude_code.md) | 12 | best-effort | yes | yes | `live-run` | `.claude/settings.json` |
 | [OpenAI Codex CLI](codex_cli.md) | 9 | best-effort | yes | yes | `vendor-source` | `.codex/hooks.json` |
 | [Cursor](cursor.md) | 11 | enforceable | yes | yes | `live-run-partial` | `.cursor/hooks.json` |
-| [Devin](devin.md) | 7 | best-effort | yes | yes | `vendor-docs` | `.devin/hooks.v1.json` |
+| [Devin](devin.md) | 6 | best-effort | yes | yes | `vendor-docs` | `.devin/hooks.v1.json` |
 | [Gemini CLI](gemini_cli.md) | 7 | best-effort | yes | yes | `vendor-docs` | `.gemini/settings.json` |
 | [Grok CLI](grok.md) | 10 | best-effort | yes | no | `vendor-docs` | `.grok/hooks/agentseam.json` |
 | [Junie CLI](junie.md) | 5 | best-effort | yes | yes | `vendor-docs` | `~/.junie/config.json` |
