@@ -7,6 +7,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Devin's matrix row claimed `pre_compact` coverage by mapping `PostCompaction` onto
+  canonical `PRE_COMPACT` -- but `PostCompaction` fires AFTER compaction, the adapter's own
+  docstring already said so. A handler wired at `pre_compact` to flush or snapshot context
+  before it is discarded -- the reason the event exists -- ran once the context was already
+  gone, and `install('devin', ['pre_compact'])` silently wired the wrong moment. Left
+  unmapped: `parse()` reports `PostCompaction` `UNKNOWN` rather than claim a "before" gate
+  that is actually "after"; `install` now refuses `pre_compact` for devin with an actionable
+  error instead of wiring it wrong. `examples/generated/devin.md` regenerated.
 - Cursor's `postToolUseFailure` was missing from `_POST_HOC`, so a deny/ask at a failed
   tool call returned silence instead of the `{"additional_context": "observed after the
   fact..."}` detection record its sibling `postToolUse` gets for the identical fact (the
