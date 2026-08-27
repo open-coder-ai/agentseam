@@ -27,6 +27,25 @@ def test_project_path_separates_junie_from_claude_code():
     assert A.adapters.detect(without) == "claude_code"
 
 
+def test_multiedit_and_notebookedit_content_reach_a_content_policy():
+    """The docstring stakes everything on Junie's field names following Claude Code's wire
+    protocol -- so a policy that already works on claude_code's MultiEdit/NotebookEdit must
+    not go blind here just because project_path marks it as Junie."""
+    multiedit = _pre(
+        tool_name="MultiEdit",
+        tool_input={
+            "file_path": "AGENTS.md",
+            "edits": [{"old_string": "x", "new_string": "AWS_SECRET_ACCESS_KEY=akia"}],
+        },
+    )
+    _, _, event, _ = A.handle(multiedit, lambda e: Decision.deny("x"), agent="junie")
+    assert "AWS_SECRET_ACCESS_KEY" in event.content
+
+    notebook = _pre(tool_name="NotebookEdit", tool_input={"notebook_path": "nb.ipynb", "new_source": "SECRET=akia"})
+    _, _, event, _ = A.handle(notebook, lambda e: Decision.deny("x"), agent="junie")
+    assert event.path == "nb.ipynb" and "SECRET" in event.content
+
+
 @pytest.mark.parametrize(
     "decision,expected",
     [
