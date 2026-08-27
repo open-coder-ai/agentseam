@@ -7,6 +7,18 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Windsurf's two MCP events (`pre_mcp_tool_use`/`post_mcp_tool_use`) stored the constant
+  vendor event name in `event.tool` instead of the MCP tool identity, so a cross-agent
+  handler written as `event.tool in RISKY_TOOLS` (works on `claude_code`/`devin`) could
+  never match a Windsurf MCP call -- `event.tool` was always the same string. `event.tool`
+  now carries `<server>/<tool>` for these two events (per the real installation's own
+  payload shape). Blocking and the vendor event name in log messages, which used to be
+  read off `event.tool`, are now derived from `event.raw` instead so this does not regress.
+  Separately, `install('windsurf', ['pre_tool'])` wired only `pre_run_command` --
+  `pre_mcp_tool_use`, a documented BLOCKING gate mapped to the same canonical `PRE_TOOL`,
+  was never wired by anything, so a `pre_tool` policy silently covered shell commands but
+  not MCP tool calls. `hook_config` now wires both. `examples/generated/windsurf.md`
+  regenerated.
 - Claude Code's `InstructionsLoaded` and `FileChanged` carry no `tool_input` at all --
   `file_path` (and, for `InstructionsLoaded`, `content`) sit at the top level instead, per
   the project's own recorded example payloads. `parse()` only ever read from `tool_input`,
