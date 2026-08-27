@@ -7,6 +7,13 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- VS Code Copilot's `FILE_WRITE_TOOLS` constant (`create_file`/`edit_file`/`apply_patch`) was
+  declared and read by nothing, misleadingly implying write-tool-specific content extraction
+  that does not exist -- `parse()`'s generic branch reads `content`/`newText`/`new_str`
+  regardless of tool name. Removed the dead constant. The underlying gap it named -- neither
+  `edit_file`'s nor `apply_patch`'s actual `tool_input` shape has been recorded from a real
+  payload or the cited vendor source -- is left for a live capture rather than guessed at; a
+  wrong key would silently read the wrong field.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
