@@ -7,6 +7,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- The capture probe blocked a real command. Cursor's permission gates expect
+  `{"permission": "allow"}` on stdout and treat a silent hook as a refusal -- witnessed
+  live on Windows, where the probe's silence made Cursor reject the very command that was
+  trying to read the capture report. "Always allows" meant "exits 0", and exit 0 is not an
+  answer everywhere: the probe now replies allow in the agent's own dialect through the
+  adapter's `respond()`, stays silent where silence is the documented protocol, and the
+  witnessed behaviour is recorded in Cursor's matrix note (silence blocks, so the
+  documented fail-open covers less than any-hook-problem).
 - On Windows, a UTF-8 BOM on stdin turned every payload into mojibake under the console
   locale (cp1252), `json` failed at line 1 column 1, and the dispatcher allowed everything
   while the consumer believed it was gating. Witnessed live: a real Cursor session on
