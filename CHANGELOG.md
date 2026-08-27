@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Claude Code's `InstructionsLoaded` and `FileChanged` carry no `tool_input` at all --
+  `file_path` (and, for `InstructionsLoaded`, `content`) sit at the top level instead, per
+  the project's own recorded example payloads. `parse()` only ever read from `tool_input`,
+  so `event.path` (and `event.content`) were always `None` for both events -- a policy
+  gating instruction-file loads or watched-file changes by path or content never fired.
+  `examples/generated/claude_code.md` regenerated to reflect the fix.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
