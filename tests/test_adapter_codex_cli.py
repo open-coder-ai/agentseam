@@ -56,6 +56,18 @@ def test_codex_supports_ask_and_rewrite():
     assert rw["hookSpecificOutput"]["updatedInput"] == {"content": "safe"}
 
 
+def test_a_rewrite_reason_reaches_the_model_not_just_the_replacement_input():
+    """claude_code's respond already includes permissionDecisionReason on a rewrite; codex's
+    dropped it entirely, so a handler explaining WHY a write was altered (e.g. 'secret
+    redacted; use env var') left the model with the changed content and no explanation."""
+    rw = json.loads(A.handle(CX_WRITE, lambda e: Decision.rewrite({"content": "safe"}, "secret redacted"))[0])
+    assert rw["hookSpecificOutput"]["permissionDecisionReason"] == "secret redacted"
+
+    # No reason supplied: the key stays absent rather than a fabricated placeholder.
+    silent = json.loads(A.handle(CX_WRITE, lambda e: Decision.rewrite({"content": "safe"}))[0])
+    assert "permissionDecisionReason" not in silent["hookSpecificOutput"]
+
+
 def test_codex_hook_config_uses_matcher_group_shape():
     cfg = A.adapters.get("codex_cli").hook_config([A.PRE_TOOL], "handler", matcher="Write")
     entry = cfg["hooks"]["preToolUse"][0]

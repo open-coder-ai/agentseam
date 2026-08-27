@@ -290,7 +290,7 @@ Exit code: `0`
 **`Decision.rewrite()`** — the handler wants the input changed
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}}}
+{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
 ```
 
 Exit code: `0`
