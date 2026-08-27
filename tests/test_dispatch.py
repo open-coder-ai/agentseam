@@ -177,3 +177,30 @@ def test_a_payload_naming_another_client_is_not_claimed_by_lookalikes():
     # Strip the proof and it is genuinely ambiguous again -- which is the honest answer.
     anonymous = {k: v for k, v in kimi_session_start.items() if k != "client_type"}
     assert A.adapters.detect(anonymous) is None
+
+
+def test_run_survives_a_bom_from_the_platform_locale():
+    """A UTF-8 BOM on stdin must not turn every decision into a silent allow.
+
+    Witnessed live: Cursor on Windows sends a BOM, the console locale is cp1252, and
+    json fails at line 1 column 1 -- the dispatcher then allows everything while the
+    consumer believes it is gating. run() now reads bytes and decodes utf-8-sig itself.
+    """
+    import io
+
+    payload = json.dumps(CC_WRITE).encode("utf-8")
+    seen = []
+
+    def handler(event):
+        seen.append(event.event)
+        return Decision.deny("no")
+
+    stream = io.TextIOWrapper(io.BytesIO(b"\xef\xbb\xbf" + payload), encoding="cp1252")
+    out = io.StringIO()
+    from agentseam import dispatch as dispatch_mod
+
+    dispatch_mod.run(handler, stdin=stream, stdout=out, exit=False)
+    assert seen == ["pre_tool"], "the BOM ate the payload: handler saw %s" % seen
+    # Claude Code's dialect denies via JSON on stdout, not the exit code -- what matters
+    # is that the deny travelled at all instead of the silent allow the BOM used to cause.
+    assert "deny" in out.getvalue(), out.getvalue()

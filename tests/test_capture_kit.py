@@ -132,6 +132,81 @@ def test_a_probe_over_unparseable_input_still_allows(tmp_path, monkeypatch):
     assert result.returncode == 0
 
 
+def _run_probe(tmp_path, monkeypatch, data, agent=("cursor",)):
+    import subprocess
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    probe = tmp_path / "probe.py"
+    probe.write_text(capture._probe_source())
+    result = subprocess.run([sys.executable, str(probe), *agent], input=data, capture_output=True)
+    assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
+    captured = tmp_path / "captured.jsonl"
+    return json.loads(captured.read_text()) if captured.exists() else None
+
+
+def test_a_bom_or_utf16_payload_still_parses(tmp_path, monkeypatch):
+    """The exact failure a live Cursor run on Windows produced: the console locale turned a
+    UTF-8 BOM into mojibake and a whole session was recorded only as lengths. Chock's gate
+    hit the same byte-for-byte failure and its fix -- read bytes, decode utf-8-sig -- is
+    ported here and pinned."""
+    payload = json.dumps({"hook_event_name": "beforeShellExecution", "command": "echo hi"})
+    for data in (b"\xef\xbb\xbf" + payload.encode("utf-8"), payload.encode("utf-16")):
+        row = _run_probe(tmp_path, monkeypatch, data)
+        assert row["payload"].get("hook_event_name") == "beforeShellExecution", row
+        (tmp_path / "captured.jsonl").unlink()
+
+
+def test_unparseable_input_records_why_not_just_how_much(tmp_path, monkeypatch):
+    """A length alone cannot be diagnosed; 115 payloads of a real run proved it. The probe
+    now records shape-only facts -- encoding, BOM, first character class, line counts --
+    and still nothing of the content."""
+    row = _run_probe(tmp_path, monkeypatch, b"Content-Length: 42\r\n\r\nnot json")
+    diag = row["payload"]["__unparsed__"]
+    assert diag["encoding"] == "utf-8-sig" and diag["bom"] == "none"
+    assert diag["first_char"] == "letter" and diag["json_lines"] == 0
+    assert "Content-Length" not in json.dumps(row)
+
+
+def test_the_probe_knows_which_agent_it_records(tmp_path, monkeypatch):
+    """Attribution rides argv: install wires it, so the report can hold the payloads
+    against the right adapter instead of filing everything under '?'."""
+    row = _run_probe(tmp_path, monkeypatch, b"{}", agent=("junie",))
+    assert row["agent"] == "junie"
+
+
+def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeypatch):
+    """An unquoted interpreter under 'C:\\Program Files' never launches, which is
+    indistinguishable at capture time from a vendor whose hooks do not fire."""
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import argparse
+
+    import capture
+
+    capture.cmd_install(argparse.Namespace(agent="cursor", repo=str(tmp_path)))
+    from agentseam import install as install_mod
+
+    entry = json.loads((tmp_path / ".cursor" / "hooks.json").read_text())
+
+    def commands_in(obj):
+        if isinstance(obj, dict):
+            found = [obj["command"]] if isinstance(obj.get("command"), str) else []
+            return found + [c for v in obj.values() for c in commands_in(v)]
+        if isinstance(obj, list):
+            return [c for v in obj for c in commands_in(v)]
+        return []
+
+    commands = commands_in(entry)
+    assert commands, entry
+    for command in commands:
+        assert command.startswith('"%s" "' % sys.executable), command
+        assert command.endswith(" cursor"), command
+    assert install_mod.installed("cursor", str(tmp_path))
+
+
 def test_every_adapter_can_be_detected():
     """A footprint per adapter, or `detect` silently cannot find agents we support.
 

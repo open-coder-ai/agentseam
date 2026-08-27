@@ -7,6 +7,23 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- On Windows, a UTF-8 BOM on stdin turned every payload into mojibake under the console
+  locale (cp1252), `json` failed at line 1 column 1, and the dispatcher allowed everything
+  while the consumer believed it was gating. Witnessed live: a real Cursor session on
+  Windows fired 115 hook events and the capture probe recorded every one of them only as a
+  length. The fix is chock's, ported with its provenance: read bytes and decode
+  `utf-8-sig` ourselves (`utf-16` as a fallback in the probe), never the platform locale.
+- The capture probe threw away the evidence of why a payload did not parse -- a length
+  cannot be diagnosed. Unparseable input now records shape-only facts: byte count,
+  encoding that succeeded, BOM, first-character class, line counts. Still nothing of the
+  content.
+- The capture probe read the agent it was recording from an environment variable that
+  `install` never set, so every payload was filed under `?` and the report could not hold
+  them against any adapter. The agent name now rides as argv, wired at install time.
+- The capture kit wired an unquoted interpreter path, which never launches when Python
+  lives under a path with a space -- indistinguishable at capture time from a vendor whose
+  hooks do not fire. Interpreter and probe path are now double-quoted, shell-agnostic
+  between POSIX shells and cmd.exe (also chock's fix).
 - An unmapped vendor event was answered four different ways across the adapters, and the
   most common was the worst: five relabelled it as the nearest canonical event, so a
   `TeammateIdle` payload reached a handler as `pre_tool` and invited a pre-tool policy to be
