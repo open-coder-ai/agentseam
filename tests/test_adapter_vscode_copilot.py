@@ -31,3 +31,12 @@ def test_vscode_memory_tool_shapes():
 def test_vscode_speaks_claude_contract():
     text, _, _, _ = A.handle(VS_MEM_CREATE, deny_all)
     assert json.loads(text)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_the_user_prompt_reaches_a_prompt_policy():
+    """userPromptSubmitted parsed to prompt_submit, but parse() never read the prompt text,
+    so `event.prompt` was None and any prompt-based policy on this agent did nothing.
+    Its envelope-twins claude_code and gemini_cli both read it."""
+    ev = A.adapters.get("vscode_copilot").parse({"hookEventName": "userPromptSubmitted", "prompt": "delete prod"})
+    assert ev.event == A.PROMPT_SUBMIT
+    assert ev.prompt == "delete prod"

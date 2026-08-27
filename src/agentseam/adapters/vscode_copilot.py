@@ -105,6 +105,10 @@ def parse(raw):
         command=ti.get("command") if tool not in MEMORY_TOOLS else None,
         path=path,
         content=content,
+        # userPromptSubmitted parses to prompt_submit, but the prompt text was never read,
+        # so a prompt-based policy saw None and was silently dead on this agent. Its peers
+        # sharing this envelope (claude_code, gemini_cli) both read `prompt`.
+        prompt=raw.get("prompt"),
         output=raw.get("tool_output"),
         session_id=raw.get("session_id"),
         tool_use_id=raw.get("tool_use_id"),
