@@ -73,3 +73,20 @@ def test_prompt_id_alone_no_longer_decides_between_claude_code_and_devin():
 
     assert A.adapters.detect(devin_shaped) == "devin"
     assert A.adapters.detect(claude_shaped) == "claude_code"
+
+
+def test_notebookedit_cell_content_reaches_a_content_policy():
+    """NotebookEdit is in WRITE_TOOLS, so the adapter claims to handle it -- but its cell
+    body arrives as `new_source`, which parse() did not read, so a content policy saw None.
+    Claiming to gate a write while dropping the write is an internal contradiction, not a
+    vendor guess: MultiEdit (edits[].new_string) and the rest were already read."""
+    ev = A.adapters.get("claude_code").parse(
+        {
+            "hook_event_name": "PreToolUse",
+            "tool_name": "NotebookEdit",
+            "tool_input": {"notebook_path": "/w/n.ipynb", "new_source": "import os  # secret"},
+        }
+    )
+    assert ev.event == A.PRE_TOOL
+    assert ev.content == "import os  # secret"
+    assert ev.path == "/w/n.ipynb"
