@@ -21,14 +21,44 @@ BEGIN = "# >>> agentseam >>>"
 END = "# <<< agentseam <<<"
 
 
+class ConfigUnreadable(Exception):
+    """An existing config file could not be read or parsed, so it must not be overwritten.
+
+    Returning {} here -- as this used to -- meant install merged its fragment into an empty
+    object and wrote that back, silently DESTROYING everything the user had. For Junie, whose
+    config.json is the whole CLI configuration rather than a hooks-only file, a single stray
+    byte (a UTF-8 BOM, a trailing comma, a half-saved edit) cost the user their entire
+    config. Wiping a file we cannot understand is the exact silent-destruction this library
+    exists to refuse; the honest move is to stop and say so.
+    """
+
+
 def _load(path):
+    """The existing config as a dict. {} only when the file is genuinely absent.
+
+    A BOM is tolerated (utf-8-sig), mirroring the runtime's stdin fix -- Windows editors add
+    one and it is not corruption. Anything still unparseable, or unreadable, raises rather
+    than returning {}, because the caller is about to write this file back.
+    """
     if not os.path.exists(path):
         return {}
     try:
-        with open(path) as fh:
-            return json.load(fh)
-    except (ValueError, OSError):
-        return {}
+        with open(path, encoding="utf-8-sig") as fh:
+            text = fh.read()
+    except OSError as exc:
+        raise ConfigUnreadable("cannot read %s: %s" % (path, exc)) from exc
+    if not text.strip():
+        return {}  # an empty file is not corruption; treat it as a fresh config
+    try:
+        loaded = json.loads(text)
+    except ValueError as exc:
+        raise ConfigUnreadable(
+            "%s exists but is not valid JSON (%s); refusing to overwrite it. "
+            "Fix or move the file, then re-run." % (path, exc)
+        ) from exc
+    if not isinstance(loaded, dict):
+        raise ConfigUnreadable("%s is valid JSON but not an object; refusing to overwrite it." % path)
+    return loaded
 
 
 def _dump(path, data):
@@ -185,4 +215,9 @@ def installed(agent, repo_root=".", owner="agentseam"):
             return False
         with open(path) as fh:
             return _block_bounds(fh.read(), owner) is not None
-    return owner in json.dumps(_load(path))
+    try:
+        return owner in json.dumps(_load(path))
+    except ConfigUnreadable:
+        # A query never raises: if the file cannot be read, our witness is not known to be
+        # there. uninstall() is where an unreadable file must stop, not here.
+        return False

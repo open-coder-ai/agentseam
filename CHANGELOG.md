@@ -7,6 +7,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
+  failure, so the fragment was merged into an empty object and written back, discarding
+  everything the file held. For Junie, whose `config.json` is the whole CLI configuration
+  rather than a hooks-only file, a single stray byte -- a UTF-8 BOM from a Windows editor, a
+  trailing comma, a half-saved edit -- cost the user their entire config. `_load` now
+  tolerates a BOM (utf-8-sig, mirroring the runtime stdin fix) and raises `ConfigUnreadable`
+  on anything still unparseable rather than returning `{}`, so `install` and `uninstall`
+  stop and preserve the file instead of overwriting it. `installed()` stays a safe query and
+  reports "not present" rather than raising. This protected every JSON-config agent, not
+  just Junie.
 - A policy `reason` containing any character the platform console cannot encode crashed the
   response write before the exit code was emitted -- the output twin of the stdin BOM bug.
   On a Windows cp1252 console an emoji or a non-Latin word in a deny reason raised
