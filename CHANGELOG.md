@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Codex CLI's `respond()` dropped `decision.reason` on a REWRITE: the emitted JSON carried
+  only `allow` + `updatedInput`, unlike `claude_code.respond` which already includes
+  `permissionDecisionReason` when a rewrite has one. A handler explaining WHY a write was
+  altered (e.g. "secret redacted; use env var") reached Codex with the changed content and
+  no explanation. `examples/generated/codex_cli.md` regenerated.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
