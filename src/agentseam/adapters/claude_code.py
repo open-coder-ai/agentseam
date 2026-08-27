@@ -131,8 +131,11 @@ def parse(raw):
         EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=tool,
         command=ti.get("command"),
-        path=ti.get("file_path") or ti.get("path") or ti.get("notebook_path"),
-        content=content,
+        # InstructionsLoaded and FileChanged carry no tool_input at all -- file_path (and,
+        # for InstructionsLoaded, content) sit at the top level instead, per the project's
+        # own recorded example payloads (examples/generated/claude_code.md).
+        path=ti.get("file_path") or ti.get("path") or ti.get("notebook_path") or raw.get("file_path"),
+        content=content or raw.get("content"),
         output=out,
         prompt=raw.get("prompt"),
         session_id=raw.get("session_id"),

@@ -19,6 +19,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   was never wired by anything, so a `pre_tool` policy silently covered shell commands but
   not MCP tool calls. `hook_config` now wires both. `examples/generated/windsurf.md`
   regenerated.
+- Claude Code's `InstructionsLoaded` and `FileChanged` carry no `tool_input` at all --
+  `file_path` (and, for `InstructionsLoaded`, `content`) sit at the top level instead, per
+  the project's own recorded example payloads. `parse()` only ever read from `tool_input`,
+  so `event.path` (and `event.content`) were always `None` for both events -- a policy
+  gating instruction-file loads or watched-file changes by path or content never fired.
+  `examples/generated/claude_code.md` regenerated to reflect the fix.
+- Kimi Code and Junie both claim Claude Code's wire protocol exactly (their own docstrings
+  say so), but `parse()` in each read only `content`/`new_string` -- so MultiEdit's
+  `edits[].new_string` and NotebookEdit's `new_source`/`notebook_path` were dropped, and a
+  content policy that already works on claude_code's MultiEdit/NotebookEdit went blind on
+  these two. Mirrors the fallback chain claude_code.parse already uses.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
