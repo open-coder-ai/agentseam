@@ -8,8 +8,10 @@ ROOT = Path(__file__).resolve().parents[1]
 ENV = {"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin:/usr/local/bin"}
 
 
-def _run(args, **kw):
-    return subprocess.run([sys.executable, "-m", "agentseam.cli", *args], capture_output=True, text=True, env=ENV, **kw)
+def _run(args, env=None, **kw):
+    return subprocess.run(
+        [sys.executable, "-m", "agentseam.cli", *args], capture_output=True, text=True, env=env or ENV, **kw
+    )
 
 
 def test_matrix_renders():
@@ -89,3 +91,42 @@ def test_packaging_shows_the_layouts_and_what_is_shared():
     assert "write once, works for several" in out.stdout
     assert "also reads another agent's" in out.stdout
     assert "codex_cli" in out.stdout  # named as unrecorded, with the reason
+
+
+def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
+    """Both documented example commands used to crash with a traceback and wire NOTHING.
+
+    At least one of twelve agents lacks a hook for any given event set, and install()
+    raising for it is deliberate -- but `all` propagating that raise meant the eleven
+    wireable agents were taken down by the one gap. The permissions primitive already
+    solved this shape: do what can be done, name what cannot, exit non-zero.
+    """
+    out = _run(
+        [
+            "install",
+            "all",
+            "echo hi",
+            "--events",
+            "pre_tool",
+            "post_tool",
+            "session_start",
+            "stop",
+            "--repo",
+            str(tmp_path),
+        ],
+        env={**ENV, "HOME": str(tmp_path)},  # kimi's config is user-scoped; keep it in the sandbox
+    )
+
+    assert out.returncode == 1, "a skipped agent must be visible to CI: %s" % out.stderr
+    for agent in ("claude_code", "cursor", "gemini_cli", "grok"):
+        assert "wired %-16s" % agent in out.stdout
+    for agent in ("antigravity", "junie", "vscode_copilot", "windsurf"):
+        assert ("skipped %-14s" % agent) in out.stderr, "%s should be skipped whole" % agent
+    assert "no hook for" in out.stderr
+
+    # And the wireable agents really were wired -- the skip must not have aborted the loop.
+    sys.path.insert(0, str(ROOT / "src"))
+    from agentseam import install as install_mod
+
+    assert install_mod.installed("cursor", str(tmp_path))
+    assert install_mod.installed("windsurf", str(tmp_path)) is False

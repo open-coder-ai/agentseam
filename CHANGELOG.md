@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `agentseam install all` crashed with a traceback and wired nothing -- including both
+  commands the example docstrings document. At least one of twelve agents lacks a hook for
+  any given event set, and `install()` raising for an unwireable event is deliberate; `all`
+  propagating that raise let one agent's gap take down the eleven that could be wired. It
+  now mirrors the permissions primitive: wires what can be wired, names each skipped agent
+  with the events it lacks on stderr, and exits non-zero so a script still notices.
 - **Claude Code detection was broken against current builds, and the payloads went to the
   wrong adapter.** `claims()` treated `prompt_id` as proof a payload was Devin's rather than
   Claude Code's; Claude Code now sends it on nearly every event. A live capture claimed 4 of
