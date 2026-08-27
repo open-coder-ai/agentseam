@@ -40,7 +40,13 @@ EVENT_MAP = {
 
 MEMORY_TOOLS = ("memory", "copilot_memory")
 MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
-FILE_WRITE_TOOLS = ("create_file", "edit_file", "apply_patch")
+# A FILE_WRITE_TOOLS constant naming create_file/edit_file/apply_patch used to sit here,
+# declared and read by nothing -- misleading, since it implied write-tool-specific content
+# extraction that does not exist. The generic parse branch below reads content/newText/
+# new_str regardless of tool name, and none of those three tools' actual tool_input shape
+# for edit_file (code? a diff?) or apply_patch (the patch text, under what key?) has been
+# recorded from a real payload or the vendor source cited above. Needs a live capture
+# before adding a fallback -- guessing a key here risks reading the wrong field silently.
 
 
 #: Turn-scoped fields OpenAI Codex CLI sends and VS Code never does.
