@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Cursor's `postToolUseFailure` was missing from `_POST_HOC`, so a deny/ask at a failed
+  tool call returned silence instead of the `{"additional_context": "observed after the
+  fact..."}` detection record its sibling `postToolUse` gets for the identical fact (the
+  call already happened). A policy flagging failed commands lost its only signal on Cursor.
+  `examples/generated/cursor.md` regenerated.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration

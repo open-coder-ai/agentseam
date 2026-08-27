@@ -83,7 +83,18 @@ _PERMISSION_GATES = {
 }
 
 #: Post-hoc events: the action already happened, so nothing we return can prevent it.
-_POST_HOC = ("postToolUse", "afterShellExecution", "afterMCPExecution", "afterFileEdit", "afterTabFileEdit")
+#: postToolUseFailure is its sibling postToolUse's failure twin -- same TOOL_FAILURE/
+#: POST_TOOL shape, same "already happened" fact -- and was missing here, so a deny/ask at
+#: a failed tool call returned silence instead of the additional_context detection record
+#: every other post-hoc event gets.
+_POST_HOC = (
+    "postToolUse",
+    "postToolUseFailure",
+    "afterShellExecution",
+    "afterMCPExecution",
+    "afterFileEdit",
+    "afterTabFileEdit",
+)
 
 #: Events with no output contract at all -- returning JSON here is simply ignored.
 _MUTE = ("afterFileEdit", "afterTabFileEdit")
