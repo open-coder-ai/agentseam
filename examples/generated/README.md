@@ -18,7 +18,7 @@ without notice. Verify against your own installation before relying on any of it
 | [Antigravity](antigravity.md) | 3 | best-effort | yes | no | `vendor-docs` | `.agents/hooks.json` |
 | [Claude Code](claude_code.md) | 12 | enforced | yes | yes | `live-run` | `.claude/settings.json` |
 | [OpenAI Codex CLI](codex_cli.md) | 9 | best-effort | yes | yes | `vendor-source` | `.codex/hooks.json` |
-| [Cursor](cursor.md) | 11 | enforceable | yes | yes | `vendor-docs` | `.cursor/hooks.json` |
+| [Cursor](cursor.md) | 11 | enforceable | yes | yes | `live-run-partial` | `.cursor/hooks.json` |
 | [Devin](devin.md) | 7 | best-effort | yes | yes | `vendor-docs` | `.devin/hooks.v1.json` |
 | [Gemini CLI](gemini_cli.md) | 7 | best-effort | yes | yes | `vendor-docs` | `.gemini/settings.json` |
 | [Grok CLI](grok.md) | 10 | best-effort | yes | no | `vendor-docs` | `.grok/hooks/agentseam.json` |

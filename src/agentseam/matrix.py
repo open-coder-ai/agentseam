@@ -11,6 +11,7 @@ from .matrix_terms import (
     BASES,
     BASIS_INHERITED,
     BASIS_LIVE,
+    BASIS_LIVE_PARTIAL,
     FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
@@ -31,9 +32,11 @@ __all__ = [
     "agents",
     "adapted_agents",
     "basis",
+    "observed",
     "BASES",
     "BASIS_INHERITED",
     "BASIS_LIVE",
+    "BASIS_LIVE_PARTIAL",
     "FAIL_CLOSED",
     "FAIL_CONFIGURABLE",
     "FAIL_OPEN",
@@ -92,6 +95,18 @@ def basis(agent):
     """
     row = MATRIX.get(agent)
     return row["verified"].get("basis") if row else None
+
+
+def observed(agent):
+    """Canonical events actually seen fire against the running agent.
+
+    Empty for a row nobody has run. A `live-run-partial` row has some but not all of what it
+    claims, and this is the difference: `basis` says what KIND of evidence exists, `observed`
+    says how far it reaches. A consumer relying on a specific gate should check this rather
+    than the row-level basis, because an event a row claims is not an event anyone saw.
+    """
+    row = MATRIX.get(agent)
+    return tuple(row["verified"].get("observed", ())) if row else ()
 
 
 def agents():

@@ -7,6 +7,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- `live-run-partial`, a sixth `verified.basis` value, and an `observed` list on the evidence
+  record naming the canonical events actually seen fire. Cursor's row is the first to use
+  both: 120 real payloads across four capture sessions on Cursor 3.17.8 observed 6 of the 11
+  events it claims. Neither existing word was true -- `vendor-docs` would understate a row
+  somebody really ran, and `live-run` would let a consumer filtering for observed rows rely
+  on a gate nobody has seen fire. The same reasoning that produced `enforceable`.
+  `matrix.observed(agent)` exposes the list; three invariants keep it honest (a partial row
+  must name events, may only name events the row claims, and may not be missing none).
 - The capture report states the agent version it observed. Redaction already let it through
   -- `cursor_version` is on the structural allowlist and a version string is enum-like -- but
   the report printed only key *paths*, so the one fact a `verified` matrix record requires

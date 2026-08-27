@@ -181,3 +181,66 @@ def test_only_rows_actually_observed_claim_a_live_run():
     for agent in A.MATRIX:
         if basis(agent) == BASIS_INHERITED:
             assert agent not in A.adapters.ADAPTERS, agent
+
+
+def test_a_partial_live_run_says_which_events_it_actually_saw():
+    """The whole point of the term: `basis` says what KIND of evidence, `observed` how far.
+
+    A partial row without an observed list would be strictly worse than `vendor-docs` -- it
+    would advertise a live run and then decline to say of what.
+    """
+    from agentseam.matrix import BASIS_LIVE_PARTIAL, basis, observed
+
+    partial = [a for a in A.MATRIX if basis(a) == BASIS_LIVE_PARTIAL]
+    assert partial, "the term exists; a row should be using it or it should be removed"
+    for agent in partial:
+        assert observed(agent), "%s claims a partial live run but names no observed event" % agent
+
+
+def test_an_observed_event_is_one_the_row_actually_claims():
+    """You cannot observe an event this row does not assert exists.
+
+    Catches the copy-paste that would let an `observed` list drift into advertising a
+    capability the matrix never claimed -- claim inflation by a side door.
+    """
+    from agentseam.matrix import observed
+
+    for agent in A.MATRIX:
+        claimed = set(A.MATRIX[agent]["events"])
+        stray = sorted(set(observed(agent)) - claimed)
+        assert not stray, "%s reports observing events it does not claim: %s" % (agent, stray)
+
+
+def test_a_partial_live_run_is_not_a_live_run():
+    """`live-run` must keep meaning "observed everywhere this row claims".
+
+    If a partial row could also answer to `live-run`, a consumer filtering for observed rows
+    would get back exactly the rows the new term exists to distinguish.
+    """
+    from agentseam.matrix import BASIS_LIVE, BASIS_LIVE_PARTIAL, basis, observed
+
+    for agent in A.MATRIX:
+        if basis(agent) == BASIS_LIVE_PARTIAL:
+            assert basis(agent) != BASIS_LIVE
+            missing = set(A.MATRIX[agent]["events"]) - set(observed(agent))
+            assert missing, (
+                "%s is marked partial but every event it claims was observed -- "
+                "that is a full live run and should say so" % agent
+            )
+
+
+def test_every_basis_has_a_caveat_a_reader_can_understand():
+    """A vocabulary term with no prose behind it is a label, not an explanation.
+
+    The generated pages look the caveat up with no default, so a new basis fails the build
+    rather than emitting a page whose provenance line silently went missing.
+    """
+    import sys
+    from pathlib import Path
+
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
+    from provenance import BASIS_CAVEAT
+
+    from agentseam.matrix import BASES
+
+    assert sorted(BASIS_CAVEAT) == sorted(BASES)
