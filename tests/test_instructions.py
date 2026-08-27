@@ -104,3 +104,17 @@ def test_discover_reports_what_exists(tmp_path):
 def test_nested_paths_are_created(tmp_path):
     I.write("rule", ["junie"], str(tmp_path))
     assert (tmp_path / ".junie" / "guidelines.md").exists()
+
+
+def test_the_readme_arithmetic_cannot_drift():
+    """README says "15 agents reached with 8 files written". Pin it to the data.
+
+    The last claim ("14 agents with 7 files") went stale the day Tabnine landed and sat
+    wrong until an audit counted. covered + per_agent must add up to every agent the map
+    knows, and the files written are the shared one plus one per uncovered agent.
+    """
+    p = I.plan(I.agents(), repo_root=".")
+    agents_reached = len(p["covered"]) + len(p["per_agent"])
+    files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
+    assert agents_reached == len(I.INSTRUCTION_FILES) == 15
+    assert files_written == 8

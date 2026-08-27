@@ -178,10 +178,11 @@ A closed vocabulary you can filter on: `live-run`, `vendor-source`, `vendor-docs
 `third-party-install`, `inherited`. Free-text `method` says what was read; `basis` says what
 class of claim it is.
 
-**Only Claude Code's row is `live-run`.** Two rows rest on the vendor's own source
-(Codex CLI, VS Code Copilot) and one on a third-party installation (Windsurf); the remaining
-eleven rest on vendor documentation — a claim about what a vendor *says*, not an observation
-of what their build does. `test_only_rows_actually_observed_claim_a_live_run` keeps that from
+**Only Claude Code's row is `live-run`; Cursor's is `live-run-partial`**, with the events
+actually seen fire listed on the row. Two rows rest on the vendor's own source (Codex CLI,
+VS Code Copilot) and one on a third-party installation (Windsurf); the remaining ten rest on
+vendor documentation — a claim about what a vendor *says*, not an observation of what their
+build does. `test_only_rows_actually_observed_claim_a_live_run` keeps that from
 drifting upward, which is the direction claims drift.
 
 There is a measured reason to distrust inherited rows specifically. No row carries that
