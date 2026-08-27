@@ -95,7 +95,10 @@ def claims(raw):
             return False
         # Junie reuses this whole event vocabulary on purpose -- it says so -- and sends
         # project_path, which Claude Code does not. Without this the two are one payload.
-        if "turn_id" in raw or "project_path" in raw:
+        # Foreign nameplates: Codex's turn_id, Junie's project_path, Tabnine's timestamp.
+        # None appears in any real Claude Code payload observed live, and each is the only
+        # documented thing separating that vendor's identically-named events from ours.
+        if "turn_id" in raw or "project_path" in raw or "timestamp" in raw:
             return False
         # `prompt_id` used to be treated as proof this was Devin's payload, not ours. Claude
         # Code now sends it too, so the field alone settles nothing: it is only Devin's when
