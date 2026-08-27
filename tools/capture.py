@@ -28,6 +28,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 sys.path.insert(0, HERE)
 
+import probe_source  # noqa: E402
 from redact import keys_of  # noqa: E402
 
 from agentseam import adapters  # noqa: E402
@@ -56,90 +57,8 @@ FOOTPRINTS = {
 
 
 def _probe_source():
-    """The recording hook, written as a standalone file so no install is needed to run it."""
-    lines = [
-        "#!/usr/bin/env python3",
-        "# agentseam capture probe. Records the payload shape, then allows.",
-        "# Allowing is not a convenience: a probe that can block turns verification into a",
-        "# risk, and nobody runs it twice.",
-        "import json, os, sys",
-        "",
-        "sys.path.insert(0, @HERE@)",
-        "sys.path.insert(0, @SRC@)",
-        "",
-        "try:",
-        "    from redact import redact",
-        "",
-        "    # Bytes first, decoded by us: the platform locale is how Cursor's UTF-8 BOM",
-        "    # became cp1252 mojibake on Windows and a whole live run was recorded only as",
-        "    # lengths. Witnessed twice now -- once by chock's gate, once by this probe.",
-        "    data = sys.stdin.buffer.read()",
-        "    text, encoding = None, None",
-        "    for candidate in ('utf-8-sig', 'utf-16'):",
-        "        try:",
-        "            text, encoding = data.decode(candidate), candidate",
-        "            break",
-        "        except UnicodeError:",
-        "            continue",
-        "    payload = None",
-        "    if text is not None:",
-        "        try:",
-        "            payload = redact(json.loads(text))",
-        "        except ValueError:",
-        "            pass",
-        "    if payload is None:",
-        "        # Shape-only diagnostics: WHY it did not parse, nothing of what it said.",
-        "        parts = [ln for ln in (text or '').splitlines() if ln.strip()]",
-        "        json_lines = 0",
-        "        for ln in parts:",
-        "            try:",
-        "                json.loads(ln)",
-        "                json_lines += 1",
-        "            except ValueError:",
-        "                pass",
-        "        first = next((c for c in (text or '') if not c.isspace()), '')",
-        "        payload = {'__unparsed__': {",
-        "            'bytes': len(data),",
-        "            'encoding': encoding or 'undecodable',",
-        "            'bom': ('utf-8' if data[:3] == b'\\xef\\xbb\\xbf'",
-        "                    else 'utf-16' if data[:2] in (b'\\xff\\xfe', b'\\xfe\\xff')",
-        "                    else 'none'),",
-        "            'first_char': (first if first in '{[\"<'",
-        "                           else 'letter' if first.isalpha() else 'other'),",
-        "            'lines': len(parts),",
-        "            'json_lines': json_lines,",
-        "        }}",
-        "    agent = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('AGENTSEAM_PROBE_AGENT', '?')",
-        "    os.makedirs(@CAPTURE_DIR@, exist_ok=True)",
-        "    with open(@CAPTURE_FILE@, 'a') as fh:",
-        "        fh.write(json.dumps({'agent': agent, 'payload': payload}, sort_keys=True) + chr(10))",
-        "    # Exit 0 is not an answer everywhere. Cursor's permission gates expect",
-        "    # {'permission': 'allow'} on stdout; a silent probe there is treated as a",
-        "    # refusal and BLOCKS the user's real command -- witnessed live on Windows,",
-        "    # where this probe's silence made Cursor reject the very command that was",
-        "    # trying to read the capture report. The adapters already speak every",
-        "    # dialect, so allow in the agent's own words; raw is re-read because the",
-        "    # recorded copy is redacted and parse() wants the true payload.",
-        "    if text is not None and '__unparsed__' not in payload:",
-        "        from agentseam import Decision, adapters",
-        "",
-        "        mod = adapters.ADAPTERS.get(agent)",
-        "        if mod is not None:",
-        "            out, _code = mod.respond(Decision.allow('agentseam capture probe'), mod.parse(json.loads(text)))",
-        "            if out:",
-        "                sys.stdout.write(out)",
-        "                sys.stdout.flush()",
-        "except Exception:",
-        "    pass  # a probe that can crash the hook is a probe that can break the session",
-        "sys.exit(0)  # always allow",
-    ]
-    src = chr(10).join(lines) + chr(10)
-    return (
-        src.replace("@HERE@", repr(HERE))
-        .replace("@SRC@", repr(os.path.join(HERE, "..", "src")))
-        .replace("@CAPTURE_DIR@", repr(CAPTURE_DIR))
-        .replace("@CAPTURE_FILE@", repr(CAPTURE_FILE))
-    )
+    """The probe program. Its text lives in probe_source.py -- a different activity."""
+    return probe_source.render(HERE, CAPTURE_DIR)
 
 
 def _probe_path():
@@ -189,18 +108,49 @@ def cmd_uninstall(args):
     return 0
 
 
-def _load():
-    if not os.path.exists(CAPTURE_FILE):
+def _capture_files():
+    """Every capture file: the per-process shards, plus the legacy shared file.
+
+    Sorted so a report is deterministic across runs.
+    """
+    if not os.path.isdir(CAPTURE_DIR):
         return []
-    with open(CAPTURE_FILE) as fh:
-        return [json.loads(line) for line in fh if line.strip()]
+    names = [n for n in os.listdir(CAPTURE_DIR) if n.startswith("captured.") and n.endswith(".jsonl")]
+    return [os.path.join(CAPTURE_DIR, n) for n in sorted(names)]
+
+
+def _load():
+    """Records from every capture file, skipping any line that is not whole.
+
+    A torn line is a fact about the capture, not a reason to lose the other 122 records. The
+    count is left on `_load.torn` so the report can say how much it skipped, rather than
+    quietly presenting a partial capture as a complete one.
+    """
+    rows, torn = [], 0
+    for path in _capture_files():
+        with open(path, encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if not line.strip():
+                    continue
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    torn += 1
+    _load.torn = torn
+    return rows
+
+
+_load.torn = 0
 
 
 def cmd_report(args):
     """Compare what arrived against what the adapter expects, and say which won."""
     rows = _load()
+    if _load.torn:
+        print("NOTE: skipped %d unreadable line(s) -- a record torn by concurrent writes." % _load.torn)
+        print("      Captures taken after the per-process-shard fix should not produce these.\n")
     if not rows:
-        print("Nothing captured yet at %s" % CAPTURE_FILE)
+        print("Nothing captured yet in %s" % CAPTURE_DIR)
         print("If the agent ran and this is still empty, the hook did not fire -- which is")
         print("itself a finding worth reporting: the config path or format may be wrong.")
         return 1

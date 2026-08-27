@@ -14,6 +14,8 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   taking 122 good records with it. Each probe now writes its own `captured.<pid>.jsonl` with
   a single `os.write()`, and the loader reads every shard, skips any line that is not whole,
   and reports how many it skipped rather than presenting a partial capture as a complete one.
+  (The entry above shipped in #24 describing code that did not: the commit carried only the
+  changelog and the runbook. The code landed in #25.)
 - The capture probe blocked a real command. Cursor's permission gates expect
   `{"permission": "allow"}` on stdout and treat a silent hook as a refusal -- witnessed
   live on Windows, where the probe's silence made Cursor reject the very command that was

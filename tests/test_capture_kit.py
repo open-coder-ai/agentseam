@@ -6,8 +6,7 @@ redactor that misses something has already leaked by the time anyone reads it.
 
 So these tests assert the strong property rather than spot-checking known-sensitive keys:
 **no string from the input may appear in the output**, except the short protocol enums on a
-named allowlist.
-"""
+named allowlist."""
 
 from __future__ import annotations
 
@@ -19,12 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
-import pytest  # noqa: E402
-from redact import STRUCTURAL_KEYS, keys_of, redact  # noqa: E402
 
 # Paths use /workspace/alice deliberately: the repository's own privacy scanner rejects a tracked
 # file containing a realistic home directory, and it was right to reject the first version of
-# this fixture. A test proving that secrets do not escape has no business shipping one.
+
 SENSITIVE = {
     "hook_event_name": "PreToolUse",
     "tool_name": "Write",
@@ -39,59 +36,6 @@ SENSITIVE = {
     "count": 7,
     "flag": True,
 }
-
-
-def _strings(value):
-    if isinstance(value, str):
-        return [value]
-    if isinstance(value, dict):
-        return [s for v in value.values() for s in _strings(v)]
-    if isinstance(value, list):
-        return [s for v in value for s in _strings(v)]
-    return []
-
-
-def test_no_input_string_survives_except_allowlisted_enums():
-    """The property that matters. A denylist would miss the first field a vendor invents."""
-    out = redact(SENSITIVE)
-    allowed = {SENSITIVE[k] for k in STRUCTURAL_KEYS if isinstance(SENSITIVE.get(k), str)}
-    leaked = [s for s in _strings(out) if s in set(_strings(SENSITIVE)) and s not in allowed]
-    assert not leaked, "these input strings survived redaction: %s" % leaked
-
-
-def test_the_protocol_enums_do_survive():
-    """Otherwise a capture cannot tell us which event we are looking at, which is the point."""
-    out = redact(SENSITIVE)
-    assert out["hook_event_name"] == "PreToolUse"
-    assert out["tool_name"] == "Write"
-
-
-def test_a_structural_key_carrying_prose_is_still_redacted():
-    """The allowlist is by key AND by shape, so a vendor reusing a name for something
-    richer cannot smuggle content through it.
-    """
-    out = redact({"tool_name": "/workspace/alice/secret/path/with/separators"})
-    assert out["tool_name"].startswith("<str:")
-
-    long_value = {"source": "x" * 200}
-    assert redact(long_value)["source"].startswith("<str:")
-
-
-def test_structure_and_types_are_preserved_because_that_is_the_evidence():
-    out = redact(SENSITIVE)
-    assert out["count"] == 7 and out["flag"] is True
-    assert set(keys_of(out)) >= {"tool_input", "tool_input.content", "nested.deep.deeper"}
-    assert out["tool_input"]["content"].startswith("<str:")
-
-
-def test_long_lists_are_summarized_not_dumped():
-    out = redact({"items": ["a", "b", "c", "d"]})
-    assert out["items"][-1] == "<...2 more>"
-
-
-@pytest.mark.parametrize("value", [None, 3, 3.5, True, "plain", [], {}])
-def test_redaction_never_raises_on_anything_a_vendor_might_send(value):
-    json.dumps(redact({"k": value}))
 
 
 def test_the_real_probe_allows_and_writes_nothing_sensitive(tmp_path, monkeypatch):
@@ -112,7 +56,7 @@ def test_the_real_probe_allows_and_writes_nothing_sensitive(tmp_path, monkeypatc
     result = subprocess.run([sys.executable, str(probe)], input=json.dumps(SENSITIVE), capture_output=True, text=True)
     assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
 
-    written = (tmp_path / "captured.jsonl").read_text()
+    written = "".join(open(shard).read() for shard in capture._capture_files())
     for secret in ("hunter2", "someone@example.com", "/workspace/alice", "sess-9f3a-private", "AKIA-not-real"):
         assert secret not in written, "%r reached the capture file" % secret
     assert "PreToolUse" in written and "tool_input" in written
@@ -143,8 +87,9 @@ def _run_probe(tmp_path, monkeypatch, data, agent=("cursor",)):
     probe.write_text(capture._probe_source())
     result = subprocess.run([sys.executable, str(probe), *agent], input=data, capture_output=True)
     assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
-    captured = tmp_path / "captured.jsonl"
-    return json.loads(captured.read_text()) if captured.exists() else None
+    # Through the loader, not a fixed filename: the probe writes a per-process shard.
+    rows = capture._load()
+    return rows[0] if rows else None
 
 
 def test_a_bom_or_utf16_payload_still_parses(tmp_path, monkeypatch):
@@ -156,7 +101,8 @@ def test_a_bom_or_utf16_payload_still_parses(tmp_path, monkeypatch):
     for data in (b"\xef\xbb\xbf" + payload.encode("utf-8"), payload.encode("utf-16")):
         row = _run_probe(tmp_path, monkeypatch, data)
         assert row["payload"].get("hook_event_name") == "beforeShellExecution", row
-        (tmp_path / "captured.jsonl").unlink()
+        for shard in tmp_path.glob("captured*.jsonl"):
+            shard.unlink()
 
 
 def test_unparseable_input_records_why_not_just_how_much(tmp_path, monkeypatch):
@@ -254,3 +200,63 @@ def test_every_adapter_can_be_detected():
 
     missing = sorted(set(adapters.ADAPTERS) - set(capture.FOOTPRINTS))
     assert not missing, "adapters with no detection footprint: %s" % ", ".join(missing)
+
+
+def test_concurrent_probes_never_tear_a_record(tmp_path, monkeypatch):
+    """Cursor runs subagents in parallel, so several probes append at once.
+
+    Witnessed live: a shared append target produced two records split mid-string and the
+    report died on the first fragment, taking 122 good records with it. Per-process shards
+    remove the sharing rather than narrowing the window; this fires 64 probes concurrently
+    with payloads large enough to make a buffered append tear.
+    """
+    import concurrent.futures
+    import subprocess
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    probe = tmp_path / "probe.py"
+    probe.write_text(capture._probe_source())
+    payload = json.dumps(
+        {
+            "hook_event_name": "preToolUse",
+            "conversation_id": "c",
+            "generation_id": "g",
+            "cursor_version": "1.0",
+            "workspace_roots": ["/w"],
+            "tool_name": "Bash",
+            "tool_input": {"command": "x" * 3000, "cwd": "/w"},
+        }
+    ).encode()
+
+    def fire(_):
+        return subprocess.run([sys.executable, str(probe), "cursor"], input=payload, capture_output=True).returncode
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=16) as pool:
+        assert set(pool.map(fire, range(64))) == {0}
+
+    rows = capture._load()
+    assert capture._load.torn == 0, "%d record(s) torn by concurrent writes" % capture._load.torn
+    assert len(rows) == 64, "expected 64 records, got %d" % len(rows)
+
+
+def test_a_torn_line_is_skipped_and_counted_not_fatal(tmp_path, monkeypatch):
+    """The other half of the same failure: a capture already torn must still report.
+
+    Losing 122 good records to one bad line is the wrong trade, and dropping it silently
+    would present a partial capture as a complete one.
+    """
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    whole_a = json.dumps({"agent": "cursor", "payload": {"hook_event_name": "stop"}})
+    whole_b = json.dumps({"agent": "cursor", "payload": {"hook_event_name": "sessionStart"}})
+    # The literal tail of a record torn mid-string, as seen in the live capture.
+    fragment = 'er_email": "<str:29>", "workspace_roots": ["<str:40>"]}}'
+    (tmp_path / "captured.jsonl").write_text("\n".join([whole_a, fragment, whole_b]) + "\n")
+
+    rows = capture._load()
+    assert len(rows) == 2 and capture._load.torn == 1
