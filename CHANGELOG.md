@@ -13,6 +13,15 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   per canonical one. Nothing said this was deliberate rather than a coverage gap. Documented
   in the docstring and matrix note: bundling the two under one `pre_tool` install would hand
   a consumer an approve-by-default gate they did not ask for, so it must be wired by hand.
+- **Claude Code's matrix row claimed `enforced` -- the strongest claim in the whole
+  vocabulary -- at `pre_tool` and `prompt_submit` with no basis anywhere in this project**:
+  not the docstring, not the note, not the evidence record, not the CHANGELOG. Every other
+  agent's fail-mode claim is justified in its note; this was the one unsupported exception,
+  and a consumer filtering for `enforcement_level == "enforced"` to pick a sole barrier
+  would trust a guard that, if it crashed, may silently allow the very thing it was
+  installed to stop. Downgraded to `FAIL_OPEN` (`best-effort`) pending a live observation
+  that would justify closing it back up. `pre_compact`'s `block=True` had the same problem
+  and is now `detect`-only. `examples/generated/claude_code.md` regenerated.
 - VS Code Copilot's `FILE_WRITE_TOOLS` constant (`create_file`/`edit_file`/`apply_patch`) was
   declared and read by nothing, misleadingly implying write-tool-specific content extraction
   that does not exist -- `parse()`'s generic branch reads `content`/`newText`/`new_str`

@@ -18,13 +18,13 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | | |
 |---|---|
 | tier | `block+rewrite` |
-| enforcement at `pre_tool` | **enforced** |
+| enforcement at `pre_tool` | **best-effort** |
 | can block / rewrite | yes / yes |
 | hooks covered | 12 |
 | hook config | `.claude/settings.json` |
 | evidence | `live-run` — live headless run + official hooks reference |
 
-Richest surface (~30 events). Blocks via exit 2 or hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only). Live capture 2026-08-27 found detection broken against current builds: Claude Code now sends prompt_id, which this adapter treated as proof a payload was Devin's, so 38 of 42 real payloads were claimed by Devin instead and a deny rendered in the wrong dialect. Fixed by discriminating on fields observed from Claude Code rather than on a field it was assumed to lack.
+Richest surface (~30 events). Blocks via exit 2 or hookSpecificOutput.permissionDecision; rewrite via updatedInput (pre_tool only). Fail mode is not documented anywhere in this project (notes, docstring, evidence, CHANGELOG) for pre_tool or prompt_submit, so the weaker claim (FAIL_OPEN) is recorded rather than a guess in our own favour -- pre_tool and prompt_submit had rested on FAIL_CLOSED with no basis, the strongest claim in the whole vocabulary, and the only one of its kind unsupported here. PreCompact's block=True was similarly unsupported and is now detect-only; the hooks reference at the time this adapter was written suggests PreCompact's exit 2 writes to stderr without blocking anything. Live capture 2026-08-27 found detection broken against current builds: Claude Code now sends prompt_id, which this adapter treated as proof a payload was Devin's, so 38 of 42 real payloads were claimed by Devin instead and a deny rendered in the wrong dialect. Fixed by discriminating on fields observed from Claude Code rather than on a field it was assumed to lack.
 
 ## What `agentseam install` writes
 
@@ -228,7 +228,7 @@ Exit code: `0`
 
 ### 3. `prompt_submit` — called `UserPromptSubmit` here
 
-Enforcement: **enforced**.
+Enforcement: **best-effort**.
 
 The agent sends:
 
@@ -259,7 +259,7 @@ Exit code: `0`
 
 ### 4. `pre_tool` — called `PreToolUse` here
 
-Enforcement: **enforced**.
+Enforcement: **best-effort**.
 
 The agent sends:
 
@@ -400,7 +400,7 @@ Exit code: `0`
 
 ### 7. `pre_compact` — called `PreCompact` here
 
-Enforcement: **best-effort**.
+Enforcement: **detect**.
 
 The agent sends:
 

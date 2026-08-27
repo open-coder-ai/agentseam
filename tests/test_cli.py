@@ -40,7 +40,7 @@ def test_agents_and_json_matrix():
 def test_install_reports_enforcement_level(tmp_path):
     out = _run(["install", "claude_code", "handler.py", "--repo", str(tmp_path)])
     assert out.returncode == 0
-    assert "pre_tool=enforced" in out.stdout
+    assert "pre_tool=best-effort" in out.stdout
 
 
 def test_install_rejects_unknown_event(tmp_path):
