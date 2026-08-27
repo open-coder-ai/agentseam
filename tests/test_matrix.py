@@ -81,6 +81,17 @@ def test_unadapted_is_distinct_from_no_surface():
     assert "no hook surface found" in A.MATRIX["replit"]["notes"].lower()
 
 
+def test_the_codex_note_does_not_claim_a_field_the_code_deliberately_ignores():
+    """codex_cli.claims()'s own docstring: 'model used to count as a third marker and no
+    longer does -- Cursor's base hook schema sends model on every event too'. The note is a
+    source of truth by project policy; a maintainer trusting a stale note that still lists
+    `model` as a bare discriminator could re-add it to claims() and make every Cursor
+    payload ambiguous again -- the exact regression the docstring was written to prevent."""
+    note = A.MATRIX["codex_cli"]["notes"]
+    assert "turn_id" in note and "permission_mode" in note
+    assert "cannot discriminate" in note or "cursor also sends" in note.lower()
+
+
 def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
     """Every inherited row that has since been checked had MORE surface than it claimed --
     Devin's said "no pre-tool-use surface" and was false, Kimi's was false in all three of

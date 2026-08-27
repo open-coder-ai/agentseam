@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.codex/hooks.json` |
 | evidence | `vendor-source` — vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts |
 
-Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase event names and extra turn-scoped fields (turn_id, model, permission_mode). Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform.
+Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase event names and extra turn-scoped fields (turn_id, permission_mode -- and model, which Cursor also sends and therefore cannot discriminate). Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform.
 
 ## What `agentseam install` writes
 
