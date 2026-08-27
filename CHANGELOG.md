@@ -18,6 +18,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   never plumbed into `event.tool_use_id`, which stayed `None` on the one agent that names a
   correlation field at all. A handler timing a gate decision against its post-tool result, or
   verifying a denied call produced no output, had nothing to key on.
+- Tabnine's `respond()` decided whether to speak from `event.raw["hook_event_name"]` alone --
+  `respond()` is public adapter API, and a consumer who replays a captured event or builds
+  one directly (`raw` defaulting to `{}`, as other adapters permit) got silence at a real
+  blocking event instead of the deny they returned. Now checks `event.event` against the
+  four blocking events with a canonical mapping first, falling back to the raw vendor name
+  for the two (`BeforeModel`/`AfterModel`) that have none.
 - Junie's `PermissionRequest` -- the event whose inverted default (silence approves) is the
   adapter's headline hazard -- cannot be wired by `install()` on its own, since it shares
   canonical `pre_tool` with `PreToolUse` and `REVERSE_EVENT_MAP` names only one vendor event

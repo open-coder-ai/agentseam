@@ -63,6 +63,24 @@ def test_a_non_blocking_event_stays_silent():
     assert (text, code) == ("", 0)
 
 
+def test_respond_answers_a_hand_built_event_not_just_a_parsed_one():
+    """respond() is public adapter API -- a consumer replaying a captured event or building
+    one directly (raw defaulting to {}) must get an honest deny at a real blocking event,
+    not silence because event.raw['hook_event_name'] was never populated."""
+    from agentseam.contract import Event
+
+    mod = A.adapters.get("tabnine")
+    hand_built = Event("tabnine", A.PRE_TOOL, raw=None)
+    text, code = mod.respond(Decision.deny("real command"), hand_built)
+    assert json.loads(text) == {"decision": "deny", "reason": "real command"}
+    assert code == 0
+
+    # A canonically-unmapped event (no raw name available, no canonical match either) must
+    # still stay silent rather than guess.
+    unknown = Event("tabnine", A.UNKNOWN, raw=None)
+    assert mod.respond(Decision.deny("x"), unknown) == ("", 0)
+
+
 def test_ask_and_rewrite_both_deny_and_name_the_real_cause():
     ask = json.loads(A.handle(_at(A.PRE_TOOL), lambda e: Decision.ask("check first"), agent="tabnine")[0])
     assert ask["decision"] == "deny" and "cannot prompt" in ask["reason"]
