@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.cursor/hooks.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (event list, per-event schemas, exit codes) |
 
-Fails OPEN by default; failClosed:true per hook definition makes it fail closed, and agentseam sets it on every gate it installs. `ask` is accepted by the preToolUse schema but not enforced today, so the adapter denies instead of returning a prompt that would behave as a pass; beforeShellExecution and beforeMCPExecution do honour ask. Separate Tab hooks (beforeTabFileRead, afterTabFileEdit) gate inline completions, and workspaceOpen fires outside any session with no canonical event here. Cursor also loads Claude Code-format hooks.
+Fails OPEN by default; failClosed:true per hook definition makes it fail closed, and agentseam sets it on every gate it installs. `ask` is accepted by the preToolUse schema but not enforced today, so the adapter denies instead of returning a prompt that would behave as a pass; beforeShellExecution and beforeMCPExecution do honour ask. Separate Tab hooks (beforeTabFileRead, afterTabFileEdit) gate inline completions, and workspaceOpen fires outside any session with no canonical event here. Cursor also loads Claude Code-format hooks. Witnessed live (Windows, 2026-08-27): a beforeShellExecution hook that produced no stdout caused the tool call to be REJECTED -- an empty response is not an allow, so silence blocks and the documented fail-open covers something narrower than any-hook-problem. A hook wired here must answer in-dialect.
 
 ## What `agentseam install` writes
 

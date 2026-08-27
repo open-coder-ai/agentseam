@@ -32,9 +32,11 @@ Paste the report back. Repeat for whichever other agents you have.
 
 ## Why it is safe to run
 
-- **The probe always allows.** It records and exits 0. It cannot block a tool call, so it
-  cannot interfere with real work. Verification that costs you a broken session is not worth
-  running, and would not get run twice.
+- **The probe always allows.** It records, answers "allow" in the agent's own dialect,
+  and exits 0. It cannot block a tool call, so it cannot interfere with real work.
+  Verification that costs you a broken session is not worth running, and would not get run
+  twice. (The in-dialect answer is not optional: Cursor's permission gates treat a silent
+  hook as a refusal and reject the command -- witnessed live before this was fixed.)
 - **Nothing sensitive is written down.** Payloads are reduced to shape *before* anything
   touches disk: keys and types are kept, values are replaced with markers like `<str:41>`.
   A short allowlist of protocol enums survives (`hook_event_name`, `tool_name`) because

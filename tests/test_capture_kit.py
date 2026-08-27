@@ -207,6 +207,36 @@ def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeyp
     assert install_mod.installed("cursor", str(tmp_path))
 
 
+def _probe_stdout(tmp_path, monkeypatch, data, agent):
+    import subprocess
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    probe = tmp_path / "probe.py"
+    probe.write_text(capture._probe_source())
+    result = subprocess.run([sys.executable, str(probe), agent], input=data, capture_output=True)
+    assert result.returncode == 0, result.stderr
+    return result.stdout.decode()
+
+
+def test_the_probe_answers_a_permission_gate_in_the_agents_own_dialect(tmp_path, monkeypatch):
+    """Exit 0 is not an answer everywhere. Witnessed live: Cursor's beforeShellExecution
+    got no output from the silent probe and REJECTED the user's real command -- the exact
+    interference the probe promises never to cause. It now allows in-dialect."""
+    payload = json.dumps({"hook_event_name": "beforeShellExecution", "command": "x", "cwd": "/w"})
+    out = _probe_stdout(tmp_path, monkeypatch, payload.encode(), "cursor")
+    assert json.loads(out) == {"permission": "allow"}
+
+
+def test_the_probe_stays_silent_where_silence_is_the_protocol(tmp_path, monkeypatch):
+    """Observational hooks document no output fields; inventing one risks the opposite bug."""
+    payload = json.dumps({"hook_event_name": "afterFileEdit", "file_path": "/w/x.py", "edits": []})
+    assert _probe_stdout(tmp_path, monkeypatch, payload.encode(), "cursor") == ""
+    assert _probe_stdout(tmp_path, monkeypatch, b"not json", "cursor") == ""
+
+
 def test_every_adapter_can_be_detected():
     """A footprint per adapter, or `detect` silently cannot find agents we support.
 
