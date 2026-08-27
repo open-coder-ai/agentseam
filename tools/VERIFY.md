@@ -45,7 +45,7 @@ Paste the report back. Repeat for whichever other agents you have.
   appear in the output — and runs the real probe to prove it rather than reading its source.
 - **Uninstall is surgical.** The probe is installed under its own ownership marker, so
   removing it leaves any hooks you already had untouched.
-- The capture file is `.capture/captured.jsonl`, gitignored, and already safe to share.
+- Captures land in `.capture/captured.<pid>.jsonl` -- one file per probe process, gitignored, already safe to share. One file per process rather than one shared file because agents run hooks concurrently (Cursor spawns parallel subagents), and interleaved appends to a shared file tear records in half.
 
 ## What the report tells us
 

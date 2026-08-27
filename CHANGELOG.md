@@ -7,6 +7,13 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Concurrent probes tore records in half. Cursor runs subagents in parallel -- its payloads
+  carry `is_parallel_worker`, `subagent_id` and a `subagentStart` event -- so several probe
+  processes appended to one capture file at once and their buffered writes interleaved.
+  Witnessed live: two records split mid-string, and `report` crashed on the first fragment,
+  taking 122 good records with it. Each probe now writes its own `captured.<pid>.jsonl` with
+  a single `os.write()`, and the loader reads every shard, skips any line that is not whole,
+  and reports how many it skipped rather than presenting a partial capture as a complete one.
 - The capture probe blocked a real command. Cursor's permission gates expect
   `{"permission": "allow"}` on stdout and treat a silent hook as a refusal -- witnessed
   live on Windows, where the probe's silence made Cursor reject the very command that was
