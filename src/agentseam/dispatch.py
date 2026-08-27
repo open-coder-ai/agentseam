@@ -81,12 +81,28 @@ def handle(raw, handler, agent=None):
     return text, code, event, decision
 
 
+def _read_payload(stream):
+    """Read BYTES and decode UTF-8 ourselves rather than trusting the platform locale.
+
+    Ported from chock, which witnessed the failure on a real Cursor install on Windows:
+    the console locale is cp1252, Cursor's UTF-8 BOM became the three characters 'ï»¿',
+    json failed on "line 1 column 1" -- and the hook allowed everything while claiming
+    enforcement. `utf-8-sig` drops the BOM; `errors="replace"` keeps one stray byte from
+    silently disabling the gate. Streams without a binary buffer (tests, embeddings) fall
+    back to text with the BOM stripped.
+    """
+    buffer = getattr(stream, "buffer", None)
+    if buffer is not None:
+        return buffer.read().decode("utf-8-sig", errors="replace")
+    return stream.read().lstrip("\ufeff")
+
+
 def run(handler, agent=None, stdin=None, stdout=None, exit=True):
     """Read one payload from stdin, dispatch, emit the vendor response, exit."""
     stream = stdin or sys.stdin
     out = stdout or sys.stdout
     try:
-        raw = json.load(stream)
+        raw = json.loads(_read_payload(stream))
     except Exception:
         # Malformed input is not the agent's fault to pay for: allow, stay silent.
         if exit:

@@ -57,28 +57,72 @@ FOOTPRINTS = {
 
 def _probe_source():
     """The recording hook, written as a standalone file so no install is needed to run it."""
+    lines = [
+        "#!/usr/bin/env python3",
+        "# agentseam capture probe. Records the payload shape, then allows.",
+        "# Allowing is not a convenience: a probe that can block turns verification into a",
+        "# risk, and nobody runs it twice.",
+        "import json, os, sys",
+        "",
+        "sys.path.insert(0, @HERE@)",
+        "sys.path.insert(0, @SRC@)",
+        "",
+        "try:",
+        "    from redact import redact",
+        "",
+        "    # Bytes first, decoded by us: the platform locale is how Cursor's UTF-8 BOM",
+        "    # became cp1252 mojibake on Windows and a whole live run was recorded only as",
+        "    # lengths. Witnessed twice now -- once by chock's gate, once by this probe.",
+        "    data = sys.stdin.buffer.read()",
+        "    text, encoding = None, None",
+        "    for candidate in ('utf-8-sig', 'utf-16'):",
+        "        try:",
+        "            text, encoding = data.decode(candidate), candidate",
+        "            break",
+        "        except UnicodeError:",
+        "            continue",
+        "    payload = None",
+        "    if text is not None:",
+        "        try:",
+        "            payload = redact(json.loads(text))",
+        "        except ValueError:",
+        "            pass",
+        "    if payload is None:",
+        "        # Shape-only diagnostics: WHY it did not parse, nothing of what it said.",
+        "        parts = [ln for ln in (text or '').splitlines() if ln.strip()]",
+        "        json_lines = 0",
+        "        for ln in parts:",
+        "            try:",
+        "                json.loads(ln)",
+        "                json_lines += 1",
+        "            except ValueError:",
+        "                pass",
+        "        first = next((c for c in (text or '') if not c.isspace()), '')",
+        "        payload = {'__unparsed__': {",
+        "            'bytes': len(data),",
+        "            'encoding': encoding or 'undecodable',",
+        "            'bom': ('utf-8' if data[:3] == b'\\xef\\xbb\\xbf'",
+        "                    else 'utf-16' if data[:2] in (b'\\xff\\xfe', b'\\xfe\\xff')",
+        "                    else 'none'),",
+        "            'first_char': (first if first in '{[\"<'",
+        "                           else 'letter' if first.isalpha() else 'other'),",
+        "            'lines': len(parts),",
+        "            'json_lines': json_lines,",
+        "        }}",
+        "    agent = sys.argv[1] if len(sys.argv) > 1 else os.environ.get('AGENTSEAM_PROBE_AGENT', '?')",
+        "    os.makedirs(@CAPTURE_DIR@, exist_ok=True)",
+        "    with open(@CAPTURE_FILE@, 'a') as fh:",
+        "        fh.write(json.dumps({'agent': agent, 'payload': payload}, sort_keys=True) + chr(10))",
+        "except Exception:",
+        "    pass  # a probe that can crash the hook is a probe that can break the session",
+        "sys.exit(0)  # always allow",
+    ]
+    src = chr(10).join(lines) + chr(10)
     return (
-        "#!/usr/bin/env python3\n"
-        '"""agentseam capture probe. Records the payload shape, then allows.\n\n'
-        "Allowing is not a convenience: a probe that can block turns verification into a\n"
-        "risk, and nobody runs it twice.\n"
-        '"""\n'
-        "import json, os, sys\n\n"
-        "sys.path.insert(0, %r)\n"
-        % HERE
-        + "sys.path.insert(0, %r)\n\n" % os.path.join(HERE, "..", "src")
-        + "from redact import redact\n\n"
-        "raw = sys.stdin.read()\n"
-        "try:\n"
-        "    payload = json.loads(raw)\n"
-        "except ValueError:\n"
-        "    payload = {'__unparsed__': len(raw)}\n"
-        "os.makedirs(%r, exist_ok=True)\n"
-        % CAPTURE_DIR
-        + "with open(%r, 'a') as fh:\n" % CAPTURE_FILE
-        + "    fh.write(json.dumps({'agent': os.environ.get('AGENTSEAM_PROBE_AGENT', '?'),\n"
-        "                          'payload': redact(payload)}, sort_keys=True) + '\\n')\n"
-        "sys.exit(0)  # always allow\n"
+        src.replace("@HERE@", repr(HERE))
+        .replace("@SRC@", repr(os.path.join(HERE, "..", "src")))
+        .replace("@CAPTURE_DIR@", repr(CAPTURE_DIR))
+        .replace("@CAPTURE_FILE@", repr(CAPTURE_FILE))
     )
 
 
@@ -110,9 +154,11 @@ def cmd_install(args):
 
     mod = adapters.get(args.agent)
     events = sorted(mod.REVERSE_EVENT_MAP)
-    written = install_mod.install(
-        args.agent, events, "%s %s" % (sys.executable, path), repo_root=args.repo, owner=OWNER
-    )
+    # Quoted interpreter and probe path -- chock's fix for interpreters under paths with
+    # spaces, shell-agnostic between POSIX shells and cmd.exe. The agent name rides as
+    # argv so the report can attribute payloads without an env var nobody sets.
+    command = '"%s" "%s" %s' % (sys.executable, path, args.agent)
+    written = install_mod.install(args.agent, events, command, repo_root=args.repo, owner=OWNER)
     print("probe:  %s" % path)
     print("wired:  %s" % written)
     print("events: %s" % ", ".join(events))
