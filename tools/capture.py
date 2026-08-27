@@ -179,6 +179,27 @@ def cmd_conflicts(args):
     return 0
 
 
+def _versions_in(value):
+    """Version strings the capture kept, wherever they are nested.
+
+    Redaction already allows these through -- `cursor_version` is on the structural
+    allowlist and `1.5.11` is enum-like -- but the report only ever printed key *paths*, so
+    the one fact the matrix requires for a `verified` record was sitting in the file
+    unread, and had to be asked for by hand.
+    """
+    found = []
+    if isinstance(value, dict):
+        for key, sub in value.items():
+            if "version" in key.lower() and isinstance(sub, str) and not sub.startswith("<"):
+                found.append(sub)
+            else:
+                found.extend(_versions_in(sub))
+    elif isinstance(value, list):
+        for sub in value:
+            found.extend(_versions_in(sub))
+    return found
+
+
 def cmd_report(args):
     """Compare what arrived against what the adapter expects, and say which won."""
     rows = _load()
@@ -240,6 +261,9 @@ def cmd_report(args):
                 print("- **parse failures: %s**" % "; ".join(sorted(set(unparsed))))
             if missing:
                 print("- mapped but not observed (may just not have fired): %s" % ", ".join(missing))
+        versions = sorted({str(v) for payload in payloads for v in _versions_in(payload)})
+        if versions:
+            print("- **agent version: %s**" % ", ".join(versions))
         print("\nKey paths observed:\n")
         paths = sorted({p for payload in payloads for p in keys_of(payload)})
         print("```\n%s\n```\n" % "\n".join(paths))
