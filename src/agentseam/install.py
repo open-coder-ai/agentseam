@@ -220,8 +220,15 @@ def installed(agent, repo_root=".", owner="agentseam"):
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         if not os.path.exists(path):
             return False
-        with open(path) as fh:
-            return _block_bounds(fh.read(), owner) is not None
+        try:
+            with open(path, encoding="utf-8-sig") as fh:
+                text = fh.read()
+        except (OSError, UnicodeError):
+            # A query never raises: an unreadable or non-UTF-8 file means our witness is not
+            # known to be there. This mirrors the JSON branch's ConfigUnreadable handling;
+            # uninstall() is where an unreadable file must stop, not here.
+            return False
+        return _block_bounds(text, owner) is not None
     try:
         return owner in json.dumps(_load(path))
     except ConfigUnreadable:

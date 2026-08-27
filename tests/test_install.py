@@ -160,3 +160,16 @@ def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
     with pytest.raises(I.ConfigUnreadable):
         I.uninstall("junie")
     assert cfg.read_text() == "{ broken ,,, }", "uninstall must not rewrite a file it cannot parse"
+
+
+def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatch):
+    """The TOML branch of installed() must uphold the same "never raises" contract as the
+    JSON branch: a config that exists but is not UTF-8 (a UTF-16 file, a stray byte) means
+    "not known to be there", not a crash. It read the file with no guard before."""
+    monkeypatch.setenv("HOME", str(tmp_path))
+    cfg = tmp_path / ".kimi-code" / "config.toml"
+    cfg.parent.mkdir()
+    cfg.write_bytes('event = "x"'.encode("utf-16"))
+
+    assert I.installed("kimi_code") is False
+    assert cfg.read_bytes()[:2] == b"\xff\xfe", "a read-only query must not touch the file"
