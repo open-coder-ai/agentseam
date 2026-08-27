@@ -112,7 +112,9 @@ def claims(raw):
 def parse(raw):
     ti = raw.get("tool_input") or {}
     tool = raw.get("tool_name")
-    content = ti.get("content") or ti.get("new_string") or None
+    # new_source is NotebookEdit's cell body -- the tool is in WRITE_TOOLS, so claiming to
+    # handle it while dropping its content is an internal contradiction, not a vendor guess.
+    content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
     if content is None and isinstance(ti.get("edits"), list):
         joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"])
         content = joined or None
