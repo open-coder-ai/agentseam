@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Tabnine's `respond()` decided whether to speak from `event.raw["hook_event_name"]` alone --
+  `respond()` is public adapter API, and a consumer who replays a captured event or builds
+  one directly (`raw` defaulting to `{}`, as other adapters permit) got silence at a real
+  blocking event instead of the deny they returned. Now checks `event.event` against the
+  four blocking events with a canonical mapping first, falling back to the raw vendor name
+  for the two (`BeforeModel`/`AfterModel`) that have none.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration

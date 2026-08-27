@@ -74,6 +74,12 @@ REVERSE_EVENT_MAP = {
 #: The events whose decision reaches the agent loop. Six of eleven, which is more than most.
 BLOCKING_EVENTS = ("BeforeAgent", "AfterAgent", "BeforeModel", "AfterModel", "BeforeTool", "AfterTool")
 
+#: Canonical form of the four of BLOCKING_EVENTS that have a canonical mapping (BeforeModel/
+#: AfterModel do not -- they resolve to UNKNOWN and stay raw-only). respond() is public
+#: adapter API: a caller who replays a captured event or builds one directly (raw defaulting
+#: to {}) must still get an honest deny, not silence, at a real blocking event.
+_BLOCKING_CANONICAL = (PROMPT_SUBMIT, STOP, PRE_TOOL, POST_TOOL)
+
 #: In Tabnine's base schema on every event, and the only documented field separating its
 #: payloads from Gemini CLI's identically-named ones.
 MARKER = "timestamp"
@@ -111,8 +117,11 @@ def _because(reason, note):
 
 
 def respond(decision, event):
+    # event.event first: a caller replaying a captured event or building one directly (raw
+    # defaulting to {}) still gets an honest answer at the four blocking events that have a
+    # canonical mapping. The raw name catches BeforeModel/AfterModel too, which do not.
     name = (event.raw or {}).get("hook_event_name")
-    if name not in BLOCKING_EVENTS:
+    if event.event not in _BLOCKING_CANONICAL and name not in BLOCKING_EVENTS:
         # Nothing here reaches the agent loop. Emitting JSON anyway would be worse than
         # silence: stdout that is not the final JSON object breaks Tabnine's parsing, and
         # a broken parse is treated as allow.
