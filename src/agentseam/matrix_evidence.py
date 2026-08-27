@@ -11,7 +11,7 @@ a live run.
 
 from __future__ import annotations
 
-from .matrix_terms import BASIS_DOCS, BASIS_LIVE, BASIS_SOURCE, BASIS_THIRD_PARTY
+from .matrix_terms import BASIS_DOCS, BASIS_LIVE, BASIS_LIVE_PARTIAL, BASIS_SOURCE, BASIS_THIRD_PARTY
 
 EVIDENCE = {
     "antigravity": {
@@ -33,10 +33,25 @@ EVIDENCE = {
         "method": "vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts",
     },
     "cursor": {
-        "basis": BASIS_DOCS,
-        "version": "1.7+",
-        "date": "2026-08-26",
-        "method": "vendor hooks documentation read directly (event list, per-event schemas, exit codes)",
+        "basis": BASIS_LIVE_PARTIAL,
+        "version": "3.17.8",
+        "date": "2026-08-27",
+        "method": (
+            "vendor hooks documentation, plus a live capture on Windows: 120 real payloads "
+            "across four sessions, every one claimed by this adapter and none carrying a "
+            "vendor event we do not map. `observed` lists the events actually seen fire; the "
+            "rest of this row still rests on documentation."
+        ),
+        # Canonical events seen against the running agent. Deliberately NOT a claim about the
+        # five this row also asserts -- see NOTES for what three sessions failed to observe.
+        "observed": (
+            "file_changed",
+            "post_tool",
+            "pre_tool",
+            "prompt_submit",
+            "session_start",
+            "stop",
+        ),
     },
     "devin": {
         "basis": BASIS_DOCS,

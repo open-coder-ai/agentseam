@@ -45,5 +45,11 @@ BASIS_LIVE = "live-run"  # observed against a running agent
 BASIS_SOURCE = "vendor-source"  # read from the vendor's own source code
 BASIS_DOCS = "vendor-docs"  # read from the vendor's documentation
 BASIS_THIRD_PARTY = "third-party-install"  # a shipped installation somebody else published
+#: Observed against a running agent, but not at every event the row claims. Distinct from
+#: BASIS_LIVE for the same reason FAIL_CONFIGURABLE is distinct from FAIL_OPEN: neither
+#: existing word tells the truth. "vendor-docs" would understate a row somebody really ran,
+#: and "live-run" would let a consumer filtering for observed rows rely on an event nobody
+#: has seen fire. The `observed` list on the evidence record says exactly which events were.
+BASIS_LIVE_PARTIAL = "live-run-partial"
 BASIS_INHERITED = "inherited"  # carried over unverified; treat as a lead, not a fact
-BASES = (BASIS_LIVE, BASIS_SOURCE, BASIS_DOCS, BASIS_THIRD_PARTY, BASIS_INHERITED)
+BASES = (BASIS_LIVE, BASIS_LIVE_PARTIAL, BASIS_SOURCE, BASIS_DOCS, BASIS_THIRD_PARTY, BASIS_INHERITED)

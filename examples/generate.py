@@ -43,14 +43,9 @@ DECISIONS = [
 ]
 
 #: What each basis means for someone deciding how far to trust a page.
-BASIS_CAVEAT = {
-    "live-run": "observed against a running agent",
-    "vendor-source": "read from the vendor's own source code",
-    "vendor-docs": "read from the vendor's documentation -- a claim about what the vendor "
-    "says, not an observation of what their build does",
-    "third-party-install": "read from a working installation somebody else published, not from the vendor",
-    "inherited": "carried over unverified -- a lead, not a fact",
-}
+
+
+from provenance import BASIS_CAVEAT, _provenance  # noqa: E402,F401
 
 
 def _fence(text, lang=""):
@@ -59,17 +54,6 @@ def _fence(text, lang=""):
 
 def _json(obj):
     return json.dumps(obj, indent=2, sort_keys=True)
-
-
-def _provenance(agent):
-    row = A.MATRIX[agent]
-    return (
-        "> **How this was established.** %s: %s. Checked %s.\n>\n"
-        "> Vendors change their hook surfaces without telling us. Confirm against your own\n"
-        "> installation before relying on any of it, and open an issue if a page is wrong --\n"
-        "> a claim that has quietly stopped being true is the failure mode this project\n"
-        "> cares most about.\n" % (basis(agent), BASIS_CAVEAT[basis(agent)], row["verified"]["date"])
-    )
 
 
 def _decision_rows(agent, raw):
