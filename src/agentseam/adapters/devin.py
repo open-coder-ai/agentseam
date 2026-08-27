@@ -10,8 +10,11 @@ None, and a dispatcher that cannot name the agent allows the call it was install
 So detection here turns on the fields that actually differ:
 
   * Devin carries `prompt_id`, a per-turn id Claude Code has no equivalent of.
-  * `PermissionRequest` and `PostCompaction` are Devin-only events (Claude Code has
-    `PreCompact`, which is a different moment).
+  * `PermissionRequest` and `PostCompaction` are Devin-only events. `PostCompaction` is left
+    UNMAPPED rather than folded into canonical `PRE_COMPACT`: it fires AFTER compaction, so a
+    handler wired there to flush or snapshot context -- the reason `pre_compact` exists --
+    would run once the context it wanted to save is already discarded. `PreCompact` is a
+    different moment Devin does not appear to expose at all.
 
 **A Devin `SessionStart` payload is genuinely indistinguishable from Claude Code's**, because
 `prompt_id` is documented as absent for events that fire before the first user prompt. Rather
@@ -34,7 +37,6 @@ from ..contract import (
     ASK,
     DENY,
     POST_TOOL,
-    PRE_COMPACT,
     PRE_TOOL,
     PROMPT_SUBMIT,
     REWRITE,
@@ -49,13 +51,16 @@ from .claude_code import looks_like_claude_code
 
 AGENT = "devin"
 
+# PostCompaction is deliberately absent: it fires AFTER compaction, so folding it into
+# canonical PRE_COMPACT would claim a "before" gate that is actually "after" -- see the
+# module docstring. claims() still recognises the event name via _DEVIN_ONLY below; it just
+# is not wired to any canonical event, so parse() reports it UNKNOWN rather than guess.
 EVENT_MAP = {
     "PreToolUse": PRE_TOOL,
     "PostToolUse": POST_TOOL,
     "PermissionRequest": PRE_TOOL,
     "UserPromptSubmit": PROMPT_SUBMIT,
     "Stop": STOP,
-    "PostCompaction": PRE_COMPACT,
     "SessionStart": SESSION_START,
     "SessionEnd": SESSION_END,
 }
@@ -64,7 +69,6 @@ REVERSE_EVENT_MAP = {
     POST_TOOL: "PostToolUse",
     PROMPT_SUBMIT: "UserPromptSubmit",
     STOP: "Stop",
-    PRE_COMPACT: "PostCompaction",
     SESSION_START: "SessionStart",
     SESSION_END: "SessionEnd",
 }
