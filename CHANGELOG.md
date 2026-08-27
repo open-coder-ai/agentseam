@@ -7,6 +7,15 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `tools/capture.py` could not run as a script at all: `main()` builds the `report`
+  subcommand's parser with `cmd_report`, but the `from capture_report import ... cmd_report`
+  line sat *after* the `if __name__ == "__main__": sys.exit(main())` guard, so running
+  `python3 tools/capture.py <anything>` raised `NameError: name 'cmd_report' is not defined`
+  before a single argument was parsed -- the exact tool `tools/VERIFY.md` walks a verifier
+  through running first. Moved the import above the entry-point guard, keeping it after every
+  other name in the module is bound (the reason it was pushed to the bottom in the first
+  place) so `capture_report`'s own lazy `from capture import ...` still finds a fully
+  initialized module.
 - Antigravity's `respond()` Stop branch treated ASK and REWRITE identically to DENY, emitting
   `{"decision": "continue", "reason": "<handler's raw reason>"}` with no degradation note --
   unlike the gate branch just below it, which already annotates both. A handler asking for

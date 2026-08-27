@@ -164,10 +164,12 @@ def main(argv=None):
     return args.fn(args)
 
 
+# Re-exported: tests and callers address the report through `capture`, and keeping that
+# address stable is cheaper than teaching every caller about the split. Imported here, after
+# every name in this module is bound, so capture_report's lazy `from capture import ...`
+# (inside its own functions) always finds a fully-initialized module -- but still before
+# __main__ runs main(), which needs cmd_report bound to build the "report" subcommand.
+from capture_report import _capture_files, _load, _versions_in, cmd_report  # noqa: E402,F401
+
 if __name__ == "__main__":
     sys.exit(main())
-
-# Re-exported: tests and callers address the report through `capture`, and keeping that
-# address stable is cheaper than teaching every caller about the split. Imported at the
-# bottom so capture_report's lazy imports of this module find every name already bound.
-from capture_report import _capture_files, _load, _versions_in, cmd_report  # noqa: E402,F401
