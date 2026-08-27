@@ -30,6 +30,15 @@ def test_pascalcase_tool_args_are_read_into_the_canonical_fields():
     assert write.path == "AGENTS.md" and "AWS_SECRET" in write.content
 
 
+def test_stepidx_correlates_pre_and_post_tool_use():
+    """The docstring's own pre/post correlation key -- PreToolUse and PostToolUse carry the
+    same stepIdx -- was never plumbed into tool_use_id, leaving it None on the one agent
+    that names a correlation field. A handler timing a call or verifying a denied one
+    produced no output needs this."""
+    _, _, event, _ = A.handle(AG_PRE_TOOL, deny_all)
+    assert event.tool_use_id == "19"
+
+
 def test_pre_tool_use_denies_with_a_reason():
     text, code, event, _ = A.handle(AG_PRE_TOOL, deny_all)
     assert event.event == A.PRE_TOOL
@@ -73,6 +82,19 @@ def test_stop_can_refuse_to_let_the_agent_stop():
     assert event.event == A.STOP
     assert json.loads(text) == {"decision": "continue", "reason": "tests still failing"}
     assert json.loads(A.handle(AG_STOP, lambda e: Decision.allow())[0])["decision"] == "stop"
+
+
+def test_stop_names_why_ask_or_rewrite_became_continue():
+    """Without the annotation, ASK/REWRITE at Stop read exactly like a DENY: 'continue' with
+    the handler's raw reason, as though the handler had asked to keep working. The user
+    never learns confirmation or a change was actually needed and could not be expressed."""
+    ask = json.loads(A.handle(AG_STOP, lambda e: Decision.ask("confirm"))[0])
+    assert ask["decision"] == "continue"
+    assert "confirm" in ask["reason"] and "cannot prompt at Stop" in ask["reason"]
+
+    rewrite = json.loads(A.handle(AG_STOP, lambda e: Decision.rewrite({"x": "y"}, "needs change"))[0])
+    assert rewrite["decision"] == "continue"
+    assert "needs change" in rewrite["reason"] and "cannot modify" in rewrite["reason"]
 
 
 def test_invocation_events_are_unmapped_because_they_are_indistinguishable():

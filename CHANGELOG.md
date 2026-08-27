@@ -7,6 +7,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Antigravity's `respond()` Stop branch treated ASK and REWRITE identically to DENY, emitting
+  `{"decision": "continue", "reason": "<handler's raw reason>"}` with no degradation note --
+  unlike the gate branch just below it, which already annotates both. A handler asking for
+  confirmation or a rewrite at Stop was unconditionally re-entered into the work loop with a
+  reason that read as though it had asked to keep working; the user never learned
+  confirmation was needed or that the change could not be expressed there. Now annotated the
+  same way the gate branch already is.
+- Antigravity's `stepIdx` -- the module docstring's own named pre/post correlation key -- was
+  never plumbed into `event.tool_use_id`, which stayed `None` on the one agent that names a
+  correlation field at all. A handler timing a gate decision against its post-tool result, or
+  verifying a denied call produced no output, had nothing to key on.
 - Tabnine's `respond()` decided whether to speak from `event.raw["hook_event_name"]` alone --
   `respond()` is public adapter API, and a consumer who replays a captured event or builds
   one directly (`raw` defaulting to `{}`, as other adapters permit) got silence at a real
