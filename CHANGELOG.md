@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- `tools/redact.py`'s `MAX_ENUM_LEN=48` destroyed real MCP tool names: `mcp__<server>__<tool>`
+  routinely exceeds 48 characters, so a capture session gating MCP calls lost WHICH tool
+  fired -- reduced to `<str:NN>` -- on exactly the surface several matrix rows most need
+  verified. Tool-name-shaped keys (`tool_name`, `toolName`, `name`, `mcp_server_name`) now
+  get a 128-char cap; other structural keys, and actual prose reusing one of these key
+  names, are unaffected.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
