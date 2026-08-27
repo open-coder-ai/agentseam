@@ -7,6 +7,13 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- The matrix's `codex_cli` note still listed `model` among the fields that separate its
+  payload from Claude Code's, while `codex_cli.claims()`'s own docstring says the opposite:
+  `model` stopped counting as a discriminator because Cursor sends it too, and claiming on
+  it made every real Cursor payload ambiguous. A maintainer trusting the (source-of-truth)
+  note over the code could re-add `model` to `claims()` and reintroduce that exact
+  regression. Reworded to match what the code actually does.
+  `examples/generated/codex_cli.md` regenerated.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
