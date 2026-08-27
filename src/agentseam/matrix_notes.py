@@ -16,7 +16,10 @@ NOTES = {
     "safety, so a guardrail committed to a repo does not run for a teammate who clones it "
     "-- the user file is the only location that takes effect without --config-location. "
     "PermissionRequest inverts the usual default: a hook exiting 0 without a blocking "
-    "decision approves the action and skips the dialog the user would have seen. "
+    "decision approves the action and skips the dialog the user would have seen. Deliberately "
+    "not installable on its own -- it shares canonical pre_tool with PreToolUse, and "
+    "install('junie', ['pre_tool']) wires only PreToolUse, since bundling the two would hand "
+    "a consumer an approve-by-default gate they did not ask for. Wire it by hand if wanted. "
     "StopFailure is observability-only and fires on LLM/API failures, not tool failures, "
     "so it is not tool_failure and is left unmapped. Non-zero exits other than 2 are "
     "warnings and execution proceeds, so this fails OPEN.",

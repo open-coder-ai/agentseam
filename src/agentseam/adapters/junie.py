@@ -19,8 +19,14 @@ Three behaviours worth carrying into the notes because they change what a policy
     `CONFIG_PATH` points at the user file.
   * **PermissionRequest inverts the usual default.** A hook that exits 0 without a blocking
     decision *approves* the action and skips the dialog the user would otherwise have seen.
-    Installing a handler there removes a confirmation step unless the handler is careful,
-    so it is mapped but treated as a gate that must answer deliberately.
+    `parse()`/`respond()` handle it (mapped to PRE_TOOL, in BLOCKING_EVENTS), but
+    `install()` cannot wire it on its own: both PreToolUse and PermissionRequest map to the
+    one canonical `pre_tool`, and `REVERSE_EVENT_MAP` -- a single vendor name per canonical
+    event -- names only PreToolUse. This is deliberate, not an oversight: PermissionRequest
+    approves-by-default, the opposite of PreToolUse's deny-by-default gate, so bundling the
+    two under one `install('junie', ['pre_tool'])` call would silently hand a consumer a
+    second, higher-stakes gate with inverted semantics they did not ask for. A consumer who
+    wants PermissionRequest covered must wire it by hand in `~/.junie/config.json`.
   * **StopFailure is observability-only** -- output and exit code are ignored -- and it
     fires on LLM/API failures, not tool failures, so it is not `tool_failure` and is left
     unmapped rather than bent into it.

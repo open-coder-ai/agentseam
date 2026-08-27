@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Junie's `PermissionRequest` -- the event whose inverted default (silence approves) is the
+  adapter's headline hazard -- cannot be wired by `install()` on its own, since it shares
+  canonical `pre_tool` with `PreToolUse` and `REVERSE_EVENT_MAP` names only one vendor event
+  per canonical one. Nothing said this was deliberate rather than a coverage gap. Documented
+  in the docstring and matrix note: bundling the two under one `pre_tool` install would hand
+  a consumer an approve-by-default gate they did not ask for, so it must be wired by hand.
 - `install` could **destroy a user's entire config**. `_load` returned `{}` on any parse
   failure, so the fragment was merged into an empty object and written back, discarding
   everything the file held. For Junie, whose `config.json` is the whole CLI configuration
