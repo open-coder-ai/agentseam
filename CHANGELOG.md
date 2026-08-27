@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Claude Code's `NotebookEdit` is listed in `WRITE_TOOLS`, so the adapter claims to gate it,
+  but its cell body arrives as `new_source` -- a field `parse()` never read -- so
+  `Event.content` was `None` and a content policy (secret scan, memory guard) saw nothing at
+  a notebook write. Now read. MultiEdit and the other write tools were already handled; only
+  NotebookEdit was dropped.
 - A policy `reason` containing any character the platform console cannot encode crashed the
   response write before the exit code was emitted -- the output twin of the stdin BOM bug.
   On a Windows cp1252 console an emoji or a non-Latin word in a deny reason raised
