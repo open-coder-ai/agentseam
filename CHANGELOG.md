@@ -7,6 +7,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- The capture report states the agent version it observed. Redaction already let it through
+  -- `cursor_version` is on the structural allowlist and a version string is enum-like -- but
+  the report printed only key *paths*, so the one fact a `verified` matrix record requires
+  sat in the capture file unread and was asked for by hand three sessions running.
 - `capture.py conflicts` names every config in a repo that fires the probe, and exits
   non-zero when more than one does. `install` warns about the same thing while it is still
   cheap to act on.

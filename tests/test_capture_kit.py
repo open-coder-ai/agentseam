@@ -127,3 +127,48 @@ def test_an_unlabelled_payload_is_not_reported_as_an_unknown_agent(tmp_path, mon
     out = capsys.readouterr().out
     assert "NOT a second vendor" in out
     assert "No adapter for this agent yet" not in out
+
+
+def test_the_report_states_the_agent_version_it_captured(tmp_path, monkeypatch, capsys):
+    """The matrix records a version per row, and the payload carries one.
+
+    Redaction already lets it through -- `cursor_version` is on the structural allowlist and
+    a version is enum-like -- but the report printed only key *paths*, so the fact sat in the
+    capture file unread and had to be asked for by hand three times over.
+    """
+    import argparse
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    (tmp_path / "captured.1.jsonl").write_text(
+        json.dumps(
+            {
+                "agent": "cursor",
+                "payload": {"hook_event_name": "stop", "cursor_version": "1.5.11"},
+            }
+        )
+        + "\n"
+    )
+    capture.cmd_report(argparse.Namespace())
+    assert "agent version: 1.5.11" in capsys.readouterr().out
+
+
+def test_a_redacted_placeholder_is_never_reported_as_a_version(tmp_path, monkeypatch, capsys):
+    """A key merely containing "version" whose value did not survive redaction says nothing.
+
+    Printing `<str:12>` as the agent version would put a placeholder into a matrix row, which
+    is worse than leaving the field empty.
+    """
+    import argparse
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
+    sys.modules.pop("capture", None)
+    import capture
+
+    (tmp_path / "captured.1.jsonl").write_text(
+        json.dumps({"agent": "cursor", "payload": {"hook_event_name": "stop", "api_version": "<str:12>"}}) + "\n"
+    )
+    capture.cmd_report(argparse.Namespace())
+    assert "agent version" not in capsys.readouterr().out
