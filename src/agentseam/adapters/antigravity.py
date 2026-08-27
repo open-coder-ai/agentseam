@@ -124,7 +124,11 @@ def respond(decision, event):
         # handler asked to keep working, when it actually asked for confirmation or a
         # change Stop cannot express either of.
         if decision.outcome == ASK:
-            note = "Antigravity cannot modify a tool call" if degraded_from(decision) == REWRITE else "Antigravity cannot prompt at Stop"
+            note = (
+                "Antigravity cannot modify a tool call"
+                if degraded_from(decision) == REWRITE
+                else "Antigravity cannot prompt at Stop"
+            )
             reason = _because(decision.reason, note)
             return _json.dumps({"decision": "continue", "reason": reason}), 0
         if decision.outcome == REWRITE:
