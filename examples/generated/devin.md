@@ -20,7 +20,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
 | can block / rewrite | yes / yes |
-| hooks covered | 7 |
+| hooks covered | 6 |
 | hook config | `.devin/hooks.v1.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (events, output format, exit codes) |
 
@@ -34,16 +34,6 @@ One handler wired for every hook this agent supports.
 
 ```json
 {
-  "PostCompaction": [
-    {
-      "hooks": [
-        {
-          "command": "python3 guard.py",
-          "type": "command"
-        }
-      ]
-    }
-  ],
   "PostToolUse": [
     {
       "hooks": [
@@ -297,36 +287,7 @@ A `Decision.deny()` here produces:
 
 Exit code: `0`
 
-### 6. `pre_compact` — called `PostCompaction` here
-
-Enforcement: **detect**.
-
-The agent sends:
-
-```json
-{
-  "hook_event_name": "PostCompaction",
-  "prompt_id": "turn-1",
-  "session_id": "example",
-  "trigger": "auto"
-}
-```
-
-which normalizes to:
-
-```
-event    = pre_compact
-```
-
-A `Decision.deny()` here produces:
-
-```json
-{"decision": "block", "reason": "policy violation"}
-```
-
-Exit code: `0`
-
-### 7. `stop` — called `Stop` here
+### 6. `stop` — called `Stop` here
 
 Enforcement: **best-effort**.
 

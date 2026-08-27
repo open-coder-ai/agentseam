@@ -352,7 +352,9 @@ output   = 1 test failed
 
 A `Decision.deny()` here produces:
 
-_Nothing. This event is observation only, so a decision is not read._
+```json
+{"additional_context": "observed after the fact (postToolUseFailure cannot prevent it): policy violation"}
+```
 
 Exit code: `0`
 

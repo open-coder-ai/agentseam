@@ -90,3 +90,21 @@ def test_notebookedit_cell_content_reaches_a_content_policy():
     assert ev.event == A.PRE_TOOL
     assert ev.content == "import os  # secret"
     assert ev.path == "/w/n.ipynb"
+
+
+def test_instructionsloaded_and_filechanged_read_top_level_fields():
+    """These two events carry no tool_input at all -- file_path (and, for InstructionsLoaded,
+    content) sit at the top level instead, per the project's own recorded example payloads.
+    parse() only ever read from tool_input, so both events lost path (and content) entirely."""
+    ev = A.adapters.get("claude_code").parse(
+        {
+            "hook_event_name": "InstructionsLoaded",
+            "file_path": "CLAUDE.md",
+            "content": "Prefer pnpm. Tests live beside source.",
+        }
+    )
+    assert ev.path == "CLAUDE.md"
+    assert ev.content == "Prefer pnpm. Tests live beside source."
+
+    ev = A.adapters.get("claude_code").parse({"hook_event_name": "FileChanged", "file_path": "AGENTS.md"})
+    assert ev.path == "AGENTS.md"

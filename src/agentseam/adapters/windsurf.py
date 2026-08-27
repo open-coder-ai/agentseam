@@ -42,22 +42,39 @@ def claims(raw):
     return "trajectory_id" in raw and isinstance(raw.get("tool_info"), dict)
 
 
-def parse(raw):
+def _event_name(raw):
     name = raw.get("hook_event_name")
-    if name is None:
-        # Shape decides only when the name is absent: a command means the terminal hook,
-        # otherwise the prompt hook. A name we do not recognise is a new event, and must
-        # not be answered as though it were one of these.
-        info = raw.get("tool_info") or {}
-        name = "pre_run_command" if info.get("command_line") else "pre_user_prompt"
+    if name is not None:
+        return name
+    # Shape decides only when the name is absent: a command means the terminal hook,
+    # otherwise the prompt hook. A name we do not recognise is a new event, and must
+    # not be answered as though it were one of these.
     info = raw.get("tool_info") or {}
+    return "pre_run_command" if info.get("command_line") else "pre_user_prompt"
+
+
+#: The two events whose real subject is an MCP tool, not the vendor event itself.
+_MCP_EVENTS = ("pre_mcp_tool_use", "post_mcp_tool_use")
+
+
+def parse(raw):
+    name = _event_name(raw)
+    info = raw.get("tool_info") or {}
+    if name in _MCP_EVENTS:
+        # event.tool held the vendor event name here, which a cross-agent handler written
+        # as `event.tool in RISKY_TOOLS` (works on claude_code/devin) could never match --
+        # the real MCP tool identity was never surfaced. server/tool come from a real,
+        # working Windsurf installation's own payload (see module docstring).
+        tool = "%s/%s" % (info["server"], info["tool"]) if info.get("server") and info.get("tool") else info.get("tool")
+    else:
+        tool = name
     return Event(
         AGENT,
         # An event this adapter has no mapping for resolves to UNKNOWN, never to the
         # nearest canonical one: relabelling it invites a guardrail to evaluate the
         # wrong policy against it.
         EVENT_MAP.get(name, UNKNOWN),
-        tool=name,
+        tool=tool,
         command=info.get("command_line"),
         path=raw.get("path") or info.get("path"),
         # No file-write hook exists, so `content` is never populated for this agent.
@@ -75,7 +92,12 @@ def respond(decision, event):
     The reason goes to stderr because that is the only channel Windsurf reads, and a
     blocked action with no explanation is a support ticket waiting to happen.
     """
-    vendor_event = event.tool or ""
+    # event.tool now carries the MCP tool identity at the two MCP events (server/tool), not
+    # the vendor event name, so blocking/the vendor event name are derived from raw here
+    # rather than from event.tool -- the same rule parse() uses to name the event. respond()
+    # is public API a caller may invoke on a hand-built Event with no raw; that is not a
+    # vendor event we can name, so it stays non-blocking, matching the prior default.
+    vendor_event = _event_name(event.raw) if event.raw else ""
     blocking = vendor_event in BLOCKING_EVENTS
     if decision.outcome in (DENY, ASK, REWRITE):
         if not blocking:
@@ -117,12 +139,19 @@ REVERSE_EVENT_MAP = {
 
 
 def hook_config(canonical_events, command, matcher=None):
-    """{"hooks": {"<event>": [{"command": ...}]}} -- matchers are not supported."""
+    """{"hooks": {"<event>": [{"command": ...}]}} -- matchers are not supported.
+
+    PRE_TOOL covers two vendor events -- pre_run_command AND pre_mcp_tool_use, both blocking
+    gates per EVENT_MAP/BLOCKING_EVENTS -- so an install for PRE_TOOL wires both rather than
+    only the first, or the MCP half of Windsurf's own documented pre-surface runs unhooked.
+    """
     hooks = {}
     for ev in canonical_events:
         name = REVERSE_EVENT_MAP.get(ev)
         if name:
             hooks.setdefault(name, []).append({"command": command})
+        if ev == PRE_TOOL:
+            hooks.setdefault("pre_mcp_tool_use", []).append({"command": command})
     return {"hooks": hooks}
 
 
