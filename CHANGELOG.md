@@ -6,6 +6,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **Claude Code detection was broken against current builds, and the payloads went to the
+  wrong adapter.** `claims()` treated `prompt_id` as proof a payload was Devin's rather than
+  Claude Code's; Claude Code now sends it on nearly every event. A live capture claimed 4 of
+  42 real payloads -- and the other 38 were claimed by Devin, alone, so `detect()` returned
+  "devin" with no ambiguity to stop it. A `deny` then rendered as `{"decision": "block"}`,
+  which Claude Code does not read: the gate was silently open on the one agent whose row
+  says `live-run`. Both adapters now discriminate on fields *observed* from Claude Code
+  instead of on a field it was assumed to lack, and the fixture corpus gained payloads
+  shaped like the ones a real session produces.
+
 ### Added
 - `live-run-partial`, a sixth `verified.basis` value, and an `observed` list on the evidence
   record naming the canonical events actually seen fire. Cursor's row is the first to use

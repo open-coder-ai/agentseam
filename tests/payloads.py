@@ -254,3 +254,33 @@ KM_WRITE = dict(
 #: Documented as observation-only: the main flow proceeds whatever the script returns.
 KM_POST = dict(KM_BASE, hook_event_name="PostToolUse", tool_name="Bash", tool_input={"command": "npm test"})
 KM_NOTIFY = dict(KM_BASE, hook_event_name="SessionStart", source="startup")
+
+
+# A Claude Code payload shaped like the ones a live capture actually produced (2026-08-27,
+# 42 payloads). The historic CC_* fixtures are minimal, docs-era shapes -- and their
+# minimality is why detection could break against reality for months without a test noticing.
+# Values are synthetic; only the KEYS come from the capture.
+CC_LIVE_PRE_TOOL = {
+    "hook_event_name": "PreToolUse",
+    "session_id": "s-1",
+    "transcript_path": "/w/.claude/transcript.jsonl",
+    "cwd": "/workspace/proj",
+    "permission_mode": "default",
+    "prompt_id": "p-1",
+    "model": "a-model",
+    "effort": {"level": "high"},
+    "tool_name": "Read",
+    "tool_input": {"file_path": "/workspace/proj/AGENTS.md"},
+    "tool_use_id": "t-1",
+}
+
+CC_LIVE_SUBAGENT_START = {
+    "hook_event_name": "SubagentStart",
+    "session_id": "s-1",
+    "transcript_path": "/w/.claude/transcript.jsonl",
+    "agent_id": "a-1",
+    "agent_type": "general-purpose",
+    "agent_transcript_path": "/w/.claude/sub.jsonl",
+    "prompt_id": "p-2",
+    "background_tasks": [],
+}
