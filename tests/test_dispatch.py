@@ -204,3 +204,43 @@ def test_run_survives_a_bom_from_the_platform_locale():
     # Claude Code's dialect denies via JSON on stdout, not the exit code -- what matters
     # is that the deny travelled at all instead of the silent allow the BOM used to cause.
     assert "deny" in out.getvalue(), out.getvalue()
+
+
+def test_a_non_ascii_reason_does_not_crash_the_gate_on_a_locale_stdout():
+    """The output twin of the BOM bug: a policy reason with a non-cp1252 char must not
+    crash run() before it emits the verdict.
+
+    On a Windows console `out.write(str)` encodes through cp1252 and raises on the first
+    character it cannot represent -- an emoji, a CJK word, a matched secret in another
+    script. That raise lands before sys.exit(code): Windsurf, whose only block signal is
+    the exit code, then exits 1 instead of 2 and the action proceeds. Fail-open, on the
+    exact platform every other Windows bug in this project surfaced on.
+    """
+    import io
+
+    class LocaleStdout:
+        """stdout whose text layer is cp1252 (raises) but whose buffer is real bytes."""
+
+        def __init__(self):
+            self.buffer = io.BytesIO()
+
+        def write(self, s):  # what a real Windows console does to a str
+            s.encode("cp1252")  # raises UnicodeEncodeError on non-cp1252 text
+            self.buffer.write(s.encode("cp1252"))
+
+        def flush(self):
+            pass
+
+    def handler(event):
+        return Decision.deny("blocked: 危険 \U0001f6ab")  # CJK + emoji
+
+    from agentseam import dispatch
+
+    # Windsurf, because its only block signal IS the exit code -- the case where a crash
+    # before sys.exit turns a block into an allow. Its payload keys the vendor event on tool.
+    out = LocaleStdout()
+    payload = {"hook_event_name": "pre_run_command", "toolName": "pre_run_command", "tool_input": {"command": "x"}}
+    # run() must not raise while writing the reason, and must still reach its exit code.
+    code = dispatch.run(handler, agent="windsurf", stdin=io.StringIO(json.dumps(payload)), stdout=out, exit=False)
+    assert code == 2, "the block's exit code must survive the write, not be pre-empted by a crash"
+    assert "危険" in out.buffer.getvalue().decode("utf-8"), "the reason must reach stdout intact"

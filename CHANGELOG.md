@@ -7,6 +7,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- A policy `reason` containing any character the platform console cannot encode crashed the
+  response write before the exit code was emitted -- the output twin of the stdin BOM bug.
+  On a Windows cp1252 console an emoji or a non-Latin word in a deny reason raised
+  UnicodeEncodeError inside `run()`; for Windsurf, whose only block signal is the exit code,
+  the process then exited 1 instead of 2 and the action proceeded, and for every
+  JSON-dialect agent the deny body never reached stdout. Both fail OPEN. `run()` now writes
+  UTF-8 bytes through the stdout buffer, so no policy reason can crash the gate.
+- VS Code Copilot parsed `userPromptSubmitted` to `prompt_submit` but never read the prompt
+  text, so `event.prompt` was `None` and any prompt-based policy on this agent was silently
+  dead. Its envelope-twins claude_code and gemini_cli both read `prompt`; now it does too.
 - **13 of the 15 shipping payloads that render the published vendor pages resolved to the
   wrong adapter, and Tabnine's gates were dead.** Gemini CLI claimed on
   `client_type in (None, ...)` -- the absence of somebody else's nameplate -- and its own

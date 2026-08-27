@@ -110,8 +110,31 @@ def run(handler, agent=None, stdin=None, stdout=None, exit=True):
         return 0
     text, code, _event, _decision = handle(raw, handler, agent)
     if text:
-        out.write(text)
-        out.flush()
+        _emit(out, text)
     if exit:
         sys.exit(code)
     return code
+
+
+def _emit(out, text):
+    """Write the vendor response as UTF-8, whatever the platform locale is.
+
+    The output twin of `_read_payload`. A policy `reason` is arbitrary text -- it can carry
+    a path, a matched secret, a non-Latin word -- and on a Windows console `out.write` goes
+    through a cp1252 layer that raises UnicodeEncodeError on the first character it cannot
+    encode. That raise happens BEFORE `sys.exit(code)`, so the process dies with exit 1: for
+    Windsurf, whose only block signal IS the exit code, 1 is not 2 and the action proceeds;
+    for every JSON-dialect agent the deny body never reaches stdout either. A guardrail that
+    fails the moment its reason contains an emoji is not a guardrail, and it fails OPEN.
+
+    Write encoded bytes through the underlying buffer so the locale never sees the string;
+    fall back to a lossy locale write only where there is no binary buffer (a StringIO in a
+    test), which cannot be a real agent's stdout.
+    """
+    buffer = getattr(out, "buffer", None)
+    if buffer is not None:
+        buffer.write(text.encode("utf-8"))
+        buffer.flush()
+    else:
+        out.write(text)
+        out.flush()
