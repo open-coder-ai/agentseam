@@ -7,6 +7,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- Codex CLI's `respond()` dropped `decision.reason` on a REWRITE: the emitted JSON carried
+  only `allow` + `updatedInput`, unlike `claude_code.respond` which already includes
+  `permissionDecisionReason` when a rewrite has one. A handler explaining WHY a write was
+  altered (e.g. "secret redacted; use env var") reached Codex with the changed content and
+  no explanation. `examples/generated/codex_cli.md` regenerated.
 - `tools/redact.py`'s `MAX_ENUM_LEN=48` destroyed real MCP tool names: `mcp__<server>__<tool>`
   routinely exceeds 48 characters, so a capture session gating MCP calls lost WHICH tool
   fired -- reduced to `<str:NN>` -- on exactly the surface several matrix rows most need
