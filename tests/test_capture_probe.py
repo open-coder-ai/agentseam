@@ -50,6 +50,7 @@ def _run_probe(tmp_path, monkeypatch, data, agent=("cursor",)):
     probe.write_text(capture._probe_source())
     result = subprocess.run([sys.executable, str(probe), *agent], input=data, capture_output=True)
     assert result.returncode == 0, "the probe must always allow: %s" % result.stderr
+    _run_probe.stdout = result.stdout.decode()
     # Through the loader, not a fixed filename: the probe writes a per-process shard.
     rows = capture._load()
     return rows[0] if rows else None
@@ -212,3 +213,57 @@ def test_a_torn_line_is_skipped_and_counted_not_fatal(tmp_path, monkeypatch):
 
     rows = capture._load()
     assert len(rows) == 2 and capture._load.torn == 1
+
+
+#: Cursor's own preToolUse payload. Cursor loads Claude Code-format hooks as well as its
+#: own -- confirmed live 2026-08-27, where both configs present made every event fire
+#: twice -- so a probe installed as claude_code really does receive this.
+CURSOR_PRE_TOOL = {
+    "hook_event_name": "preToolUse",
+    "conversation_id": "c1",
+    "generation_id": "g1",
+    "cursor_version": "3.17.8",
+    "workspace_roots": ["/workspace/alice/repo"],
+    "tool_name": "Shell",
+    "tool_input": {"command": "cat report.txt"},
+}
+
+
+def test_the_probe_answers_the_agent_that_sent_the_payload_not_the_one_it_was_installed_as(tmp_path, monkeypatch):
+    """The probe used to pick its dialect from argv -- the label it was INSTALLED under --
+    rather than from the payload in front of it. Those are different questions.
+
+    In the dual-config case this repo has already witnessed, a probe installed as
+    claude_code receives Cursor's preToolUse payload and answered it with
+    hookSpecificOutput. Cursor does not read that shape, which makes it identical to
+    silence -- and this probe's own source records that silence at a Cursor gate is
+    treated as a REFUSAL and blocks the user's real command, witnessed live on Windows.
+    So the wrong dialect here does not merely fail to help; it blocks work.
+    """
+    _run_probe(tmp_path, monkeypatch, json.dumps(CURSOR_PRE_TOOL).encode(), agent=("claude_code",))
+    assert json.loads(_run_probe.stdout) == {"permission": "allow"}
+
+
+def test_the_record_is_still_attributed_to_the_installed_label(tmp_path, monkeypatch):
+    """Only the DIALECT moved to detection. Which config fired the probe is a real fact
+    about the capture and stays argv's answer -- it is how the dual-config double-fire
+    was spotted in the first place."""
+    row = _run_probe(tmp_path, monkeypatch, json.dumps(CURSOR_PRE_TOOL).encode(), agent=("claude_code",))
+    assert row["agent"] == "claude_code"
+
+
+def test_an_unnameable_event_gets_no_invented_dialect(tmp_path, monkeypatch):
+    """parse() resolves an unmapped event to UNKNOWN. There is no recorded output contract
+    for an event we cannot name, and answering anyway is how a probe starts speaking for a
+    gate it does not understand."""
+    unknown = dict(CURSOR_PRE_TOOL, hook_event_name="somethingBrandNew")
+    _run_probe(tmp_path, monkeypatch, json.dumps(unknown).encode(), agent=("cursor",))
+    assert _run_probe.stdout == ""
+
+
+def test_a_payload_no_adapter_claims_is_not_answered_in_the_argv_dialect(tmp_path, monkeypatch):
+    """detect() declines on a genuine tie, and the argv fallback exists for that case --
+    but only where the argv adapter actually claims the payload. Otherwise the fallback
+    would quietly restore the very bug above."""
+    _run_probe(tmp_path, monkeypatch, json.dumps({"totally": "foreign"}).encode(), agent=("claude_code",))
+    assert _run_probe.stdout == ""
