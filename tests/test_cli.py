@@ -17,7 +17,9 @@ def _run(args, env=None, **kw):
 def test_matrix_renders():
     out = _run(["matrix"])
     assert out.returncode == 0
-    assert "claude_code" in out.stdout and "enforced" in out.stdout
+    # "best-effort", not "enforced": no row claims FAIL_CLOSED any more (see
+    # test_no_agent_is_rated_enforced_because_none_has_been_shown_to_fail_closed).
+    assert "claude_code" in out.stdout and "best-effort" in out.stdout
 
 
 def test_matrix_survives_a_closed_pipe():
@@ -118,9 +120,11 @@ def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
     )
 
     assert out.returncode == 1, "a skipped agent must be visible to CI: %s" % out.stderr
-    for agent in ("claude_code", "cursor", "gemini_cli", "grok"):
+    # vscode_copilot joined the wired list once its REVERSE_EVENT_MAP stopped naming an
+    # event no vendor has (postToolUseFailure) and started naming the ones both do.
+    for agent in ("claude_code", "cursor", "gemini_cli", "grok", "vscode_copilot"):
         assert "wired %-16s" % agent in out.stdout
-    for agent in ("antigravity", "junie", "vscode_copilot", "windsurf"):
+    for agent in ("antigravity", "junie", "windsurf"):
         assert ("skipped %-14s" % agent) in out.stderr, "%s should be skipped whole" % agent
     assert "no hook for" in out.stderr
 
