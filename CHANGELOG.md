@@ -67,6 +67,27 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **A regression introduced and caught in the same change: `devin`'s `PermissionRequest`
+  stopped blocking.** Scoping `respond()` to a blocking-events tuple (above) left out
+  `PermissionRequest`, which maps to canonical `pre_tool` — so a deny at a permission gate
+  began returning `""`, which is an allow. Found by re-reading the diff against `main`
+  rather than by any test, which is not a net worth relying on.
+
+  Hence a third invariant: **a deny at a blocking event is never silent.** It drives *every*
+  vendor event name rather than the shipping payload corpus, because the corpus only
+  exercises each canonical event's primary vendor name and the aliases are exactly where
+  this hides. Verified by reintroducing the regression.
+
+  It tests "said something", not "used a decision word" — `cursor` refuses at
+  `beforeSubmitPrompt` with `{"continue": false}` and no decision word at all, which is a
+  real block in that dialect; a word-based test would have called it a bug.
+
+  Four `kimi_code` events are pinned as known exceptions (`UserPromptQueued`,
+  `PermissionRequest`, `StopFailure`, `Interrupt` — the open `kimi_code.py:~50`), with a
+  second test asserting they are *still* silent so the exception expires if it stops being
+  true. Pinned rather than fixed: the remedy is a design choice between unmapping them and
+  correcting the matrix claim, and that is not mine to make silently.
+
 - **VS Code Copilot's hooks never ran on Windows** — the identical defect fixed for Codex in
   #52, found in the vendor's source before it cost a capture session. `hookExecutor.ts`'s
   `getShellCommand` spawns `powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo

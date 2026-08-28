@@ -48,6 +48,21 @@ from agentseam import MATRIX, Decision, adapters  # noqa: E402
 #: walking the whole object is that a new nesting cannot smuggle a word past this test.
 _DECISION_KEYS = ("decision", "permission", "permissionDecision")
 
+#: Carries every discriminator the adapters key on, so one payload parses as whichever
+#: vendor is under test. Only the event name and agent vary per call.
+_PROBE_PAYLOAD = {
+    "prompt_id": "p",
+    "turn_id": "t",
+    "timestamp": "2026-08-28T00:00:00Z",
+    "project_path": "/repo",
+    "conversation_id": "c",
+    "generation_id": "g",
+    "transcript_path": "/t.jsonl",
+    "tool_name": "x",
+    "tool_input": {"command": "c"},
+    "prompt": "p",
+}
+
 _OUTCOMES = (
     ("allow", lambda: Decision.allow()),
     ("deny", lambda: Decision.deny("policy")),
@@ -150,3 +165,60 @@ def test_respond_speaks_a_verdict_only_where_the_matrix_says_one_is_read(agent):
         for word in sorted(_words(text)):
             spurious.append("%s/%s (detect-only) -> %r" % (agent, event, word))
     assert not spurious, "verdicts at events the matrix says cannot block:\n  " + "\n  ".join(spurious)
+
+
+#: Vendor events that map onto a blocking canonical event but cannot actually block, so a
+#: deny there is dropped in silence. This is `kimi_code.py:~50` in the vendor-truth backlog:
+#: the vendor documents exactly three blocking events (PreToolUse, UserPromptSubmit, Stop)
+#: and these four are fire-and-forget, yet they alias onto canonical events the matrix rates
+#: blocking. Fixing it is a design choice -- unmap them and lose the lifecycle signal, or
+#: correct the matrix claim -- so it is pinned here rather than resolved by guess. Pinned,
+#: not ignored: the gap is visible in CI and a NEW silent gate still fails.
+_SILENT_GATES = {
+    ("kimi_code", "UserPromptQueued"),
+    ("kimi_code", "PermissionRequest"),
+    ("kimi_code", "StopFailure"),
+    ("kimi_code", "Interrupt"),
+}
+
+
+@pytest.mark.parametrize("agent", sorted(adapters.ADAPTERS))
+def test_a_deny_at_a_blocking_event_is_never_silent(agent):
+    """Silence at a gate is the dispatcher's allow. This drives EVERY vendor event name,
+    not just the shipping corpus, because the corpus only exercises each canonical event's
+    primary vendor name -- and the aliases are exactly where this hides.
+
+    It exists because writing the sibling invariant above introduced this very bug: scoping
+    devin's respond() to a blocking-events tuple silently dropped PermissionRequest, which
+    maps to canonical pre_tool. A deny at a permission gate began returning "" -- an allow.
+    Caught by re-reading the diff, which is not a reliable enough net to leave it at.
+
+    "Said something" rather than "used a decision word" on purpose: cursor refuses at
+    beforeSubmitPrompt with {"continue": false} and no decision word at all, which is a real
+    block in that dialect. Testing for a word would have called that a bug.
+    """
+    mod = adapters.get(agent)
+    silent = []
+    for vendor_event, canonical in sorted(getattr(mod, "EVENT_MAP", {}).items()):
+        if not (MATRIX[agent]["events"].get(canonical) or {}).get("block"):
+            continue
+        if (agent, vendor_event) in _SILENT_GATES:
+            continue
+        raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, hookEventName=vendor_event, client_type=agent)
+        text, code = mod.respond(Decision.deny("policy"), mod.parse(raw))
+        if not text.strip() and code == 0:
+            silent.append("%s/%s (-> %s) answered a deny with silence" % (agent, vendor_event, canonical))
+    assert not silent, "a deny at a blocking event must not be silent:\n  " + "\n  ".join(silent)
+
+
+def test_the_pinned_silent_gates_are_still_silent():
+    """A pinned exception must expire when it stops being true, or it outlives the defect
+    and quietly excuses a future one at the same coordinates."""
+    for agent, vendor_event in sorted(_SILENT_GATES):
+        mod = adapters.get(agent)
+        raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, client_type=agent)
+        text, code = mod.respond(Decision.deny("policy"), mod.parse(raw))
+        assert not text.strip() and code == 0, "%s/%s now answers -- drop it from _SILENT_GATES" % (
+            agent,
+            vendor_event,
+        )

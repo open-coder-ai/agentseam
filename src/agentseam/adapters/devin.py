@@ -136,7 +136,11 @@ DECISION_VOCABULARY = frozenset({"approve", "block"})
 #: reads, which invites a log or a consumer to record a block that never happened. Until
 #: 2026-08-28 respond() emitted {"decision": "block"} at post_tool, session_start and
 #: session_end alike, contradicting this adapter's own matrix row.
-_BLOCKING_EVENTS = ("PreToolUse", "UserPromptSubmit", "Stop")
+#: PermissionRequest is here because it maps to canonical pre_tool, which the matrix rates
+#: blocking -- leaving it out made a deny at a permission gate return silence, i.e. an
+#: allow. A vendor event is in this tuple if the canonical event it maps to can block, not
+#: if its name looks like a gate.
+_BLOCKING_EVENTS = ("PreToolUse", "PermissionRequest", "UserPromptSubmit", "Stop")
 
 
 def respond(decision, event):
