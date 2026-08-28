@@ -67,6 +67,22 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **Six adapters crashed on a malformed `tool_input`, and a crash is an allow.** `parse()`
+  raised `AttributeError` whenever `tool_input` was a truthy non-dict (a string, a list, a
+  number), and three raised on an `edits` list holding non-dicts. `dispatch.run` wraps only
+  the JSON decode — everything after it runs unprotected — so the exception killed the hook
+  with exit 1, which almost every vendor here treats as a non-blocking error. The call
+  proceeds. The one failure this library exists to prevent, caused by the library.
+
+  Five adapters already hardened with `isinstance`; the inconsistency is what kept it
+  invisible. `tool_input` is whatever the agent chose to serialise, and its shape is not
+  ours to assume.
+
+### Added
+- **A fourth invariant: `parse()` never raises.** Nine hostile payload shapes × every
+  adapter, 108 cases. None exotic — a vendor adding a scalar-argument tool, or a serialiser
+  that flattens, produces them.
+
 - **`installed()` answered a substring question, not an ownership one.** It was
   `owner in json.dumps(config)`, a text search over the whole serialised file. Two ways that
   lied, both real and both present in this repo:

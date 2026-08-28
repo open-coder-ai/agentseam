@@ -111,13 +111,18 @@ def claims(raw):
 
 
 def parse(raw):
-    ti = raw.get("tool_input") or {}
+    ti = raw.get("tool_input")
+    # A guard that crashes is a guard that allows: dispatch only wraps the JSON decode, so
+    # an exception here kills the hook with exit 1, which most vendors treat as a
+    # non-blocking error and let the call through. tool_input is whatever the agent chose
+    # to serialise, so it is not ours to assume the shape of.
+    ti = ti if isinstance(ti, dict) else {}
     tool = raw.get("tool_name")
     # new_source is NotebookEdit's cell body -- the tool is in WRITE_TOOLS, so claiming to
     # handle it while dropping its content is an internal contradiction, not a vendor guess.
     content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
     if content is None and isinstance(ti.get("edits"), list):
-        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"])
+        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"] if isinstance(e, dict))
         content = joined or None
     out = raw.get("tool_output")
     if isinstance(out, (dict, list)):
