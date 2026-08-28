@@ -30,6 +30,23 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this adapter for as long as it existed.
 
 ### Fixed
+- **Cursor's read gate dropped the file text it was handed.** `beforeReadFile` (and
+  `beforeTabFileRead`) put the file's contents at the top level of the payload, with no
+  `tool_input` and no `edits` — the shape `tests/payloads.py`'s own committed `CU_READ`
+  fixture carries. `_content_of` read only those two nested locations, so `event.content`
+  was `None` on the one gate that can still stop a secret being read into the model's
+  context: a handler written as `"TOKEN" in (event.content or "")` — the pattern
+  `dispatch.py`'s own docstring advertises — saw nothing and allowed. `path` already read
+  the same payload's top-level `file_path`; only content was missed.
+- **Cursor's prompt gate was installed fail-open.** `hook_config()` set `failClosed` by
+  asking `name in _PERMISSION_GATES`, but that set answers a different question — which
+  gates speak the `{"permission": ...}` dialect. `beforeSubmitPrompt` is a real gate that
+  speaks `continue` instead (`respond()` has a branch returning `{"continue": false}` on a
+  deny), so it fell through the gap. Cursor fails **open** by default, so a prompt guard
+  that crashed or was missing silently permitted the prompt it was installed to stop — on
+  the one agent whose matrix row rates `prompt_submit` `fail-configurable`, i.e. our choice
+  to make. The two meanings are now separate sets.
+
 - **VS Code Copilot's hooks file was never parseable, and its events were the wrong
   vendor's** -- four defects found by reading microsoft/vscode from a clone rather than
   from the docs, each of which failed silently.
