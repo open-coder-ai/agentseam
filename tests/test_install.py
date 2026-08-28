@@ -79,7 +79,7 @@ def test_codex_cli_install_round_trips_without_a_top_level_marker(tmp_path):
     path = Path(I.install("codex_cli", ["pre_tool"], "guard.py", repo_root=root))
     body = json.loads(path.read_text())
     assert I.MARKER not in body
-    entry = body["hooks"]["preToolUse"][0]
+    entry = body["hooks"]["PreToolUse"][0]
     assert entry["hooks"][0]["command"] == "guard.py"
     assert I.installed("codex_cli", root)
 
