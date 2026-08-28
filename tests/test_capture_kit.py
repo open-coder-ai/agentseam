@@ -20,9 +20,16 @@ sys.path.insert(0, str(ROOT / "tools"))
 # file containing a realistic home directory, and it was right to reject the first version of
 
 
-def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeypatch):
-    """An unquoted interpreter under 'C:\\Program Files' never launches, which is
-    indistinguishable at capture time from a vendor whose hooks do not fire."""
+def test_install_wires_a_launchable_interpreter_and_the_agent_name(tmp_path, monkeypatch):
+    """The command must actually launch, which is not the same as being quoted.
+
+    An unquoted interpreter under 'C:\\Program Files' never launches, and that is
+    indistinguishable at capture time from a vendor whose hooks do not fire -- so quotes
+    stay whenever the path has spaces. But quoting unconditionally has the same failure on
+    the other side: PowerShell will not run a line beginning with a quoted path, and two
+    vendors wrap hooks in PowerShell on Windows. So the rule is conditional, and this test
+    asserts the property (it launches) rather than the spelling.
+    """
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
     sys.modules.pop("capture", None)
     import argparse
@@ -45,7 +52,11 @@ def test_install_wires_a_quoted_interpreter_and_the_agent_name(tmp_path, monkeyp
     commands = commands_in(entry)
     assert commands, entry
     for command in commands:
-        assert command.startswith('"%s" "' % sys.executable), command
+        if " " in sys.executable:
+            assert command.startswith('"%s" "' % sys.executable), command
+        else:
+            assert command.startswith("%s " % sys.executable), command
+            assert not command.startswith('"'), "PowerShell cannot run a quoted-path line"
         assert command.endswith(" cursor"), command
     assert install_mod.installed("cursor", str(tmp_path))
 
@@ -199,3 +210,49 @@ def test_key_paths_are_attributed_to_the_event_that_carried_them(tmp_path, monke
     fail = out.index("postToolUseFailure:")
     assert out.index("session_id") > pre, "session_id must sit under the event that carried it"
     assert fail < out.index("error_message") < pre, "error_message belongs under postToolUseFailure only"
+
+
+def test_the_probe_command_is_runnable_by_powershell_too(monkeypatch):
+    """The quoted form is correct for POSIX shells and cmd.exe and unrunnable in PowerShell,
+    where a line beginning with a quoted path parses as a string expression rather than an
+    invocation. Two vendors are now known to wrap hooks that way on Windows -- Codex, and
+    VS Code Copilot via hookExecutor.ts's getShellCommand -- so a probe wired for either was
+    recording nothing at all, silently.
+
+    Those two carry a per-platform override in their own config schema. The other ten record
+    no such field, so the command string is the only lever: an unquoted interpreter path
+    parses in command mode in all three shells and needs no vendor support.
+    """
+    import capture
+
+    monkeypatch.setattr(capture.sys, "executable", "C:/Python314/python.exe")
+    command = capture._probe_command("C:/repo/.capture/probe.py", "cursor")
+    assert not command.startswith('"'), "PowerShell will not run a line starting with a quote"
+    assert command == 'C:/Python314/python.exe "C:/repo/.capture/probe.py" cursor'
+
+
+def test_an_interpreter_path_with_spaces_keeps_its_quotes(monkeypatch):
+    """There is no single string that runs in every shell when the path contains spaces, so
+    the quoted form stays -- correct for POSIX and cmd -- rather than trading a working
+    invocation on two shells for a broken one on three. install() warns in that case."""
+    import capture
+
+    monkeypatch.setattr(capture.sys, "executable", "C:/Program Files/Py/python.exe")
+    command = capture._probe_command("C:/repo/probe.py", "cursor")
+    assert command == '"C:/Program Files/Py/python.exe" "C:/repo/probe.py" cursor'
+
+
+def test_detected_wires_every_agent_whose_config_location_exists(tmp_path, monkeypatch, capsys):
+    """One capture evening should not have to guess which agent will be opened. The probe
+    always allows, so an extra one costs a few recorded payloads; the benefit is that
+    whichever agent is actually used is already recording."""
+    import capture
+
+    monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path / "cap"))
+    monkeypatch.setattr(capture, "_detected_agents", lambda: ["claude_code", "cursor"])
+    rc = capture.cmd_install(capture.argparse.Namespace(agent="detected", repo=str(tmp_path)))
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "wiring 2 detected agent(s)" in out
+    assert (tmp_path / ".claude" / "settings.json").exists()
+    assert (tmp_path / ".cursor" / "hooks.json").exists()

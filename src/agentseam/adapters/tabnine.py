@@ -116,6 +116,16 @@ def _because(reason, note):
     return "%s (%s)" % (reason, note) if reason else note
 
 
+#: Decision words this vendor accepts -- UNVERIFIED, and the only such entry here. Nothing
+#: in this repository records Tabnine's decision values: the docstring above is thorough
+#: about events, detection and fail-open and silent on this. These two are what respond()
+#: has always emitted, not what the vendor is known to read. If the word is "block" (as it
+#: is for Junie and Devin) every deny here is ignored -- and Tabnine treats non-JSON stdout
+#: as an allow, so an unrecognised value is a permitted action. Settle it in the live round
+#: tabnine already needs; do NOT swap the words on inference.
+DECISION_VOCABULARY = frozenset({"allow", "deny"})
+
+
 def respond(decision, event):
     # event.event first: a caller replaying a captured event or building one directly (raw
     # defaulting to {}) still gets an honest answer at the four blocking events that have a

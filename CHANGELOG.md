@@ -29,7 +29,129 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   dialect this adapter speaks, and citing it is precisely what put camelCase event names in
   this adapter for as long as it existed.
 
+### Added
+- **Every adapter now declares the decision words its vendor accepts**, and a test asserts
+  `respond()` emits nothing outside that set. Each `DECISION_VOCABULARY` is cited to where
+  the value is recorded — the vendor's source, its documentation, or the adapter's own
+  docstring.
+
+  This is the guardrail for a defect class found twice by hand in one week: `junie` emitted
+  `"deny"` where the vocabulary is allow/ask/block, at all three of its permission gates.
+  Most of these agents fail **open**, so an unrecognised decision is not a louder refusal —
+  it is a *permitted action*, reported to the caller as a block. The rest of the suite could
+  not see it, because it asserted the *shape* of a response and never asked whether the
+  vendor had a word for it.
+
+  Verified by reintroducing the Junie bug: the test fails with the exact word and event.
+
+  **What it does not catch**, stated plainly: `claude_code`'s defect used a *valid* word in
+  the *wrong envelope* (`permissionDecision` at events reading a top-level `decision`).
+  Word-checking cannot see placement — reintroducing that bug leaves this test green. That
+  class still needs a live contract experiment (`tools/probe_contract.py`).
+
+  One vocabulary is marked `UNVERIFIED` — `tabnine`'s, which rests on nothing recorded
+  anywhere in this repository. It is deliberately left as-is rather than guessed at, with a
+  test pinning that it stays the only one, so the exception cannot quietly spread.
+
+- **A second invariant: `respond()` may only speak a verdict where the matrix says one is
+  read.** A decision word at a detect-only event is a refusal nobody reads — and worse than
+  useless, because it is indistinguishable on the wire from a real gate verdict and invites
+  a log or a downstream consumer to record a block that never happened.
+
+  Writing it immediately found two more, both open "certain" items in the vendor-truth
+  backlog and neither previously caught by any test: `devin` returned `{"decision":
+  "block"}` at `post_tool`, `session_start` and `session_end`, and `gemini_cli` returned
+  `{"decision": "deny"}` at `pre_compact`, `session_start` and `session_end` — each
+  contradicting its own matrix row. Both now stay silent there; `devin` keeps recording the
+  finding as `additionalContext` at the events that have that channel. Verified by
+  reintroducing the `devin` case, which the test rejects by event and word.
+
 ### Fixed
+- **The capture probe was unrunnable under PowerShell, on every agent.** `capture.py` wired
+  `"C:\py.exe" "probe.py" agent` — correct for POSIX shells and `cmd.exe`, and chosen for
+  interpreters under paths with spaces. PowerShell is the gap: a line *beginning* with a
+  quoted path parses as a string expression, not an invocation, so nothing runs. Two vendors
+  are now known to wrap hooks that way on Windows (Codex; VS Code Copilot via
+  `hookExecutor.ts`'s `getShellCommand`), and both have per-platform override fields they now
+  use — but the other ten record no such field, leaving the command string as the only lever.
+
+  It is now unquoted whenever the interpreter path has no spaces, which parses in command
+  mode in all three shells and needs no vendor support. A path *with* spaces keeps its
+  quotes — there is no single string that works everywhere — and `install` warns when that
+  combination meets an adapter with no override, rather than silently picking one shell.
+  Safe here in a way it would not be in a real guard: the probe always allows, so an
+  invocation that fails to resolve costs a capture, not a gate.
+
+### Added
+- `capture.py install --agent detected` wires every agent whose config location exists, so a
+  capture evening records whichever agent actually gets opened instead of one guess. Wiring
+  several at once also makes double-firing visible — that is how Cursor was found to load
+  Claude Code's config as well as its own, with every event arriving twice.
+
+- **A regression introduced and caught in the same change: `devin`'s `PermissionRequest`
+  stopped blocking.** Scoping `respond()` to a blocking-events tuple (above) left out
+  `PermissionRequest`, which maps to canonical `pre_tool` — so a deny at a permission gate
+  began returning `""`, which is an allow. Found by re-reading the diff against `main`
+  rather than by any test, which is not a net worth relying on.
+
+  Hence a third invariant: **a deny at a blocking event is never silent.** It drives *every*
+  vendor event name rather than the shipping payload corpus, because the corpus only
+  exercises each canonical event's primary vendor name and the aliases are exactly where
+  this hides. Verified by reintroducing the regression.
+
+  It tests "said something", not "used a decision word" — `cursor` refuses at
+  `beforeSubmitPrompt` with `{"continue": false}` and no decision word at all, which is a
+  real block in that dialect; a word-based test would have called it a bug.
+
+  Four `kimi_code` events are pinned as known exceptions (`UserPromptQueued`,
+  `PermissionRequest`, `StopFailure`, `Interrupt` — the open `kimi_code.py:~50`), with a
+  second test asserting they are *still* silent so the exception expires if it stops being
+  true. Pinned rather than fixed: the remedy is a design choice between unmapping them and
+  correcting the matrix claim, and that is not mine to make silently.
+
+- **VS Code Copilot's hooks never ran on Windows** — the identical defect fixed for Codex in
+  #52, found in the vendor's source before it cost a capture session. `hookExecutor.ts`'s
+  `getShellCommand` spawns `powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo
+  -Command <hookCommand>` whenever `ComSpec` is `cmd.exe` — the Windows default — and
+  PowerShell will not RUN a line beginning with a quoted path: it parses as a string
+  expression, so nothing executes. Every command agentseam installs begins with a quoted
+  interpreter path. Installs now also emit the vendor's own `windows` platform override
+  (`normalizeHookCommand` in `hookSchema.ts`) carrying PowerShell's `&` call operator, while
+  `command` keeps the POSIX form so the exact interpreter path that installed the hook
+  survives. The shared rule now lives in one place (`adapters/_windows.py`) rather than in
+  two copies that could drift.
+
+- **Every `prompt_submit` and `stop` deny on Claude Code was silently discarded.**
+  `respond()` emitted `hookSpecificOutput.permissionDecision` at every event. A live
+  response-contract experiment against Claude Code 2.1.247 (Windows, 2026-08-28) settled
+  what each event actually reads:
+
+  | event | `{"decision": "block"}` | `hookSpecificOutput` | exit 2 |
+  |---|---|---|---|
+  | `UserPromptSubmit` | honoured | **ignored** | honoured |
+  | `Stop` | honoured | **ignored** | honoured |
+  | `PreToolUse` | — | **honoured** | — |
+
+  So the handler refused, the dispatcher reported a block, and the prompt reached the model
+  anyway — on the most-used adapter in the matrix. The verdicts come from the agent's own
+  behaviour, not the hook's claim: at `UserPromptSubmit` the trial prompt asked the agent to
+  write a marker file and under `hookSpecificOutput` the file appeared; at `Stop` the agent
+  carried on and the hook re-fired with `stop_hook_active` set.
+
+  `prompt_submit` and `stop` now emit the top-level `{"decision": "block", "reason": ...}`,
+  with `ask` and `rewrite` degrading to a block that names the degradation. `exit 2` works
+  at both and is deliberately not used — it collapses to 1 under the PowerShell wrapper some
+  vendors apply (which is what made the exit-code path useless on Codex/Windows) and it
+  leaks the hook's full command line into the UI. `pre_tool` keeps `permissionDecision`, and that
+  was checked in the same round rather than assumed — a deny there blocked the `Write`
+  outright, and the agent's next `Bash` call too. So all three blocking events this row
+  claims now rest on an observation rather than on inference from the other two. The
+  observation-only events get silence instead of a verdict nothing read.
+
+  Documentation could not settle this. Two reads of the vendor's own hooks page disagreed,
+  and one of them said these events had no JSON decision control at all — which is why the
+  fix waited for a live run rather than a third reading.
+
 - **Junie's gate emitted a decision word the vendor does not accept.** `respond()` returned
   `{"decision": "deny"}` at `PreToolUse`, `UserPromptSubmit` and `PermissionRequest`. Both
   places this repository records Junie's gate vocabulary — the adapter's own module

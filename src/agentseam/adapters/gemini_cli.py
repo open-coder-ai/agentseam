@@ -114,8 +114,24 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts: a top-level `decision` of allow or deny. No "block",
+#: and no "ask" -- the vocabulary is two words wide.
+DECISION_VOCABULARY = frozenset({"allow", "deny"})
+
+
+#: The events whose stdout decision is actually read. session_start, session_end and
+#: pre_compact are observation-only in this row, and respond() emitted a full
+#: {"decision": "deny"} at all three until 2026-08-28 -- a verdict nobody reads, which
+#: invites a log or a consumer to record a block that never happened. Gemini has no
+#: additionalContext channel recorded here, so the honest answer there is silence.
+_BLOCKING_EVENTS = ("BeforeTool", "AfterTool", "BeforeAgent", "AfterAgent")
+
+
 def respond(decision, event):
     import json as _json
+
+    if (event.raw or {}).get("hook_event_name") not in _BLOCKING_EVENTS:
+        return "", 0
 
     if decision.outcome == DENY:
         # `reason` is required on a deny and is delivered TO THE AGENT as a tool

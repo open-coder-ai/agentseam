@@ -73,7 +73,7 @@ EVENT_MAP = {
     "afterTabFileEdit": FILE_CHANGED,
 }
 
-#: Gates whose response is `{"permission": ...}`. The value says whether `ask` is honoured.
+#: Gates answering `{"permission": ...}`; the value says whether `ask` is honoured.
 _PERMISSION_GATES = {
     "preToolUse": False,  # schema accepts "ask"; Cursor does not enforce it today
     "beforeShellExecution": True,
@@ -82,16 +82,14 @@ _PERMISSION_GATES = {
     "beforeTabFileRead": False,
 }
 
-#: Every event where a decision is expected -- NOT the set above, which answers which
-#: dialect a gate speaks. Reusing that one here left beforeSubmitPrompt, a gate speaking
-#: `continue` rather than `permission`, installed fail-OPEN -- Cursor's default.
+#: Every event where a decision is expected -- NOT the set above (which dialect a gate
+#: speaks). Reusing that left beforeSubmitPrompt, which speaks `continue` rather than
+#: `permission`, installed fail-OPEN: Cursor's default.
 _GATES = frozenset(_PERMISSION_GATES) | {"beforeSubmitPrompt"}
 
 #: Post-hoc events: the action already happened, so nothing we return can prevent it.
-#: postToolUseFailure is its sibling postToolUse's failure twin -- same TOOL_FAILURE/
-#: POST_TOOL shape, same "already happened" fact -- and was missing here, so a deny/ask at
-#: a failed tool call returned silence instead of the additional_context detection record
-#: every other post-hoc event gets.
+#: postToolUseFailure was missing here, so a deny at a failed tool call returned silence
+#: instead of the additional_context record every other post-hoc event gets.
 _POST_HOC = (
     "postToolUse",
     "postToolUseFailure",
@@ -101,18 +99,16 @@ _POST_HOC = (
     "afterTabFileEdit",
 )
 
-#: Events with no output contract at all -- returning JSON here is simply ignored.
+#: No output contract at all -- returning JSON here is ignored.
 _MUTE = ("afterFileEdit", "afterTabFileEdit")
 
 
-#: Fields Cursor's base schema puts on every hook event. Used as positive identification
-#: where the event name alone is not enough.
+#: Cursor's base schema fields, used as positive ID where the event name is not enough.
 _CURSOR_MARKERS = ("conversation_id", "generation_id", "cursor_version", "workspace_roots")
 
 #: Event names Cursor shares with OpenAI Codex CLI, which also spells its events in
-#: camelCase. On these the name proves nothing, so a Cursor marker has to be present --
-#: otherwise both adapters claim the payload, detection goes ambiguous, and the dispatcher
-#: allows the call it was installed to gate.
+#: camelCase. On these the name proves nothing, so a Cursor marker must be present, or both
+#: adapters claim the payload, detection goes ambiguous, and the dispatcher allows the call.
 _AMBIGUOUS_NAMES = (
     "preToolUse",
     "postToolUse",
@@ -201,6 +197,10 @@ def _vendor_event(event):
     """The vendor event name, which `parse` keeps in `tool` when the tool has no name."""
     name = (event.raw or {}).get("hook_event_name")
     return name if name in EVENT_MAP else (event.tool if event.tool in EVENT_MAP else "beforeShellExecution")
+
+
+#: Decision words this vendor accepts. preToolUse's schema takes "ask" but does not enforce it, so respond() denies there instead.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask"})
 
 
 def respond(decision, event):

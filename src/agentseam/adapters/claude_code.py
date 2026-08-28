@@ -8,6 +8,7 @@ exit 2 also blocks. Verified live against Claude Code 2.1.245 (2026-08-25).
 from __future__ import annotations
 
 from ..contract import (
+    ALLOW,
     ASK,
     DENY,
     FILE_CHANGED,
@@ -145,10 +146,75 @@ def parse(raw):
     )
 
 
+#: Events that read a TOP-LEVEL {"decision": "block", "reason": ...} and ignore
+#: hookSpecificOutput.permissionDecision entirely. Established by live experiment against
+#: Claude Code 2.1.247 (2026-08-28), not from documentation -- two reads of the vendor page
+#: gave contradictory answers, and the shape this adapter had been emitting turned out to be
+#: read by neither. See respond() for the result table.
+_BLOCK_DIALECT_EVENTS = (PROMPT_SUBMIT, STOP)
+
+
+def _refusal_reason(decision):
+    """One reason string for the events that can only block -- no ask, no rewrite.
+
+    Both degrade to a block with the degradation named rather than being dropped: silence
+    at a blocking event is the dispatcher's allow, which is not what the caller asked for.
+    """
+    reason = decision.reason or "blocked by policy"
+    if decision.outcome == ASK:
+        return reason + " (confirmation requested; this event cannot prompt, so it blocks)"
+    if decision.outcome == REWRITE:
+        return reason + " (input rewrite requested; this event cannot modify input, so it blocks)"
+    return reason
+
+
+#: Decision words this vendor accepts. allow/deny/ask are permissionDecision's, honoured at
+#: pre_tool; "block" is the top-level dialect prompt_submit and stop read. Both halves were
+#: established live against 2.1.247 (2026-08-28), not from documentation.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
+
+
 def respond(decision, event):
-    """(stdout_text, exit_code) for this decision."""
-    hook_name = REVERSE_EVENT_MAP.get(event.event, "PreToolUse")
-    out = {"hookEventName": hook_name}
+    """(stdout_text, exit_code) for this decision -- three dialects, not one.
+
+    Until 2026-08-28 this emitted hookSpecificOutput.permissionDecision at EVERY event.
+    A live experiment against Claude Code 2.1.247 settled what each event actually reads,
+    by wiring one candidate shape per trial and watching the agent rather than the hook:
+
+        event             {"decision": "block"}   hookSpecificOutput   exit 2
+        UserPromptSubmit  honoured                IGNORED              honoured
+        Stop              honoured                IGNORED              honoured
+        PreToolUse        --                      honoured             --
+
+    So every prompt_submit and stop deny this library has ever produced on its most-used
+    adapter was silently discarded: the handler refused, the dispatcher reported a block,
+    and the prompt reached the model anyway. At prompt_submit the trial prompt asked the
+    agent to write a marker file and the file appeared; at stop the agent carried on and
+    the Stop hook re-fired with stop_hook_active set. Both signals are things the agent
+    did, not things the probe claimed.
+
+    exit 2 works at both, and is deliberately NOT used: it collapses to 1 under the
+    PowerShell wrapper some vendors apply (which is what made the exit-code path useless on
+    Codex/Windows), and it leaks the full hook command line into the UI where the JSON form
+    does not. The JSON block also carries the reason into the model's context.
+
+    pre_tool keeps hookSpecificOutput.permissionDecision, and that was verified in the same
+    round rather than assumed: a deny there blocked the Write outright, and the agent's next
+    Bash call too, so the gate fires for every tool. It must keep this shape in any case --
+    it is the only one carrying updatedInput, which rewrite depends on. Everything else is
+    observation-only in this row and gets silence: a verdict there was never read.
+    """
+    import json as _json
+
+    if event.event in _BLOCK_DIALECT_EVENTS:
+        if decision.outcome == ALLOW:
+            return "", 0
+        return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
+
+    if event.event != PRE_TOOL:
+        return "", 0
+
+    out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
     if decision.outcome == DENY:
         out["permissionDecision"] = "deny"
         out["permissionDecisionReason"] = decision.reason or "blocked"
@@ -162,8 +228,6 @@ def respond(decision, event):
             out["permissionDecisionReason"] = decision.reason
     else:
         out["permissionDecision"] = "allow"
-    import json as _json
-
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 

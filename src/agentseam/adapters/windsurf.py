@@ -86,6 +86,11 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts: none. Exit code 2 is the only block signal here --
+#: there is no stdout decision protocol at all, so respond() never emits one.
+DECISION_VOCABULARY = frozenset()
+
+
 def respond(decision, event):
     """Exit code only: 2 blocks a pre_* hook, everything else allows.
 

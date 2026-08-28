@@ -56,12 +56,8 @@ def test_the_installed_config_is_the_shape_vs_code_actually_parses():
     mod = A.adapters.get("vscode_copilot")
     cfg = mod.hook_config([A.PRE_TOOL, A.STOP], "python3 guard.py")
     assert "version" not in cfg
-    assert cfg == {
-        "hooks": {
-            "PreToolUse": [{"type": "command", "command": "python3 guard.py"}],
-            "Stop": [{"type": "command", "command": "python3 guard.py"}],
-        }
-    }
+    entry = {"type": "command", "command": "python3 guard.py", "windows": "& python3 guard.py"}
+    assert cfg == {"hooks": {"PreToolUse": [entry], "Stop": [entry]}}
 
 
 def test_event_names_are_pascalcase_because_that_is_what_vs_code_sends():
@@ -137,3 +133,18 @@ def test_post_tool_output_is_read_from_tool_response():
     mod = A.adapters.get("vscode_copilot")
     raw = {"timestamp": "t", "hook_event_name": "PostToolUse", "tool_name": "runInTerminal", "tool_response": "secret"}
     assert mod.parse(raw).output == "secret"
+
+
+def test_windows_gets_a_powershell_callable_command():
+    """hookExecutor.ts's getShellCommand spawns
+    `powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo -Command <hookCommand>`
+    whenever ComSpec is cmd.exe -- the Windows default. PowerShell will not RUN a line
+    beginning with a quoted path: it parses as a string expression, so nothing executes.
+
+    This is the identical failure Codex had, found in the vendor's source before it cost
+    anyone a capture session. `command` keeps the POSIX form so the exact interpreter path
+    that installed the hook survives; `windows` is the vendor's own override field.
+    """
+    entry = A.adapters.get("vscode_copilot").hook_config([A.PRE_TOOL], '"C:\\py.exe" "g.py"')["hooks"]["PreToolUse"][0]
+    assert entry["command"] == '"C:\\py.exe" "g.py"'
+    assert entry["windows"] == '& "C:\\py.exe" "g.py"'

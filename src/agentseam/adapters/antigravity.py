@@ -110,6 +110,11 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts. PreToolUse takes the five in the docstring above;
+#: Stop takes continue/stop, where anything but "continue" lets the stop happen.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "force_ask", "deny_unless_prior_grant", "continue", "stop"})
+
+
 def respond(decision, event):
     name = _infer_event(event.raw or {})
 

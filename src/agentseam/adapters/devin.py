@@ -126,8 +126,33 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts. No "ask" and no "deny": the pair is approve/block,
+#: per the docstring above and the comment in respond().
+DECISION_VOCABULARY = frozenset({"approve", "block"})
+
+
+#: The events whose stdout decision is actually read. Everywhere else this row is
+#: observation-only, and a verdict there is not a quieter refusal -- it is a refusal nobody
+#: reads, which invites a log or a consumer to record a block that never happened. Until
+#: 2026-08-28 respond() emitted {"decision": "block"} at post_tool, session_start and
+#: session_end alike, contradicting this adapter's own matrix row.
+#: PermissionRequest is here because it maps to canonical pre_tool, which the matrix rates
+#: blocking -- leaving it out made a deny at a permission gate return silence, i.e. an
+#: allow. A vendor event is in this tuple if the canonical event it maps to can block, not
+#: if its name looks like a gate.
+_BLOCKING_EVENTS = ("PreToolUse", "PermissionRequest", "UserPromptSubmit", "Stop")
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hook_event_name") or "PreToolUse"
+
+    if name not in _BLOCKING_EVENTS:
+        # The finding is still worth recording where there is a channel for it. Silence
+        # otherwise: SessionEnd has no additionalContext to carry it.
+        if decision.reason and name in _CONTEXT_EVENTS:
+            body = {"hookEventName": name, "additionalContext": decision.reason}
+            return _json.dumps({"hookSpecificOutput": body}), 0
+        return "", 0
 
     if decision.outcome == REWRITE:
         if name == "PreToolUse" and decision.updated_input is not None:

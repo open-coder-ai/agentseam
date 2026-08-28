@@ -133,6 +133,11 @@ def _because(reason, note):
     return "%s (%s)" % (reason, note) if reason else note
 
 
+#: Decision words this vendor accepts: Claude Code's permissionDecision vocabulary, which
+#: this agent takes wholesale (see the note). Only "deny" is ever emitted here.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask"})
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hook_event_name")
     if name not in BLOCKING_EVENTS:

@@ -8,3 +8,9 @@ build/
 
 # Live capture output (redacted, but no reason to commit it)
 .capture/
+
+tools/probe-contract-mode.txt
+tools/probe-contract-log.jsonl
+
+# Local Claude Code config: machine-specific paths, never shared.
+.claude/settings.local.json
