@@ -7,6 +7,7 @@ re-install replaces rather than duplicates.
 
 from __future__ import annotations
 
+import inspect
 import json
 import os
 
@@ -105,11 +106,24 @@ def _mark(obj, owner):
 
 
 def _strip_owned(obj, owner):
-    """Remove entries we own; leave everything else untouched."""
+    """Remove entries `owner` owns; leave everything else untouched -- including its marker.
+
+    The dict branch used to drop MARKER unconditionally, which erased OTHER owners' marks.
+    That is not cosmetic: ownership is the only thing that makes uninstall surgical, so a
+    second `install(..., owner="b")` silently un-owned everything "a" had written, and
+    neither could be uninstalled afterwards. Both sets of entries stayed in the user's real
+    settings file with nothing left to identify them -- permanent pollution, from the one
+    operation whose entire purpose is to be reversible.
+
+    A marker equal to `owner` is still dropped here, for the dict that is not a list item
+    and so cannot be removed by the branch above. `_mark` does not put one there today (see
+    its docstring: some vendors reject unknown top-level fields), but stripping ours if it
+    ever appears is the conservative half of the pair.
+    """
     if isinstance(obj, list):
         return [_strip_owned(v, owner) for v in obj if not (isinstance(v, dict) and v.get(MARKER) == owner)]
     if isinstance(obj, dict):
-        return {k: _strip_owned(v, owner) for k, v in obj.items() if k != MARKER}
+        return {k: _strip_owned(v, owner) for k, v in obj.items() if not (k == MARKER and v == owner)}
     return obj
 
 
@@ -187,7 +201,7 @@ def config_path(agent, repo_root=".", owner="agentseam"):
     return _resolve(adapters.get(agent), repo_root, owner)
 
 
-def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam"):
+def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None):
     """Wire `command` for `events` into `agent`'s config. Returns the path written.
 
     Raises ValueError for an event this agent cannot be wired for, rather than writing a
@@ -195,6 +209,17 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     failure this library exists to prevent, so it must not be how its own installer behaves.
     """
     mod = adapters.get(agent)
+    # `fail_closed=False` marks this wiring as an OBSERVER, not a gate. It reaches only the
+    # adapters whose hook_config takes the argument -- today just cursor, the one vendor
+    # whose config carries a per-hook fail mode. Forwarded by signature rather than by name
+    # so an adapter that grows the knob later gets it without a change here.
+    #
+    # It exists for the capture probe, which always allows: installed as a gate on Cursor it
+    # inherits failClosed:true, so a probe that cannot launch BLOCKS the user's real command.
+    # Verification that costs someone a broken session is not worth running.
+    extra = {}
+    if fail_closed is not None and "fail_closed" in inspect.signature(mod.hook_config).parameters:
+        extra["fail_closed"] = fail_closed
     unwireable = [e for e in events if e not in getattr(mod, "REVERSE_EVENT_MAP", {})]
     if unwireable:
         raise ValueError(
@@ -203,10 +228,10 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
         )
     path = _resolve(mod, repo_root, owner)  # e.g. .github/hooks/*.json
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
-        _write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher)), owner)
+        _write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
     existing = _strip_owned(_load(path), owner)  # idempotent: drop our old entries
-    fragment = _mark(mod.hook_config(events, command, matcher=matcher), owner)
+    fragment = _mark(mod.hook_config(events, command, matcher=matcher, **extra), owner)
     _dump(path, _merge(existing, fragment))
     return path
 
