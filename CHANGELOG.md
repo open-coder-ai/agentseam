@@ -67,6 +67,34 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **`installed()` answered a substring question, not an ownership one.** It was
+  `owner in json.dumps(config)`, a text search over the whole serialised file. Two ways that
+  lied, both real and both present in this repo:
+  - Antigravity's config group is literally named `agentseam`, the default owner. After
+    `uninstall`, the leftover empty group kept the witness True **forever** — `installed()`
+    reported a guard that was gone.
+  - `agentseam-capture` *contains* `agentseam`, so asking whether the default owner had a
+    guard installed answered True when only the capture probe was wired. This repo's own
+    capture test asserted exactly that, which is how long a prefix collision can hide.
+
+  It now looks for the ownership marker carrying that owner's value.
+- `kimi_code`'s `hookSpecificOutput` now carries `hookEventName`. The recorded claim
+  is that Kimi takes Claude Code's shape wholesale, and Claude Code's carries it; omitting a
+  field from a shape we say we are copying is an unforced difference from the thing we claim
+  to be.
+
+### Changed
+- `windsurf.respond()`'s docstring claimed the reason "goes to stderr because that is the
+  only channel Windsurf reads". It does not — the dispatcher writes the response text to
+  **stdout**, and nothing in this project establishes that Windsurf reads stderr. The matrix
+  note already records the honest position: Windsurf has no machine-readable reason channel
+  at all, so a blocked action arrives without an explanation. Corrected rather than papered
+  over, because "there is nowhere to put the reason" is a real limitation worth stating.
+- `devin`'s dead `SHELL_TOOL` constant is removed. Its comment claimed it was "named here so
+  `Event.command` is populated the same way as elsewhere"; `parse()` never read it. A
+  constant documenting behaviour the code does not have is worse than no constant, because
+  the next reader believes it.
+
 - **Installing a second owner permanently orphaned the first owner's hooks.**
   `_strip_owned` dropped the ownership marker from *every* dict regardless of owner, so
   `install(..., owner="b")` silently un-owned everything `"a"` had written — and afterwards

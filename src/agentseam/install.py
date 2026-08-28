@@ -252,6 +252,26 @@ def uninstall(agent, repo_root=".", owner="agentseam"):
     return True
 
 
+def _owns_anything(obj, owner):
+    """True when some entry carries OUR marker -- not merely our name somewhere in the file.
+
+    The witness used to be `owner in json.dumps(...)`, a substring test over the whole
+    serialised config. Antigravity's config group is literally named "agentseam", the
+    default owner, so after uninstall the leftover empty group `{"agentseam": {...}}` kept
+    the witness True forever: `installed()` reported a guard that was gone. Any user string
+    containing the owner name did the same -- a path, a command, a comment.
+
+    Looking for the marker key with our value is the question we actually meant to ask.
+    """
+    if isinstance(obj, dict):
+        if obj.get(MARKER) == owner:
+            return True
+        return any(_owns_anything(v, owner) for v in obj.values())
+    if isinstance(obj, list):
+        return any(_owns_anything(v, owner) for v in obj)
+    return False
+
+
 def installed(agent, repo_root=".", owner="agentseam"):
     """True when our witness is present in this agent's config."""
     mod = adapters.get(agent)
@@ -269,7 +289,7 @@ def installed(agent, repo_root=".", owner="agentseam"):
             return False
         return _block_bounds(text, owner) is not None
     try:
-        return owner in json.dumps(_load(path))
+        return _owns_anything(_load(path), owner)
     except ConfigUnreadable:
         # A query never raises: if the file cannot be read, our witness is not known to be
         # there. uninstall() is where an unreadable file must stop, not here.

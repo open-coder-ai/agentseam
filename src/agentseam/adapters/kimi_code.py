@@ -167,7 +167,14 @@ def respond(decision, event):
     elif decision.outcome != DENY:
         return "", 0
 
-    body = {"permissionDecision": "deny", "permissionDecisionReason": reason or "blocked by policy"}
+    # hookEventName included: the recorded claim is that Kimi takes Claude Code's
+    # hookSpecificOutput shape, and Claude Code's carries it. Omitting a field from a shape
+    # we say we are copying is an unforced difference from the thing we claim to be.
+    body = {
+        "hookEventName": name,
+        "permissionDecision": "deny",
+        "permissionDecisionReason": reason or "blocked by policy",
+    }
     # Exit 2 also blocks and is the documented path, but the JSON form carries the reason
     # back into the model's context, which exit-code-only blocking does not.
     return _json.dumps({"hookSpecificOutput": body}), 0

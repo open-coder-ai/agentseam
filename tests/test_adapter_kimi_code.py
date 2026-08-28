@@ -28,7 +28,13 @@ def test_pre_tool_use_blocks_with_the_reason_in_the_json_form():
     text, code, event, _ = A.handle(KM_SHELL, deny_all)
     assert event.event == A.PRE_TOOL and event.command == "rm -rf /"
     body = json.loads(text)["hookSpecificOutput"]
-    assert body == {"permissionDecision": "deny", "permissionDecisionReason": "test-deny"}
+    # hookEventName is part of the shape: the recorded claim is that Kimi takes Claude
+    # Code's hookSpecificOutput wholesale, and Claude Code's carries it.
+    assert body == {
+        "hookEventName": "PreToolUse",
+        "permissionDecision": "deny",
+        "permissionDecisionReason": "test-deny",
+    }
     assert code == 0
 
 

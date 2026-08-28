@@ -247,3 +247,29 @@ def test_an_observer_is_not_wired_as_a_fail_closed_gate(tmp_path):
     guard = tmp_path / "guard"
     install_mod.install("cursor", ["pre_tool"], "real-guard", repo_root=str(guard))
     assert json.loads((guard / ".cursor" / "hooks.json").read_text())["hooks"]["preToolUse"][0]["failClosed"] is True
+
+
+def test_the_witness_asks_about_ownership_not_about_a_substring(tmp_path):
+    """`installed()` used to be `owner in json.dumps(config)` -- a substring test over the
+    whole serialised file, which answers a different question than the one it was asked.
+
+    Two ways it lied, both real:
+
+    * Antigravity's config group is literally named "agentseam", the default owner. After
+      `uninstall` the leftover empty group kept the witness True forever, so `installed()`
+      reported a guard that was gone.
+    * `agentseam-capture` CONTAINS `agentseam`, so asking whether the default owner had a
+      guard installed answered True when only the capture probe was wired. This repo's own
+      capture test asserted that, which is how long a prefix collision can hide.
+    """
+    from agentseam import install as install_mod
+
+    install_mod.install("antigravity", ["pre_tool"], "g", repo_root=str(tmp_path))
+    assert install_mod.installed("antigravity", repo_root=str(tmp_path))
+    install_mod.uninstall("antigravity", repo_root=str(tmp_path))
+    assert not install_mod.installed("antigravity", repo_root=str(tmp_path)), "an empty group is not a guard"
+
+    other = tmp_path / "other"
+    install_mod.install("cursor", ["pre_tool"], "g", repo_root=str(other), owner="agentseam-capture")
+    assert install_mod.installed("cursor", repo_root=str(other), owner="agentseam-capture")
+    assert not install_mod.installed("cursor", repo_root=str(other)), "a prefix of the owner is not the owner"

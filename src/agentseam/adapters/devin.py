@@ -79,8 +79,10 @@ _DEVIN_ONLY = ("PermissionRequest", "PostCompaction")
 #: Events that inject context rather than gate anything.
 _CONTEXT_EVENTS = ("UserPromptSubmit", "SessionStart", "PostToolUse")
 
-#: Devin's shell tool. Named here so `Event.command` is populated the same way as elsewhere.
-SHELL_TOOL = "exec"
+# SHELL_TOOL = "exec" used to sit here, with a comment claiming it was "named here so
+# Event.command is populated the same way as elsewhere". parse() never read it: command
+# comes from tool_input like every other adapter. A constant that documents behaviour the
+# code does not have is worse than no constant, because the next reader believes it.
 
 
 def claims(raw):

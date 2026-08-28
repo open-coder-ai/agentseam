@@ -58,7 +58,11 @@ def test_install_wires_a_launchable_interpreter_and_the_agent_name(tmp_path, mon
             assert command.startswith("%s " % sys.executable), command
             assert not command.startswith('"'), "PowerShell cannot run a quoted-path line"
         assert command.endswith(" cursor"), command
-    assert install_mod.installed("cursor", str(tmp_path))
+    # capture installs under its own owner. Asking with the default owner used to answer
+    # True purely because the substring witness matched "agentseam" inside
+    # "agentseam-capture" -- a prefix collision that reported a guard nobody had installed.
+    assert install_mod.installed("cursor", str(tmp_path), owner=capture.OWNER)
+    assert not install_mod.installed("cursor", str(tmp_path)), "the capture probe is not a guard"
 
 
 def test_every_adapter_can_be_detected():
