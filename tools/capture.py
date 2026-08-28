@@ -138,7 +138,10 @@ def cmd_install(args):
     mod = adapters.get(args.agent)
     events = sorted(mod.REVERSE_EVENT_MAP)
     command = _probe_command(path, args.agent)
-    written = install_mod.install(args.agent, events, command, repo_root=args.repo, owner=OWNER)
+    # fail_closed=False: this is an observer, not a gate. On Cursor a gate is wired
+    # failClosed:true, so a probe that cannot launch would BLOCK the user's real command --
+    # and verification that costs someone a broken session is not worth running.
+    written = install_mod.install(args.agent, events, command, repo_root=args.repo, owner=OWNER, fail_closed=False)
     print("probe:  %s" % path)
     print("wired:  %s" % written)
     print("events: %s" % ", ".join(events))

@@ -67,6 +67,25 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **Installing a second owner permanently orphaned the first owner's hooks.**
+  `_strip_owned` dropped the ownership marker from *every* dict regardless of owner, so
+  `install(..., owner="b")` silently un-owned everything `"a"` had written — and afterwards
+  **neither could be uninstalled**. Both sets of entries stayed in the user's real settings
+  file with nothing left to identify them: permanent pollution, produced by the one
+  operation whose entire purpose is to be reversible. Now only the caller's own marker is
+  dropped; everyone else's survives.
+- **The capture probe was wired as a fail-closed gate on Cursor.** The probe always allows,
+  but `install` gave it the same config a real guardrail gets — including `failClosed: true`
+  — so a probe that could not launch (moved repo, wrong interpreter) would **block the
+  user's real command**. Verification that costs someone a broken session is not worth
+  running. `install(..., fail_closed=False)` now marks an observer, and `capture.py` uses
+  it. Real guards are unchanged: this stops a recorder pretending to be a gate, it does not
+  weaken a gate.
+
+  The flag reaches only adapters whose `hook_config` accepts it — today just `cursor`, the
+  one vendor with a per-hook fail mode — forwarded by signature rather than by name, so an
+  adapter that grows the knob later gets it without a change in `install`.
+
 - **`kimi_code` claimed a gate at four events that cannot block.** `UserPromptQueued`,
   `PermissionRequest`, `StopFailure` and `Interrupt` mapped onto `prompt_submit`, `pre_tool`
   and `stop` — canonical events the matrix rates blocking — while being fire-and-forget per

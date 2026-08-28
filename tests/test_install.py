@@ -202,3 +202,48 @@ def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatc
 
     assert I.installed("kimi_code") is False
     assert cfg.read_bytes()[:2] == b"\xff\xfe", "a read-only query must not touch the file"
+
+
+def test_uninstalling_one_owner_leaves_another_owners_mark_intact(tmp_path):
+    """Ownership is the only thing that makes uninstall surgical, so erasing someone else's
+    mark is not cosmetic -- it strands their entries in the user's real settings file with
+    nothing left to identify them.
+
+    `_strip_owned` dropped MARKER from every dict regardless of owner, so a second
+    `install(..., owner="b")` silently un-owned everything "a" had written, and afterwards
+    NEITHER could be uninstalled. Permanent pollution, from the one operation whose whole
+    purpose is to be reversible.
+    """
+    from agentseam import install as install_mod
+
+    install_mod.install("cursor", ["pre_tool"], "guard-A", repo_root=str(tmp_path), owner="team-a")
+    install_mod.install("cursor", ["pre_tool"], "guard-B", repo_root=str(tmp_path), owner="team-b")
+    assert install_mod.installed("cursor", repo_root=str(tmp_path), owner="team-a")
+    assert install_mod.installed("cursor", repo_root=str(tmp_path), owner="team-b"), (
+        "the second install erased the first"
+    )
+
+    install_mod.uninstall("cursor", repo_root=str(tmp_path), owner="team-a")
+    entries = json.loads((tmp_path / ".cursor" / "hooks.json").read_text())["hooks"]["preToolUse"]
+    assert [e["command"] for e in entries] == ["guard-B"], entries
+    assert install_mod.installed("cursor", repo_root=str(tmp_path), owner="team-b")
+
+
+def test_an_observer_is_not_wired_as_a_fail_closed_gate(tmp_path):
+    """The capture probe always allows. Wired as a gate on Cursor it inherits
+    failClosed:true, so a probe that cannot launch -- moved repo, wrong interpreter --
+    BLOCKS the user's real command. Verification that costs someone a broken session is
+    not worth running, so `install(fail_closed=False)` says observer explicitly.
+
+    Guards keep the default. This does not weaken a real gate; it stops a recorder from
+    pretending to be one.
+    """
+    from agentseam import install as install_mod
+
+    install_mod.install("cursor", ["pre_tool"], "probe", repo_root=str(tmp_path), fail_closed=False)
+    entry = json.loads((tmp_path / ".cursor" / "hooks.json").read_text())["hooks"]["preToolUse"][0]
+    assert "failClosed" not in entry, entry
+
+    guard = tmp_path / "guard"
+    install_mod.install("cursor", ["pre_tool"], "real-guard", repo_root=str(guard))
+    assert json.loads((guard / ".cursor" / "hooks.json").read_text())["hooks"]["preToolUse"][0]["failClosed"] is True

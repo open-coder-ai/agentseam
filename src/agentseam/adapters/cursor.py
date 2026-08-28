@@ -87,9 +87,8 @@ _PERMISSION_GATES = {
 #: `permission`, installed fail-OPEN: Cursor's default.
 _GATES = frozenset(_PERMISSION_GATES) | {"beforeSubmitPrompt"}
 
-#: Post-hoc events: the action already happened, so nothing we return can prevent it.
-#: postToolUseFailure was missing here, so a deny at a failed tool call returned silence
-#: instead of the additional_context record every other post-hoc event gets.
+#: Post-hoc events: the action already happened, so nothing we return prevents it.
+#: postToolUseFailure was missing here, so a deny at a failed tool call returned silence instead of the additional_context record every other post-hoc event gets.
 _POST_HOC = (
     "postToolUse",
     "postToolUseFailure",
@@ -280,7 +279,7 @@ REVERSE_EVENT_MAP = {
 }
 
 
-def hook_config(canonical_events, command, matcher=None):
+def hook_config(canonical_events, command, matcher=None, fail_closed=True):
     hooks = {}
     for ev in canonical_events:
         name = REVERSE_EVENT_MAP.get(ev)
@@ -291,7 +290,8 @@ def hook_config(canonical_events, command, matcher=None):
             entry["matcher"] = matcher
         # Fail open on a gate and a crashed hook silently permits the thing it was
         # installed to stop, so ask for fail-closed wherever a decision is expected.
-        if name in _GATES:
+        # fail_closed=False marks an observer (the capture probe): wired as a gate it would block the user's command whenever it cannot launch.
+        if fail_closed and name in _GATES:
             entry["failClosed"] = True
         hooks.setdefault(name, []).append(entry)
     return {"version": 1, "hooks": hooks}
