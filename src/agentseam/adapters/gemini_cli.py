@@ -119,9 +119,16 @@ def parse(raw):
     )
 
 
-#: Decision words this vendor accepts: a top-level `decision` of allow or deny. No "block",
-#: and no "ask" -- the vocabulary is two words wide.
-DECISION_VOCABULARY = frozenset({"allow", "deny"})
+#: Decision words this vendor accepts: a top-level `decision` of allow, deny or ask. No
+#: "block" -- `isBlockingDecision()` tests block|deny, so "block" is read, but "deny" is the
+#: word the reference documents and the only one this adapter emits.
+#:
+#: "ask" was absent here until 2026-08-28 on the strength of the docs alone. Source says
+#: otherwise -- see respond().
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask"})
+
+#: The one event that reads an `ask`. See respond().
+_ASK_EVENT = "BeforeTool"
 
 
 #: The events whose stdout decision is actually read. session_start, session_end and
@@ -135,7 +142,8 @@ _BLOCKING_EVENTS = ("BeforeTool", "AfterTool", "BeforeAgent", "AfterAgent")
 def respond(decision, event):
     import json as _json
 
-    if (event.raw or {}).get("hook_event_name") not in _BLOCKING_EVENTS:
+    name = (event.raw or {}).get("hook_event_name")
+    if name not in _BLOCKING_EVENTS:
         return "", 0
 
     if decision.outcome == DENY:
@@ -143,21 +151,37 @@ def respond(decision, event):
         # error, so it should read as an instruction the model can act on.
         return _json.dumps({"decision": "deny", "reason": decision.reason or "blocked by policy"}), 0
     if decision.outcome == ASK:
-        # Gemini has no interactive confirmation in the hook protocol. Denying with an
-        # explanation is the honest translation: never silently allow something the
-        # handler wanted a human to see.
+        if name == _ASK_EVENT:
+            # An ask IS honoured here, and this adapter denied instead until 2026-08-28 --
+            # a guardrail that meant "let the human choose" was answered with "blocked",
+            # and the human never saw the choice. The docs do not say so; the source does:
+            # hook-utils.ts routes isAskDecision() to hookDecision='ask', scheduler.ts
+            # turns that into PolicyDecision.ASK_USER and calls resolveConfirmation with
+            # forcedDecision:'ask_user'. Forced is the operative word -- it prompts even
+            # where the user's own policy rule would have auto-allowed the call, which is
+            # a stronger ask than most vendors here can express.
+            return _json.dumps({"decision": "ask", "reason": decision.reason or "confirmation required"}), 0
+        # Everywhere else an ask is inert: BeforeAgent and AfterAgent consult only
+        # isBlockingDecision(), so "ask" there is a word nothing reads, and a verdict
+        # nobody reads is a pass. Denying with the explanation is the honest translation.
         return (
             _json.dumps(
                 {
                     "decision": "deny",
-                    "reason": "%s (confirmation required; this agent cannot prompt from a hook)"
-                    % (decision.reason or "policy requires confirmation"),
+                    "reason": "%s (confirmation required; %s cannot prompt from a hook)"
+                    % (decision.reason or "policy requires confirmation", name),
                 }
             ),
             0,
         )
     if decision.outcome == REWRITE:
         return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
+    # An explicit allow, and it costs nothing: Gemini never READS this word. Only
+    # isBlockingDecision() (block|deny) and isAskDecision() (ask) are consulted anywhere in
+    # the tree, and hookAggregator synthesises decision:'allow' itself when no hook blocked
+    # or asked. So the word is inert -- identical in effect to silence, and unable to skip
+    # a confirmation the way VS Code's permissionDecision:"allow" does. It stays because
+    # it is what the vendor's own reference documents a hook returning.
     return _json.dumps({"decision": "allow"}), 0
 
 

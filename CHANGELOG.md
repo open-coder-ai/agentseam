@@ -7,6 +7,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
+- **A bare `ALLOW` now means the vendor's default, and every adapter records which spelling
+  that is.** `ALLOW` says one thing -- "this handler has no objection" -- and adapters were
+  spelling it two ways, six silent and six speaking an explicit approval, with nothing
+  recording which was deliberate. That split was not cosmetic: on VS Code Copilot and Claude
+  Code the explicit word is read as *skip the user's confirmation*, so a policy that simply
+  did not match was disabling the user's own protection on every tool call. Those two were
+  fixed; `agentseam.allow_semantics` is the audit of the other ten, with the evidence per
+  vendor, and a fifth CI invariant holds the code to it. The rule is not "always be silent":
+  on Cursor an empty response was witnessed to REJECT the call, so abstaining there would
+  block the user's work -- four kinds, not a boolean. Three rows (antigravity, devin,
+  tabnine) rest on documentation that answers neither half and are recorded `unverified`
+  rather than moved on a guess; the set is pinned by a test so adding to it cannot be quiet.
+
+### Fixed
+- **Gemini CLI honours `ask`, and this library was answering it with `deny`.** The vendor's
+  hooks reference gives the vocabulary as allow/deny, so the adapter degraded every `ask`
+  into a block "because no interactive confirmation exists in this protocol". Its source
+  says otherwise: `isAskDecision()` becomes `PolicyDecision.ASK_USER`, which calls
+  `resolveConfirmation` with `forcedDecision: 'ask_user'` -- a prompt that fires even where
+  the user's own policy rule would have auto-allowed the call, which is a *stronger* ask
+  than most vendors here can express. A guardrail that meant "let the human choose" was
+  telling the agent it was blocked, and the human never saw the choice. Honoured at
+  `BeforeTool`; still degraded at `BeforeAgent`/`AfterAgent`, where only
+  `isBlockingDecision()` is consulted and an `ask` would be a word nothing reads. The row's
+  evidence basis moves from `vendor-docs` to `vendor-source`, and the same reading
+  established that Gemini reads `allow` nowhere at all.
 - **No agent is rated `enforced` any more.** VS Code Copilot's `pre_tool` was the only row
   claiming `FAIL_CLOSED`, the strongest word in the vocabulary, and the vendor's own source
   contradicts it: `hookExecutor` treats exit 2 as a blocking error and *any other* non-zero
