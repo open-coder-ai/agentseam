@@ -95,6 +95,20 @@ CX_WRITE = {
 }
 
 
+# Captured live from Codex CLI 0.150.1 (Windows, 2026-08-28), redacted by the probe: the KEYS
+# are the finding. turn_id is the only observed separator from Claude Code -- see codex_cli.py.
+CX_LIVE_PROMPT_SUBMIT = {
+    "cwd": "<str:35>",
+    "hook_event_name": "UserPromptSubmit",
+    "model": "<str:13>",
+    "permission_mode": "default",
+    "prompt": "<str:4>",
+    "session_id": "<str:36>",
+    "transcript_path": "<str:112>",
+    "turn_id": "<str:36>",
+}
+
+
 GM_AFTER = {"hook_event_name": "AfterTool", "tool_name": "write_file", "tool_output": "ok"}
 
 

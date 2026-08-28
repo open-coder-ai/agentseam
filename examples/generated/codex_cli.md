@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.codex/hooks.json` |
 | evidence | `vendor-source` — vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts |
 
-Claude-family decision shape (hookSpecificOutput.permissionDecision) and Claude-family PascalCase event names (verified against hook_config.rs/schema.rs; an earlier version of this note wrongly said camelCase, sourced from the App Server's separate IDE-facing protocol rather than the CLI hook dialect this adapter speaks). Told apart from Claude Code by turn_id: permission_mode and model were also believed exclusive to Codex and turned out not to be -- a real live-captured Claude Code payload carries permission_mode too, and model cannot discriminate either since Cursor's base hook schema also sends it on every event -- so turn_id is the only one of the three still unrefuted by a real payload. Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform. ask is not a supported permissionDecision at PreToolUse -- Codex's own parser rejects it as an invalid hook response, which fails OPEN -- so respond() degrades ASK to a DENY with an explanatory reason instead.
+Claude-family decision shape (hookSpecificOutput.permissionDecision) and Claude-family PascalCase event names (verified against hook_config.rs/schema.rs; an earlier version of this note wrongly said camelCase, sourced from the App Server's separate IDE-facing protocol rather than the CLI hook dialect this adapter speaks). Told apart from Claude Code by turn_id: permission_mode and model were also believed exclusive to Codex and turned out not to be -- a real live-captured Claude Code payload carries permission_mode too, and model cannot discriminate either since Cursor's base hook schema also sends it on every event -- so turn_id is the only one of the three still unrefuted by a real payload. Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform. That same PowerShell wrapper will not RUN a command line beginning with a quoted path -- it parses as a string expression, not an invocation -- so installs emit Codex's own commandWindows override carrying the `&` call operator (witnessed live 2026-08-28: without it every hook failed with exit 1 and never executed). Three response dialects, one per event group, because every per-event output struct is deny_unknown_fields and rejects the whole response over a foreign key: pre_tool takes hookSpecificOutput.permissionDecision, prompt_submit and stop take a top-level {decision: block, reason}, and the observation-only events accept no verdict at all and get silence. A bare allow is silence everywhere -- permissionDecision:allow is rejected unless it carries updatedInput, and a rejected response fails OPEN. ask is likewise unsupported and degrades to a deny with an explanatory reason.
 
 ## What `agentseam install` writes
 
@@ -40,6 +40,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -50,6 +51,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -60,6 +62,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -70,6 +73,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -80,6 +84,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -90,6 +95,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -100,6 +106,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -110,6 +117,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -120,6 +128,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
+            "commandWindows": "& python3 guard.py",
             "type": "command"
           }
         ]
@@ -160,9 +169,7 @@ event    = session_start
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "SessionStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -192,9 +199,7 @@ event    = session_end
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "SessionEnd", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -225,7 +230,7 @@ event    = prompt_submit
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"decision": "block", "reason": "policy violation"}
 ```
 
 Exit code: `0`
@@ -265,9 +270,7 @@ This is the gate, so every decision is worth seeing.
 
 **`Decision.allow()`** — the handler is happy
 
-```json
-{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow"}}
-```
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 
@@ -328,9 +331,7 @@ output   = ok
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "PostToolUse", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -360,9 +361,7 @@ event    = pre_compact
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "PreCompact", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -392,7 +391,7 @@ event    = stop
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "Stop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"decision": "block", "reason": "policy violation"}
 ```
 
 Exit code: `0`
@@ -423,9 +422,7 @@ event    = subagent_start
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "SubagentStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -455,9 +452,7 @@ event    = subagent_stop
 
 A `Decision.deny()` here produces:
 
-```json
-{"hookSpecificOutput": {"hookEventName": "SubagentStop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
