@@ -38,43 +38,50 @@ One handler wired for every hook this agent supports.
     "PostToolUse": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "PreToolUse": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "SessionStart": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "Stop": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "SubagentStart": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "SubagentStop": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ],
     "UserPromptSubmit": [
       {
         "command": "python3 guard.py",
-        "type": "command"
+        "type": "command",
+        "windows": "& python3 guard.py"
       }
     ]
   }

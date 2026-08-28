@@ -46,6 +46,10 @@ from ..contract import (
     Event,
 )
 
+# Re-exported: callers and tests address this through the adapter that needs it, and the
+# rule it encodes is a PowerShell fact two vendors share. See _windows.py.
+from ._windows import powershell_command  # noqa: E402,F401
+
 AGENT = "codex_cli"
 
 # hook_config.rs's HookEventsToml field renames, and schema.rs's HookEventNameWire /
@@ -232,24 +236,6 @@ def _pre_tool_response(decision):
     else:
         return "", 0  # allow: silence, since permissionDecision:allow alone is rejected
     return _json.dumps({"hookSpecificOutput": out}), 0
-
-
-def powershell_command(command):
-    """`command` rewritten so PowerShell will actually run it.
-
-    On Windows Codex runs hook commands through PowerShell. There, a command line that
-    BEGINS with a quoted path is parsed as a string expression, not an invocation -- and a
-    bare string followed by more arguments is a parse error, so nothing runs at all. `&` is
-    PowerShell's call operator, and it makes a quoted path executable.
-
-    Witnessed live (Codex CLI 0.150.1, Windows, 2026-08-28): the quoted form failed with
-    "hook exited with code 1" on every event, and a `> file 2>&1` redirect appended to it
-    produced NO file -- proof the line never reached execution, since PowerShell sets up
-    redirection only for a command it could parse. Prefixing `&` ran the hook immediately.
-    The same session showed chock's hook working with a bare `python3 "..."`, which parses
-    in command mode; that is the difference, not the interpreter.
-    """
-    return command if command.lstrip().startswith("&") else "& " + command
 
 
 def hook_config(canonical_events, command, matcher=None):

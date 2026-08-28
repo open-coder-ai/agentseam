@@ -67,6 +67,18 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **VS Code Copilot's hooks never ran on Windows** — the identical defect fixed for Codex in
+  #52, found in the vendor's source before it cost a capture session. `hookExecutor.ts`'s
+  `getShellCommand` spawns `powershell.exe -ExecutionPolicy Bypass -NoProfile -NoLogo
+  -Command <hookCommand>` whenever `ComSpec` is `cmd.exe` — the Windows default — and
+  PowerShell will not RUN a line beginning with a quoted path: it parses as a string
+  expression, so nothing executes. Every command agentseam installs begins with a quoted
+  interpreter path. Installs now also emit the vendor's own `windows` platform override
+  (`normalizeHookCommand` in `hookSchema.ts`) carrying PowerShell's `&` call operator, while
+  `command` keeps the POSIX form so the exact interpreter path that installed the hook
+  survives. The shared rule now lives in one place (`adapters/_windows.py`) rather than in
+  two copies that could drift.
+
 - **Every `prompt_submit` and `stop` deny on Claude Code was silently discarded.**
   `respond()` emitted `hookSpecificOutput.permissionDecision` at every event. A live
   response-contract experiment against Claude Code 2.1.247 (Windows, 2026-08-28) settled

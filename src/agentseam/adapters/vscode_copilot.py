@@ -8,13 +8,13 @@ Neither list contains `postToolUseFailure`, which this adapter mapped, claimed o
 installed for until 2026-08-28: the config key resolves to nothing and is dropped, so an
 install for tool_failure wired a hook that could never fire.
 
-PreToolUse wire contract, from `hookCommandTypes.ts`: IPreToolUseHookCommandInput
-{tool_name, tool_input, tool_use_id} plus the envelope `chatHookService.executeHook` merges
-into every event ({timestamp, hook_event_name, session_id, transcript_path, cwd?}); out,
-hookSpecificOutput {permissionDecision: allow|deny|ask, permissionDecisionReason,
-updatedInput, additionalContext}, honoured in languageModelToolsService.invokeTool.
+PreToolUse wire contract (hookCommandTypes.ts): IPreToolUseHookCommandInput {tool_name,
+tool_input, tool_use_id} plus the envelope executeHook merges into every event
+({timestamp, hook_event_name, session_id, transcript_path, cwd?}); out, hookSpecificOutput
+{permissionDecision: allow|deny|ask, permissionDecisionReason, updatedInput,
+additionalContext}, honoured in languageModelToolsService.invokeTool.
 
-The difference that matters for policy: a memory write here is the `memory` tool
+The difference that matters for policy: a memory write is the `memory` tool
 (create/str_replace/insert on /memories/...), not a file edit.
 """
 
@@ -36,14 +36,14 @@ from ..contract import (
     UNKNOWN,
     Event,
 )
+from ._windows import powershell_command
 
 AGENT = "vscode_copilot"
 
-#: Every vendor event name, in both spellings; parsing accepts both, so a payload from
-#: either product normalizes. `errorOccurred` is deliberately absent: it reports a session
-#: error, not a tool failure, so mapping it onto TOOL_FAILURE would have a guardrail judge
-#: a tool policy against a payload with no tool in it. Unmapped resolves to UNKNOWN.
-#: PreCompact is absent too: VS Code's schema and docs list it, but it is never fired.
+#: Every vendor event name, in both spellings; parsing accepts both. `errorOccurred` is
+#: absent: it reports a session error, not a tool failure, so mapping it to TOOL_FAILURE
+#: would have a guardrail judge a tool policy against a payload with no tool. PreCompact
+#: is absent too: VS Code's schema and docs list it, but it is never fired.
 EVENT_MAP = {
     # VS Code agent mode (Target.VSCode)
     "PreToolUse": PRE_TOOL,
@@ -66,10 +66,9 @@ EVENT_MAP = {
 MEMORY_TOOLS = ("memory", "copilot_memory")
 MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
 # A FILE_WRITE_TOOLS constant naming create_file/edit_file/apply_patch used to sit here,
-# declared and read by nothing. The generic parse branch reads content/newText/new_str
-# regardless of tool name, and no real payload or vendor source read here records what
-# edit_file (code? a diff?) or apply_patch (the patch, under what key?) actually sends.
-# Needs a live capture: guessing a key risks reading the wrong field silently.
+# read by nothing. The generic parse branch reads content/newText/new_str regardless of
+# tool name, and no payload or vendor source read here records what edit_file or
+# apply_patch actually sends. Needs a live capture: a guessed key reads the wrong field.
 
 
 #: Turn-scoped fields OpenAI Codex CLI sends and VS Code never does.
@@ -78,17 +77,16 @@ _CODEX_MARKERS = ("turn_id", "permission_mode")
 #: Cursor's base hook schema, present on every one of its events.
 _CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id", "workspace_roots")
 
-#: Copilot CLI's camelCase names, which no other vendor here uses -- an event name alone
-#: identifies these. Derived from EVENT_MAP rather than kept by hand: the hand-kept list
-#: drifted, leaving payloads claimed by the matrix but by no adapter, and allowed through.
+#: Copilot CLI's camelCase names, which no other vendor uses -- the name alone identifies
+#: these. Derived from EVENT_MAP: a hand-kept list drifted, leaving payloads claimed by
+#: the matrix but by no adapter, and so allowed through.
 _CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
 
-#: `chatHookService.executeHook` merges {timestamp, hook_event_name, session_id?,
-#: transcript_path?} into EVERY VS Code payload. `timestamp` is the one field in that
-#: envelope Claude Code -- whose PascalCase names VS Code reuses exactly -- has never been
-#: observed to send, and claude_code.claims() already declines on it. A single field, and
-#: it is what there is: every other field in a VS Code PreToolUse payload is one Claude
-#: Code sends too. Tabnine sends it too, so SessionStart stays ambiguous by design.
+#: executeHook merges {timestamp, hook_event_name, session_id?, transcript_path?} into
+#: EVERY VS Code payload. `timestamp` is the one field there that Claude Code -- whose
+#: PascalCase names VS Code reuses exactly -- has never been observed to send, and
+#: claude_code.claims() already declines on it. Tabnine sends it too, so SessionStart
+#: stays ambiguous by design.
 _VSCODE_ENVELOPE = "timestamp"
 
 
@@ -97,8 +95,7 @@ def claims(raw):
 
     Until 2026-08-28 this claimed camelCase only, so it never claimed a real VS Code
     payload: VS Code spells its events PascalCase, identically to Claude Code, so those
-    went to claude_code alone and were answered in Claude Code's dialect -- right at
-    PreToolUse, wrong at UserPromptSubmit and Stop, which read a different shape.
+    went to claude_code alone and were answered in the wrong dialect at every event but one.
     """
     if not isinstance(raw, dict):
         return False
@@ -173,9 +170,8 @@ def is_memory_write(event):
 _TOP_LEVEL_BLOCK = (PROMPT_SUBMIT, POST_TOOL)
 
 #: Events whose block verdict is the same two fields NESTED in hookSpecificOutput.
-#: StopHookOutput and SubagentStopHookOutput put decision/reason there, and
-#: toolCallingLoop.executeStopHook requires BOTH -- `specific?.decision === 'block' &&
-#: specific.reason` -- so a block with no reason is discarded and the agent stops anyway.
+#: executeStopHook requires BOTH -- `specific?.decision === 'block' && specific.reason` --
+#: so a block with no reason is discarded and the agent stops anyway.
 _NESTED_BLOCK = (STOP, SUBAGENT_STOP)
 
 
@@ -199,8 +195,7 @@ def _refusal_reason(decision):
     return reason
 
 
-#: Decision words this vendor accepts: permissionDecision's allow/deny/ask
-#: (hookCommandTypes.ts) plus the "block" the two decision dialects read.
+#: Decision words accepted: permissionDecision's allow/deny/ask (hookCommandTypes.ts) plus the "block" the two decision dialects read.
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
 
@@ -210,12 +205,10 @@ def respond(decision, event):
     Until 2026-08-28 this emitted the PreToolUse permission-decision JSON at every event.
     Elsewhere that shape is not merely ignored: UserPromptSubmit and PostToolUse read a
     top-level `decision`, Stop a nested one, and SessionStart/SubagentStart swallow
-    everything under `ignoreErrors: true`. A deny at prompt_submit or stop was theater --
-    the hook reported a block and the prompt went to the model anyway.
+    everything under `ignoreErrors: true`. A deny there was theater.
 
-    hookEventName is echoed from the payload rather than hardcoded: _toHookResult compares
-    it against the event being run and STRIPS hookSpecificOutput on a mismatch, so a Stop
-    response labelled PreToolUse loses its whole decision.
+    hookEventName is echoed rather than hardcoded: _toHookResult STRIPS hookSpecificOutput
+    when the name does not match the event being run.
     """
     import json as _json
 
@@ -277,23 +270,30 @@ REVERSE_EVENT_MAP = {
 def hook_config(canonical_events, command, matcher=None):
     """The hooks file VS Code actually parses: an object keyed by event name.
 
-    Until 2026-08-28 this emitted `{"version": 1, "hooks": [{"event": ..., "command":
-    ...}]}` -- a LIST under `hooks`, an `event` key, no `type`. All three are wrong and the
-    failure is silent: `parseCopilotHooks` iterates `Object.keys(hooksObj)`, which over a
-    list yields "0", "1", "2", resolving to no hook type and skipped. The file parses, VS
-    Code reports nothing, and zero hooks are installed. A top-level `version` additionally
-    flips the editor's schema to its Copilot CLI branch, which rejects `command`.
+    Until 2026-08-28 this emitted `{"version": 1, "hooks": [{"event": ...}]}` -- a LIST
+    under `hooks`, an `event` key, no `type`. All three are wrong and the failure is
+    silent: `parseCopilotHooks` iterates `Object.keys(hooksObj)`, which over a list yields
+    "0", "1", "2", resolving to no hook type. Zero hooks are installed, with no error. A
+    top-level `version` also flips the schema to the Copilot CLI branch, which rejects
+    `command`.
 
-    `matcher` is accepted and ignored, deliberately. `extractHookCommandsFromItem` does
-    read Claude's `{matcher, hooks: [...]}` shape here, but takes the inner `hooks` and
-    throws the matcher away -- there is no tool filtering on this vendor. Emitting one
-    would claim the guard runs on a subset of tools when it runs on all of them.
+    `windows` is the vendor's own per-platform override (normalizeHookCommand in
+    hookSchema.ts). It is needed because hookExecutor.ts spawns `powershell.exe -Command
+    <hookCommand>` whenever ComSpec is cmd.exe -- the Windows default -- and PowerShell
+    will not run a line beginning with a quoted path. Without it an install here fails
+    exactly as Codex's did. `command` keeps the POSIX form, so the interpreter path that
+    installed the hook survives.
+
+    `matcher` is accepted and ignored: extractHookCommandsFromItem reads Claude's
+    `{matcher, hooks: [...]}` shape but throws the matcher away, so there is no tool
+    filtering here and emitting one would claim a narrower guard than exists.
     """
     hooks = {}
     for ev in canonical_events:
         name = REVERSE_EVENT_MAP.get(ev)
         if name:
-            hooks.setdefault(name, []).append({"type": "command", "command": command})
+            entry = {"type": "command", "command": command, "windows": powershell_command(command)}
+            hooks.setdefault(name, []).append(entry)
     return {"hooks": hooks}
 
 
