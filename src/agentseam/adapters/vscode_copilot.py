@@ -39,14 +39,11 @@ from ..contract import (
 
 AGENT = "vscode_copilot"
 
-#: Every vendor event name, in both spellings. Neither dialect contains the other, and
-#: parsing accepts both so a payload from either product normalizes.
-#:
-#: `errorOccurred` is deliberately absent: it reports a session error, not a tool failure,
-#: and mapping it onto TOOL_FAILURE would have a guardrail evaluate a tool policy against a
-#: payload with no tool in it. Unmapped resolves to UNKNOWN, the honest answer. PreCompact
-#: is absent too: VS Code's schema and docs list it, but the extension defines only
-#: `PreCompactHookInput` and never calls `executeHook('PreCompact')`.
+#: Every vendor event name, in both spellings; parsing accepts both, so a payload from
+#: either product normalizes. `errorOccurred` is deliberately absent: it reports a session
+#: error, not a tool failure, so mapping it onto TOOL_FAILURE would have a guardrail judge
+#: a tool policy against a payload with no tool in it. Unmapped resolves to UNKNOWN.
+#: PreCompact is absent too: VS Code's schema and docs list it, but it is never fired.
 EVENT_MAP = {
     # VS Code agent mode (Target.VSCode)
     "PreToolUse": PRE_TOOL,
@@ -83,17 +80,15 @@ _CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id"
 
 #: Copilot CLI's camelCase names, which no other vendor here uses -- an event name alone
 #: identifies these. Derived from EVENT_MAP rather than kept by hand: the hand-kept list
-#: had drifted, leaving payloads claimed by the matrix but by no adapter -- and an
-#: unidentified payload is allowed through.
+#: drifted, leaving payloads claimed by the matrix but by no adapter, and allowed through.
 _CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
 
 #: `chatHookService.executeHook` merges {timestamp, hook_event_name, session_id?,
 #: transcript_path?} into EVERY VS Code payload. `timestamp` is the one field in that
 #: envelope Claude Code -- whose PascalCase names VS Code reuses exactly -- has never been
-#: observed to send, and claude_code.claims() already declines on it. A single field, which
-#: the comment below warns against resting on, and it is what there is: every other field
-#: in a VS Code PreToolUse payload is one Claude Code sends too. Tabnine sends it too, so
-#: SessionStart, the one name those two share, stays ambiguous by design.
+#: observed to send, and claude_code.claims() already declines on it. A single field, and
+#: it is what there is: every other field in a VS Code PreToolUse payload is one Claude
+#: Code sends too. Tabnine sends it too, so SessionStart stays ambiguous by design.
 _VSCODE_ENVELOPE = "timestamp"
 
 
@@ -172,9 +167,9 @@ def is_memory_write(event):
 
 #: Events whose block verdict is a TOP-LEVEL {decision: "block", reason}.
 #: UserPromptSubmitHookOutput declares exactly those two fields and
-#: defaultIntentRequestHandler reads `typedOutput.decision === "block"` off the root object;
-#: executePostToolUseHook reads the same two off the root of a PostToolUse response, where
-#: a block feeds the reason back to the model instead of the tool result.
+#: defaultIntentRequestHandler reads `typedOutput.decision` off the root object;
+#: executePostToolUseHook reads the same two off a PostToolUse response's root, where a
+#: block feeds the reason back to the model instead of the tool result.
 _TOP_LEVEL_BLOCK = (PROMPT_SUBMIT, POST_TOOL)
 
 #: Events whose block verdict is the same two fields NESTED in hookSpecificOutput.
@@ -202,6 +197,11 @@ def _refusal_reason(decision):
     if decision.outcome == REWRITE:
         return reason + " (input rewrite requested; this event cannot modify input, so it blocks)"
     return reason
+
+
+#: Decision words this vendor accepts: permissionDecision's allow/deny/ask
+#: (hookCommandTypes.ts) plus the "block" the two decision dialects read.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
 
 def respond(decision, event):

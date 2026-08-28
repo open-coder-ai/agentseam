@@ -112,6 +112,12 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts, per the docstring above and the matrix note. The
+#: blocking word is "block"; respond() said "deny" until 2026-08-28, and since Junie fails
+#: open an unrecognised value there was no refusal at all. This constant exists to stop that.
+DECISION_VOCABULARY = frozenset({"allow", "ask", "block"})
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hook_event_name")
     if name not in BLOCKING_EVENTS:

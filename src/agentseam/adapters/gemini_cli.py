@@ -114,6 +114,11 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts: a top-level `decision` of allow or deny. No "block",
+#: and no "ask" -- the vocabulary is two words wide.
+DECISION_VOCABULARY = frozenset({"allow", "deny"})
+
+
 def respond(decision, event):
     import json as _json
 

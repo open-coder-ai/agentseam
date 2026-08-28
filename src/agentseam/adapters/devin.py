@@ -126,6 +126,11 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts. No "ask" and no "deny": the pair is approve/block,
+#: per the docstring above and the comment in respond().
+DECISION_VOCABULARY = frozenset({"approve", "block"})
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hook_event_name") or "PreToolUse"
 

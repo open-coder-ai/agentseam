@@ -155,6 +155,12 @@ def _because(reason, note):
 _BLOCK_DIALECT_EVENTS = (PROMPT_SUBMIT, STOP)
 
 
+#: Decision words this vendor HONOURS. "ask" is deliberately absent: it is in schema.rs's
+#: PreToolUsePermissionDecisionWire, but output_parser.rs rejects it as an unsupported
+#: response -- and a rejected response fails open, so emitting it would be worse than a deny.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "block"})
+
+
 def respond(decision, event):
     """Always exit 0 and carry the verdict in JSON, in the dialect THIS event accepts.
 

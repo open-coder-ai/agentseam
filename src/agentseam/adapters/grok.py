@@ -117,6 +117,11 @@ def parse(raw):
     )
 
 
+#: Decision words this vendor accepts. Exactly one: the documented vocabulary is
+#: {decision: deny, reason} and nothing more -- no allow verb, no ask, no rewrite.
+DECISION_VOCABULARY = frozenset({"deny"})
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hookEventName")
     if name != BLOCKING_EVENT:

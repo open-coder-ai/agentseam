@@ -168,6 +168,12 @@ def _refusal_reason(decision):
     return reason
 
 
+#: Decision words this vendor accepts. allow/deny/ask are permissionDecision's, honoured at
+#: pre_tool; "block" is the top-level dialect prompt_submit and stop read. Both halves were
+#: established live against 2.1.247 (2026-08-28), not from documentation.
+DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
+
+
 def respond(decision, event):
     """(stdout_text, exit_code) for this decision -- three dialects, not one.
 

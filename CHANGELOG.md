@@ -29,6 +29,30 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   dialect this adapter speaks, and citing it is precisely what put camelCase event names in
   this adapter for as long as it existed.
 
+### Added
+- **Every adapter now declares the decision words its vendor accepts**, and a test asserts
+  `respond()` emits nothing outside that set. Each `DECISION_VOCABULARY` is cited to where
+  the value is recorded — the vendor's source, its documentation, or the adapter's own
+  docstring.
+
+  This is the guardrail for a defect class found twice by hand in one week: `junie` emitted
+  `"deny"` where the vocabulary is allow/ask/block, at all three of its permission gates.
+  Most of these agents fail **open**, so an unrecognised decision is not a louder refusal —
+  it is a *permitted action*, reported to the caller as a block. The rest of the suite could
+  not see it, because it asserted the *shape* of a response and never asked whether the
+  vendor had a word for it.
+
+  Verified by reintroducing the Junie bug: the test fails with the exact word and event.
+
+  **What it does not catch**, stated plainly: `claude_code`'s defect used a *valid* word in
+  the *wrong envelope* (`permissionDecision` at events reading a top-level `decision`).
+  Word-checking cannot see placement — reintroducing that bug leaves this test green. That
+  class still needs a live contract experiment (`tools/probe_contract.py`).
+
+  One vocabulary is marked `UNVERIFIED` — `tabnine`'s, which rests on nothing recorded
+  anywhere in this repository. It is deliberately left as-is rather than guessed at, with a
+  test pinning that it stays the only one, so the exception cannot quietly spread.
+
 ### Fixed
 - **Every `prompt_submit` and `stop` deny on Claude Code was silently discarded.**
   `respond()` emitted `hookSpecificOutput.permissionDecision` at every event. A live
