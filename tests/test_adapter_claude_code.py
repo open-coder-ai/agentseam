@@ -37,7 +37,13 @@ def test_claude_deny_dialect():
 
 
 def test_claude_allow_and_rewrite():
-    assert json.loads(A.handle(CC_WRITE, allow_all)[0])["hookSpecificOutput"]["permissionDecision"] == "allow"
+    """A bare allow is SILENCE. It used to emit permissionDecision:"allow", which is a
+    different statement: the vendor documents that exit 0 with no output "continues through
+    the normal permission flow", while an explicit allow is undocumented there and proven in
+    VS Code's source to auto-approve. A policy that simply did not match -- every tool call
+    it had no opinion on -- was disabling the user's own confirmation prompts.
+    """
+    assert A.handle(CC_WRITE, allow_all)[0] == ""
     text, _, _, _ = A.handle(CC_WRITE, lambda e: Decision.rewrite({"file_path": "CLAUDE.md", "content": "redacted"}))
     out = json.loads(text)["hookSpecificOutput"]
     assert out["permissionDecision"] == "allow" and out["updatedInput"]["content"] == "redacted"

@@ -169,9 +169,8 @@ def is_memory_write(event):
 #: block feeds the reason back to the model instead of the tool result.
 _TOP_LEVEL_BLOCK = (PROMPT_SUBMIT, POST_TOOL)
 
-#: Events whose block verdict is the same two fields NESTED in hookSpecificOutput.
-#: executeStopHook requires BOTH -- `specific?.decision === 'block' && specific.reason` --
-#: so a block with no reason is discarded and the agent stops anyway.
+#: Block verdict NESTED in hookSpecificOutput. executeStopHook requires BOTH decision and
+#: reason, so a block with no reason is discarded and the agent stops anyway.
 _NESTED_BLOCK = (STOP, SUBAGENT_STOP)
 
 
@@ -202,13 +201,11 @@ DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 def respond(decision, event):
     """Three dialects, one per event group -- not one gate shape everywhere.
 
-    Until 2026-08-28 this emitted the PreToolUse permission-decision JSON at every event.
-    Elsewhere that shape is not merely ignored: UserPromptSubmit and PostToolUse read a
-    top-level `decision`, Stop a nested one, and SessionStart/SubagentStart swallow
-    everything under `ignoreErrors: true`. A deny there was theater.
+    Until 2026-08-28 this emitted the PreToolUse gate JSON at every event. Elsewhere that
+    shape is not ignored but misread: UserPromptSubmit and PostToolUse take a top-level
+    `decision`, Stop a nested one, and the start events swallow everything.
 
-    hookEventName is echoed rather than hardcoded: _toHookResult STRIPS hookSpecificOutput
-    when the name does not match the event being run.
+    hookEventName is echoed, not hardcoded: _toHookResult STRIPS hookSpecificOutput on a name mismatch.
     """
     import json as _json
 
@@ -229,6 +226,12 @@ def respond(decision, event):
         # UNKNOWN. None of them has a verdict shape to speak in, so none gets one.
         return "", 0
 
+    if decision.outcome == ALLOW:
+        # Silence, not permissionDecision:"allow": languageModelToolsService returns
+        # `autoConfirmed: ConfirmationNotNeeded` on that value, skipping the user's
+        # confirmation. A policy that did not match was doing that on every tool call.
+        return "", 0
+
     out = {"hookEventName": _echoed_name(event)}
     if decision.outcome == DENY:
         out["permissionDecision"] = "deny"
@@ -241,8 +244,6 @@ def respond(decision, event):
         out["updatedInput"] = decision.updated_input
         if decision.reason:
             out["permissionDecisionReason"] = decision.reason
-    else:
-        out["permissionDecision"] = "allow"
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
@@ -285,8 +286,7 @@ def hook_config(canonical_events, command, matcher=None):
     installed the hook survives.
 
     `matcher` is accepted and ignored: extractHookCommandsFromItem reads Claude's
-    `{matcher, hooks: [...]}` shape but throws the matcher away, so there is no tool
-    filtering here and emitting one would claim a narrower guard than exists.
+    `{matcher, hooks: [...]}` shape but discards the matcher, so there is no tool filter.
     """
     hooks = {}
     for ev in canonical_events:
