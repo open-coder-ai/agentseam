@@ -67,6 +67,27 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **The capture probe was unrunnable under PowerShell, on every agent.** `capture.py` wired
+  `"C:\py.exe" "probe.py" agent` — correct for POSIX shells and `cmd.exe`, and chosen for
+  interpreters under paths with spaces. PowerShell is the gap: a line *beginning* with a
+  quoted path parses as a string expression, not an invocation, so nothing runs. Two vendors
+  are now known to wrap hooks that way on Windows (Codex; VS Code Copilot via
+  `hookExecutor.ts`'s `getShellCommand`), and both have per-platform override fields they now
+  use — but the other ten record no such field, leaving the command string as the only lever.
+
+  It is now unquoted whenever the interpreter path has no spaces, which parses in command
+  mode in all three shells and needs no vendor support. A path *with* spaces keeps its
+  quotes — there is no single string that works everywhere — and `install` warns when that
+  combination meets an adapter with no override, rather than silently picking one shell.
+  Safe here in a way it would not be in a real guard: the probe always allows, so an
+  invocation that fails to resolve costs a capture, not a gate.
+
+### Added
+- `capture.py install --agent detected` wires every agent whose config location exists, so a
+  capture evening records whichever agent actually gets opened instead of one guess. Wiring
+  several at once also makes double-firing visible — that is how Cursor was found to load
+  Claude Code's config as well as its own, with every event arriving twice.
+
 - **A regression introduced and caught in the same change: `devin`'s `PermissionRequest`
   stopped blocking.** Scoping `respond()` to a blocking-events tuple (above) left out
   `PermissionRequest`, which maps to canonical `pre_tool` — so a deny at a permission gate

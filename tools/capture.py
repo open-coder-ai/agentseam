@@ -20,6 +20,7 @@ share. There is no second step to forget, and the file on disk never held the co
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 
@@ -78,7 +79,56 @@ def cmd_detect(args):
     return 0
 
 
+def _probe_command(path, agent):
+    """The probe invocation, spelled so every shell an agent might wrap it in will RUN it.
+
+    The quoted form -- `"C:\\py.exe" "probe.py" agent` -- is correct for POSIX shells and
+    cmd.exe, and was chosen for interpreters under paths with spaces. PowerShell is the gap
+    it did not cover: there, a line BEGINNING with a quoted path parses as a string
+    expression rather than an invocation, so nothing runs at all. Two vendors are now known
+    to wrap hooks that way on Windows -- Codex, and VS Code Copilot via hookExecutor.ts's
+    getShellCommand -- and both were silently recording nothing.
+
+    Those two have per-platform override fields in their own config schema and use them. The
+    other ten have no such field recorded, so the only lever left is this string. An
+    UNQUOTED interpreter path parses in command mode in all three shells, and needs no
+    vendor support -- so it is used whenever the path has no spaces, which is the common
+    case. A path with spaces still needs the quotes, and there is no single string that
+    works everywhere; install() warns rather than silently choosing one shell.
+
+    Safe here in a way it would not be in a real guard: this probe always allows. An
+    invocation that fails to resolve costs a capture, not a gate.
+    """
+    interpreter = sys.executable
+    if " " not in interpreter:
+        return '%s "%s" %s' % (interpreter, path, agent)
+    return '"%s" "%s" %s' % (interpreter, path, agent)
+
+
+def _detected_agents():
+    return sorted(a for a in FOOTPRINTS if any(os.path.exists(os.path.expanduser(p)) for p in FOOTPRINTS[a]))
+
+
 def cmd_install(args):
+    """Wire the probe. `--agent detected` does every agent whose config location exists.
+
+    Wiring several at once is deliberate for a capture evening: the probe always allows, so
+    the cost of an extra one is a few recorded payloads, and the benefit is that whichever
+    agent you happen to open is already recording. It also makes double-firing visible --
+    that is how Cursor was found to load Claude Code's config as well as its own, with every
+    event arriving twice.
+    """
+    if args.agent == "detected":
+        found = _detected_agents()
+        if not found:
+            print("no agent config locations found here; name one explicitly with --agent")
+            return 1
+        print("wiring %d detected agent(s): %s\n" % (len(found), ", ".join(found)))
+        rc = 0
+        for agent in found:
+            rc |= cmd_install(argparse.Namespace(agent=agent, repo=args.repo))
+            print()
+        return rc
     os.makedirs(CAPTURE_DIR, exist_ok=True)
     path = _probe_path()
     with open(path, "w") as fh:
@@ -87,14 +137,19 @@ def cmd_install(args):
 
     mod = adapters.get(args.agent)
     events = sorted(mod.REVERSE_EVENT_MAP)
-    # Quoted interpreter and probe path -- chock's fix for interpreters under paths with
-    # spaces, shell-agnostic between POSIX shells and cmd.exe. The agent name rides as
-    # argv so the report can attribute payloads without an env var nobody sets.
-    command = '"%s" "%s" %s' % (sys.executable, path, args.agent)
+    command = _probe_command(path, args.agent)
     written = install_mod.install(args.agent, events, command, repo_root=args.repo, owner=OWNER)
     print("probe:  %s" % path)
     print("wired:  %s" % written)
     print("events: %s" % ", ".join(events))
+    # A module that imports powershell_command emits a per-platform override, so a quoted
+    # command is safe there; the rest have only the one string.
+    if " " in sys.executable and not hasattr(mod, "powershell_command"):
+        print(
+            "\nWARNING: your interpreter path contains spaces, so the command must stay quoted --\n"
+            "         and %s records no per-platform override field. If this agent wraps hooks in\n"
+            "         PowerShell on Windows, the hook will not run. Check the capture is non-empty." % args.agent
+        )
     others = [a for a in _installed_configs(args.repo) if a != args.agent]
     if others:
         print("\nWARNING: these configs in this repo also fire the probe: %s" % ", ".join(others))
@@ -153,7 +208,9 @@ def main(argv=None):
         ("uninstall", cmd_uninstall, "remove the probe"),
     ):
         s = sub.add_parser(name, help=helptext)
-        s.add_argument("--agent", required=True, choices=sorted(adapters.ADAPTERS))
+        # "detected" wires every agent whose config location exists here, so one evening
+        # yields payloads from whichever the user actually opens rather than one guess.
+        s.add_argument("--agent", required=True, choices=sorted(adapters.ADAPTERS) + ["detected"])
         s.add_argument("--repo", default=".")
         s.set_defaults(fn=fn)
     sub.add_parser("report", help="compare captures against what we claim").set_defaults(fn=cmd_report)
