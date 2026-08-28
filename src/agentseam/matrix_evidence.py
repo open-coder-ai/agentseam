@@ -5,8 +5,9 @@ says how anyone knows. The second is what an adopter should read first -- `basis
 kind of evidence in a closed vocabulary, and most rows here are `vendor-docs`, which is a
 claim about what a vendor says rather than an observation of what their build does.
 
-Separating them makes the honest shape of this project visible in one file: one row rests on
-a live run.
+Separating them makes the honest shape of this project visible in one file: three rows rest
+on a live run, and only one of those saw every event it claims. Each live round has corrected
+something source or docs had been read wrongly, which is the argument for running more.
 """
 
 from __future__ import annotations
@@ -27,10 +28,30 @@ EVIDENCE = {
         "method": "live headless run + official hooks reference",
     },
     "codex_cli": {
-        "basis": BASIS_SOURCE,
-        "version": "source @ main 2026-08-26",
-        "date": "2026-08-26",
-        "method": "vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts",
+        "basis": BASIS_LIVE_PARTIAL,
+        "version": "0.150.1",
+        "date": "2026-08-28",
+        "method": (
+            "vendor source (codex-rs: config/src/hook_config.rs, hooks/src/schema.rs, "
+            "engine/output_parser.rs, engine/discovery.rs), plus a live capture on Windows: "
+            "74 real payloads across two sessions, every one claimed by this adapter. That "
+            "run is what corrected the event-name casing, the write-tool vocabulary and the "
+            "per-event response dialects -- each of which source alone had been read wrongly. "
+            "`observed` lists the events actually seen fire; the rest of this row still rests "
+            "on source. HookEventName.ts is deliberately no longer cited: it is a ts-rs "
+            "binding for the App Server's IDE-facing protocol, not the CLI hook dialect this "
+            "adapter speaks, and citing it is what put camelCase event names here."
+        ),
+        # Canonical events seen against the running agent -- NOT a claim about the four this
+        # row also asserts (pre_compact, session_end, subagent_start, subagent_stop), which
+        # simply did not fire in either session.
+        "observed": (
+            "post_tool",
+            "pre_tool",
+            "prompt_submit",
+            "session_start",
+            "stop",
+        ),
     },
     "cursor": {
         "basis": BASIS_LIVE_PARTIAL,
