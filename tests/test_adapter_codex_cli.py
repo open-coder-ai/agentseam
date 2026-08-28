@@ -29,10 +29,21 @@ def test_codex_is_not_mistaken_for_claude():
 
 def test_codex_parses_turn_scoped_payload():
     event = A.adapters.get("codex_cli").parse(CX_WRITE)
-    assert event.content == "team fact"
-    assert event.path == "AGENTS.md"
     assert event.tool_use_id == "tu-1"
     assert A.adapters.get("codex_cli").parse(CX_SHELL).command == "rm -rf /"
+
+
+def test_a_codex_write_carries_no_path_or_content_only_a_command():
+    """The whole write vocabulary this adapter used to read was Claude Code's, copied over
+    on an assumption. Live capture (2026-08-28, 36 payloads) saw exactly two tool names --
+    Bash and apply_patch -- and BOTH carry only tool_input.command. apply_patch IS the write
+    tool, with the patch inside that string, so a content policy must gate on event.command
+    here; event.content and event.path stay None on a real Codex write.
+    """
+    event = A.adapters.get("codex_cli").parse(CX_WRITE)
+    assert event.tool == "apply_patch"
+    assert event.content is None and event.path is None
+    assert "AGENTS.md" in event.command
 
 
 def test_codex_deny_is_json_with_exit_zero():
@@ -133,6 +144,27 @@ def test_observation_only_events_stay_silent():
     struct at all -- a verdict there is rejected, not merely ignored."""
     start = dict(CX_LIVE_PROMPT_SUBMIT, hook_event_name="SessionStart")
     assert A.handle(start, deny_all)[0] == ""
+
+
+def test_session_start_is_declared_ambiguous_rather_than_answered_wrongly():
+    """Codex sends no turn_id at SessionStart -- it is not turn-scoped, confirmed live and by
+    SessionStartCommandInput, which is deny_unknown_fields and defines exactly these fields.
+    Every one is a field Claude Code also sends, so nothing can separate them. Before this,
+    a real Codex SessionStart was claimed by claude_code ALONE and answered confidently in
+    the wrong dialect -- which Codex rejects, and a rejected response fails open. Declining
+    is the honest answer; the consumer names the agent, as with tabnine and gemini_cli.
+    """
+    codex_session_start = {
+        "hook_event_name": "SessionStart",
+        "session_id": "s",
+        "transcript_path": "/t",
+        "cwd": "/repo",
+        "model": "gpt-5-codex",
+        "permission_mode": "default",
+        "source": "startup",
+    }
+    assert A.adapters.get("codex_cli").claims(codex_session_start)
+    assert A.adapters.detect(codex_session_start) is None, "a wrong dialect is worse than none"
 
 
 def test_the_real_captured_payload_resolves_to_codex_alone():
