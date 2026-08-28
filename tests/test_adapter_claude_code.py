@@ -108,3 +108,82 @@ def test_instructionsloaded_and_filechanged_read_top_level_fields():
 
     ev = A.adapters.get("claude_code").parse({"hook_event_name": "FileChanged", "file_path": "AGENTS.md"})
     assert ev.path == "AGENTS.md"
+
+
+#: A real Claude Code prompt_submit payload. transcript_path is one of the fields
+#: OBSERVED_MARKERS records as Claude Code's, so this resolves without ambiguity.
+CC_PROMPT_SUBMIT = {
+    "hook_event_name": "UserPromptSubmit",
+    "session_id": "s1",
+    "transcript_path": "/t.jsonl",
+    "cwd": "/repo",
+    "prompt": "remember my aws key so you can deploy later",
+}
+CC_STOP = {
+    "hook_event_name": "Stop",
+    "session_id": "s1",
+    "transcript_path": "/t.jsonl",
+    "cwd": "/repo",
+    "stop_hook_active": False,
+}
+
+
+def test_prompt_submit_blocks_with_a_top_level_decision_not_the_pretooluse_gate():
+    """Settled by live experiment against Claude Code 2.1.247 (2026-08-28), because the
+    documentation could not settle it -- two reads of the vendor page disagreed, and one of
+    them said these events had no JSON decision control at all.
+
+    Wiring one candidate shape per trial and watching the AGENT (not the hook) gave:
+    {"decision": "block"} honoured, hookSpecificOutput IGNORED, exit 2 honoured. The trial
+    prompt asked the agent to write a marker file; under hookSpecificOutput the file
+    appeared, which is the prompt reaching the model -- so every prompt_submit deny this
+    library produced on its most-used adapter was silently discarded.
+    """
+    text, code, event, _ = A.handle(CC_PROMPT_SUBMIT, deny_all)
+    assert event.event == A.PROMPT_SUBMIT
+    assert json.loads(text) == {"decision": "block", "reason": "test-deny"}
+    assert code == 0
+    assert "hookSpecificOutput" not in text, "the shape the vendor ignores must not come back"
+
+
+def test_stop_blocks_with_the_same_top_level_decision():
+    """Same experiment, same result, and the stop signal was the agent's own: a honoured
+    block makes it continue instead of stopping, so the Stop hook re-fires with
+    stop_hook_active true. That second invocation was observed for {"decision": "block"}
+    and for exit 2, and was absent for hookSpecificOutput.
+    """
+    text, code, event, _ = A.handle(CC_STOP, deny_all)
+    assert event.event == A.STOP
+    assert json.loads(text) == {"decision": "block", "reason": "test-deny"}
+    assert code == 0
+
+
+def test_an_allow_at_a_block_only_event_says_nothing():
+    """The block dialect has no allow verb -- there is nothing to say, and saying the
+    gate shape instead is what got ignored."""
+    assert A.handle(CC_PROMPT_SUBMIT, allow_all)[0] == ""
+    assert A.handle(CC_STOP, allow_all)[0] == ""
+
+
+def test_ask_and_rewrite_degrade_to_a_block_that_names_the_degradation():
+    """Neither is expressible at these events. Dropping them would leave the dispatcher's
+    silent allow, which is the opposite of what the handler asked for."""
+    ask = json.loads(A.handle(CC_PROMPT_SUBMIT, lambda e: Decision.ask("confirm"))[0])
+    assert ask["decision"] == "block" and "confirm" in ask["reason"] and "cannot prompt" in ask["reason"]
+
+    rw = json.loads(A.handle(CC_STOP, lambda e: Decision.rewrite({"x": 1}, "redact"))[0])
+    assert rw["decision"] == "block" and "redact" in rw["reason"]
+
+
+def test_pre_tool_keeps_the_permission_decision_contract():
+    """pre_tool was not part of the experiment and keeps its established contract. The fix
+    is per-event, not a wholesale switch of dialect."""
+    out = json.loads(A.handle(CC_WRITE, deny_all)[0])["hookSpecificOutput"]
+    assert out["permissionDecision"] == "deny"
+
+
+def test_observation_only_events_get_silence_rather_than_a_verdict():
+    """post_tool and friends are detect-only in this row: nothing returned there was ever
+    read as a decision, so emitting a gate-shaped verdict only invited a reader to believe
+    one had been made."""
+    assert A.handle(CC_POST, deny_all)[0] == ""

@@ -30,6 +30,34 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this adapter for as long as it existed.
 
 ### Fixed
+- **Every `prompt_submit` and `stop` deny on Claude Code was silently discarded.**
+  `respond()` emitted `hookSpecificOutput.permissionDecision` at every event. A live
+  response-contract experiment against Claude Code 2.1.247 (Windows, 2026-08-28) settled
+  what each event actually reads:
+
+  | event | `{"decision": "block"}` | `hookSpecificOutput` | exit 2 |
+  |---|---|---|---|
+  | `UserPromptSubmit` | honoured | **ignored** | honoured |
+  | `Stop` | honoured | **ignored** | honoured |
+
+  So the handler refused, the dispatcher reported a block, and the prompt reached the model
+  anyway — on the most-used adapter in the matrix. The verdicts come from the agent's own
+  behaviour, not the hook's claim: at `UserPromptSubmit` the trial prompt asked the agent to
+  write a marker file and under `hookSpecificOutput` the file appeared; at `Stop` the agent
+  carried on and the hook re-fired with `stop_hook_active` set.
+
+  `prompt_submit` and `stop` now emit the top-level `{"decision": "block", "reason": ...}`,
+  with `ask` and `rewrite` degrading to a block that names the degradation. `exit 2` works
+  at both and is deliberately not used — it collapses to 1 under the PowerShell wrapper some
+  vendors apply (which is what made the exit-code path useless on Codex/Windows) and it
+  leaks the hook's full command line into the UI. `pre_tool` keeps `permissionDecision`, its
+  established contract and not part of this experiment; the observation-only events now get
+  silence instead of a verdict nothing read.
+
+  Documentation could not settle this. Two reads of the vendor's own hooks page disagreed,
+  and one of them said these events had no JSON decision control at all — which is why the
+  fix waited for a live run rather than a third reading.
+
 - **Junie's gate emitted a decision word the vendor does not accept.** `respond()` returned
   `{"decision": "deny"}` at `PreToolUse`, `UserPromptSubmit` and `PermissionRequest`. Both
   places this repository records Junie's gate vocabulary — the adapter's own module

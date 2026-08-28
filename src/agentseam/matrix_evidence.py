@@ -23,9 +23,23 @@ EVIDENCE = {
     },
     "claude_code": {
         "basis": BASIS_LIVE,
-        "version": "2.1.245",
-        "date": "2026-08-25",
-        "method": "live headless run + official hooks reference",
+        "version": "2.1.247",
+        "date": "2026-08-28",
+        "method": (
+            "live headless run (2.1.245) for the payload shapes, plus a live response-contract "
+            "experiment on Windows (2.1.247, 2026-08-28) for what each event actually READS: "
+            "one candidate reply shape per trial, with the verdict taken from the agent's own "
+            "behaviour rather than the hook's claim -- a marker file the trial prompt asked "
+            "for at UserPromptSubmit, and the Stop hook re-firing with stop_hook_active at "
+            'Stop. That run established {"decision": "block"} and exit 2 as honoured at '
+            "both, and hookSpecificOutput.permissionDecision -- the shape this adapter had "
+            "always emitted there -- as ignored at both. The official hooks reference could "
+            "not settle it: two reads of the same page disagreed, and one said those events "
+            "had no JSON decision control at all."
+        ),
+        # Response contract verified at these canonical events only. pre_tool keeps its
+        # established permissionDecision contract and was NOT part of the experiment.
+        "observed": ("prompt_submit", "stop"),
     },
     "codex_cli": {
         "basis": BASIS_LIVE_PARTIAL,
