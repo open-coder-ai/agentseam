@@ -98,10 +98,22 @@ EVIDENCE = {
         "method": "vendor hooks documentation read directly (events, output format, exit codes)",
     },
     "gemini_cli": {
-        "basis": BASIS_DOCS,
-        "version": "docs @ main 2026-08-26",
-        "date": "2026-08-26",
-        "method": "vendor hooks reference (docs/hooks/reference.md in google-gemini/gemini-cli), read from a clone",
+        "basis": BASIS_SOURCE,
+        "version": "source @ main 2026-08-28",
+        "date": "2026-08-28",
+        "method": (
+            "google-gemini/gemini-cli source, read from a clone rather than only from the "
+            "hooks reference: hooks/types.ts (isBlockingDecision/isAskDecision -- the only "
+            "predicates any consumer calls), hooks/hookAggregator.ts (which SYNTHESISES "
+            "decision:'allow' when no hook objected), scheduler/hook-utils.ts and "
+            "scheduler/scheduler.ts (where a BeforeTool verdict becomes PolicyDecision and "
+            "then a forced confirmation), and core/client.ts (BeforeAgent/AfterAgent, which "
+            "consult only isBlockingDecision). That reading corrected the reference on two "
+            "points at once: `ask` is honoured at BeforeTool and this adapter was denying "
+            "instead, and `allow` is read nowhere at all."
+        ),
+        # Not a live run: no event here has been seen fire against a running Gemini CLI.
+        # This row says what the code does with a reply, not that a reply was ever sent.
     },
     "grok": {
         "basis": BASIS_DOCS,
