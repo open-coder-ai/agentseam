@@ -42,7 +42,8 @@ One handler wired for every hook this agent supports.
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "python3 guard.py"
+        "command": "python3 guard.py",
+        "failClosed": true
       }
     ],
     "postToolUse": [

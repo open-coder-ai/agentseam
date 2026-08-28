@@ -82,6 +82,11 @@ _PERMISSION_GATES = {
     "beforeTabFileRead": False,
 }
 
+#: Every event where a decision is expected -- NOT the set above, which answers which
+#: dialect a gate speaks. Reusing that one here left beforeSubmitPrompt, a gate speaking
+#: `continue` rather than `permission`, installed fail-OPEN -- Cursor's default.
+_GATES = frozenset(_PERMISSION_GATES) | {"beforeSubmitPrompt"}
+
 #: Post-hoc events: the action already happened, so nothing we return can prevent it.
 #: postToolUseFailure is its sibling postToolUse's failure twin -- same TOOL_FAILURE/
 #: POST_TOOL shape, same "already happened" fact -- and was missing here, so a deny/ask at
@@ -144,7 +149,10 @@ def _content_of(raw):
     ti = raw.get("tool_input")
     if isinstance(ti, dict):
         return ti.get("content") or ti.get("new_string") or None
-    return None
+    # The read gates put the file's text at the TOP level -- the asymmetry `path` handles
+    # below. Last in the chain, so nothing carrying content elsewhere moves.
+    content = raw.get("content")
+    return content if isinstance(content, str) and content else None
 
 
 def parse(raw):
@@ -283,7 +291,7 @@ def hook_config(canonical_events, command, matcher=None):
             entry["matcher"] = matcher
         # Fail open on a gate and a crashed hook silently permits the thing it was
         # installed to stop, so ask for fail-closed wherever a decision is expected.
-        if name in _PERMISSION_GATES:
+        if name in _GATES:
             entry["failClosed"] = True
         hooks.setdefault(name, []).append(entry)
     return {"version": 1, "hooks": hooks}

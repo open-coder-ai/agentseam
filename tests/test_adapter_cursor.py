@@ -123,3 +123,42 @@ def test_installed_gates_ask_to_fail_closed():
 def test_pre_tool_installs_the_generic_gate_not_just_the_shell_one():
     config = A.adapters.get("cursor").hook_config([A.PRE_TOOL], "handler.py")
     assert "preToolUse" in config["hooks"]
+
+
+def test_the_read_gate_exposes_the_file_text_it_was_given():
+    """CU_READ -- a fixture committed to this repo -- carries the file's text at the TOP
+    level of a beforeReadFile payload. `_content_of` read only `edits` and `tool_input`, so
+    `event.content` was None on the one gate that can still stop a secret being read into
+    context. A handler written as `"TOKEN" in (event.content or "")`, the pattern
+    dispatch.py's own docstring advertises, saw nothing and allowed. `path` already read
+    the same payload's top-level `file_path`; only content was missed.
+    """
+    ev = A.adapters.get("cursor").parse(CU_READ)
+    assert ev.event == A.PRE_TOOL
+    assert ev.path == "/repo/.env"
+    assert ev.content == "TOKEN=1"
+
+
+def test_a_content_policy_actually_denies_at_the_read_gate():
+    """The end the fix exists for, not just the field."""
+    out = A.handle(CU_READ, lambda e: Decision.deny("secret") if "TOKEN" in (e.content or "") else Decision.allow())
+    assert json.loads(out[0])["permission"] == "deny"
+
+
+def test_every_gate_is_installed_fail_closed_including_the_prompt_one():
+    """Cursor fails OPEN by default, so a gate installed without failClosed silently
+    permits whatever it was installed to stop when the guard crashes or is missing.
+
+    `hook_config` asked `name in _PERMISSION_GATES`, but that set answers a different
+    question -- which gates speak the `{"permission": ...}` dialect. beforeSubmitPrompt is
+    a real gate that speaks `continue` instead (respond() has a branch for it, returning
+    `{"continue": false}` on a deny), so it fell through the gap. Its matrix row rates
+    prompt_submit `fail-configurable`, which means the choice is ours; we were making the
+    wrong one.
+    """
+    cfg = A.adapters.get("cursor").hook_config([A.PRE_TOOL, A.PROMPT_SUBMIT, A.POST_TOOL], "python3 g.py")
+    assert cfg["hooks"]["beforeSubmitPrompt"][0]["failClosed"] is True
+    assert cfg["hooks"]["preToolUse"][0]["failClosed"] is True
+    # Post-hoc events are not gates: nothing they return prevents anything, so failing
+    # closed there would stall the agent over a crashed observer.
+    assert "failClosed" not in cfg["hooks"]["postToolUse"][0]
