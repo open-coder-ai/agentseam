@@ -163,7 +163,7 @@ event    = prompt_submit
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
@@ -209,7 +209,7 @@ Exit code: `0`
 **`Decision.deny()`** — the handler refuses
 
 ```json
-{"hookSpecificOutput": {"permissionDecision": "deny", "permissionDecisionReason": "secret detected in file content"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "secret detected in file content"}}
 ```
 
 Exit code: `0`
@@ -217,7 +217,7 @@ Exit code: `0`
 **`Decision.ask()`** — the handler wants a human
 
 ```json
-{"hookSpecificOutput": {"permissionDecision": "deny", "permissionDecisionReason": "looks like a credential -- confirm? (Kimi Code cannot prompt for confirmation)"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "looks like a credential -- confirm? (Kimi Code cannot prompt for confirmation)"}}
 ```
 
 Exit code: `0`
@@ -227,7 +227,7 @@ Exit code: `0`
 > reduced to `ask`: this agent cannot rewrite
 
 ```json
-{"hookSpecificOutput": {"permissionDecision": "deny", "permissionDecisionReason": "redacting the secret (Kimi Code cannot modify a tool call)"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "redacting the secret (Kimi Code cannot modify a tool call)"}}
 ```
 
 Exit code: `0`
@@ -359,7 +359,7 @@ event    = stop
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "Stop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
