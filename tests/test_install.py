@@ -58,6 +58,35 @@ def test_every_agent_with_a_surface_can_be_wired(tmp_path):
         assert I.installed(agent, str(tmp_path / agent)), agent
 
 
+def test_the_marker_never_lands_on_a_top_level_container(tmp_path):
+    """Codex CLI < 0.143.0 rejects its whole hooks file over one unexpected top-level key
+    (openai/codex#30397: "unknown field `_agentseam`, expected `description` or `hooks`",
+    witnessed live installing here 2026-08-27) -- silently dropping every hook, not just
+    ours. The marker must only ever land on a list item (a leaf command entry, or a
+    matcher/hooks group wrapping one), never on the container object every adapter's
+    hook_config() returns.
+    """
+    for agent in sorted(adapters.ADAPTERS):
+        if getattr(adapters.get(agent), "CONFIG_FORMAT", "json") == "toml":
+            continue  # TOML configs use the marker-delimited block instead, not this path
+        path = Path(I.install(agent, ["pre_tool"], "handler", str(tmp_path / agent)))
+        body = json.loads(path.read_text())
+        assert I.MARKER not in body, agent
+
+
+def test_codex_cli_install_round_trips_without_a_top_level_marker(tmp_path):
+    root = str(tmp_path)
+    path = Path(I.install("codex_cli", ["pre_tool"], "guard.py", repo_root=root))
+    body = json.loads(path.read_text())
+    assert I.MARKER not in body
+    entry = body["hooks"]["preToolUse"][0]
+    assert entry["hooks"][0]["command"] == "guard.py"
+    assert I.installed("codex_cli", root)
+
+    assert I.uninstall("codex_cli", root) is True
+    assert I.installed("codex_cli", root) is False
+
+
 def test_devin_install_round_trips_in_its_wrapperless_file(tmp_path):
     """`.devin/hooks.v1.json` holds the hooks object as the whole file, with no wrapper key.
 

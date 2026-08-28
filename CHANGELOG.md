@@ -7,6 +7,20 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **`install()`'s ownership marker broke Codex CLI's hooks file outright**: `_mark()` tagged
+  every dict with a `hooks` key, including the top-level container `hook_config()` returns,
+  so `agentseam install codex_cli` wrote `{"_agentseam": "...", "hooks": {...}}`. Codex CLI
+  (witnessed live here, 2026-08-27) refuses to parse the whole file over that one unexpected
+  top-level key -- "unknown field `_agentseam`, expected `description` or `hooks`" -- so
+  *every* hook silently never fires, not just ours; the install reports success and wires
+  nothing. This is a known Codex bug independent of this project (openai/codex#30397, Codex
+  < 0.143.0 rejecting an unexpected top-level `description` the same way, fixed by #30229) --
+  chock's own Codex plugin emitter already works around it by never writing a top-level key
+  besides `hooks`. `_mark()` now tags only a dict reached as a *list item* (where every
+  adapter's owned entries actually live), never a container reached by plain dict traversal,
+  so the top level is never touched for any agent. Regression tests assert the marker never
+  appears at the top level for every JSON-config agent, and that codex_cli round-trips
+  install/uninstall correctly.
 - `tools/capture.py` could not run as a script at all: `main()` builds the `report`
   subcommand's parser with `cmd_report`, but the `from capture_report import ... cmd_report`
   line sat *after* the `if __name__ == "__main__": sys.exit(main())` guard, so running
