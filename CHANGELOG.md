@@ -53,6 +53,19 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   anywhere in this repository. It is deliberately left as-is rather than guessed at, with a
   test pinning that it stays the only one, so the exception cannot quietly spread.
 
+- **A second invariant: `respond()` may only speak a verdict where the matrix says one is
+  read.** A decision word at a detect-only event is a refusal nobody reads — and worse than
+  useless, because it is indistinguishable on the wire from a real gate verdict and invites
+  a log or a downstream consumer to record a block that never happened.
+
+  Writing it immediately found two more, both open "certain" items in the vendor-truth
+  backlog and neither previously caught by any test: `devin` returned `{"decision":
+  "block"}` at `post_tool`, `session_start` and `session_end`, and `gemini_cli` returned
+  `{"decision": "deny"}` at `pre_compact`, `session_start` and `session_end` — each
+  contradicting its own matrix row. Both now stay silent there; `devin` keeps recording the
+  finding as `additionalContext` at the events that have that channel. Verified by
+  reintroducing the `devin` case, which the test rejects by event and word.
+
 ### Fixed
 - **Every `prompt_submit` and `stop` deny on Claude Code was silently discarded.**
   `respond()` emitted `hookSpecificOutput.permissionDecision` at every event. A live

@@ -131,8 +131,24 @@ def parse(raw):
 DECISION_VOCABULARY = frozenset({"approve", "block"})
 
 
+#: The events whose stdout decision is actually read. Everywhere else this row is
+#: observation-only, and a verdict there is not a quieter refusal -- it is a refusal nobody
+#: reads, which invites a log or a consumer to record a block that never happened. Until
+#: 2026-08-28 respond() emitted {"decision": "block"} at post_tool, session_start and
+#: session_end alike, contradicting this adapter's own matrix row.
+_BLOCKING_EVENTS = ("PreToolUse", "UserPromptSubmit", "Stop")
+
+
 def respond(decision, event):
     name = (event.raw or {}).get("hook_event_name") or "PreToolUse"
+
+    if name not in _BLOCKING_EVENTS:
+        # The finding is still worth recording where there is a channel for it. Silence
+        # otherwise: SessionEnd has no additionalContext to carry it.
+        if decision.reason and name in _CONTEXT_EVENTS:
+            body = {"hookEventName": name, "additionalContext": decision.reason}
+            return _json.dumps({"hookSpecificOutput": body}), 0
+        return "", 0
 
     if decision.outcome == REWRITE:
         if name == "PreToolUse" and decision.updated_input is not None:

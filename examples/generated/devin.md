@@ -126,7 +126,7 @@ event    = session_start
 A `Decision.deny()` here produces:
 
 ```json
-{"decision": "block", "reason": "policy violation"}
+{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "policy violation"}}
 ```
 
 Exit code: `0`
@@ -154,9 +154,7 @@ event    = session_end
 
 A `Decision.deny()` here produces:
 
-```json
-{"decision": "block", "reason": "policy violation"}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -282,7 +280,7 @@ output   = ok
 A `Decision.deny()` here produces:
 
 ```json
-{"decision": "block", "reason": "policy violation"}
+{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "policy violation"}}
 ```
 
 Exit code: `0`

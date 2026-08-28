@@ -141,9 +141,7 @@ event    = session_start
 
 A `Decision.deny()` here produces:
 
-```json
-{"decision": "deny", "reason": "policy violation"}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -174,9 +172,7 @@ event    = session_end
 
 A `Decision.deny()` here produces:
 
-```json
-{"decision": "deny", "reason": "policy violation"}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 
@@ -330,9 +326,7 @@ event    = pre_compact
 
 A `Decision.deny()` here produces:
 
-```json
-{"decision": "deny", "reason": "policy violation"}
-```
+_Nothing. This event is observation only, so a decision is not read._
 
 Exit code: `0`
 

@@ -1,4 +1,7 @@
-"""Every decision word an adapter emits must be one its vendor accepts.
+"""What `respond()` may say, and where it may say it.
+
+Two invariants, both checking the code against what this repository records about each
+vendor -- the class of defect that has to be found by inspection otherwise.
 
 This is the guardrail for a defect class this project keeps finding by hand. A `respond()`
 that emits a word the vendor's parser does not recognise is not a louder refusal -- most of
@@ -15,9 +18,13 @@ never asked whether the vendor had a word for it. A per-adapter `DECISION_VOCABU
 to where the value is recorded, plus this test, turns that from something a human has to
 notice into something CI refuses to merge.
 
-The vocabularies are claims about vendors and can be wrong -- tabnine's is explicitly
-unverified. This test does not check them against reality; it checks the code against them,
-so a disagreement is at least visible in one place instead of buried in a branch.
+The second invariant asks a different question: not which words, but at which events. An
+adapter that answers everywhere speaks a verdict at events the vendor never reads one from,
+and that found two more defects when it was written -- devin and gemini_cli both returned a
+full block/deny at their observation-only events, contradicting their own matrix rows.
+
+Neither invariant checks the recorded claims against reality; they check the code against
+the claims, so a disagreement is visible in one place instead of buried in a branch.
 """
 
 from __future__ import annotations
@@ -34,7 +41,7 @@ sys.path.insert(0, str(ROOT / "examples"))
 
 from scenarios import SCENARIOS  # noqa: E402
 
-from agentseam import Decision, adapters  # noqa: E402
+from agentseam import MATRIX, Decision, adapters  # noqa: E402
 
 #: Keys whose string value is a decision, wherever they sit in the response. Adapters put
 #: them at the top level, inside hookSpecificOutput, or under `permission` -- the point of
@@ -114,3 +121,32 @@ def test_the_unverified_vocabulary_is_still_only_tabnine():
         agent for agent in sorted(adapters.ADAPTERS) if "UNVERIFIED" in (Path(adapters.get(agent).__file__).read_text())
     }
     assert unverified == {"tabnine"}, unverified
+
+
+@pytest.mark.parametrize("agent", sorted(SCENARIOS))
+def test_respond_speaks_a_verdict_only_where_the_matrix_says_one_is_read(agent):
+    """A decision word at a detect-only event is a refusal nobody reads.
+
+    Worse than useless: it invites a log, a capture, or a downstream consumer to record a
+    block that never happened, and it is indistinguishable on the wire from a real gate
+    verdict. The matrix row is this project's own recorded claim about which events can
+    block, so an adapter answering outside it contradicts its own documentation.
+
+    Found devin (post_tool, session_start, session_end) and gemini_cli (pre_compact,
+    session_start, session_end) when first written -- both open items in the vendor-truth
+    backlog, both filed 'certain', neither previously caught by a test.
+
+    The converse -- silence at a BLOCKING event -- is not asserted here: several adapters
+    legitimately answer an allow with silence, which is the correct spelling of "proceed"
+    in more than one dialect.
+    """
+    mod = adapters.get(agent)
+    events = MATRIX[agent]["events"]
+    spurious = []
+    for event, raw in sorted(SCENARIOS[agent].items()):
+        if (events.get(event) or {}).get("block"):
+            continue
+        text, _code = mod.respond(Decision.deny("policy"), mod.parse(raw))
+        for word in sorted(_words(text)):
+            spurious.append("%s/%s (detect-only) -> %r" % (agent, event, word))
+    assert not spurious, "verdicts at events the matrix says cannot block:\n  " + "\n  ".join(spurious)
