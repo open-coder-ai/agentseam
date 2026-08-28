@@ -50,14 +50,27 @@ def test_cursor_file_writes_are_gated_before_the_write_and_observed_after():
 
 def test_full_tier_agents_can_block_and_rewrite():
     """block+rewrite is a capability claim, not a fail-mode one -- both hold regardless of
-    whether a crashed hook fails open or closed."""
+    whether a crashed hook fails open or closed. vscode_copilot's fail mode moved to open
+    in 2026-08; these two claims must not have moved with it."""
     for agent in ("claude_code", "vscode_copilot"):
         assert A.can_block(agent, A.PRE_TOOL)
         assert A.can_rewrite(agent, A.PRE_TOOL)
 
 
-def test_vscode_copilot_pre_tool_is_enforced():
-    assert A.enforcement_level("vscode_copilot", A.PRE_TOOL) == "enforced"
+def test_no_agent_is_rated_enforced_because_none_has_been_shown_to_fail_closed():
+    """`enforced` requires FAIL_CLOSED. vscode_copilot was the only row claiming it, and
+    the vendor's source removed it: hookExecutor treats exit 2 as a blocking error and any
+    other non-zero exit as a NonBlockingError, which becomes a warning the call proceeds
+    past -- a guard that crashes, times out or is missing does not block. So the matrix now
+    tops out at best-effort: a claim about this project's evidence, not about the agents.
+    Pinned so restoring FAIL_CLOSED anywhere comes with the observation justifying it.
+    """
+    assert not [
+        (agent, event)
+        for agent, row in A.MATRIX.items()
+        for event in row["events"]
+        if A.enforcement_level(agent, event) == "enforced"
+    ]
 
 
 def test_claude_code_pre_tool_is_best_effort_not_enforced():

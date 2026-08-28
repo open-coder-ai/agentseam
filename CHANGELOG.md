@@ -7,6 +7,19 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
+- **No agent is rated `enforced` any more.** VS Code Copilot's `pre_tool` was the only row
+  claiming `FAIL_CLOSED`, the strongest word in the vocabulary, and the vendor's own source
+  contradicts it: `hookExecutor` treats exit 2 as a blocking error and *any other* non-zero
+  exit as a `NonBlockingError`, which becomes a warning the tool call proceeds past. A
+  guard that crashes, times out or is missing does not block. The row is `FAIL_OPEN`, its
+  `ask` and `updatedInput` claims are unchanged (both are native and honoured in
+  `languageModelToolsService`), and `post_tool`, `prompt_submit`, `stop` and
+  `subagent_stop` gain the block they can really do. A test pins the absence so restoring
+  `FAIL_CLOSED` anywhere has to come with the observation justifying it.
+- VS Code Copilot's evidence record now cites the files it was actually read from
+  (`hookTypes.ts`, `hookSchema.ts`, `hookCompatibility.ts`, `hookCommandTypes.ts`,
+  `chatHookService.ts`, `hookResultProcessor.ts`, `languageModelToolsService.ts`) instead
+  of two names, and is dated to that reading.
 - Codex CLI's evidence record now says `live-run-partial` rather than `vendor-source`: two
   live sessions (Codex CLI 0.150.1, Windows, 74 payloads) claimed by this adapter, with
   `observed` naming the five canonical events actually seen fire and the row's other four
@@ -17,6 +30,47 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this adapter for as long as it existed.
 
 ### Fixed
+- **VS Code Copilot's hooks file was never parseable, and its events were the wrong
+  vendor's** -- four defects found by reading microsoft/vscode from a clone rather than
+  from the docs, each of which failed silently.
+  (1) *`agentseam install vscode_copilot` wired nothing at all.* `hook_config()` emitted
+  `{"version": 1, "hooks": [{"event": ..., "command": ...}]}`. VS Code's
+  `parseCopilotHooks` iterates `Object.keys(root.hooks)` and resolves each key to a hook
+  type; over a **list** those keys are `"0"`, `"1"`, `"2"`, which resolve to nothing and
+  are skipped. The file parses, nothing is reported, and zero hooks are installed. The
+  shape is now `{"hooks": {"PreToolUse": [{"type": "command", "command": ...}]}}`, and the
+  top-level `version` is gone -- `hookFileSchema` keys its `if/then` on that field and its
+  presence selects the Copilot CLI branch, which requires `bash`/`powershell` and rejects
+  `command`.
+  (2) *Event names were the other product's.* `HOOKS_BY_TARGET` in `hookTypes.ts` carries
+  two maps: VS Code agent mode uses PascalCase (`PreToolUse`, `UserPromptSubmit`, `Stop`
+  ...), identical to Claude Code's, and the GitHub Copilot CLI uses camelCase
+  (`preToolUse`, `userPromptSubmitted`, `agentStop` ...). This adapter used camelCase
+  everywhere, so it wrote CLI names into VS Code's own file and **claimed only camelCase
+  payloads -- meaning it never claimed a real VS Code payload**. Those went to
+  `claude_code` alone and were answered in Claude Code's dialect, which happens to match at
+  PreToolUse and matches nowhere else. Both spellings now parse; `timestamp`, which
+  `chatHookService.executeHook` merges into every VS Code payload, is what separates them.
+  `SessionStart` stays deliberately ambiguous: Tabnine sends `timestamp` too and shares
+  that one event name, and both agents are `detect` there, so declining costs no gate.
+  (3) *`tool_failure` was an event no vendor has.* `postToolUseFailure` is in neither map
+  and is not a `HookType`; the config key resolved to nothing and was dropped. It is
+  removed from the adapter and from the matrix row, which had been advertising it.
+  `Stop`, `SubagentStart` and `SubagentStop` -- real events that were missing -- are added.
+  (4) *One gate shape at every event.* `respond()` emitted the PreToolUse
+  permission-decision JSON everywhere. Elsewhere that shape is not merely ignored:
+  `UserPromptSubmit` and `PostToolUse` read a **top-level** `{decision: "block", reason}`,
+  `Stop`/`SubagentStop` read the same two fields **nested** in `hookSpecificOutput` and
+  discard the block if `reason` is empty, and `SessionStart`/`SubagentStart` run under
+  `ignoreErrors: true` where even exit 2 is swallowed. A deny at prompt_submit was theater:
+  the hook reported a block and the prompt reached the model anyway. `hookEventName` is now
+  echoed from the payload rather than hardcoded to `PreToolUse`, because `_toHookResult`
+  strips `hookSpecificOutput` outright when it does not match the event being run.
+- VS Code Copilot's `post_tool` output is read from `tool_response`, the key
+  `IPostToolUseHookCommandInput` actually declares. `tool_output` is Claude Code's key,
+  assumed here, so `event.output` was `None` on every real PostToolUse payload and an
+  output-inspecting policy was silently dead on this agent.
+
 - **What Codex actually sends, from the first live capture of it (36 payloads, 2026-08-28)**
   -- two claims corrected against real traffic rather than inference.
   (1) *The write vocabulary was fiction.* `parse()` read `file_path`, `content`,

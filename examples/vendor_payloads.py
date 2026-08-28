@@ -21,6 +21,7 @@ from agentseam.contract import (
     PROMPT_SUBMIT,
     SESSION_END,
     SESSION_START,
+    STOP,
     SUBAGENT_START,
     SUBAGENT_STOP,
     TOOL_FAILURE,
@@ -176,17 +177,33 @@ def _antigravity(event, vendor_event, base):
 
 
 def _vscode(event, vendor_event, base):
-    """Memory-tool payloads for the tool events; the rest carry the camelCase event name."""
-    raw = dict(base, hookEventName=vendor_event)
+    """Memory-tool payloads for the tool events; every event carries the common envelope.
+
+    `chatHookService.executeHook` merges {timestamp, hook_event_name, session_id,
+    transcript_path} into every payload before the caller's own fields, so `timestamp` and
+    the snake_case key are on all of them. This builder used to emit `hookEventName` and no
+    timestamp -- neither of which VS Code sends.
+    """
+    raw = dict(base, timestamp="2026-08-28T00:00:00.000Z", hook_event_name=vendor_event)
     if event == PRE_TOOL:
         raw.update(
             tool_name="memory", tool_input={"command": "create", "path": "/memories/team.md", "file_text": SECRET}
         )
-    elif event in (POST_TOOL, TOOL_FAILURE):
-        raw.update(tool_name="runInTerminal", tool_input={"command": FAILING})
-        raw["tool_output"] = "ok" if event == POST_TOOL else FAILURE
+        raw["tool_use_id"] = "example"
+    elif event == POST_TOOL:
+        # IPostToolUseHookCommandInput: tool_response, not Claude Code's tool_output.
+        raw.update(tool_name="runInTerminal", tool_input={"command": FAILING}, tool_response="ok")
+        raw["tool_use_id"] = "example"
     elif event == PROMPT_SUBMIT:
         raw["prompt"] = PROMPT
+    elif event == SESSION_START:
+        raw.update(source="new", model="claude-sonnet-4-6")
+    elif event in (SUBAGENT_START, SUBAGENT_STOP):
+        raw.update(agent_id="example", agent_type="Plan")
+        if event == SUBAGENT_STOP:
+            raw["stop_hook_active"] = False
+    elif event == STOP:
+        raw["stop_hook_active"] = False
     return raw
 
 

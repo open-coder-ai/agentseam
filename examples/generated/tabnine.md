@@ -125,6 +125,10 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
+> Also claimed by **vscode_copilot**, so `detect()` declines this payload and the agent has
+> to be named: `handle(raw, handler, agent="tabnine")`. Guessing between adapters
+> that answer differently is worse than declining.
+
 The agent sends:
 
 ```json

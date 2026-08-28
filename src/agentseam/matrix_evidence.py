@@ -113,8 +113,18 @@ EVIDENCE = {
     "vscode_copilot": {
         "basis": BASIS_SOURCE,
         "version": "1.110+",
-        "date": "2026-08-26",
-        "method": "microsoft/vscode source: languageModelToolsService.invokeTool + hookCommandTypes",
+        "date": "2026-08-28",
+        "method": (
+            "microsoft/vscode source, read from a clone rather than from the docs: "
+            "hookTypes.ts (HOOKS_BY_TARGET -- both products' event-name maps), "
+            "hookSchema.ts and hookCompatibility.ts (parseCopilotHooks, the config shape "
+            "actually parsed), hookCommandTypes.ts and chatHookService.ts (per-event input "
+            "and output contracts, exit-code semantics), hookResultProcessor.ts, and "
+            "languageModelToolsService.ts (where the decision is honoured). That reading "
+            "corrected the event vocabulary, the installed config shape, the fail mode and "
+            "the response dialects -- every one of which had been wrong. No live run: "
+            "`observed` is absent here on purpose."
+        ),
     },
     "windsurf": {
         "basis": BASIS_THIRD_PARTY,

@@ -130,7 +130,18 @@ def test_the_index_says_the_pages_are_not_observations(generated):
 #: indistinguishable here. Both are `detect` at these events, so no gate is lost: detect()
 #: returns None and the dispatcher allows, which is the honest answer to "we cannot tell".
 #: Whether real Gemini CLI sends `client_type` would settle it, and needs a live capture.
-KNOWN_AMBIGUOUS = {("gemini_cli", "session_start"), ("gemini_cli", "session_end")}
+#:
+#: Tabnine and VS Code Copilot collide at SessionStart, and only there -- it is the one
+#: event name their maps share, and both put `timestamp` on every payload. VS Code's
+#: SessionStartHookInput sends source: "new" where Tabnine's example sends "startup", but
+#: that is an enum value, not a field, and resting on it means resting on Tabnine never
+#: emitting "new". Both are `detect` at session_start, so declining costs no gate.
+KNOWN_AMBIGUOUS = {
+    ("gemini_cli", "session_start"),
+    ("gemini_cli", "session_end"),
+    ("tabnine", "session_start"),
+    ("vscode_copilot", "session_start"),
+}
 
 
 def test_every_shipping_payload_resolves_to_its_own_adapter():

@@ -22,7 +22,6 @@ from .contract import (
 from .matrix_evidence import EVIDENCE
 from .matrix_notes import NOTES
 from .matrix_terms import (
-    FAIL_CLOSED,
     FAIL_CONFIGURABLE,
     FAIL_OPEN,
     TIER_BLOCK,
@@ -130,12 +129,28 @@ MATRIX = {
         "config": ".github/hooks/*.json",  # also ~/.copilot/hooks/*.json for the CLI
         "verified": EVIDENCE["vscode_copilot"],
         "events": {
-            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CLOSED),
-            POST_TOOL: _cap(),
-            TOOL_FAILURE: _cap(),
-            PROMPT_SUBMIT: _cap(),
+            # FAIL_CLOSED here was the strongest claim in the vocabulary and had no basis.
+            # hookExecutor's own contract: exit 0 succeeds, exit 2 is a blocking error, and
+            # "other non-zero exit codes" are NonBlockingError -- which _toHookResult turns
+            # into a warning and processHookResults lets through. A crashed or missing
+            # guard warns the user and the tool call proceeds. That is fail-open.
+            PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
+            # Not observation-only: IPostToolUseHookResult carries {decision: 'block',
+            # reason} and executePostToolUseHook reads a top-level `decision` from stdout.
+            POST_TOOL: _cap(block=True, fail=FAIL_OPEN),
+            # UserPromptSubmitHookOutput.decision === 'block' throws HookAbortError, which
+            # stops the prompt reaching the model.
+            PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
+            # ignoreErrors: true at both start events -- even exit 2 is swallowed there.
             SESSION_START: _cap(),
-            SESSION_END: _cap(),
+            SUBAGENT_START: _cap(),
+            # StopHookOutput / SubagentStopHookOutput both take a nested decision: 'block',
+            # which makes the loop continue instead of stopping.
+            STOP: _cap(block=True, fail=FAIL_OPEN),
+            SUBAGENT_STOP: _cap(block=True, fail=FAIL_OPEN),
+            # TOOL_FAILURE and SESSION_END are gone. `postToolUseFailure` is in neither
+            # vendor's name map, so it never existed; `sessionEnd` is a Copilot CLI name VS
+            # Code does not fire and cannot be installed for from this adapter's config.
         },
         "notes": NOTES["vscode_copilot"],
     },
