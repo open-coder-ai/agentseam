@@ -57,15 +57,25 @@ CLIENT_TYPE = "kimi_code_cli"
 
 EVENT_MAP = {
     "UserPromptSubmit": PROMPT_SUBMIT,
-    "UserPromptQueued": PROMPT_SUBMIT,
     "PreToolUse": PRE_TOOL,
     "PostToolUse": POST_TOOL,
     "PostToolUseFailure": TOOL_FAILURE,
-    "PermissionRequest": PRE_TOOL,
     "PermissionResult": POST_TOOL,
     "Stop": STOP,
-    "StopFailure": STOP,
-    "Interrupt": STOP,
+    # UNKNOWN, deliberately. These four are fire-and-forget per the vendor -- they are not
+    # in BLOCKING_EVENTS -- but they used to map onto prompt_submit, pre_tool and stop,
+    # which the matrix rates blocking. So `can_block("kimi_code", "prompt_submit")` said
+    # True, a handler denied a prompt-injection attempt at a UserPromptQueued payload, and
+    # respond() dropped it in silence: a gate that reported a block and permitted the act.
+    #
+    # Resolving them to UNKNOWN keeps what is true and drops what is not. claims() still
+    # identifies these payloads (the name is still a key here), so a consumer is not blinded
+    # to the moment; parse() just refuses to relabel a fire-and-forget event as a gate, and
+    # no policy keyed to a canonical event fires on one.
+    "UserPromptQueued": UNKNOWN,
+    "PermissionRequest": UNKNOWN,
+    "StopFailure": UNKNOWN,
+    "Interrupt": UNKNOWN,
     "SessionStart": SESSION_START,
     "SessionEnd": SESSION_END,
     "SubagentStart": SUBAGENT_START,

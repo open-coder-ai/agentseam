@@ -67,6 +67,23 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **`kimi_code` claimed a gate at four events that cannot block.** `UserPromptQueued`,
+  `PermissionRequest`, `StopFailure` and `Interrupt` mapped onto `prompt_submit`, `pre_tool`
+  and `stop` — canonical events the matrix rates blocking — while being fire-and-forget per
+  the vendor and absent from `BLOCKING_EVENTS`. So `can_block("kimi_code", "prompt_submit")`
+  answered True, a handler denied a prompt-injection attempt at a `UserPromptQueued`
+  payload, and `respond()` dropped it in silence: a gate that reported a block and permitted
+  the act.
+
+  They now resolve to `UNKNOWN`, which keeps what is true and drops what is not. `claims()`
+  still identifies these payloads — the consumer is not blinded to the moment — and `parse()`
+  simply refuses to relabel a fire-and-forget event as a gate, so no policy keyed to a
+  canonical event fires on one.
+
+  This removes the last exception from the silent-gate invariant. It shipped with these four
+  pinned; rather than excusing them, the mislabelling is gone, so there is nothing left to
+  excuse and no exception list survives.
+
 - **The capture probe was unrunnable under PowerShell, on every agent.** `capture.py` wired
   `"C:\py.exe" "probe.py" agent` — correct for POSIX shells and `cmd.exe`, and chosen for
   interpreters under paths with spaces. PowerShell is the gap: a line *beginning* with a
