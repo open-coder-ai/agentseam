@@ -67,6 +67,26 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   reintroducing the `devin` case, which the test rejects by event and word.
 
 ### Fixed
+- **A guardrail with no objection was disabling the user's own permission prompts.** On
+  `claude_code` and `vscode_copilot`, a bare `Decision.allow()` at `pre_tool` emitted
+  `hookSpecificOutput.permissionDecision: "allow"`. That is not the same statement as "the
+  handler has no objection", and the difference is the user's confirmation dialog.
+
+  For VS Code this is **proven from the vendor's source**, not inferred:
+  `languageModelToolsService` returns `autoConfirmed: { ConfirmationNotNeeded, "Allowed by
+  hook" }` on exactly that value. For Claude Code the vendor documents what *silence* does,
+  verbatim — *"Exit code 0 with no output means the hook has no decision to report, so the
+  tool call continues through the normal permission flow"* — while saying nothing about an
+  explicit allow. So one option has recorded, safe semantics and the other is a guess.
+
+  A handler returns allow for everything its policy does not match, which on a normal
+  session is every tool call. Installing agentseam therefore turned off the user's
+  confirmation prompts for the whole session — the opposite of what a guardrail is for.
+
+  A bare allow is now silence. `deny`, `ask` and `rewrite` are unchanged; **rewrite keeps
+  the explicit allow**, because `updatedInput` is the only way to express a rewrite and
+  approving the *substituted* call is what the handler asked for. `codex_cli` already
+  behaved this way, for a different vendor reason.
 - **Six adapters crashed on a malformed `tool_input`, and a crash is an allow.** `parse()`
   raised `AttributeError` whenever `tool_input` was a truthy non-dict (a string, a list, a
   number), and three raised on an `edits` list holding non-dicts. `dispatch.run` wraps only

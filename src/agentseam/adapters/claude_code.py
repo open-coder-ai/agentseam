@@ -208,6 +208,23 @@ def respond(decision, event):
     Bash call too, so the gate fires for every tool. It must keep this shape in any case --
     it is the only one carrying updatedInput, which rewrite depends on. Everything else is
     observation-only in this row and gets silence: a verdict there was never read.
+
+    A bare ALLOW is SILENCE, not permissionDecision:"allow".
+
+    "The handler has no objection" and "skip the user's own permission prompt" are different
+    statements, and only the first is what a guardrail means. The vendor's documentation
+    settles what silence does, verbatim: "Exit code 0 with no output means the hook has no
+    decision to report, so the tool call continues through the normal permission flow."
+    What an explicit "allow" does there is NOT documented -- so the recorded option is the
+    one that keeps the user's own protection, and the unrecorded one is not worth guessing
+    with. The sibling case is proven rather than inferred: VS Code's
+    languageModelToolsService returns `autoConfirmed: ConfirmationNotNeeded, "Allowed by
+    hook"` on exactly this value.
+
+    So a policy that simply did not match -- the common case, on every tool call -- used to
+    disable the user's confirmation prompts for the whole session. REWRITE still sends an
+    explicit allow, because updatedInput is the only way to express a rewrite and approving
+    the *substituted* call is what the handler asked for.
     """
     import json as _json
 
@@ -217,6 +234,9 @@ def respond(decision, event):
         return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
 
     if event.event != PRE_TOOL:
+        return "", 0
+
+    if decision.outcome == ALLOW:
         return "", 0
 
     out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
@@ -231,8 +251,6 @@ def respond(decision, event):
         out["updatedInput"] = decision.updated_input
         if decision.reason:
             out["permissionDecisionReason"] = decision.reason
-    else:
-        out["permissionDecision"] = "allow"
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
