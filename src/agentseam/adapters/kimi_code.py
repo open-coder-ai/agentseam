@@ -116,7 +116,7 @@ def parse(raw):
     # same fallback chain claude_code.parse uses -- not a guess, a claim we already made.
     content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
     if content is None and isinstance(ti.get("edits"), list):
-        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"])
+        joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"] if isinstance(e, dict))
         content = joined or None
     out = raw.get("tool_output")
     if isinstance(out, (dict, list)):

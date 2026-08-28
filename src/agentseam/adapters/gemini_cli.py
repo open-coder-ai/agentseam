@@ -90,7 +90,12 @@ def claims(raw):
 
 
 def parse(raw):
-    ti = raw.get("tool_input") or {}
+    ti = raw.get("tool_input")
+    # A guard that crashes is a guard that allows: dispatch only wraps the JSON decode, so
+    # an exception here kills the hook with exit 1, which most vendors treat as a
+    # non-blocking error and let the call through. tool_input is whatever the agent chose
+    # to serialise, so it is not ours to assume the shape of.
+    ti = ti if isinstance(ti, dict) else {}
     tool = raw.get("tool_name")
     content = None
     if tool in WRITE_TOOLS:

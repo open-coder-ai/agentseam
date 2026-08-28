@@ -78,8 +78,7 @@ _CODEX_MARKERS = ("turn_id", "permission_mode")
 _CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id", "workspace_roots")
 
 #: Copilot CLI's camelCase names, which no other vendor uses -- the name alone identifies
-#: these. Derived from EVENT_MAP: a hand-kept list drifted, leaving payloads claimed by
-#: the matrix but by no adapter, and so allowed through.
+#: these. Derived from EVENT_MAP: a hand-kept list drifted and left payloads unclaimed.
 _CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
 
 #: executeHook merges {timestamp, hook_event_name, session_id?, transcript_path?} into
@@ -115,12 +114,14 @@ def claims(raw):
     if name in _CLAIMABLE:
         return True
     # memory-tool payloads are unmistakable
-    ti = raw.get("tool_input") or {}
+    # The isinstance guard also keeps a non-dict tool_input from raising here.
+    ti = raw.get("tool_input")
     return raw.get("tool_name") in MEMORY_TOOLS and isinstance(ti, dict) and "command" in ti
 
 
 def parse(raw):
-    ti = raw.get("tool_input") or {}
+    ti = raw.get("tool_input")
+    ti = ti if isinstance(ti, dict) else {}
     tool = raw.get("tool_name") or raw.get("toolName")
     path = content = None
     if tool in MEMORY_TOOLS:
@@ -158,15 +159,15 @@ def parse(raw):
 
 def is_memory_write(event):
     """True when this event is a memory-tool content write (VS Code's memory surface)."""
-    ti = event.raw.get("tool_input") or {}
+    ti = event.raw.get("tool_input")
+    ti = ti if isinstance(ti, dict) else {}
     return event.tool in MEMORY_TOOLS and ti.get("command") in MEMORY_WRITE_COMMANDS
 
 
-#: Events whose block verdict is a TOP-LEVEL {decision: "block", reason}.
-#: UserPromptSubmitHookOutput declares exactly those two fields and
-#: defaultIntentRequestHandler reads `typedOutput.decision` off the root object;
-#: executePostToolUseHook reads the same two off a PostToolUse response's root, where a
-#: block feeds the reason back to the model instead of the tool result.
+#: Block verdict at the TOP LEVEL: {decision: "block", reason}.
+#: UserPromptSubmitHookOutput declares exactly those two and
+#: defaultIntentRequestHandler reads `typedOutput.decision` off the root;
+#: executePostToolUseHook reads the same two off a PostToolUse response's root.
 _TOP_LEVEL_BLOCK = (PROMPT_SUBMIT, POST_TOOL)
 
 #: Block verdict NESTED in hookSpecificOutput. executeStopHook requires BOTH decision and
@@ -253,10 +254,9 @@ def respond(decision, event):
 #:
 #: PascalCase, i.e. VS Code's spelling, because CONFIG_PATH is VS Code's file.
 #: `parseCopilotHooks` resolves each key with `resolveCopilotCliHookType(id) ?? toHookType
-#: (id)`, so both spellings work there -- but only one may be written: it does
-#: `result.set(hookType, ...)`, an overwrite, so two keys resolving to the same HookType
-#: silently drop one. SESSION_END is therefore unwireable: `sessionEnd` is a Copilot CLI
-#: name VS Code never fires, claimed for parsing and not offered for installing.
+#: (id)`, so both spellings work -- but only one may be written: it does `result.set(...)`,
+#: an overwrite, so two keys resolving to the same HookType silently drop one. SESSION_END
+#: is therefore unwireable: a Copilot CLI name VS Code never fires.
 REVERSE_EVENT_MAP = {
     PRE_TOOL: "PreToolUse",
     POST_TOOL: "PostToolUse",
