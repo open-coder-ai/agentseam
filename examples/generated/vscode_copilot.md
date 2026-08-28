@@ -188,9 +188,7 @@ This is the gate, so every decision is worth seeing.
 
 **`Decision.allow()`** — the handler is happy
 
-```json
-{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow"}}
-```
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 
