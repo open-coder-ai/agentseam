@@ -1,4 +1,4 @@
-"""Codex CLI adapter: Claude-shaped decisions, camelCase events, turn fields."""
+"""Codex CLI adapter: Claude-shaped decisions, Claude-shaped PascalCase events, turn fields."""
 
 import json
 import sys
@@ -44,14 +44,24 @@ def test_codex_deny_is_json_with_exit_zero():
     assert code == 0
 
 
-def test_codex_echoes_camelcase_event_name():
+def test_codex_echoes_pascalcase_event_name():
+    """hook_config.rs's HookEventsToml and schema.rs's HookEventNameWire both use
+    PascalCase, matching Claude Code's own convention -- not the camelCase this adapter
+    used to assume (sourced from the App Server's separate IDE-facing protocol)."""
     text, _, _, _ = A.handle(CX_WRITE, allow_all)
-    assert json.loads(text)["hookSpecificOutput"]["hookEventName"] == "preToolUse"
+    assert json.loads(text)["hookSpecificOutput"]["hookEventName"] == "PreToolUse"
 
 
-def test_codex_supports_ask_and_rewrite():
+def test_codex_degrades_ask_to_deny_because_the_vendor_rejects_it():
+    """output_parser.rs's unsupported_pre_tool_use_hook_specific_output treats
+    permissionDecision:ask as an invalid hook response, which Codex then fails OPEN on --
+    so a real ask must not be sent as "ask" at all."""
     ask = json.loads(A.handle(CX_WRITE, lambda e: Decision.ask("confirm"))[0])
-    assert ask["hookSpecificOutput"]["permissionDecision"] == "ask"
+    assert ask["hookSpecificOutput"]["permissionDecision"] == "deny"
+    assert "confirm" in ask["hookSpecificOutput"]["permissionDecisionReason"]
+
+
+def test_codex_supports_rewrite():
     rw = json.loads(A.handle(CX_WRITE, lambda e: Decision.rewrite({"content": "safe"}))[0])
     assert rw["hookSpecificOutput"]["updatedInput"] == {"content": "safe"}
 
@@ -69,7 +79,11 @@ def test_a_rewrite_reason_reaches_the_model_not_just_the_replacement_input():
 
 
 def test_codex_hook_config_uses_matcher_group_shape():
+    """The event key must be PascalCase ("PreToolUse"): HookEventsToml only recognises
+    its twelve #[serde(rename = "PreToolUse")]-style keys and has no deny_unknown_fields,
+    so a wrong-cased key like "preToolUse" is silently dropped -- the file parses fine and
+    Codex loads zero hooks from it, no warning, no error."""
     cfg = A.adapters.get("codex_cli").hook_config([A.PRE_TOOL], "handler", matcher="Write")
-    entry = cfg["hooks"]["preToolUse"][0]
+    entry = cfg["hooks"]["PreToolUse"][0]
     assert entry["matcher"] == "Write"
     assert entry["hooks"][0] == {"type": "command", "command": "handler"}

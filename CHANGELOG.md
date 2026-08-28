@@ -7,6 +7,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **Codex CLI's event names were the wrong casing everywhere: config file, outgoing
+  response, and incoming-payload detection.** `codex_cli.py` believed Codex's hook events
+  were camelCase ("preToolUse"), sourced from a `HookEventName.ts` binding that turns out to
+  belong to the App Server's separate IDE-facing JSON-RPC protocol, not the plain CLI
+  hook-subprocess dialect this adapter actually speaks. Verified against the real source
+  (`openai/codex: config/src/hook_config.rs`, `hooks/src/schema.rs`,
+  `hooks/src/engine/output_parser.rs`): Codex's hooks.json config keys, its runtime wire
+  payload's `hook_event_name` value, and its expected response's `hookEventName` are all
+  PascalCase, the same as Claude Code's. Three consequences, all fixed: (1) `hook_config()`
+  wrote `{"preToolUse": [...]}` into `.codex/hooks.json` -- Codex's `HookEventsToml` only
+  recognises its twelve PascalCase-named fields and silently drops anything else (no
+  `deny_unknown_fields`), so the file parsed fine and Codex loaded *zero* hooks from it, no
+  warning, no error, `agentseam install codex_cli` reporting success while wiring nothing.
+  (2) `EVENT_MAP` never matched a real payload's `hook_event_name`, so `claims()` never
+  recognised genuine Codex CLI traffic. (3) `respond()` echoed the wrong-cased value back in
+  `hookSpecificOutput.hookEventName`. Fixing (2) surfaced a second, previously-masked bug:
+  while matching stayed broken by the casing typo, `permission_mode` had quietly stopped being
+  a safe discriminator between Codex and Claude Code (a live-captured Claude Code payload
+  carries it too) without anything noticing, since codex_cli never claimed a real payload to
+  test it against. `claims()` now keys on `turn_id` alone, the one field still unrefuted by a
+  real payload. Also fixed while cross-referencing the real parser:
+  `respond()`'s ASK branch emitted `permissionDecision: "ask"`, a value Codex's own
+  `output_parser.rs` explicitly treats as an invalid hook response (`"PreToolUse hook returned
+  unsupported permissionDecision:ask"`) -- and an invalid hook response fails OPEN, so asking
+  silently allowed exactly what the handler wanted confirmed. ASK now degrades to DENY with an
+  explanatory reason instead. `examples/generated/codex_cli.md` regenerated.
 - **`install()`'s ownership marker broke Codex CLI's hooks file outright**: `_mark()` tagged
   every dict with a `hooks` key, including the top-level container `hook_config()` returns,
   so `agentseam install codex_cli` wrote `{"_agentseam": "...", "hooks": {...}}`. Codex CLI

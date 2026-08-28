@@ -70,7 +70,7 @@ CU_SHELL = {"command": "echo x >> CLAUDE.md", "cwd": "/repo"}
 
 
 CX_SHELL = {
-    "hook_event_name": "preToolUse",
+    "hook_event_name": "PreToolUse",
     "session_id": "cx1",
     "turn_id": "turn-2",
     "model": "gpt-5-codex",
@@ -82,7 +82,7 @@ CX_SHELL = {
 
 
 CX_WRITE = {
-    "hook_event_name": "preToolUse",
+    "hook_event_name": "PreToolUse",
     "session_id": "cx1",
     "turn_id": "turn-1",
     "transcript_path": "/t.json",

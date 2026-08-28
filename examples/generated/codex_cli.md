@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.codex/hooks.json` |
 | evidence | `vendor-source` — vendor source: codex-rs/hooks/src/schema.rs, engine/output_parser.rs, HookEventName.ts |
 
-Claude-family decision shape (hookSpecificOutput.permissionDecision) but camelCase event names and extra turn-scoped fields (turn_id, permission_mode -- and model, which Cursor also sends and therefore cannot discriminate). Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform.
+Claude-family decision shape (hookSpecificOutput.permissionDecision) and Claude-family PascalCase event names (verified against hook_config.rs/schema.rs; an earlier version of this note wrongly said camelCase, sourced from the App Server's separate IDE-facing protocol rather than the CLI hook dialect this adapter speaks). Told apart from Claude Code by turn_id: permission_mode and model were also believed exclusive to Codex and turned out not to be -- a real live-captured Claude Code payload carries permission_mode too, and model cannot discriminate either since Cursor's base hook schema also sends it on every event -- so turn_id is the only one of the three still unrefuted by a real payload. Deny is sent as JSON with exit 0: on Windows Codex wraps hooks in powershell -Command, which collapses exit 2 into 1, so an exit-code deny does not survive that platform. ask is not a supported permissionDecision at PreToolUse -- Codex's own parser rejects it as an invalid hook response, which fails OPEN -- so respond() degrades ASK to a DENY with an explanatory reason instead.
 
 ## What `agentseam install` writes
 
@@ -35,7 +35,7 @@ One handler wired for every hook this agent supports.
 ```json
 {
   "hooks": {
-    "postToolUse": [
+    "PostToolUse": [
       {
         "hooks": [
           {
@@ -45,7 +45,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "preCompact": [
+    "PreCompact": [
       {
         "hooks": [
           {
@@ -55,7 +55,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "preToolUse": [
+    "PreToolUse": [
       {
         "hooks": [
           {
@@ -65,7 +65,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "sessionEnd": [
+    "SessionEnd": [
       {
         "hooks": [
           {
@@ -75,7 +75,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "sessionStart": [
+    "SessionStart": [
       {
         "hooks": [
           {
@@ -85,7 +85,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "stop": [
+    "Stop": [
       {
         "hooks": [
           {
@@ -95,7 +95,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "subagentStart": [
+    "SubagentStart": [
       {
         "hooks": [
           {
@@ -105,7 +105,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "subagentStop": [
+    "SubagentStop": [
       {
         "hooks": [
           {
@@ -115,7 +115,7 @@ One handler wired for every hook this agent supports.
         ]
       }
     ],
-    "userPromptSubmit": [
+    "UserPromptSubmit": [
       {
         "hooks": [
           {
@@ -134,7 +134,7 @@ One handler wired for every hook this agent supports.
 The story is held constant across agents so the pages compare: the same credential
 heading for a memory file, the same failing test, the same prompt.
 
-### 1. `session_start` — called `sessionStart` here
+### 1. `session_start` — called `SessionStart` here
 
 Enforcement: **detect**.
 
@@ -143,7 +143,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "sessionStart",
+  "hook_event_name": "SessionStart",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -161,12 +161,12 @@ event    = session_start
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "sessionStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "SessionStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 2. `session_end` — called `sessionEnd` here
+### 2. `session_end` — called `SessionEnd` here
 
 Enforcement: **detect**.
 
@@ -175,7 +175,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "sessionEnd",
+  "hook_event_name": "SessionEnd",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "reason": "exit",
@@ -193,12 +193,12 @@ event    = session_end
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "sessionEnd", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "SessionEnd", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 3. `prompt_submit` — called `userPromptSubmit` here
+### 3. `prompt_submit` — called `UserPromptSubmit` here
 
 Enforcement: **best-effort**.
 
@@ -207,7 +207,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "userPromptSubmit",
+  "hook_event_name": "UserPromptSubmit",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "prompt": "remember my aws key so you can deploy later",
@@ -225,12 +225,12 @@ event    = prompt_submit
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "userPromptSubmit", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 4. `pre_tool` — called `preToolUse` here
+### 4. `pre_tool` — called `PreToolUse` here
 
 Enforcement: **best-effort**.
 
@@ -239,7 +239,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "preToolUse",
+  "hook_event_name": "PreToolUse",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -266,7 +266,7 @@ This is the gate, so every decision is worth seeing.
 **`Decision.allow()`** — the handler is happy
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "allow"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow"}}
 ```
 
 Exit code: `0`
@@ -274,7 +274,7 @@ Exit code: `0`
 **`Decision.deny()`** — the handler refuses
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "deny", "permissionDecisionReason": "secret detected in file content"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "secret detected in file content"}}
 ```
 
 Exit code: `0`
@@ -282,7 +282,7 @@ Exit code: `0`
 **`Decision.ask()`** — the handler wants a human
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "ask", "permissionDecisionReason": "looks like a credential -- confirm?"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "looks like a credential -- confirm? (Codex CLI does not support ask; asking would fail open)"}}
 ```
 
 Exit code: `0`
@@ -290,12 +290,12 @@ Exit code: `0`
 **`Decision.rewrite()`** — the handler wants the input changed
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
 ```
 
 Exit code: `0`
 
-### 5. `post_tool` — called `postToolUse` here
+### 5. `post_tool` — called `PostToolUse` here
 
 Enforcement: **detect**.
 
@@ -304,7 +304,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "postToolUse",
+  "hook_event_name": "PostToolUse",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -329,12 +329,12 @@ output   = ok
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "postToolUse", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "PostToolUse", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 6. `pre_compact` — called `preCompact` here
+### 6. `pre_compact` — called `PreCompact` here
 
 Enforcement: **detect**.
 
@@ -343,7 +343,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "preCompact",
+  "hook_event_name": "PreCompact",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -361,12 +361,12 @@ event    = pre_compact
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "preCompact", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "PreCompact", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 7. `stop` — called `stop` here
+### 7. `stop` — called `Stop` here
 
 Enforcement: **best-effort**.
 
@@ -375,7 +375,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "stop",
+  "hook_event_name": "Stop",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -392,12 +392,12 @@ event    = stop
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "stop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "Stop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 8. `subagent_start` — called `subagentStart` here
+### 8. `subagent_start` — called `SubagentStart` here
 
 Enforcement: **detect**.
 
@@ -406,7 +406,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "subagentStart",
+  "hook_event_name": "SubagentStart",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -424,12 +424,12 @@ event    = subagent_start
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "subagentStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "SubagentStart", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`
 
-### 9. `subagent_stop` — called `subagentStop` here
+### 9. `subagent_stop` — called `SubagentStop` here
 
 Enforcement: **detect**.
 
@@ -438,7 +438,7 @@ The agent sends:
 ```json
 {
   "cwd": "/repo",
-  "hook_event_name": "subagentStop",
+  "hook_event_name": "SubagentStop",
   "model": "gpt-5-codex",
   "permission_mode": "auto",
   "session_id": "example",
@@ -456,7 +456,7 @@ event    = subagent_stop
 A `Decision.deny()` here produces:
 
 ```json
-{"hookSpecificOutput": {"hookEventName": "subagentStop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
+{"hookSpecificOutput": {"hookEventName": "SubagentStop", "permissionDecision": "deny", "permissionDecisionReason": "policy violation"}}
 ```
 
 Exit code: `0`

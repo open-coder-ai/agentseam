@@ -1,15 +1,30 @@
 """OpenAI Codex CLI adapter.
 
-Verified against the vendor's generated schemas and hook engine source (openai/codex:
-codex-rs/hooks/src/schema.rs, engine/output_parser.rs, engine/discovery.rs,
-app-server-protocol/schema/typescript/v2/HookEventName.ts).
+Verified against the vendor's hook engine source (openai/codex: config/src/hook_config.rs,
+hooks/src/schema.rs, hooks/src/engine/output_parser.rs, hooks/src/engine/discovery.rs).
 
-Codex speaks the Claude-family decision shape — hookSpecificOutput.permissionDecision
-with allow/deny/ask — but names its events in camelCase and adds turn-scoped fields
-(turn_id, permission_mode) that Claude Code does not send. Those extra fields are how an
-adapter tells the two apart when the payload is otherwise identical. It also shares its
-camelCase event names with Cursor, which is why the marker has to be a field Cursor never
-sends rather than merely one Claude Code omits.
+Codex speaks the Claude-family decision shape — hookSpecificOutput.permissionDecision with
+allow/deny — and names its events in PASCALCASE, the same convention Claude Code uses:
+`HookEventsToml`'s field renames in hook_config.rs ("PreToolUse", "PostToolUse", ...) are
+what a hooks.json config file's event keys must match, and `HookEventNameWire`'s literal
+constructions in schema.rs (`hook_event_name: "PreToolUse".to_string()`) confirm the same
+casing on the runtime wire payload's own `hook_event_name` field. A previous version of this
+adapter believed the events were camelCase, sourced from
+app-server-protocol/schema/typescript/v2/HookEventName.ts -- that file is a ts-rs binding for
+the App Server's separate IDE-facing JSON-RPC protocol, not the plain CLI hook-subprocess
+dialect this adapter speaks; the two use different casing for the same event names.
+
+Codex adds a turn-scoped `turn_id` field that Claude Code does not send -- the one field
+that tells the two apart when the payload's event names are otherwise identical, since real
+Claude Code event names are PascalCase too. `permission_mode` and `model` were both believed
+exclusive to Codex at one point and both turned out to be shared (with Claude Code and Cursor
+respectively); see `claims()`'s docstring.
+
+"ask" is a rejected permissionDecision value at PreToolUse, per output_parser.rs's own
+`unsupported_pre_tool_use_hook_specific_output`: Codex treats it as an invalid hook response
+(not a real prompt), which Codex then handles by failing OPEN -- so `respond()` degrades ASK
+to DENY with an explanatory reason there rather than emit a value the vendor's own parser
+rejects.
 """
 
 from __future__ import annotations
@@ -33,35 +48,42 @@ from ..contract import (
 
 AGENT = "codex_cli"
 
-# HookEventName.ts, verbatim. camelCase, unlike Claude Code's PascalCase.
+# hook_config.rs's HookEventsToml field renames, and schema.rs's HookEventNameWire /
+# literal hook_event_name construction -- both PascalCase, matching Claude Code's own.
 EVENT_MAP = {
-    "preToolUse": PRE_TOOL,
-    "postToolUse": POST_TOOL,
-    "userPromptSubmit": PROMPT_SUBMIT,
-    "sessionStart": SESSION_START,
-    "sessionEnd": SESSION_END,
-    "preCompact": PRE_COMPACT,
-    "stop": STOP,
-    "subagentStart": SUBAGENT_START,
-    "subagentStop": SUBAGENT_STOP,
-    # permissionRequest, postCompact and interrupt have no canonical counterpart yet;
+    "PreToolUse": PRE_TOOL,
+    "PostToolUse": POST_TOOL,
+    "UserPromptSubmit": PROMPT_SUBMIT,
+    "SessionStart": SESSION_START,
+    "SessionEnd": SESSION_END,
+    "PreCompact": PRE_COMPACT,
+    "Stop": STOP,
+    "SubagentStart": SUBAGENT_START,
+    "SubagentStop": SUBAGENT_STOP,
+    # PermissionRequest, PostCompact and Interrupt have no canonical counterpart yet;
     # leaving them unmapped keeps the matrix honest rather than inventing coverage.
 }
 REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
 
 def claims(raw):
-    """Codex's preToolUse carries turn_id and permission_mode; Claude Code's does not.
+    """Codex's PreToolUse carries turn_id; Claude Code's does not.
 
-    `model` used to count as a third marker and no longer does: Cursor's base hook schema
+    `model` used to count as a second marker and no longer does: Cursor's base hook schema
     sends `model` on every event, so claiming on it made every real Cursor payload
     ambiguous between the two adapters -- and an unidentified payload is allowed through.
+    `permission_mode` used to count as a marker here too and no longer does either: a real
+    live-captured Claude Code payload (2026-08-27, PreToolUse) carries `permission_mode`
+    too -- confirmed once EVENT_MAP's casing was fixed to the vendor's actual PascalCase and
+    codex_cli started claiming real Claude Code traffic that only `permission_mode` matched
+    on. Two fields once believed exclusive to Codex have both turned out to be shared;
+    `turn_id` is the one still unrefuted by a real captured payload.
     """
     if not isinstance(raw, dict):
         return False
     if raw.get("hook_event_name") not in EVENT_MAP:
         return False
-    return "turn_id" in raw or "permission_mode" in raw
+    return "turn_id" in raw
 
 
 def parse(raw):
@@ -90,6 +112,10 @@ def parse(raw):
     )
 
 
+def _because(reason, note):
+    return "%s (%s)" % (reason, note) if reason else note
+
+
 def respond(decision, event):
     """Always exit 0 and carry the verdict in JSON.
 
@@ -100,13 +126,19 @@ def respond(decision, event):
     """
     import json as _json
 
-    out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "preToolUse")}
+    out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
     if decision.outcome == DENY:
         out["permissionDecision"] = "deny"
         out["permissionDecisionReason"] = decision.reason or "blocked"
     elif decision.outcome == ASK:
-        out["permissionDecision"] = "ask"
-        out["permissionDecisionReason"] = decision.reason or "confirmation required"
+        # Not a degradation of our own contract: Codex's own PreToolUse output parser
+        # rejects permissionDecision:ask as an invalid hook response (unsupported), which
+        # Codex then treats as a hook error -- and hook errors fail OPEN. Emitting "ask"
+        # here would silently let through exactly what the handler wanted confirmed.
+        out["permissionDecision"] = "deny"
+        out["permissionDecisionReason"] = _because(
+            decision.reason, "Codex CLI does not support ask; asking would fail open"
+        )
     elif decision.outcome == REWRITE:
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
