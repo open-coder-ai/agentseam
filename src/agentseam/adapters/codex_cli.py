@@ -66,6 +66,11 @@ EVENT_MAP = {
 REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
 
+#: SessionStartCommandInput's fields, minus the event name. The struct is
+#: deny_unknown_fields, so this is the whole payload -- there is nothing else to match on.
+_SESSION_START_FIELDS = ("session_id", "transcript_path", "cwd", "model", "permission_mode", "source")
+
+
 def claims(raw):
     """Codex's PreToolUse carries turn_id; Claude Code's does not.
 
@@ -78,21 +83,47 @@ def claims(raw):
     codex_cli started claiming real Claude Code traffic that only `permission_mode` matched
     on. Two fields once believed exclusive to Codex have both turned out to be shared;
     `turn_id` is the one still unrefuted by a real captured payload.
+
+    SessionStart is the exception, and it is claimed on shape instead. It is not
+    turn-scoped, so Codex sends no turn_id there -- confirmed live (2026-08-28) and by
+    `SessionStartCommandInput`, which is `deny_unknown_fields` and defines exactly the six
+    fields below plus the event name. Every one of them is a field Claude Code also sends,
+    so nothing here can tell the two apart. Claiming it anyway makes `detect()` DECLINE as
+    ambiguous, which is the honest answer: before this, a real Codex SessionStart was
+    claimed by claude_code alone and answered confidently in the wrong dialect, which Codex
+    rejects (its output structs are deny_unknown_fields) and therefore fails open. Naming
+    the agent explicitly is how a consumer resolves it, the same as tabnine and gemini_cli.
     """
     if not isinstance(raw, dict):
         return False
-    if raw.get("hook_event_name") not in EVENT_MAP:
+    name = raw.get("hook_event_name")
+    if name not in EVENT_MAP:
         return False
-    return "turn_id" in raw
+    if "turn_id" in raw:
+        return True
+    return name == "SessionStart" and all(field in raw for field in _SESSION_START_FIELDS)
 
 
 def parse(raw):
+    """Normalise one payload.
+
+    **A Codex write does not arrive with a path or content.** Live capture (2026-08-28, 36
+    payloads) observed exactly two tool names -- `Bash` and `apply_patch` -- and BOTH carry
+    only `tool_input.command`. `apply_patch` is the file-writing tool, and the patch text
+    rides inside that command string. So on this agent a content policy has to gate on
+    `event.command`; `event.content` and `event.path` stay None for a real write, and a
+    handler written as `"SECRET" in (event.content or "")` will not fire here.
+
+    `new_string`, `new_str` and `edits` used to be read alongside them. That was Claude
+    Code's MultiEdit vocabulary copied across on the assumption Codex shared it; Codex has
+    no such tool, and no payload has ever carried those keys. Removed rather than left to
+    imply a coverage this adapter does not have. `content`/`file_path`/`path` are kept only
+    as a generic fallback for MCP tools, whose tool_input this capture did not exercise.
+    """
     ti = raw.get("tool_input") or {}
     if not isinstance(ti, dict):
         ti = {}
-    content = ti.get("content") or ti.get("new_string") or ti.get("new_str")
-    if content is None and isinstance(ti.get("edits"), list):
-        content = "\n".join(str(e.get("new_string", "")) for e in ti["edits"]) or None
+    content = ti.get("content")
     return Event(
         AGENT,
         # An event this adapter has no mapping for resolves to UNKNOWN, never to the

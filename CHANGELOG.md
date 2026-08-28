@@ -7,6 +7,30 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **What Codex actually sends, from the first live capture of it (36 payloads, 2026-08-28)**
+  -- two claims corrected against real traffic rather than inference.
+  (1) *The write vocabulary was fiction.* `parse()` read `file_path`, `content`,
+  `new_string`, `new_str` and `edits` -- Claude Code's write vocabulary, copied across on the
+  assumption Codex shared it. The capture saw exactly two tool names, `Bash` and
+  `apply_patch`, and **both carry only `tool_input.command`**. `apply_patch` is the
+  file-writing tool and the patch text rides inside that command string, so `event.path` and
+  `event.content` are `None` on every real Codex write: a handler written as
+  `"SECRET" in (event.content or "")` never fires here, and a content policy has to gate on
+  `event.command` instead. `new_string`/`new_str`/`edits` are removed (Codex has no MultiEdit
+  and no payload ever carried them); `content`/`file_path`/`path` stay only as a generic
+  fallback for MCP tools, which this capture did not exercise. The `CX_WRITE` fixture was an
+  invented `Write` + `{file_path, content}` shape and is replaced with the captured
+  `apply_patch` one.
+  (2) *A real Codex `SessionStart` was claimed by claude_code.* Codex stamps `turn_id` on
+  every mapped event except `SessionStart`, which is not turn-scoped --
+  `SessionStartCommandInput` is `deny_unknown_fields` and defines exactly `session_id`,
+  `transcript_path`, `cwd`, `hook_event_name`, `model`, `permission_mode`, `source`, every
+  one of which Claude Code also sends. `claims()` required `turn_id`, so codex_cli rejected
+  its own payload and claude_code claimed it alone: `detect()` answered confidently in the
+  wrong dialect, which Codex rejects and therefore fails open. codex_cli now claims that
+  shape too, making `detect()` decline as ambiguous -- the same posture tabnine and
+  gemini_cli already take, and the honest one when two vendors are genuinely
+  indistinguishable. A consumer resolves it by naming the agent.
 - **Codex CLI hooks never ran on Windows, and their responses were rejected everywhere
   else** -- both found by finally getting a live capture out of a real Codex CLI 0.150.1
   install, and both fixed against the vendor's own source rather than inference.

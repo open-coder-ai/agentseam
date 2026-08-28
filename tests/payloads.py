@@ -8,7 +8,7 @@ so they live in one place rather than being re-typed per file.
   cursor          vendor hook example repo (hooks.json + scripts + fixtures)
   vscode_copilot  microsoft/vscode source: memoryTool.tsx, hookCommandTypes.ts
   gemini_cli      vendor docs/hooks/reference.md
-  codex_cli       vendor source: codex-rs/hooks/src/schema.rs (PreToolUseCommandInput)
+  codex_cli       live run against Codex CLI 0.150.1 (Windows), plus codex-rs schema.rs
 """
 
 CC_BASH = {"hook_event_name": "PreToolUse", "tool_name": "Bash", "tool_input": {"command": "rm -rf /"}}
@@ -81,6 +81,8 @@ CX_SHELL = {
 }
 
 
+# A Codex write, captured live (2026-08-28): apply_patch, patch inside `command`, no
+# file_path and no content. Replaces an invented `Write` + {file_path, content}.
 CX_WRITE = {
     "hook_event_name": "PreToolUse",
     "session_id": "cx1",
@@ -89,14 +91,12 @@ CX_WRITE = {
     "cwd": "/repo",
     "model": "gpt-5-codex",
     "permission_mode": "auto",
-    "tool_name": "Write",
-    "tool_input": {"file_path": "AGENTS.md", "content": "team fact"},
+    "tool_name": "apply_patch",
+    "tool_input": {"command": "apply_patch <<'EOF'\n*** Update File: AGENTS.md\n+team fact\nEOF"},
     "tool_use_id": "tu-1",
 }
 
 
-# Captured live from Codex CLI 0.150.1 (Windows, 2026-08-28), redacted by the probe: the KEYS
-# are the finding. turn_id is the only observed separator from Claude Code -- see codex_cli.py.
 CX_LIVE_PROMPT_SUBMIT = {
     "cwd": "<str:35>",
     "hook_event_name": "UserPromptSubmit",
