@@ -35,11 +35,14 @@ EVIDENCE = {
             "both, and hookSpecificOutput.permissionDecision -- the shape this adapter had "
             "always emitted there -- as ignored at both. The official hooks reference could "
             "not settle it: two reads of the same page disagreed, and one said those events "
-            "had no JSON decision control at all."
+            "had no JSON decision control at all. pre_tool was checked in the same round and does "
+            "honour permissionDecision, so the three blocking events this row claims are now "
+            "each backed by an observation rather than by inference from the other two."
         ),
-        # Response contract verified at these canonical events only. pre_tool keeps its
-        # established permissionDecision contract and was NOT part of the experiment.
-        "observed": ("prompt_submit", "stop"),
+        # Canonical events whose RESPONSE contract was verified in that round. pre_tool is
+        # included: permissionDecision blocked a Write there outright, and the agent's next
+        # Bash call too, so it is established rather than inherited from documentation.
+        "observed": ("pre_tool", "prompt_submit", "stop"),
     },
     "codex_cli": {
         "basis": BASIS_LIVE_PARTIAL,

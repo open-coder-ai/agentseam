@@ -39,6 +39,7 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   |---|---|---|---|
   | `UserPromptSubmit` | honoured | **ignored** | honoured |
   | `Stop` | honoured | **ignored** | honoured |
+  | `PreToolUse` | — | **honoured** | — |
 
   So the handler refused, the dispatcher reported a block, and the prompt reached the model
   anyway — on the most-used adapter in the matrix. The verdicts come from the agent's own
@@ -50,9 +51,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   with `ask` and `rewrite` degrading to a block that names the degradation. `exit 2` works
   at both and is deliberately not used — it collapses to 1 under the PowerShell wrapper some
   vendors apply (which is what made the exit-code path useless on Codex/Windows) and it
-  leaks the hook's full command line into the UI. `pre_tool` keeps `permissionDecision`, its
-  established contract and not part of this experiment; the observation-only events now get
-  silence instead of a verdict nothing read.
+  leaks the hook's full command line into the UI. `pre_tool` keeps `permissionDecision`, and that
+  was checked in the same round rather than assumed — a deny there blocked the `Write`
+  outright, and the agent's next `Bash` call too. So all three blocking events this row
+  claims now rest on an observation rather than on inference from the other two. The
+  observation-only events get silence instead of a verdict nothing read.
 
   Documentation could not settle this. Two reads of the vendor's own hooks page disagreed,
   and one of them said these events had no JSON decision control at all — which is why the

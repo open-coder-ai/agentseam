@@ -178,6 +178,7 @@ def respond(decision, event):
         event             {"decision": "block"}   hookSpecificOutput   exit 2
         UserPromptSubmit  honoured                IGNORED              honoured
         Stop              honoured                IGNORED              honoured
+        PreToolUse        --                      honoured             --
 
     So every prompt_submit and stop deny this library has ever produced on its most-used
     adapter was silently discarded: the handler refused, the dispatcher reported a block,
@@ -191,9 +192,11 @@ def respond(decision, event):
     Codex/Windows), and it leaks the full hook command line into the UI where the JSON form
     does not. The JSON block also carries the reason into the model's context.
 
-    pre_tool keeps hookSpecificOutput.permissionDecision, which is its established contract
-    and was not part of this experiment. Everything else is observation-only in this row and
-    gets silence -- a verdict there was never read.
+    pre_tool keeps hookSpecificOutput.permissionDecision, and that was verified in the same
+    round rather than assumed: a deny there blocked the Write outright, and the agent's next
+    Bash call too, so the gate fires for every tool. It must keep this shape in any case --
+    it is the only one carrying updatedInput, which rewrite depends on. Everything else is
+    observation-only in this row and gets silence: a verdict there was never read.
     """
     import json as _json
 
