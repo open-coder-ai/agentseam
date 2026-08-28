@@ -6,6 +6,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- Codex CLI's evidence record now says `live-run-partial` rather than `vendor-source`: two
+  live sessions (Codex CLI 0.150.1, Windows, 74 payloads) claimed by this adapter, with
+  `observed` naming the five canonical events actually seen fire and the row's other four
+  still resting on source. The old record also cited
+  `app-server-protocol/.../HookEventName.ts`, which is dropped and called out by name --
+  that file is a ts-rs binding for the App Server's IDE-facing protocol, not the CLI hook
+  dialect this adapter speaks, and citing it is precisely what put camelCase event names in
+  this adapter for as long as it existed.
+
 ### Fixed
 - **What Codex actually sends, from the first live capture of it (36 payloads, 2026-08-28)**
   -- two claims corrected against real traffic rather than inference.
