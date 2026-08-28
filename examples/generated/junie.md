@@ -175,7 +175,7 @@ event    = prompt_submit
 A `Decision.deny()` here produces:
 
 ```json
-{"decision": "deny", "reason": "policy violation"}
+{"decision": "block", "reason": "policy violation"}
 ```
 
 Exit code: `0`
@@ -222,7 +222,7 @@ Exit code: `0`
 **`Decision.deny()`** — the handler refuses
 
 ```json
-{"decision": "deny", "reason": "secret detected in file content"}
+{"decision": "block", "reason": "secret detected in file content"}
 ```
 
 Exit code: `0`

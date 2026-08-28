@@ -132,10 +132,16 @@ def respond(decision, event):
     if decision.outcome == ASK:
         return _json.dumps({"decision": "ask", "reason": decision.reason or "confirmation required"}), 0
     if decision.outcome in (DENY, REWRITE):
+        # "block", not "deny". This adapter's own docstring and its matrix note both record
+        # Junie's gate vocabulary as allow/ask/block, and the Stop branch above already
+        # spells it that way -- only this branch said "deny", a word nothing in this
+        # repository records Junie as accepting. Junie fails OPEN (non-zero exits other
+        # than 2 are warnings and execution proceeds), so an unrecognised decision value at
+        # the strongest gate in the matrix is not a louder refusal, it is no refusal.
         reason = decision.reason
         if decision.outcome == REWRITE:
             reason = "%s (no replacement input was supplied)" % (reason or "input requires modification")
-        return _json.dumps({"decision": "deny", "reason": reason or "blocked by policy"}), 0
+        return _json.dumps({"decision": "block", "reason": reason or "blocked by policy"}), 0
 
     # An explicit allow, deliberately: on PermissionRequest an empty success already
     # approves and skips the user's dialog, so silence here would be a decision too.

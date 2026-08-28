@@ -30,6 +30,35 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this adapter for as long as it existed.
 
 ### Fixed
+- **Junie's gate emitted a decision word the vendor does not accept.** `respond()` returned
+  `{"decision": "deny"}` at `PreToolUse`, `UserPromptSubmit` and `PermissionRequest`. Both
+  places this repository records Junie's gate vocabulary — the adapter's own module
+  docstring and its matrix note — give it as **allow / ask / block**, and `respond()`'s own
+  `Stop` branch already spelled it `block`; only the permission branch said `deny`, a value
+  nothing here records Junie as understanding. Junie **fails open** (non-zero exits other
+  than 2 are warnings and execution proceeds), so an unrecognised decision value at the
+  strongest gate in the matrix is not a louder refusal — it is no refusal at all, and every
+  deny and every degraded rewrite went through. `ask` was already correct and is unchanged.
+  The tests that pinned `deny` were pinning the bug, including one named
+  `test_block_and_ask_are_native`.
+
+- **The capture probe answered in the wrong agent's dialect, and that blocks work.** The
+  probe chose its response dialect from `sys.argv[1]` — the label it was *installed* under
+  — rather than from the payload in front of it. Cursor loads Claude Code-format hooks as
+  well as its own (confirmed live 2026-08-27: with both `.cursor/hooks.json` and
+  `.claude/settings.json` present, every event fired **twice**, once per config), so a
+  probe installed as `claude_code` really does receive Cursor's own `preToolUse` payload —
+  and answered it with `hookSpecificOutput`, which Cursor does not read. That is
+  indistinguishable from silence, and this probe's own source already records that silence
+  at a Cursor permission gate is treated as a **refusal** and blocks the user's real
+  command (witnessed live on Windows, where it blocked the very command reading the capture
+  report). The responding adapter is now chosen by `adapters.detect(payload)`; `argv` still
+  attributes the *record*, which is how the double-fire was spotted in the first place. Two
+  guards on the fallback: when `detect()` declines on a genuine tie (tabnine/gemini_cli
+  share an envelope by design) the argv label is used only if that adapter actually
+  `claims()` the payload, and an event resolving to `UNKNOWN` is never answered at all —
+  there is no recorded output contract for an event we cannot name.
+
 - **Cursor's read gate dropped the file text it was handed.** `beforeReadFile` (and
   `beforeTabFileRead`) put the file's contents at the top level of the payload, with no
   `tool_input` and no `edits` — the shape `tests/payloads.py`'s own committed `CU_READ`

@@ -49,11 +49,17 @@ def test_multiedit_and_notebookedit_content_reach_a_content_policy():
 @pytest.mark.parametrize(
     "decision,expected",
     [
-        (lambda: Decision.deny("secret detected"), {"decision": "deny", "reason": "secret detected"}),
+        (lambda: Decision.deny("secret detected"), {"decision": "block", "reason": "secret detected"}),
         (lambda: Decision.ask("confirm?"), {"decision": "ask", "reason": "confirm?"}),
     ],
 )
 def test_block_and_ask_are_native(decision, expected):
+    """The blocking word is `block`. This test asserted `deny` until 2026-08-28, pinning a
+    value nothing in this repository records Junie as accepting: the module docstring and
+    the matrix note both give the vocabulary as allow/ask/block, and respond()'s own Stop
+    branch already spelled it that way. Junie fails OPEN, so an unrecognised decision value
+    at the strongest gate in the matrix is not a louder refusal -- it is no refusal.
+    """
     text, code, _e, final = A.handle(_pre(), lambda e: decision(), agent="junie")
     assert json.loads(text) == expected
     assert code == 0
@@ -74,7 +80,7 @@ def test_rewrite_is_native_and_carries_updated_input():
 def test_a_rewrite_without_replacement_input_denies_rather_than_allowing():
     """Emitting `allow` with no updatedInput would let the original through unchanged."""
     body = json.loads(A.handle(_pre(), lambda e: Decision.rewrite(None, "needs redaction"), agent="junie")[0])
-    assert body["decision"] == "deny"
+    assert body["decision"] == "block"
     assert "no replacement input" in body["reason"]
 
 
@@ -87,7 +93,7 @@ def test_permission_request_is_answered_explicitly_because_silence_approves():
     assert event.event == A.PRE_TOOL
     assert json.loads(text)["decision"] == "allow"
     assert code == 0
-    assert json.loads(A.handle(raw, lambda e: Decision.deny("no"), agent="junie")[0])["decision"] == "deny"
+    assert json.loads(A.handle(raw, lambda e: Decision.deny("no"), agent="junie")[0])["decision"] == "block"
 
 
 def test_permission_request_is_not_bundled_into_a_pre_tool_install():
