@@ -86,10 +86,20 @@ ALLOW_SEMANTICS = {
     "cursor": (
         ALLOW_REQUIRED,
         "Witnessed live (Cursor 3.17.8, Windows, 2026-08-27): a beforeShellExecution hook that "
-        "produced no stdout caused the tool call to be REJECTED. An empty response is not an "
-        "allow on this vendor, so a hook wired here must answer in-dialect or it blocks the "
-        'user\'s work. Whether `permission: "allow"` also skips a confirmation is unestablished '
-        "-- but silence is not the safer option here, it is the broken one.",
+        "produced no stdout caused the tool call to be REJECTED -- the blocked command was the "
+        "one trying to read the capture report, so a user watched it happen. What that does NOT "
+        "settle is why, and the note recording it read the cause off the wrong half. "
+        "hook_config() set failClosed:true on every permission gate at the time and the probe "
+        "had no way to opt out; fail_closed arrived later. Cursor's documented default is "
+        "fail-OPEN, so two readings survive: (a) an empty response is not an allow at all, or "
+        "(b) an empty response is a hook ERROR, which refuses only because we asked that gate "
+        "to fail closed. A sibling guardrail installs the same event with no failClosed and does "
+        "not block the commands it allows, which is evidence for (b). REQUIRED either way while "
+        "these gates install fail-closed by default: under (a) silence never allows, under (b) "
+        "it allows only where the operator turned the gate's own protection off. Distinguishing "
+        "them is a one-line live test -- a beforeShellExecution hook that does nothing but exit "
+        "0, installed WITHOUT failClosed, against one shell command -- and worth running: (b) "
+        "moves this row to SILENT and makes Cursor consistent with everything else here.",
     ),
     "junie": (
         ALLOW_REQUIRED,

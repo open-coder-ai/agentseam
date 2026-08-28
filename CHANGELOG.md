@@ -6,6 +6,20 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **The Cursor "silence blocks" note recorded the wrong cause.** A `beforeShellExecution`
+  hook that produced no stdout was witnessed rejecting a real command, and that observation
+  stands -- but the hook carried `failClosed: true`, which `hook_config()` set on every
+  permission gate at the time with no way to opt out (`fail_closed` arrived later, in #60).
+  Cursor's documented default is fail-*open*, so "an empty response is not an allow" was
+  only one of two readings; the other is that an empty response is a hook *error*, refused
+  only because that gate had been asked to fail closed. A sibling guardrail installs the
+  same event without `failClosed` and does not block the commands it allows, which favours
+  the second. `cursor` stays `required` -- agentseam installs these gates fail-closed by
+  default, so silence is not safe under its own installs either way -- but the note and the
+  `allow_semantics` row now carry both readings and the one-line live test that separates
+  them. If it comes back the second way, Cursor moves to `silent` and joins the rest.
+
 ### Changed
 - **A bare `ALLOW` now means the vendor's default, and every adapter records which spelling
   that is.** `ALLOW` says one thing -- "this handler has no objection" -- and adapters were
