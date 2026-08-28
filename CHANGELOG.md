@@ -7,6 +7,33 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **Codex CLI hooks never ran on Windows, and their responses were rejected everywhere
+  else** -- both found by finally getting a live capture out of a real Codex CLI 0.150.1
+  install, and both fixed against the vendor's own source rather than inference.
+  (1) *Nothing executed on Windows.* Codex runs hook commands through PowerShell there,
+  where a command line beginning with a quoted path (`"C:\...\python.exe" "script.py"`) is
+  parsed as a string expression, not an invocation -- a parse error, so the hook never ran.
+  Every event failed with a bare "hook exited with code 1", and appending `> file 2>&1` to
+  the command produced no file at all, which is what proved the line never reached
+  execution. `install()` now also emits Codex's own `commandWindows` override
+  (`HookHandlerConfig::Command` in `config/src/hook_config.rs`, preferred over `command` on
+  Windows at `discovery.rs:512`) carrying the `&` call operator. That keeps `command` as the
+  exact interpreter that installed the hook, rather than trading a verified path for a bare
+  `python3` and hoping PATH resolves it.
+  (2) *Responses were invalid at every event except a denied pre_tool.* `respond()` sent the
+  PreToolUse `hookSpecificOutput.permissionDecision` shape everywhere, but each per-event
+  output struct in `hooks/src/schema.rs` is `#[serde(deny_unknown_fields)]`: a key that event
+  does not define does not get ignored, it makes Codex reject the entire response. Witnessed
+  live as "hook returned invalid user prompt submit JSON output" on every single prompt.
+  `respond()` is now event-aware, matching the matrix row and the vendor structs: `pre_tool`
+  keeps the permissionDecision gate; `prompt_submit` and `stop` use the top-level
+  `{"decision": "block", "reason": ...}` their structs actually define; the observation-only
+  events define no verdict field and now stay silent. A bare allow is silence everywhere too
+  -- `output_parser.rs` rejects `permissionDecision: "allow"` unless it carries
+  `updatedInput`, and a rejected response is a hook error, which fails OPEN. The first real
+  Codex payload this project has ever held is recorded as a fixture; it confirmed the
+  PascalCase event names live and showed `permission_mode`/`transcript_path` are shared with
+  Claude Code, leaving `turn_id` as the only observed discriminator.
 - **Codex CLI's event names were the wrong casing everywhere: config file, outgoing
   response, and incoming-payload detection.** `codex_cli.py` believed Codex's hook events
   were camelCase ("preToolUse"), sourced from a `HookEventName.ts` binding that turns out to

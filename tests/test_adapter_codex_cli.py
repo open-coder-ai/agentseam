@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from payloads import CC_WRITE, CX_SHELL, CX_WRITE  # noqa: E402
+from payloads import CC_WRITE, CX_LIVE_PROMPT_SUBMIT, CX_SHELL, CX_WRITE  # noqa: E402
 
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
@@ -48,8 +48,16 @@ def test_codex_echoes_pascalcase_event_name():
     """hook_config.rs's HookEventsToml and schema.rs's HookEventNameWire both use
     PascalCase, matching Claude Code's own convention -- not the camelCase this adapter
     used to assume (sourced from the App Server's separate IDE-facing protocol)."""
-    text, _, _, _ = A.handle(CX_WRITE, allow_all)
+    text, _, _, _ = A.handle(CX_WRITE, deny_all)
     assert json.loads(text)["hookSpecificOutput"]["hookEventName"] == "PreToolUse"
+
+
+def test_a_bare_allow_is_silence_because_codex_rejects_permissiondecision_allow():
+    """output_parser.rs rejects permissionDecision:allow unless it carries updatedInput
+    ("returned unsupported permissionDecision:allow"), and a rejected response is a hook
+    error -- which fails OPEN. Silence is the only spelling of allow Codex accepts."""
+    text, code, _, _ = A.handle(CX_WRITE, allow_all)
+    assert text == "" and code == 0
 
 
 def test_codex_degrades_ask_to_deny_because_the_vendor_rejects_it():
@@ -83,7 +91,53 @@ def test_codex_hook_config_uses_matcher_group_shape():
     its twelve #[serde(rename = "PreToolUse")]-style keys and has no deny_unknown_fields,
     so a wrong-cased key like "preToolUse" is silently dropped -- the file parses fine and
     Codex loads zero hooks from it, no warning, no error."""
-    cfg = A.adapters.get("codex_cli").hook_config([A.PRE_TOOL], "handler", matcher="Write")
+    cfg = A.adapters.get("codex_cli").hook_config([A.PRE_TOOL], '"C:\\py.exe" "guard.py"', matcher="Write")
     entry = cfg["hooks"]["PreToolUse"][0]
     assert entry["matcher"] == "Write"
-    assert entry["hooks"][0] == {"type": "command", "command": "handler"}
+    assert entry["hooks"][0] == {
+        "type": "command",
+        "command": '"C:\\py.exe" "guard.py"',
+        "commandWindows": '& "C:\\py.exe" "guard.py"',
+    }
+
+
+def test_windows_gets_a_powershell_callable_command():
+    """Codex runs hooks through PowerShell on Windows, where a line beginning with a quoted
+    path is a string expression, not an invocation -- a parse error, so nothing runs.
+    Witnessed live (Codex CLI 0.150.1, 2026-08-28): the quoted form failed with "hook exited
+    with code 1" and a `> file 2>&1` redirect on it produced no file at all; `&` fixed it.
+    """
+    mod = A.adapters.get("codex_cli")
+    assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli'
+    # Already callable: not doubled up.
+    assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"'
+
+
+def test_prompt_submit_uses_the_block_dialect_not_the_pretooluse_gate():
+    """UserPromptSubmitCommandOutputWire has `decision: BlockDecisionWire` and NO
+    permissionDecision field, and every output struct is #[serde(deny_unknown_fields)] --
+    so the gate shape is not ignored there, it makes Codex reject the whole response.
+    Witnessed live: "hook returned invalid user prompt submit JSON output" on every prompt.
+    """
+    text, code, event, _ = A.handle(CX_LIVE_PROMPT_SUBMIT, deny_all)
+    assert event.event == A.PROMPT_SUBMIT
+    assert json.loads(text) == {"decision": "block", "reason": "test-deny"}
+    assert code == 0
+
+    # An allow at prompt_submit says nothing at all rather than a shape Codex would reject.
+    assert A.handle(CX_LIVE_PROMPT_SUBMIT, allow_all)[0] == ""
+
+
+def test_observation_only_events_stay_silent():
+    """SessionStart accepts additionalContext but no decision, and SessionEnd has no output
+    struct at all -- a verdict there is rejected, not merely ignored."""
+    start = dict(CX_LIVE_PROMPT_SUBMIT, hook_event_name="SessionStart")
+    assert A.handle(start, deny_all)[0] == ""
+
+
+def test_the_real_captured_payload_resolves_to_codex_alone():
+    """Captured live from Codex CLI 0.150.1 (2026-08-28). Claude Code sends permission_mode
+    and transcript_path too, so turn_id is what actually separates them."""
+    assert A.adapters.detect(CX_LIVE_PROMPT_SUBMIT) == "codex_cli"
+    event = A.adapters.get("codex_cli").parse(CX_LIVE_PROMPT_SUBMIT)
+    assert event.event == A.PROMPT_SUBMIT and event.prompt == "<str:4>"

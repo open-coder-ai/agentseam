@@ -116,47 +116,120 @@ def _because(reason, note):
     return "%s (%s)" % (reason, note) if reason else note
 
 
-def respond(decision, event):
-    """Always exit 0 and carry the verdict in JSON.
+#: The two events whose refusal is a top-level {"decision": "block", "reason": ...} rather
+#: than the PreToolUse permissionDecision gate. Their output structs
+#: (UserPromptSubmitCommandOutputWire, StopCommandOutputWire) carry `decision:
+#: BlockDecisionWire` -- whose ONLY value is "block" -- and no permissionDecision field at
+#: all. Matches the matrix row: pre_tool, prompt_submit and stop are the blocking events.
+_BLOCK_DIALECT_EVENTS = (PROMPT_SUBMIT, STOP)
 
-    Codex wraps hook commands in `powershell -Command` on Windows, which collapses
-    exit 2 into exit 1 -- so an exit-code deny is silently downgraded to "the hook
-    errored" on one platform. The JSON decision is the only representation that means
-    the same thing everywhere.
+
+def respond(decision, event):
+    """Always exit 0 and carry the verdict in JSON, in the dialect THIS event accepts.
+
+    Codex wraps hook commands in `powershell -Command` on Windows, which collapses exit 2
+    into exit 1 -- so an exit-code deny is silently downgraded to "the hook errored" on one
+    platform. The JSON decision is the only representation that means the same thing
+    everywhere.
+
+    Every per-event output struct in hooks/src/schema.rs is `#[serde(deny_unknown_fields)]`,
+    so a key that event does not define is not ignored: Codex rejects the whole response.
+    Witnessed live (Codex CLI 0.150.1, 2026-08-28): sending the PreToolUse
+    permissionDecision shape at UserPromptSubmit produced "hook returned invalid user prompt
+    submit JSON output" on every prompt. Three dialects, one per group of events:
+
+      * PRE_TOOL -- hookSpecificOutput.permissionDecision (deny, or allow WITH updatedInput)
+      * PROMPT_SUBMIT / STOP -- top-level {"decision": "block", "reason": ...}
+      * everything else -- no decision surface exists, so silence
+
+    A bare allow is silence everywhere, including at PRE_TOOL: output_parser.rs's
+    `unsupported_pre_tool_use_hook_specific_output` rejects permissionDecision:allow unless
+    it carries updatedInput, and a rejected response is a hook error, which fails OPEN. An
+    empty stdout is how this adapter says "no opinion", and it is the only spelling of allow
+    Codex accepts at every event.
     """
     import json as _json
 
-    out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
-    if decision.outcome == DENY:
-        out["permissionDecision"] = "deny"
-        out["permissionDecisionReason"] = decision.reason or "blocked"
-    elif decision.outcome == ASK:
-        # Not a degradation of our own contract: Codex's own PreToolUse output parser
-        # rejects permissionDecision:ask as an invalid hook response (unsupported), which
-        # Codex then treats as a hook error -- and hook errors fail OPEN. Emitting "ask"
-        # here would silently let through exactly what the handler wanted confirmed.
-        out["permissionDecision"] = "deny"
-        out["permissionDecisionReason"] = _because(
-            decision.reason, "Codex CLI does not support ask; asking would fail open"
-        )
-    elif decision.outcome == REWRITE:
+    if event.event == PRE_TOOL:
+        return _pre_tool_response(decision)
+    if event.event in _BLOCK_DIALECT_EVENTS:
+        if decision.outcome in (DENY, ASK, REWRITE):
+            return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
+        return "", 0
+    # Observation-only events. Codex defines no decision field for them (SessionEnd has no
+    # output struct at all), so a verdict here would be rejected, not merely ignored.
+    return "", 0
+
+
+def _refusal_reason(decision):
+    """The reason text for a refusal, annotated when the decision had to be degraded."""
+    if decision.outcome == ASK:
+        return _because(decision.reason, "Codex CLI cannot prompt for confirmation at this event")
+    if decision.outcome == REWRITE:
+        return _because(decision.reason, "Codex CLI cannot modify a tool call at this event")
+    return decision.reason or "blocked by policy"
+
+
+def _pre_tool_response(decision):
+    """The permissionDecision gate, the one place Codex reads a permission verdict."""
+    import json as _json
+
+    out = {"hookEventName": "PreToolUse"}
+    if decision.outcome == REWRITE and decision.updated_input is not None:
+        # The only accepted spelling of allow: it must carry updatedInput.
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
         if decision.reason:
             out["permissionDecisionReason"] = decision.reason
+    elif decision.outcome in (DENY, ASK, REWRITE):
+        # ASK is rejected by Codex's own parser as an unsupported permissionDecision, and a
+        # rejected response fails OPEN -- so asking would silently permit the very call the
+        # handler wanted confirmed. A REWRITE with nothing to substitute is the same story.
+        out["permissionDecision"] = "deny"
+        note = None
+        if decision.outcome == ASK:
+            note = "Codex CLI does not support ask; asking would fail open"
+        elif decision.outcome == REWRITE:
+            note = "Codex CLI cannot apply a rewrite with no updatedInput"
+        out["permissionDecisionReason"] = _because(decision.reason, note) if note else (decision.reason or "blocked")
     else:
-        out["permissionDecision"] = "allow"
+        return "", 0  # allow: silence, since permissionDecision:allow alone is rejected
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
+def powershell_command(command):
+    """`command` rewritten so PowerShell will actually run it.
+
+    On Windows Codex runs hook commands through PowerShell. There, a command line that
+    BEGINS with a quoted path is parsed as a string expression, not an invocation -- and a
+    bare string followed by more arguments is a parse error, so nothing runs at all. `&` is
+    PowerShell's call operator, and it makes a quoted path executable.
+
+    Witnessed live (Codex CLI 0.150.1, Windows, 2026-08-28): the quoted form failed with
+    "hook exited with code 1" on every event, and a `> file 2>&1` redirect appended to it
+    produced NO file -- proof the line never reached execution, since PowerShell sets up
+    redirection only for a command it could parse. Prefixing `&` ran the hook immediately.
+    The same session showed chock's hook working with a bare `python3 "..."`, which parses
+    in command mode; that is the difference, not the interpreter.
+    """
+    return command if command.lstrip().startswith("&") else "& " + command
+
+
 def hook_config(canonical_events, command, matcher=None):
-    """ConfiguredHookMatcherGroup shape: {matcher, hooks: [{type: command, ...}]}."""
+    """ConfiguredHookMatcherGroup shape: {matcher, hooks: [{type: command, ...}]}.
+
+    `commandWindows` is Codex's own per-platform override (HookHandlerConfig::Command in
+    config/src/hook_config.rs; discovery.rs prefers it over `command` when cfg!(windows)).
+    Using it keeps `command` as the POSIX form -- the exact interpreter that installed the
+    hook, quoted -- while Windows gets the PowerShell-callable spelling, rather than trading
+    a verified interpreter path for a bare `python3` and hoping PATH resolves it.
+    """
     hooks = {}
     for ev in canonical_events:
         name = REVERSE_EVENT_MAP.get(ev)
         if not name:
             continue
-        entry = {"hooks": [{"type": "command", "command": command}]}
+        entry = {"hooks": [{"type": "command", "command": command, "commandWindows": powershell_command(command)}]}
         if matcher:
             entry["matcher"] = matcher
         hooks.setdefault(name, []).append(entry)
