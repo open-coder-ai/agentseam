@@ -30,6 +30,18 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   this adapter for as long as it existed.
 
 ### Fixed
+- **Junie's gate emitted a decision word the vendor does not accept.** `respond()` returned
+  `{"decision": "deny"}` at `PreToolUse`, `UserPromptSubmit` and `PermissionRequest`. Both
+  places this repository records Junie's gate vocabulary — the adapter's own module
+  docstring and its matrix note — give it as **allow / ask / block**, and `respond()`'s own
+  `Stop` branch already spelled it `block`; only the permission branch said `deny`, a value
+  nothing here records Junie as understanding. Junie **fails open** (non-zero exits other
+  than 2 are warnings and execution proceeds), so an unrecognised decision value at the
+  strongest gate in the matrix is not a louder refusal — it is no refusal at all, and every
+  deny and every degraded rewrite went through. `ask` was already correct and is unchanged.
+  The tests that pinned `deny` were pinning the bug, including one named
+  `test_block_and_ask_are_native`.
+
 - **The capture probe answered in the wrong agent's dialect, and that blocks work.** The
   probe chose its response dialect from `sys.argv[1]` — the label it was *installed* under
   — rather than from the payload in front of it. Cursor loads Claude Code-format hooks as
