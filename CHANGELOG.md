@@ -997,4 +997,64 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   of published docs and not of a running instance.
 - Examples: cross-agent event log, cross-agent notifier.
 
+### Added
+- **The single-file bundler**, resolving the chock migration's GATING risk #3: a consumer
+  vendoring a PreToolUse/SessionStart runner into an adopter repo needs a self-contained,
+  stdlib-only file with no `import agentseam`, because that repo may never install this
+  package at all. `bundler.bundle(agent) -> str` renders exactly that -- `contract.py` plus
+  the named adapter, plus whatever it transitively needs (`gemini_cli` and `devin` both
+  borrow `claude_code.looks_like_claude_code` for payload-envelope disambiguation;
+  `codex_cli` and `vscode_copilot` need the shared `_windows.powershell_command` helper) --
+  composed at the source level with `ast`, so a bundle can never drift from the adapter it
+  was built from. Deterministic: the same `(agent, agentseam version)` always renders
+  identical bytes, since every input is source text this package ships; the version is
+  stamped in the header, as bytes, never a timestamp. The consumer hook point is a fenced
+  `handle(event)` stub -- marker-delimited the same way `install.py`'s own block is -- that
+  raises `NotImplementedError` until filled in, so an unmodified vendored file fails loudly
+  rather than quietly behaving like an always-allow guard; everything around it (normalize
+  stdin, degrade a decision to what this one agent can honor, speak its dialect) is
+  agentseam's, following R1's scope discipline. Proven rather than asserted:
+  `tests/test_bundler_subprocess.py` execs every supported agent's bundle as a real
+  subprocess with agentseam **not importable** (`python -S`, which skips `site` entirely)
+  against the same per-agent, per-event fixtures the adapter suite itself is built from,
+  across four decision outcomes each, and asserts byte-identical output against the real
+  installed adapter's own `dispatch.handle()`.
+- **Opt-in content-comparison install identity.** `install()`/`installed()` tracked hook
+  entry identity by marker presence alone, with unconditional overwrite-on-reinstall -- right
+  for a single-command consumer, but wrong for one that independently toggles per-guard
+  coverage claims (chock's `installed_pretooluse_policy_ids` is the motivating case, per a
+  real historical bug documented in its own docstring: a stale hook whose guard changed kept
+  reading as "enforced" because presence says "we wrote this," not "what we wrote still
+  matches what we'd write today"). `installed()` now takes the same `events`/`command`/
+  `matcher`/`fail_closed` arguments `install()` would use to render the fragment right now;
+  passing them opts into comparing the INSTALLED bytes against the CURRENTLY-COMPILED ones,
+  and a changed fragment reads as not-installed until `install()` re-syncs it. Omitting them
+  keeps the exact default (marker-presence) behavior for every existing caller.
+  `install.py` split into `install_config.py` (shared config I/O) and `install_identity.py`
+  (the query) to stay under the file-size budget; the public surface is unchanged.
+- **`ContentRule`: a deny on content matching a regex**, distinct from `Rule`'s tool-invocation
+  model -- the shape chock's `scan-secrets` managed-setting fragment needs
+  (`{"type": "file"|"text", "pattern": <regex>, "message": ...}`). `permissions.plan()` now
+  accepts a mix of `Rule` and `ContentRule`, rendering and merging each on its own path. The
+  honesty gate here produced a finding, not an assumption honored: verified directly against
+  each vendor (2026-08-29) rather than taken on request, **no permission surface recorded in
+  this project reads content** -- each matches a tool name, a command prefix, or a path glob.
+  Claude Code looked like the one plausible candidate; a native content-pattern permission
+  rule was requested there and closed **"not planned"** upstream
+  (anthropics/claude-code#37509). The real mechanism for content-based denial on every agent
+  here is a consumer-authored hook that inspects the payload itself (`agentseam.install`/
+  `dispatch`) -- a different primitive, not a permissions rule. So every agent refuses every
+  `ContentRule` today, each with its own evidenced reason rather than one blanket message;
+  rendering into even the closest-looking vendor config would produce a fragment that reads
+  like a content policy and enforces nothing, exactly the overclaim `plan()` exists to
+  prevent. `render_content_rules()` returns `{}` unconditionally for now -- the mechanism
+  (and the merge path in `plan()`) is real and ready for a per-vendor renderer once one is
+  verified.
+
+### Known limitations at this release
+- **No agent has a real content-pattern permission renderer.** `ContentRule` is a real,
+  useful primitive; every vendor recorded here refuses it today because none of their config
+  surfaces read content bytes (see above). A consumer needing content-based denial today
+  should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
+
 [Unreleased]: https://github.com/open-coder-ai/agentseam/commits/main
