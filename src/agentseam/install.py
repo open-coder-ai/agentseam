@@ -1,8 +1,8 @@
 """Idempotent hook wiring: write our fragment into an agent's config, leave a witness.
 
-Ownership discipline (borrowed from chock, which learned it the hard way): every entry
-we add is marked, so uninstall removes exactly ours and never a user's own hooks, and a
-re-install replaces rather than duplicates.
+Ownership discipline (learned the hard way by a sibling policy engine that shipped this
+pattern first): every entry we add is marked, so uninstall removes exactly ours and never
+a user's own hooks, and a re-install replaces rather than duplicates.
 """
 
 from __future__ import annotations
@@ -92,7 +92,8 @@ def _mark(obj, owner):
     every hook in the file -- the whole file failed to load, not just our entry. A
     known-independently vendor bug, not a one-off: openai/codex#30397 documents Codex < 0.143.0
     rejecting the entire hooks file over an unexpected top-level `description` key the exact
-    same way (fixed in #30229), which is why chock's own Codex emitter never writes one either.
+    same way (fixed in #30229), which is why a sibling policy engine's own Codex emitter
+    never writes one either.
     """
     if isinstance(obj, dict):
         for v in obj.values():

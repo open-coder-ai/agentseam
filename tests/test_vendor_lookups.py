@@ -45,6 +45,9 @@ def test_every_packaging_format_answers_the_plugin_root_question():
         ("codex_cli", "${PLUGIN_ROOT}"),
         ("cursor", "${CURSOR_PLUGIN_ROOT}"),
         ("vscode_copilot", "${PLUGIN_ROOT}"),
+        # Gemini's own spelling, established from docs/extensions/reference.md: substitution
+        # is documented inside both gemini-extension.json and hooks/hooks.json.
+        ("gemini_cli", "${extensionPath}"),
     ],
 )
 def test_the_preferred_plugin_root_token_per_format(agent, expected):
@@ -52,8 +55,7 @@ def test_the_preferred_plugin_root_token_per_format(agent, expected):
 
 
 def test_an_unestablished_plugin_root_is_none_not_a_guess():
-    """Gemini's extension layout is recorded; its plugin-root token is not. Those differ."""
-    assert plugin_root("gemini_cli") is None
+    """Windsurf's vendor docs were unreachable from this environment; no token is claimed."""
     assert plugin_root("windsurf") is None
 
 
