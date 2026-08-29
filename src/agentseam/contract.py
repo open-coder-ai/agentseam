@@ -115,6 +115,12 @@ ALLOW = "allow"
 DENY = "deny"
 ASK = "ask"
 REWRITE = "rewrite"
+#: "I actively approve -- skip the user's own confirmation," never the default. ALLOW means
+#: no objection; a bare ALLOW that spoke this loudly was the exact defect
+#: allow_semantics.py exists to audit. VOUCH is that same loud word, used on purpose, on the
+#: vendors it is established to mean this. See dispatch.degrade() and
+#: allow_semantics.VOUCH_SPEAKS for which those are, and how everyone else degrades.
+VOUCH = "vouch"
 
 
 class Decision:
@@ -122,34 +128,47 @@ class Decision:
 
     `evidence` is an optional payload-free dict a consumer can carry through to its
     own log; agentseam never writes it anywhere itself.
+
+    `context` is different: free text meant to reach the MODEL, on the few vendor
+    surfaces that take side-channel context injection independent of the outcome
+    (Claude Code's hookSpecificOutput.additionalContext at SessionStart and
+    UserPromptSubmit today). An adapter with no such surface drops it silently --
+    the same honest-degrade shape as an unsupported outcome, not a promise every
+    vendor can keep. It is advisory content, never a substitute for `reason`, which
+    still speaks to the vendor's own decision/refusal dialect.
     """
 
-    __slots__ = ("outcome", "reason", "updated_input", "evidence")
+    __slots__ = ("outcome", "reason", "updated_input", "evidence", "context")
 
-    def __init__(self, outcome, reason=None, updated_input=None, evidence=None):
-        if outcome not in (ALLOW, DENY, ASK, REWRITE):
+    def __init__(self, outcome, reason=None, updated_input=None, evidence=None, context=None):
+        if outcome not in (ALLOW, DENY, ASK, REWRITE, VOUCH):
             raise ValueError("unknown outcome: %r" % (outcome,))
         self.outcome = outcome
         self.reason = reason
         self.updated_input = updated_input
         self.evidence = evidence or {}
+        self.context = context
 
     # constructors read better at call sites than Decision("deny", ...)
     @classmethod
-    def allow(cls, reason=None, evidence=None):
-        return cls(ALLOW, reason, evidence=evidence)
+    def allow(cls, reason=None, evidence=None, context=None):
+        return cls(ALLOW, reason, evidence=evidence, context=context)
 
     @classmethod
-    def deny(cls, reason, evidence=None):
-        return cls(DENY, reason, evidence=evidence)
+    def deny(cls, reason, evidence=None, context=None):
+        return cls(DENY, reason, evidence=evidence, context=context)
 
     @classmethod
-    def ask(cls, reason, evidence=None):
-        return cls(ASK, reason, evidence=evidence)
+    def ask(cls, reason, evidence=None, context=None):
+        return cls(ASK, reason, evidence=evidence, context=context)
 
     @classmethod
-    def rewrite(cls, updated_input, reason=None, evidence=None):
-        return cls(REWRITE, reason, updated_input=updated_input, evidence=evidence)
+    def rewrite(cls, updated_input, reason=None, evidence=None, context=None):
+        return cls(REWRITE, reason, updated_input=updated_input, evidence=evidence, context=context)
+
+    @classmethod
+    def vouch(cls, reason=None, evidence=None, context=None):
+        return cls(VOUCH, reason, evidence=evidence, context=context)
 
     def __repr__(self):  # pragma: no cover - debugging aid
         return "Decision(%s, %r)" % (self.outcome, self.reason)

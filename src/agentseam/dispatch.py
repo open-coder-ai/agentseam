@@ -19,7 +19,8 @@ import json
 import sys
 
 from . import adapters
-from .contract import REWRITE, UNKNOWN, Decision
+from .allow_semantics import VOUCH_SPEAKS
+from .contract import REWRITE, UNKNOWN, VOUCH, Decision
 from .matrix import capability
 
 
@@ -42,6 +43,10 @@ def degrade(decision, event, agent=None):
     input through, because the handler asked for it to be changed.
     deny at a non-blocking event stays deny; the adapter renders it as a detection so
     the caller can see it was not prevented.
+    vouch -> allow (everywhere except allow_semantics.VOUCH_SPEAKS): a vendor with no
+    established word for "actively approve, skip confirmation" gets the honest word
+    instead of a guess -- VOUCH is not itself a vendor dialect, so this is the one place
+    that reduction happens for every adapter, rather than fourteen copies of the same check.
     """
     agent = agent or event.agent
     cap = capability(agent, event.event)
@@ -53,6 +58,10 @@ def degrade(decision, event, agent=None):
         evidence = dict(decision.evidence)
         evidence["degraded_from"] = REWRITE
         return Decision.ask(decision.reason or "input requires modification before it can run", evidence=evidence)
+    if decision.outcome == VOUCH and agent not in VOUCH_SPEAKS:
+        evidence = dict(decision.evidence)
+        evidence["degraded_from"] = VOUCH
+        return Decision.allow(decision.reason, evidence=evidence, context=decision.context)
     return decision
 
 

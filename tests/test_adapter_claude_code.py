@@ -193,3 +193,56 @@ def test_observation_only_events_get_silence_rather_than_a_verdict():
     read as a decision, so emitting a gate-shaped verdict only invited a reader to believe
     one had been made."""
     assert A.handle(CC_POST, deny_all)[0] == ""
+
+
+CC_SESSION_START = {
+    "hook_event_name": "SessionStart",
+    "session_id": "s1",
+    "transcript_path": "/t.jsonl",
+    "cwd": "/repo",
+    "source": "startup",
+}
+
+
+def test_session_start_is_silent_with_no_context():
+    """No block/rewrite is claimed here either way -- silence is the whole answer absent
+    a handler that has something to tell the model."""
+    assert A.handle(CC_SESSION_START, allow_all)[0] == ""
+
+
+def test_session_start_carries_context_in_the_documented_shape():
+    """code.claude.com/docs/en/hooks' own SessionStart example names this exact field,
+    nested -- top-level would be silently ignored per the same page."""
+    text, code, event, _ = A.handle(CC_SESSION_START, lambda e: Decision.allow(context="prod deploy in progress"))
+    assert event.event == A.SESSION_START
+    assert json.loads(text) == {
+        "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "prod deploy in progress"}
+    }
+    assert code == 0
+
+
+def test_prompt_submit_carries_context_alongside_an_allow():
+    """Two independent top-level keys -- no decision/reason to combine it with here."""
+    text, _, _, _ = A.handle(CC_PROMPT_SUBMIT, lambda e: Decision.allow(context="recent files changed"))
+    assert json.loads(text) == {
+        "hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": "recent files changed"}
+    }
+
+
+def test_prompt_submit_carries_context_alongside_a_block():
+    """additionalContext and the block dialect are different top-level keys -- a deny with
+    context should still block, and still say why the model is being told what it is told."""
+    text, _, _, _ = A.handle(CC_PROMPT_SUBMIT, lambda e: Decision.deny("secret detected", context="see redaction log"))
+    payload = json.loads(text)
+    assert payload["decision"] == "block" and payload["reason"] == "secret detected"
+    assert payload["hookSpecificOutput"] == {
+        "hookEventName": "UserPromptSubmit",
+        "additionalContext": "see redaction log",
+    }
+
+
+def test_stop_does_not_speak_additional_context():
+    """Rider A's brief named SessionStart and UserPromptSubmit specifically -- Stop keeps
+    its existing block-only dialect rather than gaining a third, unverified shape."""
+    text, _, _, _ = A.handle(CC_STOP, lambda e: Decision.allow(context="ignored here"))
+    assert text == ""

@@ -40,8 +40,10 @@ from agentseam.allow_semantics import (  # noqa: E402
     ALLOW_SEMANTICS,
     ALLOW_SILENT,
     ALLOW_UNVERIFIED,
+    VOUCH_SPEAKS,
 )
-from agentseam.contract import PRE_TOOL  # noqa: E402
+from agentseam.contract import ALLOW, PRE_TOOL, VOUCH, Event  # noqa: E402
+from agentseam.dispatch import degrade  # noqa: E402
 
 _KINDS = (ALLOW_SILENT, ALLOW_INERT, ALLOW_REQUIRED, ALLOW_UNVERIFIED)
 
@@ -161,3 +163,37 @@ def test_the_unsettled_rows_are_still_exactly_these_three():
     """
     unsettled = sorted(a for a, (kind, _why) in ALLOW_SEMANTICS.items() if kind == ALLOW_UNVERIFIED)
     assert unsettled == ["antigravity", "devin", "tabnine"]
+
+
+def test_vouch_speaks_only_where_the_word_is_actually_trusted():
+    """Not every ALLOW_SILENT row: codex_cli is silent by the same default, but its own
+    evidence says the explicit word is REJECTED (a hook error, which fails open) rather than
+    honoured. Speaking it there would be the opposite of "skip confirmation" -- pinned so a
+    mechanical `kind == ALLOW_SILENT` derivation cannot quietly resurrect that bug.
+    """
+    assert VOUCH_SPEAKS == {"claude_code", "vscode_copilot"}
+    for agent in VOUCH_SPEAKS:
+        assert ALLOW_SEMANTICS[agent][0] == ALLOW_SILENT, agent
+
+
+@pytest.mark.parametrize("agent", sorted(VOUCH_SPEAKS))
+def test_vouch_speaks_the_same_word_allow_withholds(agent):
+    """The one place a bare ALLOW is deliberately silent is exactly where VOUCH must not be."""
+    for vendor_event in _permission_gates(agent):
+        allow_text, _ = _drive(agent, vendor_event)
+        assert not allow_text.strip(), "bare allow must still be silent at %s/%s" % (agent, vendor_event)
+        mod = adapters.get(agent)
+        raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, hookEventName=vendor_event, client_type=agent)
+        vouch_text, code = mod.respond(Decision.vouch("trusted"), mod.parse(raw))
+        assert vouch_text.strip(), "%s/%s: vouch must speak where allow_semantics trusts it" % (agent, vendor_event)
+        assert code == 0
+
+
+@pytest.mark.parametrize("agent", sorted(a for a in adapters.ADAPTERS if a not in VOUCH_SPEAKS))
+def test_vouch_degrades_to_an_honestly_labelled_allow_elsewhere(agent):
+    """dispatch.degrade() is where every other vendor's vouch is reduced -- one place, not
+    thirteen copies of the same check -- and the reduction must say what it was."""
+    event = Event(agent, PRE_TOOL)
+    reduced = degrade(Decision.vouch("trusted"), event, agent)
+    assert reduced.outcome == ALLOW
+    assert reduced.evidence.get("degraded_from") == VOUCH

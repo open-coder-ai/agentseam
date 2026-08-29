@@ -2,8 +2,7 @@
 
 Payload: {"tool_name", "tool_input", "session_id", "tool_use_id", "hook_event_name", ...}
 Response: {"hookSpecificOutput": {"hookEventName", "permissionDecision", ...}} on stdout;
-exit 2 also blocks. Verified live against Claude Code 2.1.245 (2026-08-25).
-"""
+exit 2 also blocks. Verified live against Claude Code 2.1.245 (2026-08-25)."""
 
 from __future__ import annotations
 
@@ -25,6 +24,7 @@ from ..contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
     UNKNOWN,
+    VOUCH,
     Event,
     tool_input_of,
 )
@@ -57,8 +57,7 @@ REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 
 #: The tool a shell command arrives under, and therefore what a PreToolUse `matcher` must say
-#: to gate shell. Recorded because a matcher is the one hook_config field whose WRONG value
-#: fails silently: it matches nothing, the hook never fires, and the install looks fine.
+#: to gate shell. A wrong value fails silently: it matches nothing, and the install looks fine.
 SHELL_TOOLS = ("Bash",)
 
 
@@ -158,10 +157,8 @@ def parse(raw):
 
 
 #: Events that read a TOP-LEVEL {"decision": "block", "reason": ...} and ignore
-#: hookSpecificOutput.permissionDecision entirely. Established by live experiment against
-#: Claude Code 2.1.247 (2026-08-28), not from documentation -- two reads of the vendor page
-#: gave contradictory answers, and the shape this adapter had been emitting turned out to be
-#: read by neither. See respond() for the result table.
+#: hookSpecificOutput.permissionDecision entirely. Established live against 2.1.247
+#: (2026-08-28) -- two reads of the vendor page gave contradictory answers. See respond().
 _BLOCK_DIALECT_EVENTS = (PROMPT_SUBMIT, STOP)
 
 
@@ -180,9 +177,22 @@ def _refusal_reason(decision):
 
 
 #: Decision words this vendor accepts. allow/deny/ask are permissionDecision's, honoured at
-#: pre_tool; "block" is the top-level dialect prompt_submit and stop read. Both halves were
-#: established live against 2.1.247 (2026-08-28), not from documentation.
+#: pre_tool; "block" is the top-level dialect prompt_submit and stop read. Established live
+#: against 2.1.247 (2026-08-28).
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
+
+
+#: hookSpecificOutput.additionalContext -- docs-basis, NOT the live-verified 2.1.247
+#: experiment below. code.claude.com/docs/en/hooks documents this as how a hook injects text
+#: into Claude's own context, explicitly nested (top-level is silently ignored), with a
+#: SessionStart example naming it and a UserPromptSubmit section for the same purpose.
+def _additional_context_output(event, context):
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse"),
+            "additionalContext": context,
+        }
+    }
 
 
 def respond(decision, event):
@@ -205,9 +215,8 @@ def respond(decision, event):
     did, not things the probe claimed.
 
     exit 2 works at both, and is deliberately NOT used: it collapses to 1 under the
-    PowerShell wrapper some vendors apply (which is what made the exit-code path useless on
-    Codex/Windows), and it leaks the full hook command line into the UI where the JSON form
-    does not. The JSON block also carries the reason into the model's context.
+    PowerShell wrapper some vendors apply, and it leaks the full hook command line into the
+    UI where the JSON form does not. The JSON block also carries the reason into context.
 
     pre_tool keeps hookSpecificOutput.permissionDecision, and that was verified in the same
     round rather than assumed: a deny there blocked the Write outright, and the agent's next
@@ -221,23 +230,30 @@ def respond(decision, event):
     statements, and only the first is what a guardrail means. The vendor's documentation
     settles what silence does, verbatim: "Exit code 0 with no output means the hook has no
     decision to report, so the tool call continues through the normal permission flow."
-    What an explicit "allow" does there is NOT documented -- so the recorded option is the
-    one that keeps the user's own protection, and the unrecorded one is not worth guessing
-    with. The sibling case is proven rather than inferred: VS Code's
-    languageModelToolsService returns `autoConfirmed: ConfirmationNotNeeded, "Allowed by
-    hook"` on exactly this value.
-
-    So a policy that simply did not match -- the common case, on every tool call -- used to
-    disable the user's confirmation prompts for the whole session. REWRITE still sends an
-    explicit allow, because updatedInput is the only way to express a rewrite and approving
-    the *substituted* call is what the handler asked for.
+    What an explicit "allow" does there is NOT documented -- so the recorded option keeps
+    the user's own protection. VS Code's languageModelToolsService, read from source, returns
+    `autoConfirmed: ConfirmationNotNeeded` on exactly this value -- which VOUCH exists to
+    speak on purpose (see below, and allow_semantics.VOUCH_SPEAKS) on the two vendors this is
+    established for. REWRITE still sends an explicit allow, since updatedInput is the only
+    way to express one and approving the *substituted* call is what was asked for.
     """
     import json as _json
 
     if event.event in _BLOCK_DIALECT_EVENTS:
-        if decision.outcome == ALLOW:
-            return "", 0
-        return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
+        # VOUCH has no word here either -- only ever spoken at pre_tool below -- so it is a
+        # louder allow this dialect cannot hear.
+        out = {} if decision.outcome in (ALLOW, VOUCH) else {"decision": "block", "reason": _refusal_reason(decision)}
+        # additionalContext is a second, independent key; only UserPromptSubmit of this pair
+        # is documented to take it.
+        if event.event == PROMPT_SUBMIT and decision.context:
+            out.update(_additional_context_output(event, decision.context))
+        return (_json.dumps(out), 0) if out else ("", 0)
+
+    if event.event == SESSION_START:
+        # Silent regardless of outcome (no block/rewrite claimed here) except for context.
+        if decision.context:
+            return _json.dumps(_additional_context_output(event, decision.context)), 0
+        return "", 0
 
     if event.event != PRE_TOOL:
         return "", 0
@@ -246,7 +262,13 @@ def respond(decision, event):
         return "", 0
 
     out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
-    if decision.outcome == DENY:
+    if decision.outcome == VOUCH:
+        # Reaches here undegraded only because allow_semantics.VOUCH_SPEAKS names
+        # claude_code (see dispatch.degrade()) -- the word a bare ALLOW withholds above.
+        out["permissionDecision"] = "allow"
+        if decision.reason:
+            out["permissionDecisionReason"] = decision.reason
+    elif decision.outcome == DENY:
         out["permissionDecision"] = "deny"
         out["permissionDecisionReason"] = decision.reason or "blocked"
     elif decision.outcome == ASK:
