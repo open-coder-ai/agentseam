@@ -9,6 +9,22 @@ The prose is the part that grows, and it grows every time a vendor is read prope
 from __future__ import annotations
 
 NOTES = {
+    "copilot": "TIER_UNADAPTED and events={} are deliberate, not a placeholder for an adapter "
+    "that has not been written yet: a real adapter under this name would claim every payload "
+    "vscode_copilot already claims (the wire dialect is documented as identical), and "
+    "adapters.detect() treats a payload two adapters both claim as unidentified -- registering "
+    "one here would silently stop dispatch working for every existing VS Code/Copilot CLI "
+    "user. A hook that ships inside a copilot-format bundle is dispatched through the "
+    "vscode_copilot adapter at runtime; 'copilot' exists only as packaging_data.PACKAGING's "
+    "identity for the Agent Plugins 1.0 marketplace bundle FORMAT, a genuinely different "
+    "artifact from vscode_copilot's repo-local .github/hooks/agentseam.json (own manifest, "
+    "own namespaced paths, published to a marketplace rather than committed to a repo). "
+    "The honest capability answer is NOT 'none': see EVIDENCE['copilot'] for what was found "
+    "-- VS Code documents plugin hooks as firing alongside workspace hooks, and documents "
+    "Copilot CLI and the Copilot app as reading the same com.github.copilot namespace; "
+    "Copilot CLI's own hooks-reference.md separately lists installed-plugin hooks as one of "
+    "its combined, executed sources. Recorded here as docs-basis evidence, not a live "
+    "capability claim, because nothing here was run against a live build.",
     "junie": "Strongest gate here: PreToolUse returns allow/ask/block and carries "
     "updatedInput, so block, ask and rewrite are all native. Its event names and field "
     "names are Claude Code's by design; project_path is what separates the two payloads. "

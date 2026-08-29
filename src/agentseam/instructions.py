@@ -41,6 +41,14 @@ INSTRUCTION_FILES = {
         "shared": True,
         "imports": None,
     },
+    # Not a second product: a repo running an installed Agent Plugins 1.0 "copilot" bundle
+    # (packaging_data.PACKAGING) is running actual GitHub Copilot, which reads the same
+    # repo-level instructions file regardless of which surface installed the plugin.
+    "copilot": {
+        "files": [".github/copilot-instructions.md", ".github/agents/agentseam.agent.md"],
+        "shared": True,
+        "imports": None,
+    },
     "gemini_cli": {"files": ["GEMINI.md", ".gemini/GEMINI.md"], "shared": True, "imports": None},
     "windsurf": {"files": [".windsurf/rules/agentseam.md", ".windsurfrules"], "shared": True, "imports": None},
     # Aider discovers nothing by convention: it reads the files listed under `read:` in

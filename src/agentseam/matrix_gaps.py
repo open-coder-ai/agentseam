@@ -21,6 +21,20 @@ from .matrix_notes import NOTES
 from .matrix_terms import TIER_NONE, TIER_UNADAPTED
 
 GAPS = {
+    "copilot": {
+        # Not "no surface" (TIER_NONE would say that, and it would be false -- see
+        # EVIDENCE/NOTES) and not "nobody built the adapter yet" in the usual TIER_UNADAPTED
+        # sense either: an adapter under this name would collide with vscode_copilot's, which
+        # already dispatches this exact wire dialect. This row exists so
+        # packaging_data.PACKAGING's "copilot" identity (the Agent Plugins 1.0 marketplace
+        # bundle) has a matrix row at all, per test_packaging's completeness invariant.
+        "display": "GitHub Copilot (Agent Plugins 1.0 marketplace bundle)",
+        "tier": TIER_UNADAPTED,
+        "config": None,
+        "verified": EVIDENCE["copilot"],
+        "events": {},
+        "notes": NOTES["copilot"],
+    },
     "replit": {
         "display": "Replit Agent",
         "tier": TIER_UNADAPTED,

@@ -67,7 +67,7 @@ def test_a_skill_is_literally_the_same_file_in_every_bundle_format():
     which is why this asserts each part separately rather than a single agent list.
     """
     shared = packaging.same_path_for(SKILL)
-    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "cursor", "gemini_cli"]
+    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "copilot", "cursor", "gemini_cli"]
     hooks = packaging.same_path_for(HOOKS)["hooks/hooks.json"]
     assert hooks == ["claude_code", "codex_cli", "cursor", "gemini_cli"]
     assert packaging.same_path_for(SUBAGENT)["agents/{name}.md"] == ["claude_code", "gemini_cli"]

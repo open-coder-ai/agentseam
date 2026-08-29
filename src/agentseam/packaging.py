@@ -210,6 +210,11 @@ def _manifest(agent, bundle, kinds):
 
     Only the parts the bundle actually has are declared. Pointing at `./skills` in a bundle
     with no skills advertises a directory that is not there.
+
+    `manifest_fixed` is a third thing again: fields a format requires on every manifest
+    regardless of what the bundle holds -- Agent Plugins 1.0's `$schema` is the only one
+    today, and it is load-bearing rather than decorative: without it the host falls back to
+    reading the file as an unrelated legacy format, silently mislabeling the whole bundle.
     """
     row = PACKAGING[agent]
     if not row["manifest"]:
@@ -217,6 +222,8 @@ def _manifest(agent, bundle, kinds):
     body = {"name": bundle.name, "version": bundle.version}
     if bundle.description:
         body["description"] = bundle.description
+    for key, value in (row.get("manifest_fixed") or {}).items():
+        body[key] = value
     for kind, (key, value) in sorted((row.get("declares") or {}).items()):
         if kind in kinds:
             body[key] = value
