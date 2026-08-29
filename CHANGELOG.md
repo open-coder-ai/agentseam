@@ -6,6 +6,36 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Codex CLI and Cursor packaging, closing the last gap between agentseam and the sibling
+  guardrail it is meant to absorb.** Both were `UNRECORDED` with an honest reason ("the
+  directory layout was not established here"); both are now recorded. Codex is read from the
+  vendor's own source (`core-plugins/src/manifest.rs`, `loader.rs`); Cursor is closed source,
+  so its row rests on vendor docs plus the layout a shipped sibling implementation emits, and
+  the row says so rather than implying equal footing.
+- **A manifest can now DECLARE its component paths, which two of the four formats require.**
+  Claude Code and Gemini CLI find components by location; Codex and Cursor resolve them from
+  the manifest, and Codex validates the `./...` syntax of each. A manifest carrying only name
+  and version would have shipped a plugin whose skills and hooks are never loaded, with
+  nothing reporting an error. Only the parts a bundle actually has are declared -- pointing at
+  `./skills` in a bundle with no skills advertises a directory that is not there.
+- Recorded for Codex: of its two manifest formats **only Legacy carries hooks**. An Agent
+  Plugins 1.0 manifest has its hooks discarded at load time (`if loaded_manifest.format ==
+  PluginManifestFormat::AgentPlugin { (Vec::new(), Vec::new()) }`), so shipping the Copilot
+  package to Codex installs a guard whose enforcement is deleted while its description still
+  claims it.
+
+### Fixed
+- **Aider was claimed to read `AGENTS.md` natively, and does not.** `INSTRUCTION_FILES` marked
+  it `shared: True`, which is precisely the "wrong True" the comment above that table warns
+  about: `plan()` counted aider as covered, wrote only the shared file, and aider read none of
+  it. Aider discovers nothing by convention -- it reads what `.aider.conf.yml` lists under
+  `read:`, which is why a sibling guardrail ships that conf file next to its CONVENTIONS.md.
+  Corrected to `False`, the conservative direction the module mandates. The arithmetic moves
+  from "15 agents, 8 files" to "15 agents, 9 files" in the README and its pinning test.
+  Writing the conf file itself is not yet expressible here (`imports` renders a note, not a
+  second file) and is left as a stated gap rather than a silent one.
+
 ### Fixed
 - **`tool_input` is not always an object, and the string form blinded every guard.** Live
   capture on VS Code Copilot (2026-08-29), the first real payloads this adapter has ever

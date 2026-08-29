@@ -58,12 +58,19 @@ def test_every_agent_records_how_it_was_verified(agent):
     assert verified["method"] and verified["date"]
 
 
-def test_a_skill_is_literally_the_same_file_in_both_bundle_formats():
-    """The claim the module is built on. If this drifts, "write it once" is a lie."""
+def test_a_skill_is_literally_the_same_file_in_every_bundle_format():
+    """The claim the module is built on. If this drifts, "write it once" is a lie.
+
+    It got stronger when Codex and Cursor were recorded: four plugin formats, four different
+    manifests, and one identical `skills/<name>/SKILL.md`. Hooks agree across all four too.
+    Subagents do not -- only the two location-discovered formats have a place for them --
+    which is why this asserts each part separately rather than a single agent list.
+    """
     shared = packaging.same_path_for(SKILL)
-    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "gemini_cli"]
+    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "cursor", "gemini_cli"]
+    hooks = packaging.same_path_for(HOOKS)["hooks/hooks.json"]
+    assert hooks == ["claude_code", "codex_cli", "cursor", "gemini_cli"]
     assert packaging.same_path_for(SUBAGENT)["agents/{name}.md"] == ["claude_code", "gemini_cli"]
-    assert packaging.same_path_for(HOOKS)["hooks/hooks.json"] == ["claude_code", "gemini_cli"]
 
 
 def test_commands_are_the_part_that_never_carries_across():
@@ -134,9 +141,30 @@ def test_unrecorded_agents_raise_rather_than_returning_an_empty_layout(bundle):
             packaging.plan(agent, bundle)
 
 
-def test_codex_is_recorded_as_having_skills_we_could_not_locate():
-    """ "No packaging" would be false: its approval config gates skill script execution."""
-    assert "skills exist" in UNRECORDED["codex_cli"]
+def test_codex_declares_its_components_and_only_one_format_carries_hooks():
+    """Codex's layout was UNRECORDED until 2026-08-29, when it was read from the loader.
+
+    Two facts make it different from the location-discovered formats beside it, and both
+    are load-bearing. Components are resolved from the manifest, so a manifest without
+    `skills`/`hooks` ships a plugin whose parts never load. And of the two manifest formats
+    only Legacy carries hooks at all -- an Agent Plugins 1.0 manifest has its hooks
+    discarded outright at load time, which would install a guard that silently does nothing.
+    """
+    row = PACKAGING["codex_cli"]
+    assert row["manifest"] == ".codex-plugin/plugin.json"
+    assert row["declares"][SKILL] == ("skills", "./skills")
+    assert row["declares"][HOOKS] == ("hooks", "./hooks/hooks.json")
+    assert "AgentPlugin" in row["notes"] and "discards" in row["notes"]
+
+
+def test_a_declaring_format_names_only_the_parts_the_bundle_has():
+    """Pointing at ./skills in a bundle with no skills advertises a directory that is absent."""
+    hooks_only = packaging.Bundle(
+        name="g", version="1", description=None, parts=[packaging.Part(kind=HOOKS, name="h", body="{}")]
+    )
+    manifest = json.loads(packaging.plan("codex_cli", hooks_only).files[".codex-plugin/plugin.json"])
+    assert manifest["hooks"] == "./hooks/hooks.json"
+    assert "skills" not in manifest
 
 
 def test_every_packaging_agent_is_an_agent_the_matrix_knows():
@@ -172,7 +200,7 @@ def test_proven_but_unlocated_parts_are_distinguished_from_absent_ones():
     Where a vendor's own hook documentation proves subagents or skills exist, the reason
     says so -- otherwise the row would quietly understate the agent.
     """
-    for agent in ("antigravity", "codex_cli", "cursor", "devin", "grok", "junie", "kimi_code"):
+    for agent in ("antigravity", "devin", "grok", "junie", "kimi_code"):
         assert "exist" in UNRECORDED[agent], agent
     for agent in ("aider", "replit", "zed"):
         assert "exist" not in UNRECORDED[agent], agent

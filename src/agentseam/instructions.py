@@ -43,7 +43,14 @@ INSTRUCTION_FILES = {
     },
     "gemini_cli": {"files": ["GEMINI.md", ".gemini/GEMINI.md"], "shared": True, "imports": None},
     "windsurf": {"files": [".windsurf/rules/agentseam.md", ".windsurfrules"], "shared": True, "imports": None},
-    "aider": {"files": ["CONVENTIONS.md"], "shared": True, "imports": None},
+    # Aider discovers nothing by convention: it reads the files listed under `read:` in
+    # .aider.conf.yml and nothing else, which is why a sibling guardrail in this org ships
+    # that conf file alongside its CONVENTIONS.md. `shared` was True here, claiming aider
+    # picks up AGENTS.md natively -- the exact "wrong True" the comment above warns about,
+    # which would have `discover()` write only AGENTS.md and report aider as covered while
+    # aider read none of it. False is the conservative answer; the conf file itself is a
+    # mechanism this module cannot yet express (`imports` renders a note, not a second file).
+    "aider": {"files": ["CONVENTIONS.md"], "shared": False, "imports": None},
     "zed": {"files": [".rules"], "shared": True, "imports": None},
     "junie": {"files": [".junie/guidelines.md"], "shared": False, "imports": None},
     "devin": {"files": [".devin/README.md"], "shared": False, "imports": None},

@@ -79,6 +79,75 @@ PACKAGING = {
             "date": "2026-08-26",
         },
     },
+    "codex_cli": {
+        "unit": "plugin",
+        "manifest": ".codex-plugin/plugin.json",
+        "manifest_format": "json",
+        # A Codex plugin is a self-contained directory; the host decides where it lives
+        # (marketplace roots under a plugins/ folder), so the bundle name IS the root.
+        "project_root": "{bundle}",
+        "parts": {
+            SKILL: "skills/{name}/SKILL.md",
+            SUBAGENT: None,
+            COMMAND: None,
+            HOOKS: "hooks/hooks.json",
+            MCP: None,
+        },
+        # Codex RESOLVES components from the manifest rather than finding them by location,
+        # so a manifest without these keys ships a plugin whose parts are never loaded.
+        "declares": {SKILL: ("skills", "./skills"), HOOKS: ("hooks", "./hooks/hooks.json")},
+        "notes": (
+            "Two formats exist and only one carries hooks. `.codex-plugin/plugin.json` is the "
+            "Legacy format; a manifest in Agent Plugins 1.0 format is loaded as "
+            "PluginManifestFormat::AgentPlugin, and loader.rs then discards its hooks "
+            "outright -- `if loaded_manifest.format == PluginManifestFormat::AgentPlugin "
+            "{ (Vec::new(), Vec::new()) }`. So shipping the Copilot package to Codex installs "
+            "a plugin whose enforcement is deleted at load time while its description still "
+            "claims it. Component paths are declared in the manifest and must use the `./...` "
+            "syntax the loader validates. `mcp_servers` and `apps` are manifest fields too, "
+            "and commands are read from a `commands` field on the same file."
+        ),
+        "verified": {
+            "method": (
+                "vendor source read from a clone: codex-rs/core-plugins/src/manifest.rs "
+                "(RawPluginManifest fields, the .codex-plugin/plugin.json path, Legacy vs "
+                "AgentPlugin formats) and core-plugins/src/loader.rs (the hook-discard branch)"
+            ),
+            "date": "2026-08-29",
+        },
+    },
+    "cursor": {
+        "unit": "plugin",
+        "manifest": ".cursor-plugin/plugin.json",
+        "manifest_format": "json",
+        "project_root": "{bundle}",
+        "parts": {
+            SKILL: "skills/{name}/SKILL.md",
+            SUBAGENT: None,
+            COMMAND: None,
+            HOOKS: "hooks/hooks.json",
+            MCP: None,
+        },
+        "declares": {SKILL: ("skills", "./skills/"), HOOKS: ("hooks", "./hooks/hooks.json")},
+        "notes": (
+            "Cursor ignores Agent Plugins 1.0 hooks entirely, so neither the Claude nor the "
+            "Copilot package reaches its hook engine -- this format is the only one that does. "
+            "Like Codex it declares component paths in the manifest rather than finding them "
+            "by location. The hooks file is Cursor's own envelope (a `version` stamp and FLAT "
+            "entries, no per-entry `hooks` array and no `type`), which is what `install()` "
+            "already writes into .cursor/hooks.json, so a plugin install and a repo install "
+            "run the identical hook."
+        ),
+        "verified": {
+            "method": (
+                "vendor plugin docs, plus the layout as implemented and shipped by a sibling "
+                "guardrail in this org (chock's .cursor-plugin emitter). Cursor is closed "
+                "source, so this is the strongest basis available -- weaker than the Codex row "
+                "beside it, which is read from the vendor's own loader."
+            ),
+            "date": "2026-08-29",
+        },
+    },
     "vscode_copilot": {
         # No bundle format: parts are found by location, so there is nothing to install
         # and nothing to name. That is a real difference, not a missing feature.
@@ -112,6 +181,15 @@ PACKAGING = {
 #: ("this format has no place for it") would understate Gemini, which supports MCP servers
 #: perfectly well -- just in the manifest rather than in a file of its own.
 PART_LIMITS = {
+    ("codex_cli", MCP): "MCP servers are declared inside .codex-plugin/plugin.json under "
+    "`mcp_servers`, not in a file of their own",
+    ("codex_cli", COMMAND): "the manifest reads command paths from a `commands` field, but the "
+    "command FILE format was not established here -- a guessed format ships a plugin whose "
+    "commands silently do not load",
+    ("codex_cli", SUBAGENT): "no subagent field exists in the plugin manifest",
+    ("cursor", MCP): "no MCP declaration was established for this plugin format",
+    ("cursor", COMMAND): "no command format was established for this plugin format",
+    ("cursor", SUBAGENT): "no subagent format was established for this plugin format",
     ("gemini_cli", MCP): "MCP servers are declared inside gemini-extension.json, not in a file "
     "of their own; a rendered .mcp.json would simply be ignored",
     ("vscode_copilot", MCP): "MCP servers are configured by the editor rather than shipped alongside these parts",
@@ -142,11 +220,6 @@ UNRECORDED = {
     "antigravity": "subagents provably exist -- define_subagent and invoke_subagent are tools it "
     "offers, and its file reader takes an IsSkillFile argument -- but the on-disk layout was "
     "not established here",
-    "codex_cli": "skills exist -- the approval config gates skill script execution -- but the "
-    "layout documentation redirects to a host this environment's egress policy blocks",
-    "cursor": "plugins exist -- hooks can be installed through them, and workspaceOpen "
-    "returns pluginPaths for the workspace -- but the directory layout was not established "
-    "here, so there is nothing to render",
     "devin": "skills provably exist -- its hook loader is documented as following the same "
     "discovery rules as skills and rules -- but their layout was not read here",
     "grok": "subagents provably exist (SubagentStart and SubagentStop hook events), and it has an "
