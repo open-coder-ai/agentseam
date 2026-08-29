@@ -6,6 +6,35 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Cursor's "silence blocks" question is settled live, and the answer is a mechanism, not a
+  rule.** Two trials on Cursor 3.17.8 (Windows, 2026-08-28) of one `beforeShellExecution`
+  hook that read stdin, logged, and exited 0 in silence, against `echo hello`, differing in
+  a single key: **without `failClosed` the command ran; with `failClosed: true` it was
+  blocked.** So an empty response at a Cursor gate is neither a refusal nor an abstention --
+  it is a hook *error*. Fail-open ignores it; fail-closed refuses on it. Both readings #65
+  recorded collapse to the second, and the #23 note's flat "an empty response is not an
+  allow" is retired: that rejection was real, but the hook carried `failClosed: true`, which
+  `hook_config()` set on every gate with no way to opt out. `cursor` stays `ALLOW_REQUIRED`
+  -- now proven, and for the opposite reason to the one predicted: because these gates
+  install fail-closed by *default*, a silent adapter would refuse every allowed tool call.
+- **Two facts the same run recorded that nothing here had.** `beforeShellExecution` fires
+  **twice for one command** (`sandbox: true`, then `sandbox: false` on Cursor's own retry),
+  so a policy with side effects double-counts and a deny must hold on both passes. And the
+  row's open non-observation -- three capture sessions in which that event never fired -- is
+  resolved as *our own wiring*: `REVERSE_EVENT_MAP` sends `pre_tool` to `preToolUse`, so it
+  was never installed. Wired, it fires. The row's basis is extended from a payload capture
+  to a response-contract experiment.
+
+### Added
+- **Sixth invariant: a gate installed fail-closed is never answered with silence.** The
+  experiment above makes a specific defect cheap to commit -- move one Cursor gate to a
+  silent allow, the direction four other adapters were deliberately moved in #62 and #64,
+  and every allowed tool call is blocked on the vendor's strongest posture, with no error a
+  user would attribute to the guardrail. Written against the `fail_closed` capability rather
+  than against Cursor, so an adapter that gains it is covered on arrival. Verified by
+  reintroducing the bug it targets. Suite 1004 -> 1006.
+
 ### Fixed
 - **The Cursor "silence blocks" note recorded the wrong cause.** A `beforeShellExecution`
   hook that produced no stdout was witnessed rejecting a real command, and that observation

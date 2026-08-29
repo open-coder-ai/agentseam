@@ -78,7 +78,15 @@ EVIDENCE = {
             "vendor hooks documentation, plus a live capture on Windows: 120 real payloads "
             "across four sessions, every one claimed by this adapter and none carrying a "
             "vendor event we do not map. `observed` lists the events actually seen fire; the "
-            "rest of this row still rests on documentation."
+            "rest of this row still rests on documentation. Extended 2026-08-28 by a live "
+            "RESPONSE-contract experiment (3.17.8, Windows): two trials of one silent "
+            "beforeShellExecution hook against `echo hello`, differing only in failClosed -- "
+            "without it the command ran, with it the command was blocked. That is what "
+            "established silence as a hook ERROR here rather than a refusal, and it corrected "
+            "this row's own note, which had generalised the confound into 'an empty response "
+            "is not an allow'. It also showed the gate firing twice per command (Cursor "
+            "retries once unsandboxed) and confirmed beforeShellExecution fires when wired -- "
+            "the earlier captures never saw it because REVERSE_EVENT_MAP wires preToolUse."
         ),
         # Canonical events seen against the running agent. Deliberately NOT a claim about the
         # five this row also asserts -- see NOTES for what three sessions failed to observe.

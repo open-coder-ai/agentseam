@@ -85,21 +85,19 @@ ALLOW_SEMANTICS = {
     ),
     "cursor": (
         ALLOW_REQUIRED,
-        "Witnessed live (Cursor 3.17.8, Windows, 2026-08-27): a beforeShellExecution hook that "
-        "produced no stdout caused the tool call to be REJECTED -- the blocked command was the "
-        "one trying to read the capture report, so a user watched it happen. What that does NOT "
-        "settle is why, and the note recording it read the cause off the wrong half. "
-        "hook_config() set failClosed:true on every permission gate at the time and the probe "
-        "had no way to opt out; fail_closed arrived later. Cursor's documented default is "
-        "fail-OPEN, so two readings survive: (a) an empty response is not an allow at all, or "
-        "(b) an empty response is a hook ERROR, which refuses only because we asked that gate "
-        "to fail closed. A sibling guardrail installs the same event with no failClosed and does "
-        "not block the commands it allows, which is evidence for (b). REQUIRED either way while "
-        "these gates install fail-closed by default: under (a) silence never allows, under (b) "
-        "it allows only where the operator turned the gate's own protection off. Distinguishing "
-        "them is a one-line live test -- a beforeShellExecution hook that does nothing but exit "
-        "0, installed WITHOUT failClosed, against one shell command -- and worth running: (b) "
-        "moves this row to SILENT and makes Cursor consistent with everything else here.",
+        "SETTLED by a two-trial live experiment (Cursor 3.17.8, Windows, 2026-08-28). One "
+        "beforeShellExecution hook that read stdin, logged, and exited 0 in silence, run "
+        "against `echo hello`, with one key differing between trials: without failClosed the "
+        "command RAN; with failClosed:true it was BLOCKED. So silence here is neither a "
+        "refusal nor an abstention -- it is a hook ERROR. Fail-open ignores it, fail-closed "
+        "refuses on it. That retires the two readings this row carried, and the #23 note's "
+        "flat 'silence blocks' with them: it was true only because hook_config() set "
+        "failClosed on every gate with no way to opt out. REQUIRED, and now for a proven "
+        "reason rather than a hedged one -- agentseam installs these gates fail-closed by "
+        "DEFAULT, so an adapter that went silent here would block every allowed tool call on "
+        "the vendor's strongest posture. See tests/test_fail_closed_gates_are_answered.py; "
+        "the same run also showed the hook firing TWICE per command (sandbox:true, then "
+        "sandbox:false on Cursor's retry).",
     ),
     "junie": (
         ALLOW_REQUIRED,
