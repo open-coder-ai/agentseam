@@ -107,19 +107,23 @@ def test_nested_paths_are_created(tmp_path):
 
 
 def test_the_readme_arithmetic_cannot_drift():
-    """README says "15 agents reached with 8 files written". Pin it to the data.
+    """README says "16 agents reached with 9 files written". Pin it to the data.
 
     The last claim ("14 agents with 7 files") went stale the day Tabnine landed and sat
     wrong until an audit counted. covered + per_agent must add up to every agent the map
     knows, and the files written are the shared one plus one per uncovered agent.
 
-    It moved to 9 on 2026-08-29 when aider's `shared` was corrected from True to False:
-    aider reads only what .aider.conf.yml lists under `read:`, so claiming it picks up
-    AGENTS.md natively had it counted as covered while it read nothing. One more file
-    written is the cost of that being honest.
+    It moved to 9 files on 2026-08-29 when aider's `shared` was corrected from True to
+    False: aider reads only what .aider.conf.yml lists under `read:`, so claiming it picks
+    up AGENTS.md natively had it counted as covered while it read nothing. It moved to 16
+    agents the same day when `copilot` (the Agent Plugins 1.0 marketplace bundle identity;
+    see packaging_data.PACKAGING) joined the matrix and was given the same instruction files
+    as vscode_copilot -- a real repo running an installed copilot-format plugin is running
+    actual GitHub Copilot, reading the exact same files. Covered, not per-agent, so the file
+    count did not move with it.
     """
     p = I.plan(I.agents(), repo_root=".")
     agents_reached = len(p["covered"]) + len(p["per_agent"])
     files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
-    assert agents_reached == len(I.INSTRUCTION_FILES) == 15
+    assert agents_reached == len(I.INSTRUCTION_FILES) == 16
     assert files_written == 9

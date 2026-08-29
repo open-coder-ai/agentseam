@@ -70,6 +70,32 @@ EVIDENCE = {
             "stop",
         ),
     },
+    "copilot": {
+        # Not the vscode_copilot row's product -- this is the honesty gate for hooks shipped
+        # inside an Agent Plugins 1.0 MARKETPLACE bundle specifically (packaging_data.py's
+        # "copilot" row). No adapter is registered under this name (see matrix_gaps.py's
+        # "copilot" row for why), so this evidence documents what was found, not a dispatch
+        # path reachable from here.
+        "basis": BASIS_DOCS,
+        "version": "VS Code 1.110+ (Agent Plugins 1.0); Copilot CLI per docs, no build pinned",
+        "date": "2026-08-29",
+        "method": (
+            "vendor docs read from a clone: microsoft/vscode-docs "
+            "docs/agent-customization/agent-plugins.md states plainly, for VS Code's own "
+            "engine, 'When a plugin is enabled, its hooks fire in addition to any other hooks "
+            "configured for the same event,' and separately that VS Code 'reads custom agents, "
+            "slash commands, rules, and hooks from the com.github.copilot namespace, which "
+            "GitHub Copilot CLI and the GitHub Copilot app also read.' github/docs "
+            "content/copilot/reference/hooks-reference.md corroborates for the CLI side: its "
+            "documented hook-loading order combines policy, user, and project hooks with "
+            "'hooks contributed by installed plugins.' Neither document was read against a "
+            "running build, and an open, unconfirmed bug report (github/copilot-cli#2540, "
+            "v1.0.18) says a plugin's hooks.json hooks did not fire for one reporter -- filed "
+            "against the Legacy Copilot format's root hooks.json, not the Agent Plugins 1.0 "
+            "com.github.copilot/hooks/hooks.json path this row is about, and not confirmed by "
+            "a maintainer, but recorded rather than omitted."
+        ),
+    },
     "cursor": {
         "basis": BASIS_LIVE_PARTIAL,
         "version": "3.17.8",

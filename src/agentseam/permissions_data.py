@@ -201,6 +201,12 @@ CAPABILITY = {
 #: still have a permission config; the two are unrelated, and treating "cannot hook" as
 #: "cannot restrict" would be a different claim than the one we are entitled to make.
 UNRECORDED = {
+    "copilot": "a distribution-only identity (the Agent Plugins 1.0 marketplace bundle format, "
+    "see packaging_data.PACKAGING), not a live settings surface of its own -- a repo running "
+    "an installed copilot-format plugin is running actual GitHub Copilot, whose "
+    "auto-approve-map permission model is already recorded under vscode_copilot; duplicating "
+    "it here under a second key would claim a second, separate config surface that does not "
+    "exist",
     "aider": "no permission model established here. Note this is independent of its lack of "
     "a hook surface: not being able to gate tool calls says nothing about what its config "
     "file can restrict",

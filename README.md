@@ -88,10 +88,10 @@ updated   AGENTS.md
 created   CLAUDE.md
 created   .junie/guidelines.md
 ...
-covered by AGENTS.md: aider, codex_cli, cursor, gemini_cli, kimi_code, vscode_copilot, windsurf, zed
+covered by AGENTS.md: codex_cli, copilot, cursor, gemini_cli, kimi_code, vscode_copilot, windsurf, zed
 ```
 
-15 agents reached with 9 files written, because 7 of them read `AGENTS.md` natively and a
+16 agents reached with 9 files written, because 8 of them read `AGENTS.md` natively and a
 second copy would only drift. Content is written as a marker-delimited block, so anything a
 human wrote in those files is preserved untouched — and `instructions --list` shows what
 a repo is already telling its agents.

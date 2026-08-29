@@ -134,17 +134,21 @@ def test_the_codex_note_does_not_claim_a_field_the_code_deliberately_ignores():
 def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
     """Every inherited row that has since been checked had MORE surface than it claimed --
     Devin's said "no pre-tool-use surface" and was false, Kimi's was false in all three of
-    its clauses. This names the ones still carrying an unverified inheritance.
+    its clauses. This names every row still at this tier, for two different reasons.
 
-    Replit is no longer among them: its documentation was searched and no hook surface was
-    found, which is a checked answer rather than an inherited one, so its basis moved to
-    vendor-docs even though the tier did not change.
+    Replit's docs were searched and no hook surface was found -- a checked answer, basis
+    vendor-docs -- but a hosted agent's absence can never be fully confirmed, so it stays
+    UNADAPTED rather than promoting to TIER_NONE the way aider and zed did.
+
+    copilot is not an inherited placeholder: it is PACKAGING's identity for the Agent
+    Plugins 1.0 marketplace bundle, deliberately unadapted -- an adapter here would claim
+    every payload vscode_copilot's already claims and break dispatch for both.
     """
     from agentseam.matrix import TIER_UNADAPTED
     from agentseam.matrix_gaps import GAPS
 
     unverified = sorted(a for a, row in GAPS.items() if row["tier"] == TIER_UNADAPTED)
-    assert unverified == ["replit"]
+    assert unverified == ["copilot", "replit"]
 
 
 def test_adapted_agents_matches_the_adapter_registry():
