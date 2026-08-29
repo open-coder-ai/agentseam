@@ -71,6 +71,9 @@ _OUTCOMES = (
     # A rewrite with nothing to substitute is the degradation path, and degradation is where
     # a wrong word is most likely: the adapter has to pick a verb it was not handed.
     ("rewrite-without-input", lambda: Decision.rewrite(None, "needs change")),
+    # respond() is driven directly here, bypassing dispatch.degrade() -- every adapter must
+    # still answer a raw, undegraded VOUCH safely, not just the two in VOUCH_SPEAKS.
+    ("vouch", lambda: Decision.vouch("trusted")),
 )
 
 

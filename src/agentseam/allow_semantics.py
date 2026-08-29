@@ -128,3 +128,19 @@ ALLOW_SEMANTICS = {
         "allow, so the two are not distinguished and the distinction is the whole question.",
     ),
 }
+
+#: Agents where the explicit approval word ALLOW_SILENT withholds is confirmed, or strongly
+#: evidenced, to itself mean "skip the user's confirmation" -- Decision.VOUCH's one
+#: legitimate use of it. Deliberately NOT every ALLOW_SILENT row above, and not derived from
+#: one mechanically: codex_cli is silent by the same default, but its own evidence says the
+#: explicit word is REJECTED outright (a hook error, which fails OPEN) rather than honoured
+#: -- speaking it there would be actively counterproductive, the opposite of "skip
+#: confirmation." grok and windsurf have no allow word to speak at all. kimi_code's word
+#: exists but its effect was never established either way. Only claude_code and
+#: vscode_copilot have evidence, of differing strength, that this specific word does what
+#: VOUCH means: vscode_copilot's is proven from source (languageModelToolsService); claude_code's
+#: rests on its documented sibling-product analogy, undocumented for claude_code itself --
+#: weaker, but a real, cited claim rather than a guess, and the one the brief names.
+#: Every other agent's VOUCH degrades to a plain, honestly-labelled allow -- see
+#: dispatch.degrade().
+VOUCH_SPEAKS = frozenset({"claude_code", "vscode_copilot"})

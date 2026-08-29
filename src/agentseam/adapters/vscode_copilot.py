@@ -5,18 +5,16 @@ microsoft/vscode's `hookTypes.ts` gives both maps side by side, PascalCase for
 Target.VSCode and camelCase for Target.GitHubCopilot. See EVENT_MAP below.
 
 Neither list contains `postToolUseFailure`, which this adapter mapped, claimed on and
-installed for until 2026-08-28: the config key resolves to nothing and is dropped, so an
-install for tool_failure wired a hook that could never fire.
+installed for until 2026-08-28: the config key resolves to nothing, so an install for
+tool_failure wired a hook that could never fire.
 
 PreToolUse wire contract (hookCommandTypes.ts): IPreToolUseHookCommandInput {tool_name,
-tool_input, tool_use_id} plus the envelope executeHook merges into every event
-({timestamp, hook_event_name, session_id, transcript_path, cwd?}); out, hookSpecificOutput
-{permissionDecision: allow|deny|ask, permissionDecisionReason, updatedInput,
-additionalContext}, honoured in languageModelToolsService.invokeTool.
+tool_input, tool_use_id} plus the envelope executeHook merges into every event; out,
+hookSpecificOutput {permissionDecision: allow|deny|ask, permissionDecisionReason,
+updatedInput, additionalContext}, honoured in languageModelToolsService.invokeTool.
 
 The difference that matters for policy: a memory write is the `memory` tool
-(create/str_replace/insert on /memories/...), not a file edit.
-"""
+(create/str_replace/insert on /memories/...), not a file edit."""
 
 from __future__ import annotations
 
@@ -34,6 +32,7 @@ from ..contract import (
     SUBAGENT_START,
     SUBAGENT_STOP,
     UNKNOWN,
+    VOUCH,
     Event,
     tool_input_of,
 )
@@ -92,10 +91,9 @@ _VSCODE_ENVELOPE = "timestamp"
 def claims(raw):
     """True for a payload from either product.
 
-    Until 2026-08-28 this claimed camelCase only, so it never claimed a real VS Code
-    payload: VS Code spells its events PascalCase, identically to Claude Code, so those
-    went to claude_code alone and were answered in the wrong dialect at every event but one.
-    """
+    Until 2026-08-28 this claimed camelCase only, so it never claimed a real VS Code payload:
+    VS Code spells its events PascalCase, identically to Claude Code, so those went to
+    claude_code alone and were answered in the wrong dialect at every event but one."""
     if not isinstance(raw, dict):
         return False
     name = raw.get("hook_event_name") or raw.get("hookEventName")
@@ -164,14 +162,13 @@ def is_memory_write(event):
     return event.tool in MEMORY_TOOLS and ti.get("command") in MEMORY_WRITE_COMMANDS
 
 
-#: Block verdict at the TOP LEVEL: {decision: "block", reason}.
-#: UserPromptSubmitHookOutput declares exactly those two and
-#: defaultIntentRequestHandler reads `typedOutput.decision` off the root;
-#: executePostToolUseHook reads the same two off a PostToolUse response's root.
+#: Block verdict at the TOP LEVEL: {decision: "block", reason}. UserPromptSubmitHookOutput
+#: declares exactly those two and defaultIntentRequestHandler reads `typedOutput.decision`
+#: off the root; executePostToolUseHook reads the same two off a PostToolUse response's root.
 _TOP_LEVEL_BLOCK = (PROMPT_SUBMIT, POST_TOOL)
 
 #: Block verdict NESTED in hookSpecificOutput. executeStopHook requires BOTH decision and
-#: reason, so a block with no reason is discarded and the agent stops anyway.
+#: reason -- a block with no reason is discarded and the agent stops anyway.
 _NESTED_BLOCK = (STOP, SUBAGENT_STOP)
 
 
@@ -202,21 +199,20 @@ DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 def respond(decision, event):
     """Three dialects, one per event group -- not one gate shape everywhere.
 
-    Until 2026-08-28 this emitted the PreToolUse gate JSON at every event. Elsewhere that
+    Until 2026-08-28 this emitted the PreToolUse gate JSON at every event; elsewhere that
     shape is not ignored but misread: UserPromptSubmit and PostToolUse take a top-level
-    `decision`, Stop a nested one, and the start events swallow everything.
-
-    hookEventName is echoed, not hardcoded: _toHookResult STRIPS hookSpecificOutput on a name mismatch.
-    """
+    `decision`, Stop a nested one, and the start events swallow everything. hookEventName is
+    echoed, not hardcoded (_toHookResult STRIPS hookSpecificOutput on a name mismatch).
+    VOUCH has no word at either block dialect below -- only ever spoken at pre_tool."""
     import json as _json
 
     if event.event in _TOP_LEVEL_BLOCK:
-        if decision.outcome == ALLOW:
+        if decision.outcome in (ALLOW, VOUCH):
             return "", 0
         return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
 
     if event.event in _NESTED_BLOCK:
-        if decision.outcome == ALLOW:
+        if decision.outcome in (ALLOW, VOUCH):
             return "", 0
         out = {"hookEventName": _echoed_name(event), "decision": "block", "reason": _refusal_reason(decision)}
         return _json.dumps({"hookSpecificOutput": out}), 0
@@ -234,7 +230,13 @@ def respond(decision, event):
         return "", 0
 
     out = {"hookEventName": _echoed_name(event)}
-    if decision.outcome == DENY:
+    if decision.outcome == VOUCH:
+        # allow_semantics.VOUCH_SPEAKS names vscode_copilot, proven from source (unlike
+        # claude_code's sibling inference): the exact value ALLOW withholds above.
+        out["permissionDecision"] = "allow"
+        if decision.reason:
+            out["permissionDecisionReason"] = decision.reason
+    elif decision.outcome == DENY:
         out["permissionDecision"] = "deny"
         out["permissionDecisionReason"] = decision.reason or "blocked"
     elif decision.outcome == ASK:
@@ -279,11 +281,9 @@ def hook_config(canonical_events, command, matcher=None):
     `command`.
 
     `windows` is the vendor's own per-platform override (normalizeHookCommand in
-    hookSchema.ts). It is needed because hookExecutor.ts spawns `powershell.exe -Command
-    <hookCommand>` whenever ComSpec is cmd.exe -- the Windows default -- and PowerShell
-    will not run a line beginning with a quoted path. Without it an install here fails
-    exactly as Codex's did. `command` keeps the POSIX form, so the interpreter path that
-    installed the hook survives.
+    hookSchema.ts), needed because hookExecutor.ts spawns `powershell.exe -Command
+    <hookCommand>` whenever ComSpec is cmd.exe -- the Windows default -- and PowerShell will
+    not run a line beginning with a quoted path. `command` keeps the POSIX form.
 
     `matcher` is accepted and ignored: extractHookCommandsFromItem reads Claude's
     `{matcher, hooks: [...]}` shape but discards the matcher, so there is no tool filter.
