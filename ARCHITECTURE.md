@@ -40,7 +40,13 @@ per vendor. They are not a taxonomy invented up front; they are what was left af
 enumerating what chock had to write twelve times.
 
 1. **Hooks** — lifecycle events, normalized, plus the honest capability record.
-   `contract.py`, `dispatch.py`, `install.py`, `adapters/`.
+   `contract.py`, `dispatch.py`, `install.py`, `bundler.py`, `adapters/`. `bundler.py` is
+   this primitive rendered standalone: `bundle(agent)` assembles `contract.py` plus one
+   adapter (plus whatever it transitively needs) into a single stdlib-only file with no
+   `import agentseam`, for a consumer that vendors the runtime into a repo that may never
+   install this package — the same normalize-stdin-to-vendor-dialect plumbing `dispatch.py`
+   runs in-process, composed at the source level with `ast` rather than copy-pasted, so it
+   cannot drift from the adapter it was built from.
 2. **Instruction files** — one body of text, every agent's drawer of near-identical
    markdown files. `instructions.py`.
 3. **Plugin / skill packaging** — one bundle, each agent's layout. `packaging*.py`.
