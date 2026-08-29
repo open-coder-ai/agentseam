@@ -1,0 +1,59 @@
+name: Release
+
+# A pushed v* tag builds sdist+wheel and publishes to PyPI via trusted publishing (OIDC) --
+# no stored token. build re-runs the test suite on the exact tagged commit rather than
+# trusting that main's own CI run for the same SHA is still the current truth by the time
+# this fires; publish is gated on that job, so a red build never reaches PyPI.
+#
+# Requires the owner to register this repo/workflow as a trusted publisher on PyPI first
+# (pypi.org -> the `agentseam` project -> Publishing -> add a GitHub publisher: owner
+# `open-coder-ai`, repo `agentseam`, workflow `release.yml`, environment `pypi`). Until
+# that is done, `publish` fails at the upload step with everything else here unaffected --
+# the build, and the tag it built from, are still valid and ready to retry.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - run: pip install -e ".[dev]"
+      - run: pytest -q
+      - name: Build sdist and wheel
+        run: |
+          pip install build
+          python -m build
+      - name: Check the built distributions
+        run: |
+          pip install twine
+          twine check dist/*
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      # OIDC token for PyPI trusted publishing -- the whole point of this workflow existing
+      # is that no PyPI API token is stored as a secret.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4.3.0
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@ec4db0b4ddc65acdf4bff5fa45ac92d78b56bdf0  # v1.9.0
