@@ -5,10 +5,10 @@ Cursor exposes three separate hook surfaces, and keeping them apart is the point
   * **Agent hooks** fire during Cmd+K / Agent Chat. `preToolUse` is generic -- it fires for
     *every* tool (Shell, Read, Write, MCP, Task) -- and its response carries `updated_input`,
     so this is a genuine block-and-rewrite gate, including on file writes.
-  * **Tab hooks** fire for inline completions only, so a policy can treat autonomous Tab
-    edits differently from user-directed agent work.
-  * **App lifecycle** (`workspaceOpen`) fires outside any session and has no canonical event
-    here; it is left unmapped rather than bent into one that means something else.
+  * **Tab hooks** fire for inline completions only, so a policy can treat autonomous Tab edits
+    differently from user-directed agent work.
+  * **App lifecycle** (`workspaceOpen`) fires outside any session and has no canonical event here;
+    it is left unmapped rather than bent into one that means something else.
 
 Three vendor facts shape the response code, and each one costs something if ignored:
 
@@ -17,9 +17,8 @@ Three vendor facts shape the response code, and each one costs something if igno
     On `beforeShellExecution` / `beforeMCPExecution` an `ask` is honoured.
   * `afterFileEdit` supports **no output fields at all**, and the write has already landed.
     A deny there can only be recorded.
-  * Hooks fail **open** by default; `failClosed: true` per hook definition makes them fail
-    closed. So Cursor's enforcement level is a configuration choice, not a fixed property --
-    `hook_config()` sets it on the gates where failing open would be the wrong answer.
+  * Hooks fail **open** by default; `failClosed: true` per hook definition makes them fail closed,
+    so enforcement level here is a configuration choice, not a fixed property.
 
 Verified against Cursor's own hooks documentation (2026-08-26).
 """
@@ -286,8 +285,9 @@ def hook_config(canonical_events, command, matcher=None, fail_closed=True):
         if not name:
             continue
         entry = {"command": command}
-        if matcher:
-            entry["matcher"] = matcher
+        # No matcher is written: Cursor's means different things per event (a COMMAND-TEXT regex
+        # at beforeShellExecution) and preToolUse's is unestablished. A wrong matcher matches
+        # nothing while the install still reports success. See this row's matrix note.
         # Fail open on a gate and a crashed hook silently permits the thing it was
         # installed to stop, so ask for fail-closed wherever a decision is expected.
         # fail_closed=False marks an observer (the capture probe): wired as a gate it would block the user's command whenever it cannot launch.
