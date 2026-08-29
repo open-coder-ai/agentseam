@@ -15,7 +15,9 @@ actually enforce.
     run(handler)
 """
 
-from . import adapters, instructions, packaging, permissions
+__version__ = "0.1.0"
+
+from . import adapters, bundler, instructions, packaging, permissions
 from .contract import (
     ALLOW,
     ASK,
@@ -41,8 +43,6 @@ from .contract import (
 from .dispatch import degrade, handle, run
 from .matrix import MATRIX, adapted_agents, agents, can_block, can_rewrite, capability, enforcement_level
 
-__version__ = "0.1.0"
-
 __all__ = [
     "run",
     "handle",
@@ -51,6 +51,7 @@ __all__ = [
     "Decision",
     "EVENTS",
     "adapters",
+    "bundler",
     "instructions",
     "packaging",
     "permissions",
