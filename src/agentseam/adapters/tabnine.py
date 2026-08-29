@@ -45,6 +45,7 @@ from ..contract import (
     UNKNOWN,
     Event,
     degraded_from,
+    tool_input_of,
 )
 
 AGENT = "tabnine"
@@ -93,7 +94,7 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     out = raw.get("tool_output") or raw.get("tool_response")
     if isinstance(out, (dict, list)):
         out = _json.dumps(out)

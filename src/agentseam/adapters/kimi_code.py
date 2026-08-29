@@ -47,6 +47,7 @@ from ..contract import (
     UNKNOWN,
     Event,
     degraded_from,
+    tool_input_of,
 )
 
 AGENT = "kimi_code"
@@ -110,7 +111,7 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     # The docstring stakes everything on this envelope being Claude Code's exactly (same
     # tool_input), so MultiEdit's edits[].new_string and NotebookEdit's new_source get the
     # same fallback chain claude_code.parse uses -- not a guess, a claim we already made.

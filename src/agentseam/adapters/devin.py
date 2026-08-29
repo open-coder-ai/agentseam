@@ -46,6 +46,7 @@ from ..contract import (
     UNKNOWN,
     Event,
     degraded_from,
+    tool_input_of,
 )
 from .claude_code import looks_like_claude_code
 
@@ -110,7 +111,7 @@ def parse(raw):
     # an exception here kills the hook with exit 1, which most vendors treat as a
     # non-blocking error and let the call through. tool_input is whatever the agent chose
     # to serialise, so it is not ours to assume the shape of.
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     content = ti.get("content") or ti.get("new_string") or None
     out = raw.get("tool_output")
     if isinstance(out, (dict, list)):

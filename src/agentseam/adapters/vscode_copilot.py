@@ -35,15 +35,15 @@ from ..contract import (
     SUBAGENT_STOP,
     UNKNOWN,
     Event,
+    tool_input_of,
 )
 from ._windows import powershell_command
 
 AGENT = "vscode_copilot"
 
-#: Every vendor event name, in both spellings; parsing accepts both. `errorOccurred` is
-#: absent: it reports a session error, not a tool failure, so mapping it to TOOL_FAILURE
-#: would have a guardrail judge a tool policy against a payload with no tool. PreCompact
-#: is absent too: VS Code's schema and docs list it, but it is never fired.
+#: Every vendor event name, in both spellings; parsing accepts both. `errorOccurred` is absent:
+#: it reports a session error, not a tool failure, so it would have a guardrail judge a tool
+#: policy against a payload with no tool. PreCompact too: in the schema and docs, never fired.
 EVENT_MAP = {
     # VS Code agent mode (Target.VSCode)
     "PreToolUse": PRE_TOOL,
@@ -65,10 +65,10 @@ EVENT_MAP = {
 
 MEMORY_TOOLS = ("memory", "copilot_memory")
 MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
-# A FILE_WRITE_TOOLS constant naming create_file/edit_file/apply_patch used to sit here,
-# read by nothing. The generic parse branch reads content/newText/new_str regardless of
-# tool name, and no payload or vendor source read here records what edit_file or
-# apply_patch actually sends. Needs a live capture: a guessed key reads the wrong field.
+# A FILE_WRITE_TOOLS constant naming create_file/edit_file/apply_patch waited here for a
+# live capture. It ran (2026-08-29): the write tool is `Edit`, sending path/old_str/new_str,
+# keys the generic branch already read. What it does not always send is an OBJECT -- see
+# tool_input_of.
 
 
 #: Turn-scoped fields OpenAI Codex CLI sends and VS Code never does.
@@ -121,7 +121,7 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     tool = raw.get("tool_name") or raw.get("toolName")
     path = content = None
     if tool in MEMORY_TOOLS:
@@ -160,7 +160,7 @@ def parse(raw):
 def is_memory_write(event):
     """True when this event is a memory-tool content write (VS Code's memory surface)."""
     ti = event.raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     return event.tool in MEMORY_TOOLS and ti.get("command") in MEMORY_WRITE_COMMANDS
 
 

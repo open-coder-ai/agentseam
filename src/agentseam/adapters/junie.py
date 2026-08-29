@@ -50,6 +50,7 @@ from ..contract import (
     STOP,
     UNKNOWN,
     Event,
+    tool_input_of,
 )
 
 AGENT = "junie"
@@ -89,7 +90,7 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     # The docstring stakes everything on Junie's field names following Claude Code's wire
     # protocol exactly, so MultiEdit's edits[].new_string and NotebookEdit's new_source get
     # the same fallback chain claude_code.parse uses -- not a guess, a claim we already made.
