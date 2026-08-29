@@ -6,6 +6,73 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-08-29
+
+### Added
+- **The `EXECUTABLE` packaging part.** Packaging modeled the hook *config* (`HOOKS`) but had
+  no part for the executable file a hook command runs, so a consumer shipping a guard script
+  had to place it itself and hand-build the path. `Part` gained an `executable` flag; `Plan`
+  gained `executables`, the rendered paths needing the bit set. `claude_code`, `gemini_cli`
+  and `vscode_copilot` record a `scripts/` location (Claude Code's own documented example;
+  Gemini CLI and VS Code follow by the same location-discovery convention, with no vendor
+  restriction against it). `codex_cli` and `cursor` degrade honestly to the documented
+  `PART_LIMITS` refusal: neither vendor's manifest or docs name a place for one. New
+  `packaging.executable_ref(agent, path)` composes the `plugin_root`-relative reference a
+  hook command should use, or returns the bare path for a repo-local format that never
+  relocates at install -- never a guessed token. `gemini_cli`'s `plugin_root`, previously
+  unestablished, is now `${extensionPath}`, sourced directly from the vendor's own
+  `docs/extensions/reference.md`.
+- **The Copilot Agent Plugins 1.0 marketplace bundle.** A distinct artifact from
+  `vscode_copilot`'s repo-local hooks: `plugin.json` (with a required, fixed `$schema` field
+  -- omitting it silently falls back to an unrelated legacy format) plus
+  `com.github.copilot/hooks/hooks.json`, sourced from `microsoft/vscode-docs`'
+  `docs/agent-customization/agent-plugins.md`. Skills and `mcp.json` are the standard's own
+  portable component types, found by location exactly like every other plugin format here.
+  The honesty gate: VS Code's own docs state plugin hooks "fire in addition to any other
+  hooks configured for the same event," and separately that Copilot CLI and the Copilot app
+  read the same namespace; Copilot CLI's own `hooks-reference.md` independently lists
+  "hooks contributed by installed plugins" in its combined, executed loading order --
+  recorded as docs-basis, not live-verified, with an open, unconfirmed bug report
+  (`github/copilot-cli#2540`) noted rather than omitted. No separate adapter is registered:
+  `vscode_copilot`'s adapter already claims this exact wire dialect, and a second one with an
+  identical `claims()` would make every VS Code/Copilot CLI payload ambiguous to
+  `adapters.detect()`. The matrix row (`TIER_UNADAPTED`, `events={}`) claims nothing dispatch
+  cannot actually deliver under this identity; the real, cited evidence lives in its
+  `notes`/`verified` fields.
+- **`hookSpecificOutput.additionalContext` on the Claude Code adapter.** `Decision` gained a
+  `context` field (every constructor, default `None`): free text meant for the model,
+  independent of outcome, on the vendor surfaces that take side-channel context injection.
+  Wired at `SessionStart` and `UserPromptSubmit` per Claude Code's own docs -- explicitly
+  nested, top level is silently ignored -- docs-basis, not run against the live 2.1.247
+  session that settled the rest of this adapter's response contract. An adapter with no such
+  surface drops it silently, the same honest-degrade shape as an unsupported outcome.
+- **The `vouch` decision outcome (owner decision D6).** `ALLOW` means "no objection"; `VOUCH`
+  means "I actively approve -- skip the user's own confirmation," the exact word a bare
+  `ALLOW` was previously found speaking by accident on some vendors (`allow_semantics.py`'s
+  whole reason for existing). New `Decision.vouch(reason, evidence, context)`. Which vendors
+  may actually speak that word is `allow_semantics.VOUCH_SPEAKS`, an explicit, evidenced
+  allowlist -- deliberately **not** every vendor silent-by-default on a bare allow: `codex_cli`
+  is silent by the same default, but its own evidence says the explicit word is **rejected
+  outright** (a hook error, which fails open), the opposite of what `vouch` means. Only
+  `claude_code` and `vscode_copilot` have real evidence (of differing strength) that the word
+  means what `vouch` means. `dispatch.degrade()` reduces `vouch` to a plain, honestly-labelled
+  allow (`degraded_from` recorded) for every other agent, in one place rather than per-adapter.
+  Must land before the API freezes at this release.
+
+### Known limitations at this release
+- **R3 — Cursor's ask dialect is not yet event-selectable.** Cursor honours `ask` only at
+  `beforeShellExecution`/`beforeMCPExecution`, not at the generic `preToolUse` a deny-style
+  policy needs. If a consumer ever ships an ask-style Cursor policy, `install()`'s one-to-one
+  `REVERSE_EVENT_MAP` cannot express it. No code change until that consumer exists --
+  tracked in [#73](https://github.com/open-coder-ai/agentseam/issues/73) so the resolution
+  isn't silently re-litigated.
+- **R2's Copilot marketplace-bundle hooks are docs-basis, not live-verified** (see above);
+  the open `github/copilot-cli#2540` report has not been reproduced or resolved here.
+- **`claude_code`'s membership in `allow_semantics.VOUCH_SPEAKS` rests on a documented
+  sibling-product analogy**, not a claude_code-specific live capture the way
+  `vscode_copilot`'s does. A future live session could settle it more strongly in either
+  direction.
+
 ### Added
 - **The three per-vendor lookups a policy engine needs and could get nowhere else.** All
   three share a failure shape: get them wrong and nothing raises -- the hook command resolves
