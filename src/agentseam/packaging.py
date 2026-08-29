@@ -18,6 +18,7 @@ import json
 from .packaging_data import (
     ALSO_READS,
     COMMAND,
+    EXECUTABLE,
     HOOKS,
     MCP,
     PACKAGING,
@@ -40,29 +41,38 @@ __all__ = [
     "same_path_for",
     "also_reads",
     "plan",
+    "plugin_root",
+    "executable_ref",
     "PARTS",
     "SKILL",
     "SUBAGENT",
     "COMMAND",
     "HOOKS",
     "MCP",
+    "EXECUTABLE",
     "SHARED_SKILL_DIR",
     "UNRECORDED",
 ]
 
 
 class Part:
-    """One piece of a bundle: a kind, a name, and its body text."""
+    """One piece of a bundle: a kind, a name, and its body text.
 
-    __slots__ = ("kind", "name", "body", "description")
+    `executable` only means anything on an EXECUTABLE part -- the writer should mark the
+    rendered file executable. agentseam never inspects or authors the body of one: it is
+    opaque consumer bytes, placed at the vendor-correct path and nothing more.
+    """
 
-    def __init__(self, kind, name, body, description=None):
+    __slots__ = ("kind", "name", "body", "description", "executable")
+
+    def __init__(self, kind, name, body, description=None, executable=False):
         if kind not in PARTS:
             raise ValueError("unknown part: %r" % (kind,))
         self.kind = kind
         self.name = name
         self.body = body
         self.description = description
+        self.executable = executable
 
     def __repr__(self):
         return "Part(%r, %r)" % (self.kind, self.name)
@@ -100,15 +110,21 @@ class Unrepresentable:
 
 
 class Plan:
-    """The files to write, relative to the bundle root, plus what did not fit."""
+    """The files to write, relative to the bundle root, plus what did not fit.
 
-    __slots__ = ("agent", "root", "files", "unrepresentable")
+    `executables` names the subset of `files` keys that need the executable bit set on
+    write -- every existing caller gets an empty frozenset, so nothing that predates this
+    breaks.
+    """
 
-    def __init__(self, agent, root, files, unrepresentable=()):
+    __slots__ = ("agent", "root", "files", "unrepresentable", "executables")
+
+    def __init__(self, agent, root, files, unrepresentable=(), executables=frozenset()):
         self.agent = agent
         self.root = root
         self.files = files
         self.unrepresentable = list(unrepresentable)
+        self.executables = frozenset(executables)
 
     @property
     def complete(self):
@@ -218,6 +234,7 @@ def plan(agent, bundle):
     row = PACKAGING[agent]
     files = {}
     dropped = []
+    executables = set()
 
     holdable = {p.kind for p in bundle.parts if row["parts"].get(p.kind)}
     manifest = _manifest(agent, bundle, holdable)
@@ -231,10 +248,13 @@ def plan(agent, bundle):
             dropped.append(Unrepresentable(part, reason))
             continue
         body = _render_command(agent, part) if part.kind == COMMAND else part.body
-        files[template.format(name=part.name)] = body
+        path = template.format(name=part.name)
+        files[path] = body
+        if part.kind == EXECUTABLE and part.executable:
+            executables.add(path)
 
     root = row["project_root"].format(bundle=bundle.name)
-    return Plan(agent, root, files, dropped)
+    return Plan(agent, root, files, dropped, executables)
 
 
 def plugin_root(agent):
@@ -248,3 +268,25 @@ def plugin_root(agent):
     row = PACKAGING.get(agent)
     tokens = row.get("plugin_root") if row else None
     return tokens[0] if tokens else None
+
+
+def executable_ref(agent, path):
+    """The string a HOOKS command should use to reach a rendered EXECUTABLE at `path`.
+
+    `path` is one of `Plan.executables` -- already root-relative, exactly as written to
+    disk. A format that relocates the bundle at install (`unit` is not None) needs it
+    composed with `plugin_root(agent)`, the one token a hardcoded relative path cannot
+    survive; a repo-local format (`unit` is None) never relocates -- committing the file
+    IS the install -- so the bare path is already correct and plugin_root's tokens (there
+    only for reading plugins THIS format did not build) do not apply.
+
+    Returns None where composing one would require a token this format has never
+    established -- never a guess at a spelling nothing has verified.
+    """
+    row = PACKAGING.get(agent)
+    if not row:
+        return None
+    if row["unit"] is None:
+        return path
+    token = plugin_root(agent)
+    return "%s/%s" % (token, path) if token else None

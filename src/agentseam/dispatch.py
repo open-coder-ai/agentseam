@@ -84,8 +84,9 @@ def handle(raw, handler, agent=None):
 def _read_payload(stream):
     """Read BYTES and decode UTF-8 ourselves rather than trusting the platform locale.
 
-    Ported from chock, which witnessed the failure on a real Cursor install on Windows:
-    the console locale is cp1252, Cursor's UTF-8 BOM became the three characters 'ï»¿',
+    Ported from a sibling policy engine, which witnessed the failure on a real Cursor
+    install on Windows: the console locale is cp1252, Cursor's UTF-8 BOM became the
+    three characters 'ï»¿',
     json failed on "line 1 column 1" -- and the hook allowed everything while claiming
     enforcement. `utf-8-sig` drops the BOM; `errors="replace"` keeps one stray byte from
     silently disabling the gate. Streams without a binary buffer (tests, embeddings) fall

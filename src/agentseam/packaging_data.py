@@ -26,7 +26,8 @@ SUBAGENT = "subagent"  # a delegated persona
 COMMAND = "command"  # a user-invoked prompt, /like-this
 HOOKS = "hooks"  # lifecycle hook config (primitive 1's install target)
 MCP = "mcp"  # MCP server declarations
-PARTS = (SKILL, SUBAGENT, COMMAND, HOOKS, MCP)
+EXECUTABLE = "executable"  # a consumer-supplied script a HOOKS command runs
+PARTS = (SKILL, SUBAGENT, COMMAND, HOOKS, MCP, EXECUTABLE)
 
 #: The neutral namespace. `.agents/skills` is to packaging what AGENTS.md is to
 #: instructions: a vendor-independent location more than one agent already reads.
@@ -44,6 +45,8 @@ SHARED_SKILL_DIR = ".agents/skills"
 #:                    this env var" (PLUGIN_DATA / CLAUDE_PLUGIN_DATA are paired the same way)
 #:   vscode_copilot   both, listed as pluginRootTokens in pluginParsers.ts
 #:   cursor           ${CURSOR_PLUGIN_ROOT}
+#:   gemini_cli       ${extensionPath} -- its own spelling; docs/extensions/reference.md
+#:                    documents substitution inside both the manifest and hooks/hooks.json
 #:
 #: **${CODEX_PLUGIN_ROOT} is a trap.** It appears in Codex's own TUI hook browser as sample
 #: text and is set NOWHERE in the tree, so a hook command written with it resolves to nothing
@@ -63,15 +66,21 @@ PACKAGING = {
             COMMAND: "commands/{name}.md",
             HOOKS: "hooks/hooks.json",
             MCP: ".mcp.json",
+            EXECUTABLE: "scripts/{name}",
         },
         "notes": (
             "Only plugin.json lives inside .claude-plugin/; every component directory sits "
             "at the plugin root. Outside a plugin the same parts live under .claude/ in a "
-            "repository, which is why VS Code can read them without Claude Code installed."
+            "repository, which is why VS Code can read them without Claude Code installed. "
+            "scripts/ is the vendor's own documented home for a hook's executable, e.g. "
+            "hooks/hooks.json pointing a command at "
+            "${CLAUDE_PLUGIN_ROOT}/scripts/format-and-lint.sh, chmod +x'd before packaging."
         ),
         "verified": {
-            "method": "vendor plugin reference read directly (directory layout and extension table)",
-            "date": "2026-08-26",
+            "method": "vendor plugin reference (directory layout, extension table); scripts/ "
+            "confirmed via the plugin-dev skill's hook-development example (${CLAUDE_PLUGIN_ROOT}"
+            "/scripts/format-and-lint.sh, chmod +x)",
+            "date": "2026-08-29",
         },
     },
     "gemini_cli": {
@@ -79,24 +88,32 @@ PACKAGING = {
         "manifest": "gemini-extension.json",
         "manifest_format": "json",
         "project_root": ".gemini/extensions/{bundle}",
-        "plugin_root": (),
+        "plugin_root": ("${extensionPath}",),
         "parts": {
             SKILL: "skills/{name}/SKILL.md",
             SUBAGENT: "agents/{name}.md",
             COMMAND: "commands/{name}.toml",
             HOOKS: "hooks/hooks.json",
             MCP: None,
+            EXECUTABLE: "scripts/{name}",
         },
         "notes": (
             "Commands are TOML with a required `prompt` field and an optional `description`; "
             "a nested commands/gcs/sync.toml becomes /gcs:sync. Hooks are deliberately not "
             "declared in the manifest -- hooks/hooks.json is found by location, exactly as in "
             "a Claude Code plugin. MCP servers have no file of their own: they are declared "
-            "inside gemini-extension.json, so a rendered .mcp.json would be ignored."
+            "inside gemini-extension.json, so a rendered .mcp.json would be ignored. "
+            "Executable placement has no vendor-reserved folder -- reference.md leaves naming "
+            "to the extension developer -- so scripts/ is kept for consistency with the layout "
+            "above; a hook command reaches it via ${extensionPath}, confirmed to substitute "
+            "inside hooks/hooks.json too, not only the manifest."
         ),
         "verified": {
-            "method": "source read: docs/extensions/reference.md, docs/cli/custom-commands.md",
-            "date": "2026-08-26",
+            "method": "source read: docs/extensions/reference.md, docs/cli/custom-commands.md; "
+            "${extensionPath} confirmed by direct quote (fetched 2026-08-29): 'you should use "
+            "${extensionPath} to refer to files within your extension directory', substitution "
+            "documented for both gemini-extension.json and hooks/hooks.json",
+            "date": "2026-08-29",
         },
     },
     "codex_cli": {
@@ -113,6 +130,7 @@ PACKAGING = {
             COMMAND: None,
             HOOKS: "hooks/hooks.json",
             MCP: None,
+            EXECUTABLE: None,
         },
         # Codex RESOLVES components from the manifest rather than finding them by location,
         # so a manifest without these keys ships a plugin whose parts are never loaded.
@@ -129,11 +147,12 @@ PACKAGING = {
             "and commands are read from a `commands` field on the same file."
         ),
         "verified": {
-            "method": (
-                "vendor source read from a clone: codex-rs/core-plugins/src/manifest.rs "
-                "(RawPluginManifest fields, the .codex-plugin/plugin.json path, Legacy vs "
-                "AgentPlugin formats) and core-plugins/src/loader.rs (the hook-discard branch)"
-            ),
+            "method": "vendor source read from a clone: codex-rs/core-plugins/src/manifest.rs "
+            "(RawPluginManifest fields, the .codex-plugin/plugin.json path, Legacy vs "
+            "AgentPlugin formats) and core-plugins/src/loader.rs (hook-discard branch); the "
+            "manifest's exhaustive field list (name, version, description, keywords, skills, "
+            "mcp_servers, apps, hooks, interface) and plugin-json-spec.md confirm no field "
+            "exists for a bundled executable/scripts path",
             "date": "2026-08-29",
         },
     },
@@ -149,6 +168,7 @@ PACKAGING = {
             COMMAND: None,
             HOOKS: "hooks/hooks.json",
             MCP: None,
+            EXECUTABLE: None,
         },
         "declares": {SKILL: ("skills", "./skills/"), HOOKS: ("hooks", "./hooks/hooks.json")},
         "notes": (
@@ -161,12 +181,12 @@ PACKAGING = {
             "run the identical hook."
         ),
         "verified": {
-            "method": (
-                "vendor plugin docs, plus the layout as implemented and shipped by a sibling "
-                "guardrail in this org (chock's .cursor-plugin emitter). Cursor is closed "
-                "source, so this is the strongest basis available -- weaker than the Codex row "
-                "beside it, which is read from the vendor's own loader."
-            ),
+            "method": "vendor plugin docs, plus the layout as implemented and shipped by a "
+            "sibling policy engine's own .cursor-plugin emitter. Cursor is closed source, so "
+            "this is the strongest basis available -- weaker than the Codex row beside it, "
+            "read from the vendor's own loader. No executable/scripts location was found in "
+            "cursor/plugins' own README (layout: .cursor-plugin/, skills/, rules/, mcp.json), "
+            "so none is claimed.",
             "date": "2026-08-29",
         },
     },
@@ -186,12 +206,18 @@ PACKAGING = {
             COMMAND: ".github/prompts/{name}.prompt.md",
             HOOKS: ".github/hooks/hooks.json",
             MCP: None,
+            EXECUTABLE: ".github/scripts/{name}",
         },
         "notes": (
             "Parts are loaded from fixed folders rather than a bundle, so there is no manifest "
             "and no install step -- committing the file is the install. Note the doubled "
             "extensions: a subagent is <name>.agent.md and a command is <name>.prompt.md, "
-            "where both of the other two use a bare .md."
+            "where both of the other two use a bare .md. Repo-local, so nothing relocates at "
+            "install: an executable's rendered path is already the reference a hook command "
+            "needs, no plugin_root token to compose -- that token pair is for reading PLUGINS "
+            "this format did not build, not its own repo-local hooks. .github/scripts/ keeps "
+            "the vendor's own namespace convention; promptFileLocations.ts imposes no "
+            "restriction here, so this is a chosen convention, not a vendor-mandated path."
         ),
         "verified": {
             "method": "source read: src/vs/workbench/contrib/chat/common/promptSyntax/config/promptFileLocations.ts",
@@ -210,9 +236,16 @@ PART_LIMITS = {
     "command FILE format was not established here -- a guessed format ships a plugin whose "
     "commands silently do not load",
     ("codex_cli", SUBAGENT): "no subagent field exists in the plugin manifest",
+    ("codex_cli", EXECUTABLE): "RawPluginManifest's field list is exhaustive (name, version, "
+    "description, keywords, skills, mcp_servers, apps, hooks, interface) and none names a "
+    "bundled executable or scripts path; whether an undeclared file elsewhere in the plugin "
+    "directory survives installation to be referenced by a hook command was not established here",
     ("cursor", MCP): "no MCP declaration was established for this plugin format",
     ("cursor", COMMAND): "no command format was established for this plugin format",
     ("cursor", SUBAGENT): "no subagent format was established for this plugin format",
+    ("cursor", EXECUTABLE): "no scripts/executable location was established for this closed-source "
+    "plugin format; the documented layout (.cursor-plugin/, skills/, rules/, mcp.json) names "
+    "no place for one",
     ("gemini_cli", MCP): "MCP servers are declared inside gemini-extension.json, not in a file "
     "of their own; a rendered .mcp.json would simply be ignored",
     ("vscode_copilot", MCP): "MCP servers are configured by the editor rather than shipped alongside these parts",
