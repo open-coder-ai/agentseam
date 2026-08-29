@@ -6,6 +6,8 @@ Stdlib only — this module is embedded verbatim into rendered single-file adapt
 
 from __future__ import annotations
 
+import json as _json
+
 # --- canonical lifecycle events -------------------------------------------------
 # Vendor event names map ONTO these; adapters own the mapping. A vendor that lacks
 # an event simply has no row for it in the capability matrix — that absence is the
@@ -162,3 +164,34 @@ def degraded_from(decision):
     never a confirmation request.
     """
     return (decision.evidence or {}).get("degraded_from")
+
+
+def tool_input_of(raw):
+    """The tool's arguments as a dict, decoding the JSON-string form some vendors send.
+
+    `tool_input` is whatever the agent chose to serialise, and it is not always an object.
+    Witnessed live on VS Code Copilot (2026-08-29), same adapter and same `Edit` tool, in
+    two runs routed to different models: once as an object with path/old_str/new_str, once
+    as a 129-character JSON *string*. Both are the vendor's real wire format.
+
+    That difference is not cosmetic. Against the object the parser reports the file and the
+    content; against the string it reported neither, so a policy denying on secret content
+    saw an empty write and allowed it. The adapters guarded the string case against a crash
+    (a crash is an allow) but resolved it to `{}`, which is a quieter version of the same
+    outcome: the guard is blind and says nothing about it.
+
+    Decoding is not a guess about an unrecorded shape -- a string that parses to a JSON
+    object IS that object, and the alternative is discarding data the vendor sent. Only a
+    dict counts: a JSON list or scalar is not a set of tool arguments, and `{}` remains the
+    honest answer for anything that does not parse.
+    """
+    if isinstance(raw, dict):
+        return raw
+    if isinstance(raw, str) and raw[:1] == "{":
+        try:
+            parsed = _json.loads(raw)
+        except Exception:
+            return {}
+        if isinstance(parsed, dict):
+            return parsed
+    return {}

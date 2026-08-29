@@ -46,6 +46,7 @@ from ..contract import (
     UNKNOWN,
     Event,
     degraded_from,
+    tool_input_of,
 )
 
 AGENT = "cursor"
@@ -158,7 +159,7 @@ def parse(raw):
         # unknown event gets reported as the gate.
         name = "afterFileEdit" if isinstance(raw.get("edits"), list) else "beforeShellExecution"
     ti = raw.get("tool_input")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     command = raw.get("command") or ti.get("command")
     # preToolUse nests the target inside tool_input; the file-scoped hooks put it at the
     # top level. Reading only one of the two leaves a guardrail asking "which file?" with
@@ -167,8 +168,7 @@ def parse(raw):
     return Event(
         AGENT,
         # An event this adapter has no mapping for resolves to UNKNOWN, never to the
-        # nearest canonical one: relabelling it invites a guardrail to evaluate the
-        # wrong policy against it.
+        # nearest canonical one: relabelling it invites a guardrail to evaluate the wrong policy against it.
         EVENT_MAP.get(name, UNKNOWN),
         tool=raw.get("tool_name") or name,
         command=command,

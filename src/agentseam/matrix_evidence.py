@@ -148,7 +148,7 @@ EVIDENCE = {
         "method": "vendor hooks documentation read directly (event table, exit codes, output fields)",
     },
     "vscode_copilot": {
-        "basis": BASIS_SOURCE,
+        "basis": BASIS_LIVE_PARTIAL,
         "version": "1.110+",
         "date": "2026-08-28",
         "method": (
@@ -157,11 +157,20 @@ EVIDENCE = {
             "hookSchema.ts and hookCompatibility.ts (parseCopilotHooks, the config shape "
             "actually parsed), hookCommandTypes.ts and chatHookService.ts (per-event input "
             "and output contracts, exit-code semantics), hookResultProcessor.ts, and "
-            "languageModelToolsService.ts (where the decision is honoured). That reading "
-            "corrected the event vocabulary, the installed config shape, the fail mode and "
-            "the response dialects -- every one of which had been wrong. No live run: "
-            "`observed` is absent here on purpose."
+            "languageModelToolsService.ts (where the decision is honoured). Extended "
+            "2026-08-29 by a LIVE CAPTURE on Windows -- the first real payloads this row "
+            "has ever had: 5 vendor events across two sessions, all claimed, none carrying "
+            "an event we do not map. It corrected the write-tool vocabulary (the tools are "
+            "`Edit`, `Read`, `Glob`, sending path/old_str/new_str -- not the "
+            "create_file/edit_file/apply_patch this adapter had waited on a capture to "
+            "confirm) and found that `tool_input` arrives as an OBJECT in one run and a "
+            "JSON STRING in another, same tool, different model routing. It also surfaced "
+            "`initial_prompt` (SessionStart) and `stop_reason` (Stop), which appear in no "
+            "vendor doc read here."
         ),
+        # Canonical events seen against the running agent. NOT a claim about subagent_start
+        # or subagent_stop, which this row also asserts and which did not fire.
+        "observed": ("post_tool", "pre_tool", "prompt_submit", "session_start", "stop"),
     },
     "windsurf": {
         "basis": BASIS_THIRD_PARTY,

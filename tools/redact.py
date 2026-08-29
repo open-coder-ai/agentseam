@@ -16,6 +16,8 @@ turn up.
 
 from __future__ import annotations
 
+import json as _json
+
 #: Keys whose values describe the protocol rather than the user. Everything else is typed.
 #:
 #: A value is kept only if it is also short and free of separators -- an enum, not prose --
@@ -92,14 +94,46 @@ def _type_of(value):
     return "<%s>" % type(value).__name__
 
 
+def _embedded_json(value):
+    """The parsed object inside a JSON-encoded string, or None.
+
+    A vendor may send a whole sub-payload as a *string* rather than an object. VS Code
+    Copilot does exactly this: witnessed live 2026-08-29, `Edit` sends `tool_input` as a
+    129-character JSON string while `Read` and `Glob` send objects. Treating that string as
+    opaque loses the one thing a capture exists to learn -- which keys the write tool
+    carries -- and reports it as `<str:129>`, which reads like an id.
+
+    Only dicts and lists are unwrapped. A bare JSON scalar ("42", "true", a quoted string)
+    is still just a value and stays a value: json.loads would happily turn a user's typed
+    `true` into a bool and claim structure that is not there.
+    """
+    if not isinstance(value, str) or value[:1] not in ("{", "["):
+        return None
+    try:
+        parsed = _json.loads(value)
+    except Exception:
+        return None
+    return parsed if isinstance(parsed, (dict, list)) else None
+
+
 def redact(value, key=None):
     """Shape-only copy of `value`. Never returns any string the caller passed in.
 
     The one exception is a structural key holding an enum-like value, which is the whole
     point of capturing: `hook_event_name` is the field we most need to read back.
+
+    A JSON-encoded string is unwrapped and redacted as the structure it is -- keys kept,
+    values shaped, exactly as if the vendor had sent an object. Nothing is loosened by this:
+    every leaf still goes through the same allowlist, so the values inside an embedded
+    payload are redacted by the identical rules as the values outside it.
     """
     if isinstance(value, dict):
         return {k: redact(v, key=k) for k, v in value.items()}
+    inner = _embedded_json(value)
+    if inner is not None:
+        # Marked, not silently flattened: a reader must be able to tell that the vendor
+        # sent a string here, because an adapter parsing this field has to decode it.
+        return {"<json-string>": redact(inner, key=key)}
     if isinstance(value, list):
         # Keep the first two entries' shapes; a longer list adds a count, not more shape.
         shaped = [redact(v) for v in value[:2]]

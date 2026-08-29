@@ -6,6 +6,35 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **`tool_input` is not always an object, and the string form blinded every guard.** Live
+  capture on VS Code Copilot (2026-08-29), the first real payloads this adapter has ever
+  had: the same `Edit` tool sent `tool_input` as an **object** in one run and as a
+  **129-character JSON string** in another, the two runs routed to different models. Against
+  the object the parser reported the file and its content; against the string it reported
+  neither, so a policy denying on secret content saw an empty write and allowed it. The
+  `isinstance` guard added when `parse()` was made total stopped the crash -- and a crash is
+  an allow -- but resolved the string to `{}`, which is the same blindness without the
+  traceback. `contract.tool_input_of` now decodes it, and every adapter reads through it.
+  Pinned by an invariant stated as an equivalence -- the string form must parse to what the
+  object form parses to -- so an adapter whose vendor does not use `tool_input` is not
+  accused of a bug, and only reading one shape and not the other is forbidden.
+
+### Changed
+- **VS Code Copilot's row moves from `vendor-source` to `live-partial`.** The capture
+  corrected the write-tool vocabulary the adapter had explicitly deferred to a live round:
+  the tools are `Edit`, `Read` and `Glob`, sending `path`/`old_str`/`new_str` -- not the
+  `create_file`/`edit_file`/`apply_patch` a filed finding had assumed. Those keys were
+  already in the generic parse chain, so the guessed *names* never mattered; the wire
+  *shape* did. Five events observed; `initial_prompt` (SessionStart) and `stop_reason`
+  (Stop) appear in no vendor doc read here.
+- **The redactor lost structure inside JSON-encoded strings.** It recorded the `Edit`
+  payload as `<str:129>`, which reads like an id, so a capture run specifically to learn
+  which keys the write tool carries came back saying nothing. A string that parses to a dict
+  or list is now unwrapped and redacted as the structure it is, marked `<json-string>` so a
+  reader can tell the vendor sent a string. Nothing is loosened: a test puts a secret inside
+  an embedded field and asserts it does not survive.
+
 ### Changed
 - **Cursor's "silence blocks" question is settled live, and the answer is a mechanism, not a
   rule.** Two trials on Cursor 3.17.8 (Windows, 2026-08-28) of one `beforeShellExecution`

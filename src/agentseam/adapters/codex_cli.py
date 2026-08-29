@@ -44,6 +44,7 @@ from ..contract import (
     SUBAGENT_STOP,
     UNKNOWN,
     Event,
+    tool_input_of,
 )
 
 # Re-exported: callers and tests address this through the adapter that needs it, and the
@@ -124,9 +125,7 @@ def parse(raw):
     imply a coverage this adapter does not have. `content`/`file_path`/`path` are kept only
     as a generic fallback for MCP tools, whose tool_input this capture did not exercise.
     """
-    ti = raw.get("tool_input") or {}
-    if not isinstance(ti, dict):
-        ti = {}
+    ti = tool_input_of(raw.get("tool_input"))
     content = ti.get("content")
     return Event(
         AGENT,

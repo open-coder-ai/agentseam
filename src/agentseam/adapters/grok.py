@@ -44,6 +44,7 @@ from ..contract import (
     UNKNOWN,
     Event,
     degraded_from,
+    tool_input_of,
 )
 
 AGENT = "grok"
@@ -94,7 +95,7 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("toolInput")
-    ti = ti if isinstance(ti, dict) else {}
+    ti = tool_input_of(ti)
     content = ti.get("content") or ti.get("new_string") or None
     out = raw.get("toolOutput")
     if isinstance(out, (dict, list)):
