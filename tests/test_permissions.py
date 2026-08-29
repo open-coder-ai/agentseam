@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from agentseam import permissions
-from agentseam.permissions import Rule
+from agentseam.permissions import ContentRule, Rule
 from agentseam.permissions_data import (
     ACTIONS,
     ALLOW,
@@ -171,3 +171,59 @@ def test_a_missing_hook_surface_is_not_recorded_as_a_missing_permission_model():
     """
     for agent in ("aider", "zed"):
         assert "independent of its lack of a hook surface" in UNRECORDED[agent]
+
+
+# --- ContentRule: content-pattern deny (honesty gate) ----------------------------------
+
+
+def test_content_rule_rejects_vocabulary_it_does_not_know():
+    with pytest.raises(ValueError):
+        ContentRule("directory", r"SECRET")
+    with pytest.raises(ValueError):
+        ContentRule(ContentRule.TEXT, "")
+
+
+@pytest.mark.parametrize("agent", sorted(CAPABILITY))
+def test_no_agent_recorded_here_can_express_a_content_rule(agent):
+    """Verified 2026-08-29 against each vendor directly: every permission surface recorded
+    here matches a tool name, a command prefix, or a path glob -- never file/text content.
+
+    Claude Code looked like the one plausible candidate (the richest rule syntax of the
+    four); a native content-pattern permission rule was requested there and closed 'not
+    planned' upstream (anthropics/claude-code#37509). Rendering a ContentRule into any of
+    these configs would produce a fragment that reads like a content policy and enforces
+    nothing -- exactly the overclaim this module exists to prevent, so every agent must
+    refuse it, honestly, rather than the render finding one lucky vendor to special-case.
+    """
+    rule = ContentRule(ContentRule.FILE, r"AKIA[0-9A-Z]{16}", message="AWS key")
+    result = permissions.plan(agent, [rule])
+    assert not result.complete
+    assert any(gap.rule == rule for gap in result.unrepresentable)
+
+
+def test_content_rule_reason_is_specific_per_vendor_not_a_blanket_message():
+    reasons = {
+        agent: permissions.plan(agent, [ContentRule(ContentRule.TEXT, r"password")]).unrepresentable[0].reason
+        for agent in sorted(CAPABILITY)
+    }
+    assert len(set(reasons.values())) == len(reasons), "every vendor should get its own evidenced reason"
+    assert "not planned" in reasons["claude_code"]
+    assert "37509" in reasons["claude_code"]
+
+
+def test_content_rules_do_not_disturb_tool_rules_rendered_alongside_them():
+    """A mixed rules list renders each kind on its own path and reports both gaps -- one
+    kind's refusal must not swallow or corrupt the other kind's real fragment.
+    """
+    result = permissions.plan(
+        "claude_code", [Rule(DENY, FILE_WRITE, ".env"), ContentRule(ContentRule.FILE, r"AKIA[0-9A-Z]{16}")]
+    )
+    assert result.fragment["permissions"]["deny"] == ["Edit(.env)", "Write(.env)"]
+    assert len(result.unrepresentable) == 1
+    assert isinstance(result.unrepresentable[0].rule, ContentRule)
+
+
+def test_content_rule_still_raises_keyerror_for_an_unrecorded_agent():
+    for agent in UNRECORDED:
+        with pytest.raises(KeyError):
+            permissions.plan(agent, [ContentRule(ContentRule.TEXT, r"secret")])
