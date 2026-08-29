@@ -7,6 +7,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **The three per-vendor lookups a policy engine needs and could get nowhere else.** All
+  three share a failure shape: get them wrong and nothing raises -- the hook command resolves
+  to a path that is not there, or the matcher matches nothing -- while the install still
+  reports success and the guard never fires.
+  - `packaging.plugin_root(agent)`: the token a hook command uses to reach its own plugin
+    directory. Four spellings across three products, source-verified: Codex's `discovery.rs`
+    sets `PLUGIN_ROOT` **and** `CLAUDE_PLUGIN_ROOT` ("for OOTB compat with existing plugins
+    that use this env var"), and VS Code lists both as `pluginRootTokens`. **`${CODEX_PLUGIN_ROOT}`
+    is recorded as a trap**: it appears in Codex's own TUI hook browser as sample text and is
+    set nowhere in the tree, so a command copied from there resolves to nothing.
+  - `adapters.shell_tools(agent)`: the tool name a shell command arrives under. Recorded only
+    where established -- `Bash` for Claude Code, `run_shell_command` for Gemini CLI -- and `()`
+    everywhere else, which means "not established", not "no shell tool".
+
+### Changed
+- **The Cursor adapter no longer writes a `matcher` it cannot vouch for.** Cursor's matcher
+  does not mean the same thing at every event: under `beforeShellExecution` it is a regex over
+  the COMMAND TEXT, not a tool name, so the `"Bash"` a caller would reasonably pass matches
+  almost nothing and quietly disables the gate. What `preToolUse`'s matcher matches was not
+  established here, and an unverified matcher is the same silent failure with less warning. No
+  matcher gates every call, which over-gates rather than under-gates -- the safe direction, and
+  the conclusion a sibling guardrail reached independently after shipping this format. Adapters
+  whose matcher IS established still write one; this is about Cursor, not a retreat from
+  matchers.
+
+### Added
 - **Codex CLI and Cursor packaging, closing the last gap between agentseam and the sibling
   guardrail it is meant to absorb.** Both were `UNRECORDED` with an honest reason ("the
   directory layout was not established here"); both are now recorded. Codex is read from the

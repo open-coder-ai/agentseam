@@ -52,3 +52,18 @@ def detect(raw):
     """
     claims = [name for name, mod in sorted(ADAPTERS.items()) if mod.claims(raw)]
     return claims[0] if len(claims) == 1 else None
+
+
+def shell_tools(agent):
+    """Tool names a shell command arrives under, or () where none is established.
+
+    The one question a caller wiring a shell gate must answer, and the one whose wrong answer
+    is silent: a `matcher` naming a tool the vendor does not use matches nothing, so the hook
+    never fires and the install still reports success.
+
+    () is a claim in the usual sense here -- "not established", not "no shell tool". Guessing
+    is the failure this returns () to prevent: a sibling guardrail hardcodes "Bash" for four
+    vendors, which is right for the two that speak Claude Code's protocol and unverified for
+    the rest.
+    """
+    return tuple(getattr(get(agent), "SHELL_TOOLS", ()))

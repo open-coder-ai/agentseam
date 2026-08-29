@@ -235,3 +235,16 @@ def plan(agent, bundle):
 
     root = row["project_root"].format(bundle=bundle.name)
     return Plan(agent, root, files, dropped)
+
+
+def plugin_root(agent):
+    """The token a hook command should use to reach its own plugin directory.
+
+    Returns the preferred spelling, or None where none is established. A caller building a
+    hook command needs exactly this and has no other place to get it: the value differs per
+    product, two products accept two spellings each, and one plausible-looking spelling
+    (${CODEX_PLUGIN_ROOT}) is never set at all. See PACKAGING's plugin_root note.
+    """
+    row = PACKAGING.get(agent)
+    tokens = row.get("plugin_root") if row else None
+    return tokens[0] if tokens else None

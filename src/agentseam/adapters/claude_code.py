@@ -56,6 +56,11 @@ REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 # Tools whose input carries file content rather than a shell command.
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 
+#: The tool a shell command arrives under, and therefore what a PreToolUse `matcher` must say
+#: to gate shell. Recorded because a matcher is the one hook_config field whose WRONG value
+#: fails silently: it matches nothing, the hook never fires, and the install looks fine.
+SHELL_TOOLS = ("Bash",)
+
 
 #: Fields observed in real Claude Code payloads (live capture, v3.17.8 era, 2026-08-27) that
 #: no other adapter's documented envelope lists. Positive evidence, not inferred absence --
