@@ -19,10 +19,11 @@ from __future__ import annotations
 import os
 
 from .permissions_data import ACTIONS, CAPABILITIES, CAPABILITY, CONFIG_FILES, UNRECORDED
-from .permissions_render import RENDERERS, Unrepresentable
+from .permissions_render import RENDERERS, Unrepresentable, render_content_rules
 
 __all__ = [
     "Rule",
+    "ContentRule",
     "Plan",
     "Unrepresentable",
     "agents",
@@ -65,6 +66,54 @@ class Rule:
 
     def __repr__(self):
         return "Rule(%r, %r, %r)" % (self.action, self.capability, self.specifier)
+
+
+class ContentRule:
+    """A deny on CONTENT matching a regex -- what bytes a file or a piece of text contain,
+    never which tool touched them.
+
+    `Rule` narrows an invocation (a command prefix, a path glob): it is still a statement
+    about a tool call. This is a different kind of statement with no shared vocabulary --
+    the same secret trips it whether it arrives via `Read`, `Grep`, an MCP tool, or a tool
+    this project has never heard of, and a `capability`/`specifier` pair has nowhere to put
+    that. `kind` distinguishes matching a file's contents (`FILE`) from matching a bare
+    string a handler already has in hand (`TEXT`, e.g. a prompt or a tool's stdout).
+
+    `pattern` is a regular expression, spelled once and rendered into whichever agent's
+    config can hold it. Keep it lookahead/lookbehind-free: `(?=`, `(?!`, `(?<=`, `(?<!` are
+    not guaranteed to survive translation to every vendor's own regex engine, several of
+    which are RE2-family and reject them outright -- a pattern that only ever runs through
+    Python's `re` here can still be shipped into a config file read by a different engine
+    entirely. This module does not enforce that today (no renderer accepts a `ContentRule`
+    yet -- see `permissions_render.render_content_rules`), but a pattern written for real
+    cross-vendor use should hold to it from the start rather than needing a rewrite later.
+    """
+
+    __slots__ = ("kind", "pattern", "message")
+
+    FILE = "file"
+    TEXT = "text"
+    KINDS = (FILE, TEXT)
+
+    def __init__(self, kind, pattern, message=None):
+        if kind not in self.KINDS:
+            raise ValueError("unknown content-rule kind: %r (expected one of %s)" % (kind, self.KINDS))
+        if not pattern:
+            raise ValueError("a content rule needs a pattern; an empty one matches everything or nothing by accident")
+        self.kind = kind
+        self.pattern = pattern
+        self.message = message
+
+    def __eq__(self, other):
+        return isinstance(other, ContentRule) and (
+            (self.kind, self.pattern, self.message) == (other.kind, other.pattern, other.message)
+        )
+
+    def __hash__(self):
+        return hash((self.kind, self.pattern, self.message))
+
+    def __repr__(self):
+        return "ContentRule(%r, %r)" % (self.kind, self.pattern)
 
 
 class Plan:
@@ -122,13 +171,28 @@ def deny_is_authoritative(agent):
 def plan(agent, rules):
     """Render `rules` into `agent`'s native config, reporting whatever could not be rendered.
 
-    Raises KeyError for an agent with no recorded permission model -- including the ones in
-    UNRECORDED, where the honest answer is "we do not know", not an empty config.
+    `rules` may mix `Rule` (a tool invocation) and `ContentRule` (a content match) --
+    each kind is rendered by its own path and the results merged, so a caller does not have
+    to split one policy into two calls. Raises KeyError for an agent with no recorded
+    permission model -- including the ones in UNRECORDED, where the honest answer is "we do
+    not know", not an empty config.
     """
     if agent not in RENDERERS:
         reason = UNRECORDED.get(agent, "no permission model recorded for this agent")
         raise KeyError("%s: %s" % (agent, reason))
-    fragment, dropped = RENDERERS[agent](list(rules))
+    tool_rules = [r for r in rules if isinstance(r, Rule)]
+    content_rules = [r for r in rules if isinstance(r, ContentRule)]
+    fragment, dropped = RENDERERS[agent](tool_rules)
+    content_fragment, content_dropped = render_content_rules(agent, content_rules)
+    dropped = dropped + content_dropped
+    if content_fragment:
+        # Not exercised today -- every agent recorded here refuses every ContentRule (see
+        # render_content_rules) -- but a caller merging a future non-empty content fragment
+        # into a non-dict one (codex_cli's Starlark text) needs a loud failure, not a
+        # silently wrong config.
+        if not isinstance(fragment, dict) or not isinstance(content_fragment, dict):
+            raise TypeError("%s: cannot merge a non-dict permission fragment with rendered content rules" % agent)
+        fragment = dict(fragment, **content_fragment)
     return Plan(agent, fragment, *_target(agent), unrepresentable=dropped)
 
 
