@@ -19,7 +19,7 @@ def test_plan_prefers_the_shared_file_over_copies():
     """Fourteen near-identical files is the disease; one shared file is the cure."""
     decided = I.plan()
     assert decided["shared"] == "AGENTS.md"
-    assert len(decided["covered"]) >= 8
+    assert len(decided["covered"]) >= 7
     # Nobody covered by AGENTS.md gets a second file of their own to drift.
     assert not set(decided["covered"]) & set(decided["per_agent"])
     assert len(decided["per_agent"]) < len(I.agents())
@@ -112,9 +112,14 @@ def test_the_readme_arithmetic_cannot_drift():
     The last claim ("14 agents with 7 files") went stale the day Tabnine landed and sat
     wrong until an audit counted. covered + per_agent must add up to every agent the map
     knows, and the files written are the shared one plus one per uncovered agent.
+
+    It moved to 9 on 2026-08-29 when aider's `shared` was corrected from True to False:
+    aider reads only what .aider.conf.yml lists under `read:`, so claiming it picks up
+    AGENTS.md natively had it counted as covered while it read nothing. One more file
+    written is the cost of that being honest.
     """
     p = I.plan(I.agents(), repo_root=".")
     agents_reached = len(p["covered"]) + len(p["per_agent"])
     files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
     assert agents_reached == len(I.INSTRUCTION_FILES) == 15
-    assert files_written == 8
+    assert files_written == 9

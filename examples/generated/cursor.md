@@ -534,5 +534,9 @@ Exit code: `0`
 **Permissions** — no model recorded: its hook surface is now recorded (see the matrix), and hooks are a permission mechanism -- but the settings-file allow/deny model is a separate thing, and that documentation was not available here
 
 
-**Packaging** — no format recorded: plugins exist -- hooks can be installed through them, and workspaceOpen returns pluginPaths for the workspace -- but the directory layout was not established here, so there is nothing to render
+**Packaging** — a one-skill bundle, rooted at `secrets-guard`:
 
+```
+.cursor-plugin/plugin.json
+skills/secret-scan/SKILL.md
+```

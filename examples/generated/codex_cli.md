@@ -467,5 +467,9 @@ prefix_rule(
 )
 ```
 
-**Packaging** — no format recorded: skills exist -- the approval config gates skill script execution -- but the layout documentation redirects to a host this environment's egress policy blocks
+**Packaging** — a one-skill bundle, rooted at `secrets-guard`:
 
+```
+.codex-plugin/plugin.json
+skills/secret-scan/SKILL.md
+```

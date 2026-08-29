@@ -183,13 +183,27 @@ def _render_command(agent, part):
     return part.body
 
 
-def _manifest(agent, bundle):
+def _manifest(agent, bundle, kinds):
+    """The bundle manifest, including any component paths this host declares rather than finds.
+
+    Two shapes hide behind one word. Claude Code and Gemini CLI find components by LOCATION:
+    `skills/<name>/SKILL.md` is loaded because of where it sits, and the manifest carries only
+    identity. Codex and Cursor RESOLVE components from the manifest -- Codex validates the
+    `./...` syntax of each declared path -- so a manifest carrying only name and version ships
+    a plugin whose skills and hooks are never loaded, and nothing reports an error.
+
+    Only the parts the bundle actually has are declared. Pointing at `./skills` in a bundle
+    with no skills advertises a directory that is not there.
+    """
     row = PACKAGING[agent]
     if not row["manifest"]:
         return None
     body = {"name": bundle.name, "version": bundle.version}
     if bundle.description:
         body["description"] = bundle.description
+    for kind, (key, value) in sorted((row.get("declares") or {}).items()):
+        if kind in kinds:
+            body[key] = value
     return json.dumps(body, indent=2, sort_keys=True) + "\n"
 
 
@@ -205,7 +219,8 @@ def plan(agent, bundle):
     files = {}
     dropped = []
 
-    manifest = _manifest(agent, bundle)
+    holdable = {p.kind for p in bundle.parts if row["parts"].get(p.kind)}
+    manifest = _manifest(agent, bundle, holdable)
     if manifest:
         files[row["manifest"]] = manifest
 
