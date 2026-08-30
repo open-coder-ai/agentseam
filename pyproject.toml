@@ -9,7 +9,10 @@ description = "The primitives layer for every coding agent — one handler API o
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "Apache-2.0" }
-keywords = ["ai-agents", "hooks", "claude-code", "cursor", "copilot", "guardrails", "observability"]
+keywords = [
+  "ai-agents", "hooks", "claude-code", "cursor", "copilot", "codex", "gemini-cli", "windsurf",
+  "pretooluse", "agents-md", "plugin-packaging", "guardrails", "observability",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
@@ -22,6 +25,7 @@ dependencies = []                      # stdlib only, on purpose: adapters must 
 [project.urls]
 Homepage = "https://github.com/open-coder-ai/agentseam"
 Source = "https://github.com/open-coder-ai/agentseam"
+Documentation = "https://github.com/open-coder-ai/agentseam/blob/main/ARCHITECTURE.md"
 Issues = "https://github.com/open-coder-ai/agentseam/issues"
 Changelog = "https://github.com/open-coder-ai/agentseam/blob/main/CHANGELOG.md"
 
