@@ -1,8 +1,16 @@
 <img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg"
-     alt="agentseam logo: five unevenly spaced vendor lines converging through a stitched seam into five evenly spaced parallel lines"
+     alt="agentseam: the primitives layer for every coding agent -- one handler API over per-agent hooks, instruction files, plugin packaging and config. The mark is a seam: five unevenly spaced vendor lines converging through stitches into five evenly spaced parallel lines."
      width="104" align="right">
 
 # agentseam
+
+[![CI](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml/badge.svg)](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![PyPI](https://img.shields.io/pypi/v/agentseam)](https://pypi.org/project/agentseam/)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-coder-ai/agentseam/badge)](https://scorecard.dev/viewer/?uri=github.com/open-coder-ai/agentseam)
+
 
 **The primitives layer for every coding agent — one handler API over per-agent hooks,
 instruction files, plugin packaging, and config.**

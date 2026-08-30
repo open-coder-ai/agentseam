@@ -138,9 +138,14 @@ CARD_ALT = (
     f"{N_MATRIX} agents in the capability matrix, {len(ADAPTERS)} adapted, zero dependencies, "
     f"Apache-2.0, version {VERSION}."
 )
+#: The hero image is the most prominent slot on the page, and its alt text is what a crawler
+#: or an LLM retriever reads there. It states what agentseam IS before describing the mark;
+#: a label that only describes the drawing spends that slot on nothing.
 LOGO_ALT = (
-    "agentseam logo: five unevenly spaced vendor lines converging through a stitched seam "
-    "into five evenly spaced parallel lines."
+    "agentseam: the primitives layer for every coding agent -- one handler API over "
+    "per-agent hooks, instruction files, plugin packaging and config. The mark is a seam: "
+    "five unevenly spaced vendor lines converging through stitches into five evenly spaced "
+    "parallel lines."
 )
 
 
