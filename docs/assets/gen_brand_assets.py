@@ -300,8 +300,49 @@ def build_logo():
     )
 
 
+def check(svg, stem):
+    """Compare a freshly derived asset against the committed one; report what drifted.
+
+    The committed image is a snapshot of facts that live in the package, so adding an
+    adapter or an event silently invalidates it. Nothing here is hand-typed -- every count
+    is len() of a list read at render time -- but a stale image is wrong all the same, and
+    it is what a link preview shows to someone who has not read the repo yet.
+
+    The comparison is on the SVG, never the PNG: the SVG is plain text derived only from
+    repository data, so it is byte-identical on any machine, while a PNG depends on the
+    font installed on the renderer. Any drift in the facts reaches the SVG first.
+    """
+    path = pathlib.Path(f"{stem}.svg")
+    if not path.exists():
+        return [f"{path} is missing"]
+    committed = path.read_text(encoding="utf-8")
+    if committed == svg:
+        return []
+    fresh = re.findall(r">([^<>]+)</text>", svg)
+    old = re.findall(r">([^<>]+)</text>", committed)
+    added = [r for r in fresh if r not in old]
+    removed = [r for r in old if r not in fresh]
+    detail = []
+    if added:
+        detail.append("  now present: " + ", ".join(added[:8]) + (" …" if len(added) > 8 else ""))
+    if removed:
+        detail.append("  no longer:   " + ", ".join(removed[:8]) + (" …" if len(removed) > 8 else ""))
+    return [f"{path} is out of date"] + detail
+
+
 if __name__ == "__main__":
     card, logo = build_card(), build_logo()
+    if "--check" in sys.argv:
+        problems = check(card, "social-preview") + check(logo, "logo")
+        if problems:
+            print("\n".join(problems))
+            print(
+                "\nThe card is derived from the package, so this means the package "
+                "changed.\nRegenerate it:  python docs/assets/gen_brand_assets.py"
+            )
+            raise SystemExit(1)
+        print("social-preview.svg and logo.svg are current")
+        raise SystemExit(0)
     for name, source in (("social-preview", card), ("logo", logo)):
         with open(f"{name}.svg", "w", encoding="utf-8") as fh:
             fh.write(source)
