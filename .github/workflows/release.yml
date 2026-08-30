@@ -56,4 +56,9 @@ jobs:
         with:
           name: dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@ec4db0b4ddc65acdf4bff5fa45ac92d78b56bdf0  # v1.9.0
+      # v1.9.0 bundled a twine that only understands Metadata-Version up to 2.3 and
+      # rejected this project's wheel with "Metadata is missing required fields: Name,
+      # Version" -- the fields are present, that twine just cannot parse a 2.4 file.
+      # Our metadata is 2.4 because the PEP 639 `license = "Apache-2.0"` expression
+      # emits License-Expression. This pin is the one chock already publishes with.
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # release/v1
