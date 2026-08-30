@@ -1,5 +1,8 @@
 [build-system]
-requires = ["setuptools>=68"]
+# >=77 is required, not preferred: the PEP 639 `license = "Apache-2.0"` expression below
+# is only understood from 77 onward. 68 built correctly only because CI happened to
+# resolve a newer setuptools; a build pinned at the declared floor would not.
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +11,12 @@ version = "0.1.0"
 description = "The primitives layer for every coding agent — one handler API over per-agent hooks, instruction files, plugin packaging, and config."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "Apache-2.0" }
+# PEP 639 SPDX expression; needs setuptools >= 77 (pinned in build-system above).
+# The `{ text = ... }` table form this replaces is deprecated and emits the legacy
+# `License:` field; the expression emits `License-Expression`, which is what a tool
+# reading the licence programmatically now looks for. Changed before the first
+# publish on purpose -- PyPI freezes a version's metadata permanently.
+license = "Apache-2.0"
 keywords = [
   "ai-agents", "hooks", "claude-code", "cursor", "copilot", "codex", "gemini-cli", "windsurf",
   "pretooluse", "agents-md", "plugin-packaging", "guardrails", "observability",
@@ -17,7 +25,7 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Console",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: Apache Software License",
+  # No License classifier: PyPI rejects one alongside a PEP 639 expression.
   "Operating System :: OS Independent",
   # requires-python is >=3.9; CI exercises the ends and the middle (3.9, 3.11, 3.13).
   "Programming Language :: Python :: 3",
