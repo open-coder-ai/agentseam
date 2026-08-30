@@ -103,3 +103,50 @@ def test_windows_helper_is_inlined_only_where_the_adapter_actually_needs_it():
         assert "def powershell_command(command):" in bundler.bundle(agent)
     for agent in ("claude_code", "gemini_cli"):
         assert "def powershell_command(command):" not in bundler.bundle(agent)
+
+
+def test_no_module_is_imported_twice_at_module_level():
+    """Composing sources that each legitimately `import json` used to emit one module-level
+    import per source. Harmless at runtime, but every consumer's static analysis reports it
+    against their repository -- 7 CodeQL alerts on chock's vendored runners was what surfaced
+    it. The bundle should say each import once, because that is what it means.
+
+    Deliberately counts by MODULE, not by bound name: `import json` and `import json as
+    _json` are two bindings of one module, which is exactly the case that regressed.
+    """
+    for agent in bundler.SUPPORTED_AGENTS:
+        tree = ast.parse(bundler.bundle(agent))
+        modules = []
+        for node in tree.body:
+            if isinstance(node, ast.Import):
+                modules.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module != "__future__":
+                modules.append(node.module)
+        duplicated = sorted({m for m in modules if modules.count(m) > 1})
+        assert not duplicated, "%s bundle imports %s more than once at module level" % (agent, duplicated)
+
+
+def test_every_name_a_source_imported_is_still_bound():
+    """Hoisting must not lose an alias. Each bundle is compiled and executed in a namespace
+    of its own; a name a composed source relied on going missing shows up here rather than
+    in a consumer's repo at hook time."""
+    for agent in bundler.SUPPORTED_AGENTS:
+        src = bundler.bundle(agent)
+        namespace = {"__name__": "_bundle_%s" % agent}
+        exec(compile(src, "<bundle:%s>" % agent, "exec"), namespace)  # noqa: S102 - the artifact under test
+        assert namespace["_json"] is namespace["json"], "%s: alias binding lost" % agent
+
+
+def test_function_local_imports_are_left_alone():
+    """A source's decision to import inside a function body is its own; a source-composer
+    rewriting function bodies would be doing more than composing. Only module level moves."""
+    src = bundler.bundle("claude_code")
+    tree = ast.parse(src)
+    local = [
+        node
+        for parent in ast.walk(tree)
+        if isinstance(parent, ast.FunctionDef)
+        for node in ast.walk(parent)
+        if isinstance(node, ast.Import)
+    ]
+    assert local, "expected at least one function-local import to have survived hoisting"

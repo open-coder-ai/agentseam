@@ -15,7 +15,7 @@ actually enforce.
     run(handler)
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 from . import adapters, bundler, instructions, packaging, permissions
 from .contract import (

@@ -58,20 +58,73 @@ def _adapter_source(agent):
     return _read(path)
 
 
-def _strip_own_imports(source):
-    """`source` minus `from __future__ import annotations` and every relative import.
+def _strip_own_imports(source, hoist=None):
+    """`source` minus `from __future__ import annotations`, every relative import, and --
+    when `hoist` is given -- every module-level absolute import, collected into it instead.
 
-    Both are satisfied once, elsewhere in the bundle, by the sections this one is stitched
-    after -- contract's names, `_windows`'s, another adapter's. An absolute stdlib import
-    (`import json as _json`) is untouched; it still needs to run right where it is.
+    The relative ones are satisfied once, elsewhere in the bundle, by the sections this one
+    is stitched after: contract's names, `_windows`'s, another adapter's.
+
+    The absolute ones used to be left where they stood, on the reasoning that they still
+    need to run there. In one file they do not: composing N sources that each legitimately
+    `import json` produces N module-level imports of the same module, which every static
+    analyser then reports against the consumer's repository (7 CodeQL alerts on chock's
+    vendored runners, open-coder-ai/chock#73). Hoisting them into one deduplicated preamble
+    is strictly safer than leaving them -- a module-level import moved earlier in the same
+    module is bound before anything that could use it -- and it makes the bundle say each
+    import once, which is what it means.
+
+    Imports inside a function body are NOT touched: those are the source module's own
+    decision about when to pay for an import, and rewriting a function body is more than a
+    source-composer should do. `ast.parse(...).body` is module level by construction.
     """
     tree = ast.parse(source)
     drop = set()
     for node in tree.body:
         if isinstance(node, ast.ImportFrom) and (node.module == "__future__" or node.level >= 1):
             drop.update(range(node.lineno, node.end_lineno + 1))
+        elif hoist is not None and isinstance(node, ast.Import):
+            for alias in node.names:
+                hoist.add((alias.name, alias.asname))
+            drop.update(range(node.lineno, node.end_lineno + 1))
+        elif hoist is not None and isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+            for alias in node.names:
+                hoist.add(("%s.%s" % (node.module, alias.name), alias.asname or alias.name))
+            drop.update(range(node.lineno, node.end_lineno + 1))
     lines = source.splitlines(keepends=True)
     return "".join(line for i, line in enumerate(lines, start=1) if i not in drop)
+
+
+def _render_imports(hoisted):
+    """One `import` statement per module, however many names the sources bound it to.
+
+    A module reached under two names (`json` and `_json`) is still one import; the extra
+    names become plain assignments rather than a second import of the same module, which is
+    what a static analyser reads as redundant. Sorted, so the bundle stays byte-stable.
+    """
+    by_module = {}
+    for module, asname in hoisted:
+        by_module.setdefault(module, set()).add(asname)
+    out = []
+    for module in sorted(by_module):
+        names = sorted(n for n in by_module[module] if n is not None)
+        plain = None in by_module[module]
+        if "." in module:  # came from `from pkg import name`
+            pkg, attr = module.rsplit(".", 1)
+            out.append(
+                "from %s import %s" % (pkg, attr)
+                if names == [attr]
+                else "from %s import %s as %s" % (pkg, attr, names[0])
+            )
+            for extra in names[1:]:
+                out.append("%s = %s" % (extra, names[0]))
+            continue
+        first = None if plain else names[0]
+        out.append("import %s" % module if first is None else "import %s as %s" % (module, first))
+        bound = module if first is None else first
+        for extra in names if first is None else names[1:]:
+            out.append("%s = %s" % (extra, bound))
+    return "\n".join(out)
 
 
 def _cross_module_imports(source):
@@ -157,21 +210,33 @@ def bundle(agent):
     adapter_source = _adapter_source(agent)
     cross = _cross_module_imports(adapter_source)
 
-    sections = [HEADER.format(version=__version__, agent=agent)]
-    sections.append("from __future__ import annotations\n\nimport json\nimport sys\n")
-    sections.append(section("contract (agentseam %s)" % __version__, _strip_own_imports(_module_source("contract"))))
+    # Every module-level absolute import from every composed source lands here and is
+    # emitted once, at the top, instead of once per source. `json` and `sys` seed it
+    # because the runtime section below uses them and has no source of its own.
+    hoisted = {("json", None), ("sys", None)}
+
+    body = []
+    body.append(
+        section("contract (agentseam %s)" % __version__, _strip_own_imports(_module_source("contract"), hoisted))
+    )
 
     for module, names in sorted(cross.items()):
         dep_source = _adapter_source(module)
-        sections.append(
+        body.append(
             section("from %s (used by the %s adapter)" % (module, agent), _extract_with_deps(dep_source, names))
         )
 
     if _needs_windows_helper(adapter_source):
         windows_source = _read(os.path.join(_ADAPTERS_DIR, "_windows.py"))
-        sections.append(section("windows helper (used by the %s adapter)" % agent, _strip_own_imports(windows_source)))
+        body.append(
+            section("windows helper (used by the %s adapter)" % agent, _strip_own_imports(windows_source, hoisted))
+        )
 
-    sections.append(section("%s adapter" % agent, _strip_own_imports(adapter_source)))
+    body.append(section("%s adapter" % agent, _strip_own_imports(adapter_source, hoisted)))
+
+    sections = [HEADER.format(version=__version__, agent=agent)]
+    sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
+    sections.extend(body)
 
     rewrite_events = sorted(ev for ev in EVENTS if capability(agent, ev)["rewrite"])
     vouch_speaks = agent in VOUCH_SPEAKS

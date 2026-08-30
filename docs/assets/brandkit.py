@@ -153,6 +153,9 @@ def column(x, y, w, h, groups):
 def check(svg, stem):
     """Compare a freshly derived asset against the committed one; report what drifted.
 
+    `stem` is a full path without the extension, so the comparison reads the committed
+    asset wherever it lives rather than wherever the script happened to be started from.
+
     The committed image is a snapshot of facts that live in the package, so adding an
     adapter or an event silently invalidates it. Nothing here is hand-typed -- every count
     is len() of a list read at render time -- but a stale image is wrong all the same, and
@@ -164,7 +167,7 @@ def check(svg, stem):
     """
     path = pathlib.Path(f"{stem}.svg")
     if not path.exists():
-        return [f"{path} is missing"]
+        return [f"{path.name} is missing"]
     committed = path.read_text(encoding="utf-8")
     if committed == svg:
         return []
@@ -177,4 +180,4 @@ def check(svg, stem):
         detail.append("  now present: " + ", ".join(added[:8]) + (" …" if len(added) > 8 else ""))
     if removed:
         detail.append("  no longer:   " + ", ".join(removed[:8]) + (" …" if len(removed) > 8 else ""))
-    return [f"{path} is out of date"] + detail
+    return [f"{path.name} is out of date"] + detail

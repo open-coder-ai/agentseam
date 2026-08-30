@@ -6,6 +6,51 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-30
+
+### Fixed
+- **`bundler.bundle()` emitted one module-level import per composed source.** Composing N
+  sources that each legitimately `import json` produced N module-level imports of the same
+  module in the bundle. Harmless at runtime, and every static analyser in every consumer's
+  repository reported it against *them*: it surfaced as 7 CodeQL alerts on chock's vendored
+  runners ([open-coder-ai/chock#73](https://github.com/open-coder-ai/chock/pull/73)), where a
+  generated file cannot be hand-fixed because it is byte-pinned. Module-level absolute
+  imports are now hoisted into one deduplicated preamble, counted by *module* rather than by
+  bound name — `import json` and `import json as _json` are two bindings of one module, which
+  is exactly the case that slipped through. Extra names become plain assignments rather than a
+  second import.
+
+  Imports **inside a function body are deliberately left alone**: those are the source
+  module's own decision about when to pay for an import, and rewriting a function body is
+  more than a source-composer should do. Bundles remain deterministic and byte-stable for
+  identical inputs, and still exec standalone with no agentseam present.
+
+### Changed
+- **Bundle output bytes differ from 0.1.0.** No API, behaviour or capability claim changed —
+  only the import preamble. Consumers that pin the bundle by hash (chock's
+  `VENDORED_RUNTIMES`) must regenerate and re-pin. `GOVERNANCE.md` now states plainly that
+  bundle bytes were never part of the semver contract, which it had been silent on.
+
+### Documentation
+- **`vouch` was missing everywhere a reader would look for it.** The decision type has five
+  outcomes; `README.md`, `llms.txt` and the generated per-vendor example pages all described
+  four. The examples now drive `Decision.vouch()` through every adapter, which is where it
+  matters most: on all but the two vendors in `allow_semantics.VOUCH_SPEAKS` it reduces to a
+  plain `allow`, and each page now shows which side of that line its agent is on.
+- **The social preview card said `DECISIONS · 4`.** Its generator claimed to derive the
+  vocabulary but filtered a tuple typed into the file, so it could only ever find names
+  already listed there and `rewrite` was invisible to it. It now reads the constructors off
+  `Decision`, cross-checked against the module-level outcome constants. A derivation that
+  cannot discover a name nobody told it about is not a derivation.
+- **`CITATION.cff` still said 0.1.0** after the bump in this same release, and
+  `examples/generate.py` could silently omit an outcome. Both are now asserted in CI
+  (`tests/test_repo_standards.py`, and an assertion in the generator itself) rather than
+  left to inspection.
+- **The brand generator wrote its output relative to the working directory.** The check job
+  runs from `docs/assets/` while the README says to run it from the repository root, so the
+  documented invocation wrote a second copy of the card where nothing read it and left the
+  committed one stale. Paths are now anchored to the script.
+
 ## [0.1.0] - 2026-08-30
 
 ### Added
@@ -1057,5 +1102,6 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surfaces read content bytes (see above). A consumer needing content-based denial today
   should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
 
-[Unreleased]: https://github.com/open-coder-ai/agentseam/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/open-coder-ai/agentseam/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/open-coder-ai/agentseam/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/open-coder-ai/agentseam/releases/tag/v0.1.0

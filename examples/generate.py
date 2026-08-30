@@ -40,7 +40,17 @@ DECISIONS = [
         lambda: Decision.rewrite({"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "redacting the secret"),
         "the handler wants the input changed",
     ),
+    # The loud one, and the reason it belongs on these pages: on all but the two vendors in
+    # allow_semantics.VOUCH_SPEAKS it reduces to a plain `allow`, and a reader needs to see
+    # which side of that line their agent falls on before writing a handler that vouches.
+    ("vouch", lambda: Decision.vouch("signed by a trusted key"), "the handler actively approves"),
 ]
+# These pages are where a reader learns what a handler may return, so a missing outcome is a
+# missing part of the API. Checked rather than trusted: `rewrite` was added to the vocabulary
+# and this list did not notice, and neither did anything else.
+assert [name for name, _make, _why in DECISIONS] == [
+    n for n, v in vars(Decision).items() if isinstance(v, classmethod)
+], "examples/generate.py does not show every Decision outcome"
 
 #: What each basis means for someone deciding how far to trust a page.
 

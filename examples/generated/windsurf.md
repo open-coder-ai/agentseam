@@ -156,6 +156,14 @@ redacting the secret (this agent cannot rewrite tool input; blocking instead)
 
 Exit code: `2`
 
+**`Decision.vouch()`** — the handler actively approves
+
+> reduced to `allow`: this agent cannot vouch
+
+_No output; the exit code carries the answer._
+
+Exit code: `0`
+
 ### 3. `post_tool` — called `post_mcp_tool_use` here
 
 Enforcement: **detect**.

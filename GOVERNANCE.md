@@ -25,6 +25,14 @@ adapter interface are the public API; breaking any of them is a MAJOR bump. Addi
 adapter or an event is MINOR. A matrix correction is PATCH — and is expected to happen
 often, because vendors change.
 
+**`bundler.bundle()`'s output bytes are not part of that contract.** The bundle is
+guaranteed to be deterministic (same inputs, same bytes) and to behave identically, not to
+be byte-identical across versions: a formatting fix, a deduplicated import, or a matrix
+correction reaching an adapter all change it. Consumers that pin the output by hash —
+chock's `VENDORED_RUNTIMES` drift detection does — must regenerate and re-pin on any
+agentseam upgrade, including a PATCH. That is a feature of their drift detection working,
+not a break of ours; say so in the release notes when it happens, as 0.1.1 does.
+
 ## Relationship to other projects
 
 agentseam is deliberately consumer-agnostic. Guardrail engines, observability sinks,

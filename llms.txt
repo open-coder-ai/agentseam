@@ -6,8 +6,8 @@
 Every coding agent (Claude Code, Cursor, VS Code Copilot, Codex CLI, Gemini CLI, Windsurf,
 and more) invented its own hook system, instruction-file convention, and permission
 language. agentseam normalizes them into one handler API, one decision type
-(`allow`/`deny`/`ask`/`rewrite`), and an explicit capability matrix that states what each
-agent can *actually* enforce — `enforced`, `best-effort`, `enforceable`, `detect`, or `none`
+(`allow`/`deny`/`ask`/`rewrite`/`vouch`), and an explicit capability matrix that states what
+each agent can *actually* enforce — `enforced`, `best-effort`, `enforceable`, `detect`, or `none`
 — rather than assuming they are equivalent. A matrix row is only claimed when a
 `verified: {version, date, method}` record backs it; most rows rest on vendor documentation
 and are marked as such, not on an observed live run.

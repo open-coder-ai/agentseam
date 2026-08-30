@@ -315,6 +315,14 @@ Exit code: `0`
 
 Exit code: `0`
 
+**`Decision.vouch()`** — the handler actively approves
+
+```json
+{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "permissionDecisionReason": "signed by a trusted key"}}
+```
+
+Exit code: `0`
+
 ### 5. `post_tool` — called `PostToolUse` here
 
 Enforcement: **detect**.

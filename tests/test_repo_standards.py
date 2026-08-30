@@ -96,3 +96,46 @@ def test_import_pulls_in_only_stdlib():
     from check_stdlib_only import offending_imports
 
     assert not offending_imports()
+
+
+def _decision_outcomes():
+    """Read off the class, so a constructor added later is discovered rather than assumed."""
+    sys.path.insert(0, str(ROOT / "src"))
+    from agentseam import contract
+
+    return [name for name, value in vars(contract.Decision).items() if isinstance(value, classmethod)]
+
+
+def test_the_front_door_docs_name_every_decision_outcome():
+    """A partial vocabulary in the docs is an outcome nobody knows they can return.
+
+    `vouch` was added to `Decision` and neither of these files heard about it, so the
+    project's own front page described a four-word vocabulary for a five-word type. Only
+    these two files are checked: the generated example pages carry each VENDOR's dialect,
+    where an absent word is the honest answer, and prose elsewhere may mention one outcome
+    without claiming to enumerate them.
+    """
+    missing = []
+    for name in ("README.md", "llms.txt"):
+        text = (ROOT / name).read_text(encoding="utf-8")
+        for outcome in _decision_outcomes():
+            if "`%s`" % outcome not in text:
+                missing.append("%s never names `%s`" % (name, outcome))
+    assert not missing, "\n  ".join(["docs describe an incomplete decision vocabulary:"] + missing)
+
+
+def test_citation_version_tracks_the_package():
+    """CITATION.cff is a claim about which version someone cited, so a stale one misattributes.
+
+    It has no build step to keep it honest -- it drifted on the 0.1.1 bump, in the same
+    commit that did the bumping -- so the check has to live here.
+    """
+    sys.path.insert(0, str(ROOT / "src"))
+    import agentseam
+
+    lines = (ROOT / "CITATION.cff").read_text(encoding="utf-8").splitlines()
+    declared = [line.split(":", 1)[1].strip() for line in lines if line.startswith("version:")]
+    assert declared == [agentseam.__version__], "CITATION.cff says %r, package is %r" % (
+        declared,
+        agentseam.__version__,
+    )
