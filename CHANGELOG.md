@@ -31,6 +31,26 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `VENDORED_RUNTIMES`) must regenerate and re-pin. `GOVERNANCE.md` now states plainly that
   bundle bytes were never part of the semver contract, which it had been silent on.
 
+### Documentation
+- **`vouch` was missing everywhere a reader would look for it.** The decision type has five
+  outcomes; `README.md`, `llms.txt` and the generated per-vendor example pages all described
+  four. The examples now drive `Decision.vouch()` through every adapter, which is where it
+  matters most: on all but the two vendors in `allow_semantics.VOUCH_SPEAKS` it reduces to a
+  plain `allow`, and each page now shows which side of that line its agent is on.
+- **The social preview card said `DECISIONS · 4`.** Its generator claimed to derive the
+  vocabulary but filtered a tuple typed into the file, so it could only ever find names
+  already listed there and `rewrite` was invisible to it. It now reads the constructors off
+  `Decision`, cross-checked against the module-level outcome constants. A derivation that
+  cannot discover a name nobody told it about is not a derivation.
+- **`CITATION.cff` still said 0.1.0** after the bump in this same release, and
+  `examples/generate.py` could silently omit an outcome. Both are now asserted in CI
+  (`tests/test_repo_standards.py`, and an assertion in the generator itself) rather than
+  left to inspection.
+- **The brand generator wrote its output relative to the working directory.** The check job
+  runs from `docs/assets/` while the README says to run it from the repository root, so the
+  documented invocation wrote a second copy of the card where nothing read it and left the
+  committed one stale. Paths are now anchored to the script.
+
 ## [0.1.0] - 2026-08-30
 
 ### Added

@@ -13,10 +13,14 @@ cairosvg is NOT a dependency of agentseam. The package's runtime path is stdlib-
 runs by hand when the artwork changes, and its output is committed.
 
 Every fact on the card is READ FROM THE PACKAGE at render time -- the adapter names, the
-event names, the decision outcomes, the enforcement vocabulary, the version, the supported
-Python range. A social preview is a claim surface, and the surest way to keep it honest is
-to give it no independent copy of the truth to drift from. The counts printed beside each
-list are asserted against the lists themselves, so a card that would lie fails to render.
+event names, the decision outcomes, the version, the supported Python range. A social
+preview is a claim surface, and the surest way to keep it honest is to give it no
+independent copy of the truth to drift from. The counts printed beside each list are
+asserted against the lists themselves, so a card that would lie fails to render.
+
+Two lists are spelled out here because their order is a design choice (events) or because
+they exist only as return literals (the enforcement words). Both are checked against the
+package rather than trusted: see the assertions beside each.
 
 The mark is a seam: uneven vendor dialect lines converging through stitches into one even
 canonical envelope. Its geometry carries two invariants, also asserted rather than
@@ -38,7 +42,13 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[2] / "src"))
 from brandkit import COOL, DIM, FAINT, GOLD, NAVY, PANEL, WHITE, H, S, W, badge, check, column, esc, seam, text
 
 import agentseam  # noqa: E402  (needs the path above)
-from agentseam import contract  # noqa: E402
+from agentseam import contract, matrix  # noqa: E402
+
+#: Assets are read and written beside this script, never relative to the working directory.
+#: The check job runs from here and the README tells you to run it from the repository root;
+#: with bare filenames those two disagree, and the root invocation quietly writes a second
+#: copy of the card somewhere nothing reads it.
+ASSETS = pathlib.Path(__file__).resolve().parent
 
 # --- facts, read from the package rather than retyped -----------------------------
 
@@ -51,7 +61,7 @@ def python_range():
     version filter; when they are present they set the ceiling and are cross-checked against
     the floor, and when they are not the card says "3.9+" rather than inventing a ceiling.
     """
-    source = (pathlib.Path(__file__).resolve().parents[2] / "pyproject.toml").read_text(encoding="utf-8")
+    source = (ASSETS.parent.parent / "pyproject.toml").read_text(encoding="utf-8")
     floor = re.search(r'requires-python\s*=\s*"[><=~^ ]*(3\.\d+)"', source)
     assert floor, "could not read requires-python from pyproject.toml"
     low = floor.group(1)
@@ -66,9 +76,21 @@ def python_range():
 
 
 def decision_outcomes():
-    """The constructors on Decision are the decision vocabulary."""
-    names = [n for n in ("allow", "deny", "ask", "vouch") if hasattr(contract.Decision, n)]
-    assert len(names) == 4, f"Decision's outcome set changed: {names}"
+    """The constructors on Decision are the decision vocabulary.
+
+    Read off the class, not off a list kept here. An earlier version of this filtered a
+    tuple typed into this file, which can only ever find the names already in it: when
+    `rewrite` was added the card silently kept saying four. Anything that claims to be
+    derived has to be able to discover a name nobody told it about.
+    """
+    names = [n for n, v in vars(contract.Decision).items() if isinstance(v, classmethod)]
+    # Each constructor pairs with a module-level outcome constant of the same name. If that
+    # stops holding, a classmethod that is not an outcome has been added and this needs a
+    # real discriminator rather than a quiet miscount.
+    for name in names:
+        assert getattr(contract, name.upper(), None) == name, (
+            f"Decision.{name} has no matching outcome constant; the derivation is unsound"
+        )
     return names
 
 
@@ -94,6 +116,14 @@ DECISIONS = decision_outcomes()
 # serves). Two different five-word sets; putting one under the other's heading would be a
 # quiet false claim, which is the whole thing this project exists not to do.
 ENFORCEMENT = ["enforced", "enforceable", "best-effort", "detect", "none"]
+# Those words live only as return literals, so they cannot be read off the function the way
+# the decision constructors can. What IS checkable: every level the matrix can actually
+# produce has to appear on the card. This catches a new level being added; it cannot catch
+# one being dropped, since a listed level need not be reachable (no agent fails closed by
+# default today, so "enforced" is declared but unreachable).
+assert set(matrix.enforcement_level(a, e) for a in agentseam.agents() for e in agentseam.EVENTS) <= set(ENFORCEMENT), (
+    "enforcement_level() produces a level the card does not list"
+)
 N_MATRIX = len(agentseam.agents())
 VERSION = agentseam.__version__
 
@@ -169,7 +199,7 @@ def build_logo():
 if __name__ == "__main__":
     card, logo = build_card(), build_logo()
     if "--check" in sys.argv:
-        problems = check(card, "social-preview") + check(logo, "logo")
+        problems = check(card, ASSETS / "social-preview") + check(logo, ASSETS / "logo")
         if problems:
             print("\n".join(problems))
             print(
@@ -180,8 +210,9 @@ if __name__ == "__main__":
         print("social-preview.svg and logo.svg are current")
         raise SystemExit(0)
     for name, source in (("social-preview", card), ("logo", logo)):
-        with open(f"{name}.svg", "w", encoding="utf-8") as fh:
-            fh.write(source)
-    cairosvg.svg2png(bytestring=card.encode(), write_to="social-preview.png", output_width=W, output_height=H)
-    cairosvg.svg2png(bytestring=logo.encode(), write_to="logo-512.png", output_width=S, output_height=S)
+        (ASSETS / f"{name}.svg").write_text(source, encoding="utf-8")
+    cairosvg.svg2png(
+        bytestring=card.encode(), write_to=str(ASSETS / "social-preview.png"), output_width=W, output_height=H
+    )
+    cairosvg.svg2png(bytestring=logo.encode(), write_to=str(ASSETS / "logo-512.png"), output_width=S, output_height=S)
     print(f"rendered: {len(ADAPTERS)} adapters, {len(EVENTS)} events, {N_MATRIX} in matrix, v{VERSION}")

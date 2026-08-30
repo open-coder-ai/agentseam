@@ -249,6 +249,16 @@ Exit code: `0`
 
 Exit code: `0`
 
+**`Decision.vouch()`** — the handler actively approves
+
+> reduced to `allow`: this agent cannot vouch
+
+```json
+{"decision": "approve"}
+```
+
+Exit code: `0`
+
 ### 5. `post_tool` — called `PostToolUse` here
 
 Enforcement: **detect**.

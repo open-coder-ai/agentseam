@@ -243,6 +243,16 @@ Exit code: `0`
 
 Exit code: `0`
 
+**`Decision.vouch()`** — the handler actively approves
+
+> reduced to `allow`: this agent cannot vouch
+
+```json
+{"decision": "allow", "additionalContext": "signed by a trusted key"}
+```
+
+Exit code: `0`
+
 ### 5. `stop` — called `Stop` here
 
 Enforcement: **best-effort**.
