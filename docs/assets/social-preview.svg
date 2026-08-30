@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640"
+     role="img" aria-label="agentseam — the primitives layer for every coding agent: one handler API over per-agent hooks, instruction files, plugin packaging, and config. Twelve unevenly spaced vendor hook dialects converge through a stitched seam into one evenly spaced canonical envelope.">
+  <rect width="1280" height="640" fill="#0D1626"/>
+  <path d="M 60 44 L 44 44 L 44 60" fill="none" stroke="#D9B45C" stroke-opacity="0.30" stroke-width="1.4"/>
+  <path d="M 1220 44 L 1236 44 L 1236 60" fill="none" stroke="#D9B45C" stroke-opacity="0.30" stroke-width="1.4"/>
+  <path d="M 60 596 L 44 596 L 44 580" fill="none" stroke="#D9B45C" stroke-opacity="0.30" stroke-width="1.4"/>
+  <path d="M 1220 596 L 1236 596 L 1236 580" fill="none" stroke="#D9B45C" stroke-opacity="0.30" stroke-width="1.4"/>
+  <text x="88" y="236" font-family="Geist Mono" font-size="13" letter-spacing="5.2" fill="#8A7340">PRIMITIVES LAYER</text>
+  <text x="84" y="322" font-family="Geist Mono" font-size="78" font-weight="700" letter-spacing="-1.5" fill="#D9B45C">agentseam</text>
+  <line x1="88" y1="356" x2="566" y2="356" stroke="#D9B45C" stroke-opacity="0.28" stroke-width="1.2"/>
+  <text x="88" y="398" font-family="Geist Mono" font-size="19" fill="#9FB0C4">One handler API over per-agent hooks,</text>
+  <text x="88" y="426" font-family="Geist Mono" font-size="19" fill="#9FB0C4">instruction files, plugin packaging, config.</text>
+  <text x="88" y="524" font-family="Geist Mono" font-size="12" letter-spacing="3.4" fill="#8A7340">12 ADAPTERS &#183; STDLIB-ONLY &#183; APACHE-2.0</text>
+  <line x1="664.0" y1="104.0" x2="930.0" y2="152.0" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="698.0" y1="136.0" x2="930.0" y2="182.5" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="676.0" y1="181.0" x2="930.0" y2="213.1" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="710.0" y1="215.0" x2="930.0" y2="243.6" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="670.0" y1="262.0" x2="930.0" y2="274.2" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="692.0" y1="295.0" x2="930.0" y2="304.7" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="682.0" y1="338.0" x2="930.0" y2="335.3" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="716.0" y1="374.0" x2="930.0" y2="365.8" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="674.0" y1="420.0" x2="930.0" y2="396.4" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="702.0" y1="455.0" x2="930.0" y2="426.9" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="686.0" y1="496.0" x2="930.0" y2="457.5" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="708.0" y1="536.0" x2="930.0" y2="488.0" stroke="#D9B45C" stroke-width="1.6" stroke-opacity="0.36" stroke-linecap="round"/>
+  <line x1="930.0" y1="152.0" x2="1192.0" y2="152.0" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="182.5" x2="1192.0" y2="182.5" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="213.1" x2="1192.0" y2="213.1" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="243.6" x2="1192.0" y2="243.6" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="274.2" x2="1192.0" y2="274.2" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="304.7" x2="1192.0" y2="304.7" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="335.3" x2="1192.0" y2="335.3" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="365.8" x2="1192.0" y2="365.8" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="396.4" x2="1192.0" y2="396.4" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="426.9" x2="1192.0" y2="426.9" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="457.5" x2="1192.0" y2="457.5" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="488.0" x2="1192.0" y2="488.0" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="930.0" y1="139.4" x2="930.0" y2="500.6" stroke="#D9B45C" stroke-width="2.0" stroke-opacity="0.42"/>
+  <rect x="925.8" y="147.8" width="8.4" height="8.4" transform="rotate(45 930.0 152.0)" fill="#D9B45C"/>
+  <rect x="925.8" y="178.3" width="8.4" height="8.4" transform="rotate(45 930.0 182.5)" fill="#D9B45C"/>
+  <rect x="925.8" y="208.9" width="8.4" height="8.4" transform="rotate(45 930.0 213.1)" fill="#D9B45C"/>
+  <rect x="925.8" y="239.4" width="8.4" height="8.4" transform="rotate(45 930.0 243.6)" fill="#D9B45C"/>
+  <rect x="925.8" y="270.0" width="8.4" height="8.4" transform="rotate(45 930.0 274.2)" fill="#D9B45C"/>
+  <rect x="925.8" y="300.5" width="8.4" height="8.4" transform="rotate(45 930.0 304.7)" fill="#D9B45C"/>
+  <rect x="925.8" y="331.1" width="8.4" height="8.4" transform="rotate(45 930.0 335.3)" fill="#D9B45C"/>
+  <rect x="925.8" y="361.6" width="8.4" height="8.4" transform="rotate(45 930.0 365.8)" fill="#D9B45C"/>
+  <rect x="925.8" y="392.2" width="8.4" height="8.4" transform="rotate(45 930.0 396.4)" fill="#D9B45C"/>
+  <rect x="925.8" y="422.7" width="8.4" height="8.4" transform="rotate(45 930.0 426.9)" fill="#D9B45C"/>
+  <rect x="925.8" y="453.3" width="8.4" height="8.4" transform="rotate(45 930.0 457.5)" fill="#D9B45C"/>
+  <rect x="925.8" y="483.8" width="8.4" height="8.4" transform="rotate(45 930.0 488.0)" fill="#D9B45C"/>
+  <text x="928.0" y="576" font-family="Geist Mono" font-size="11" letter-spacing="3.6" fill="#8A7340" text-anchor="middle">VENDOR DIALECTS &#8594; CANONICAL ENVELOPE</text>
+</svg>

@@ -1,3 +1,7 @@
+<img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg"
+     alt="agentseam logo: five unevenly spaced vendor lines converging through a stitched seam into five evenly spaced parallel lines"
+     width="104" align="right">
+
 # agentseam
 
 **The primitives layer for every coding agent — one handler API over per-agent hooks,
