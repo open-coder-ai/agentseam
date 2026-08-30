@@ -1,0 +1,45 @@
+# agentseam
+
+> The primitives layer for every coding agent — one handler API over per-agent hooks,
+> instruction files, plugin packaging, and config.
+
+Every coding agent (Claude Code, Cursor, VS Code Copilot, Codex CLI, Gemini CLI, Windsurf,
+and more) invented its own hook system, instruction-file convention, and permission
+language. agentseam normalizes them into one handler API, one decision type
+(`allow`/`deny`/`ask`/`rewrite`), and an explicit capability matrix that states what each
+agent can *actually* enforce — `enforced`, `best-effort`, `enforceable`, `detect`, or `none`
+— rather than assuming they are equivalent. A matrix row is only claimed when a
+`verified: {version, date, method}` record backs it; most rows rest on vendor documentation
+and are marked as such, not on an observed live run.
+
+License: Apache-2.0. Status: pre-1.0 — the CLI surface, manifest schema, and compiled
+output can change between MINOR releases.
+
+## Docs
+
+- [README](https://github.com/open-coder-ai/agentseam/blob/main/README.md): what it is, the
+  capability matrix, install, supported agents.
+- [ARCHITECTURE](https://github.com/open-coder-ai/agentseam/blob/main/ARCHITECTURE.md): the
+  layering principle (agentseam / chock / chock-catalog), the four primitives, and the bug
+  classes the design exists to prevent.
+- [CHANGELOG](https://github.com/open-coder-ai/agentseam/blob/main/CHANGELOG.md): per-version
+  changes, one entry per user-visible behavior change.
+- [CONTRIBUTING](https://github.com/open-coder-ai/agentseam/blob/main/CONTRIBUTING.md): how
+  to add an agent adapter, the honesty rule that overrides preference, and local checks.
+- [SECURITY](https://github.com/open-coder-ai/agentseam/blob/main/SECURITY.md): threat model
+  and how to report a vulnerability.
+
+## Examples
+
+- [examples/generated/](https://github.com/open-coder-ai/agentseam/tree/main/examples/generated):
+  a page per supported agent, showing the same scenario in that vendor's own dialect —
+  config, normalized event, and decision — generated from the real code paths.
+- [tools/VERIFY.md](https://github.com/open-coder-ai/agentseam/blob/main/tools/VERIFY.md):
+  how to capture your own agent's real payloads and turn a `vendor-docs` matrix row into a
+  `live-run` one.
+
+## Optional
+
+- [GOVERNANCE](https://github.com/open-coder-ai/agentseam/blob/main/GOVERNANCE.md): project
+  governance.
+- [CODE_OF_CONDUCT](https://github.com/open-coder-ai/agentseam/blob/main/CODE_OF_CONDUCT.md)

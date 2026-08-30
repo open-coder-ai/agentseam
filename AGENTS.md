@@ -1,6 +1,6 @@
 # agentseam
 
-the primitives layer for coding agents — one handler API over per-agent hooks,
+the primitives layer for every coding agent — one handler API over per-agent hooks,
 instruction files, plugin packaging, and config
 
 ## Conventions

@@ -1,11 +1,12 @@
 # agentseam
 
-**Write one handler. Run it on every coding agent.**
+**The primitives layer for every coding agent — one handler API over per-agent hooks,
+instruction files, plugin packaging, and config.**
 
-Every agent — Claude Code, Cursor, VS Code Copilot, Codex, Gemini CLI, Windsurf — invented
-its own hook system: different event names, different payload shapes, different ways to say
-"no", different config files. So every tool built on top gets written once per agent, or
-targets one agent and stops there.
+Write one handler. Run it on every coding agent. Every agent — Claude Code, Cursor, VS Code
+Copilot, Codex, Gemini CLI, Windsurf — invented its own hook system: different event names,
+different payload shapes, different ways to say "no", different config files. So every tool
+built on top gets written once per agent, or targets one agent and stops there.
 
 agentseam is the layer underneath: one normalized event, one decision type, and an explicit
 map of what each agent can *actually* do.
@@ -50,6 +51,10 @@ post_tool            none            detect          detect          detect     
   airtight; "enforced" would claim a default that isn't there. agentseam's installer asks
   for fail-closed on every gate it writes
 - **none** — no hook surface at all (Zed, Aider). Said out loud rather than papered over.
+
+A row is only claimed when a `verified: {version, date, method}` record backs it — the
+version and date something was checked, and how (live run, vendor source, vendor docs).
+No row asserts a capability nobody has verified.
 
 `unadapted` is a fourth, deliberately separate state: agentseam has no hook adapter for
 that agent yet. It is a claim about *us*, not about the agent — those agents still receive
@@ -183,10 +188,10 @@ produces — an example nobody regenerates is a claim nobody checks.
 What the pages cannot do is verify the vendors. Each row records what its claims rest on —
 `live-run`, `live-run-partial`, `vendor-source`, `vendor-docs`, `third-party-install`,
 `inherited` — and most are vendor documentation, which is a claim about what a vendor *says*
-rather than an observation of what their build does. Only Claude Code's row rests on a full
-live run; Cursor's rests on a partial one, with the observed events listed on the row. Vendors change hook
-surfaces without notice, so **verify against your own installation before relying on any of
-it**, and open an issue if a page is wrong.
+rather than an observation of what their build does. Claude Code's row rests on a full live
+run; Codex CLI, Cursor, and VS Code Copilot each rest on a partial one, with the observed
+events listed on the row. Vendors change hook surfaces without notice, so **verify against
+your own installation before relying on any of it**, and open an issue if a page is wrong.
 
 ```bash
 python3 examples/generate.py           # rewrite the pages
@@ -195,8 +200,9 @@ python3 examples/generate.py --check   # what CI runs
 
 ## Verify a claim against your own agent
 
-Only Claude Code's row rests on a full live run (Cursor's is partial). If you have another
-of these agents installed, an hour turns its row from "the vendor says so" into evidence:
+Claude Code's row rests on a full live run; Codex CLI, Cursor, and VS Code Copilot each rest
+on a partial one. If you have another of these agents installed, an hour turns its row from
+"the vendor says so" into evidence:
 
 ```bash
 python3 tools/capture.py detect
