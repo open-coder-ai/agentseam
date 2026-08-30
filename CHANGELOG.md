@@ -6,6 +6,31 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-08-30
+
+### Fixed
+- **`bundler.bundle()` emitted one module-level import per composed source.** Composing N
+  sources that each legitimately `import json` produced N module-level imports of the same
+  module in the bundle. Harmless at runtime, and every static analyser in every consumer's
+  repository reported it against *them*: it surfaced as 7 CodeQL alerts on chock's vendored
+  runners ([open-coder-ai/chock#73](https://github.com/open-coder-ai/chock/pull/73)), where a
+  generated file cannot be hand-fixed because it is byte-pinned. Module-level absolute
+  imports are now hoisted into one deduplicated preamble, counted by *module* rather than by
+  bound name — `import json` and `import json as _json` are two bindings of one module, which
+  is exactly the case that slipped through. Extra names become plain assignments rather than a
+  second import.
+
+  Imports **inside a function body are deliberately left alone**: those are the source
+  module's own decision about when to pay for an import, and rewriting a function body is
+  more than a source-composer should do. Bundles remain deterministic and byte-stable for
+  identical inputs, and still exec standalone with no agentseam present.
+
+### Changed
+- **Bundle output bytes differ from 0.1.0.** No API, behaviour or capability claim changed —
+  only the import preamble. Consumers that pin the bundle by hash (chock's
+  `VENDORED_RUNTIMES`) must regenerate and re-pin. `GOVERNANCE.md` now states plainly that
+  bundle bytes were never part of the semver contract, which it had been silent on.
+
 ## [0.1.0] - 2026-08-30
 
 ### Added
@@ -1057,5 +1082,6 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surfaces read content bytes (see above). A consumer needing content-based denial today
   should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
 
-[Unreleased]: https://github.com/open-coder-ai/agentseam/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/open-coder-ai/agentseam/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/open-coder-ai/agentseam/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/open-coder-ai/agentseam/releases/tag/v0.1.0
