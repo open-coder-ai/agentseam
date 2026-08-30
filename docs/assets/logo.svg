@@ -2,14 +2,14 @@
      aria-label="agentseam logo: five unevenly spaced vendor lines converging through a stitched seam into five evenly spaced parallel lines.">
   <rect width="512" height="512" rx="104" fill="#0D1626"/>
   <line x1="96.0" y1="126.0" x2="252.0" y2="168.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
-  <line x1="114.7" y1="214.0" x2="252.0" y2="212.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
-  <line x1="102.6" y1="264.0" x2="252.0" y2="256.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
-  <line x1="121.3" y1="332.0" x2="252.0" y2="300.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
-  <line x1="99.3" y1="386.0" x2="252.0" y2="344.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
   <line x1="252.0" y1="168.0" x2="416.0" y2="168.0" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="114.7" y1="214.0" x2="252.0" y2="212.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
   <line x1="252.0" y1="212.0" x2="416.0" y2="212.0" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="102.6" y1="264.0" x2="252.0" y2="256.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
   <line x1="252.0" y1="256.0" x2="416.0" y2="256.0" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="121.3" y1="332.0" x2="252.0" y2="300.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
   <line x1="252.0" y1="300.0" x2="416.0" y2="300.0" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.95" stroke-linecap="round"/>
+  <line x1="99.3" y1="386.0" x2="252.0" y2="344.0" stroke="#D9B45C" stroke-width="5.0" stroke-opacity="0.52" stroke-linecap="round"/>
   <line x1="252.0" y1="344.0" x2="416.0" y2="344.0" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.95" stroke-linecap="round"/>
   <line x1="252.0" y1="151.8" x2="252.0" y2="360.2" stroke="#D9B45C" stroke-width="6.5" stroke-opacity="0.42"/>
   <rect x="243.0" y="159.0" width="18.0" height="18.0" transform="rotate(45 252.0 168.0)" fill="#D9B45C"/>
