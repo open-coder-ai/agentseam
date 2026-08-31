@@ -1,27 +1,4 @@
-"""Cursor adapter.
-
-Cursor exposes three separate hook surfaces, and keeping them apart is the point:
-
-  * **Agent hooks** fire during Cmd+K / Agent Chat. `preToolUse` is generic -- it fires for
-    *every* tool (Shell, Read, Write, MCP, Task) -- and its response carries `updated_input`,
-    so this is a genuine block-and-rewrite gate, including on file writes.
-  * **Tab hooks** fire for inline completions only, so a policy can treat autonomous Tab edits
-    differently from user-directed agent work.
-  * **App lifecycle** (`workspaceOpen`) fires outside any session and has no canonical event here;
-    it is left unmapped rather than bent into one that means something else.
-
-Three vendor facts shape the response code, and each one costs something if ignored:
-
-  * `ask` is accepted by the `preToolUse` schema **but not enforced today**. Returning it
-    there would read as a prompt and behave as a pass, so we deny instead and say why.
-    On `beforeShellExecution` / `beforeMCPExecution` an `ask` is honoured.
-  * `afterFileEdit` supports **no output fields at all**, and the write has already landed.
-    A deny there can only be recorded.
-  * Hooks fail **open** by default; `failClosed: true` per hook definition makes them fail closed,
-    so enforcement level here is a configuration choice, not a fixed property.
-
-Verified against Cursor's own hooks documentation (2026-08-26).
-"""
+"""Cursor adapter."""
 
 from __future__ import annotations
 
@@ -51,7 +28,6 @@ from ..contract import (
 AGENT = "cursor"
 
 EVENT_MAP = {
-    # agent surface
     "sessionStart": SESSION_START,
     "sessionEnd": SESSION_END,
     "preToolUse": PRE_TOOL,
@@ -68,27 +44,20 @@ EVENT_MAP = {
     "beforeSubmitPrompt": PROMPT_SUBMIT,
     "preCompact": PRE_COMPACT,
     "stop": STOP,
-    # tab surface -- same canonical events, distinguishable by `event.tool`
     "beforeTabFileRead": PRE_TOOL,
     "afterTabFileEdit": FILE_CHANGED,
 }
 
-#: Gates answering `{"permission": ...}`; the value says whether `ask` is honoured.
 _PERMISSION_GATES = {
-    "preToolUse": False,  # schema accepts "ask"; Cursor does not enforce it today
+    "preToolUse": False,
     "beforeShellExecution": True,
     "beforeMCPExecution": True,
-    "beforeReadFile": False,  # allow/deny only
+    "beforeReadFile": False,
     "beforeTabFileRead": False,
 }
 
-#: Every event where a decision is expected -- NOT the set above (which dialect a gate
-#: speaks). Reusing that left beforeSubmitPrompt, which speaks `continue` rather than
-#: `permission`, installed fail-OPEN: Cursor's default.
 _GATES = frozenset(_PERMISSION_GATES) | {"beforeSubmitPrompt"}
 
-#: Post-hoc events: the action already happened, so nothing we return prevents it.
-#: postToolUseFailure was missing here, so a deny at a failed tool call returned silence instead of the additional_context record every other post-hoc event gets.
 _POST_HOC = (
     "postToolUse",
     "postToolUseFailure",
@@ -98,16 +67,11 @@ _POST_HOC = (
     "afterTabFileEdit",
 )
 
-#: No output contract at all -- returning JSON here is ignored.
 _MUTE = ("afterFileEdit", "afterTabFileEdit")
 
 
-#: Cursor's base schema fields, used as positive ID where the event name is not enough.
 _CURSOR_MARKERS = ("conversation_id", "generation_id", "cursor_version", "workspace_roots")
 
-#: Event names Cursor shares with OpenAI Codex CLI, which also spells its events in
-#: camelCase. On these the name proves nothing, so a Cursor marker must be present, or both
-#: adapters claim the payload, detection goes ambiguous, and the dispatcher allows the call.
 _AMBIGUOUS_NAMES = (
     "preToolUse",
     "postToolUse",
@@ -129,11 +93,8 @@ def claims(raw):
         if name in _AMBIGUOUS_NAMES:
             return any(k in raw for k in _CURSOR_MARKERS)
         return True
-    # Cursor does not always name the event. These shapes are unambiguous:
-    # beforeShellExecution puts `command` at the top level beside cwd/sandbox.
     if isinstance(raw.get("command"), str) and ("sandbox" in raw or "cwd" in raw) and "tool_input" not in raw:
         return True
-    # afterFileEdit: file_path + edits[], with no tool_name wrapper.
     return "file_path" in raw and isinstance(raw.get("edits"), list) and "tool_name" not in raw
 
 
@@ -144,8 +105,6 @@ def _content_of(raw):
     ti = raw.get("tool_input")
     if isinstance(ti, dict):
         return ti.get("content") or ti.get("new_string") or None
-    # The read gates put the file's text at the TOP level -- the asymmetry `path` handles
-    # below. Last in the chain, so nothing carrying content elsewhere moves.
     content = raw.get("content")
     return content if isinstance(content, str) and content else None
 
@@ -153,21 +112,13 @@ def _content_of(raw):
 def parse(raw):
     name = raw.get("hook_event_name")
     if name is None:
-        # Cursor does not always name the event, so shape decides -- but only when there is
-        # no name. A name we do not recognise is a new event, and guessing at one is how an
-        # unknown event gets reported as the gate.
         name = "afterFileEdit" if isinstance(raw.get("edits"), list) else "beforeShellExecution"
     ti = raw.get("tool_input")
     ti = tool_input_of(ti)
     command = raw.get("command") or ti.get("command")
-    # preToolUse nests the target inside tool_input; the file-scoped hooks put it at the
-    # top level. Reading only one of the two leaves a guardrail asking "which file?" with
-    # no answer on exactly the gate that could still stop the write.
     path = raw.get("file_path") or ti.get("file_path") or ti.get("path")
     return Event(
         AGENT,
-        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
-        # nearest canonical one: relabelling it invites a guardrail to evaluate the wrong policy against it.
         EVENT_MAP.get(name, UNKNOWN),
         tool=raw.get("tool_name") or name,
         command=command,
@@ -183,11 +134,7 @@ def parse(raw):
 
 
 def _because(reason, note):
-    """Keep the handler's own reason and add why the outcome changed shape.
-
-    Replacing it would tell the user their rewrite was refused for wanting confirmation,
-    which is a different and untrue story.
-    """
+    """Keep the handler's own reason and add why the outcome changed shape."""
     return "%s (%s)" % (reason, note) if reason else note
 
 
@@ -197,7 +144,6 @@ def _vendor_event(event):
     return name if name in EVENT_MAP else (event.tool if event.tool in EVENT_MAP else "beforeShellExecution")
 
 
-#: Decision words this vendor accepts. preToolUse's schema takes "ask" but does not enforce it, so respond() denies there instead.
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask"})
 
 
@@ -205,8 +151,6 @@ def respond(decision, event):
     name = _vendor_event(event)
 
     if name in _MUTE:
-        # Documented as supporting no output fields. Exit 0 and let the caller's own log
-        # carry the finding -- pretending otherwise would invent a gate that isn't there.
         return "", 0
 
     if name in _POST_HOC:
@@ -216,14 +160,12 @@ def respond(decision, event):
         return "", 0
 
     if name == "beforeSubmitPrompt":
-        # This gate speaks `continue`, not `permission`.
         payload = {"continue": decision.outcome not in (DENY, ASK, REWRITE)}
         if decision.reason:
             payload["user_message"] = decision.reason
         return _json.dumps(payload), 0
 
     if name not in _PERMISSION_GATES:
-        # sessionStart, stop, preCompact and friends: observation only.
         return "", 0
 
     honours_ask = _PERMISSION_GATES[name]
@@ -234,8 +176,6 @@ def respond(decision, event):
         if name == "preToolUse" and decision.updated_input is not None:
             payload = {"permission": "allow", "updated_input": decision.updated_input}
         else:
-            # Only preToolUse carries updated_input. Elsewhere a rewrite has no expression,
-            # and allowing the *unmodified* input through would be the dangerous reading.
             payload = {"permission": "deny"}
             reason = _because(reason, "input requires modification, which this gate cannot express")
     elif decision.outcome == DENY:
@@ -260,9 +200,6 @@ def respond(decision, event):
     return _json.dumps(payload), 0
 
 
-#: Canonical event -> the vendor event that gates it most tightly. `pre_tool` maps to the
-#: generic `preToolUse` rather than `beforeShellExecution`: it covers every tool, not just
-#: shell, and it is the only one that can rewrite.
 REVERSE_EVENT_MAP = {
     PRE_TOOL: "preToolUse",
     POST_TOOL: "postToolUse",
@@ -285,12 +222,6 @@ def hook_config(canonical_events, command, matcher=None, fail_closed=True):
         if not name:
             continue
         entry = {"command": command}
-        # No matcher is written: Cursor's means different things per event (a COMMAND-TEXT regex
-        # at beforeShellExecution) and preToolUse's is unestablished. A wrong matcher matches
-        # nothing while the install still reports success. See this row's matrix note.
-        # Fail open on a gate and a crashed hook silently permits the thing it was
-        # installed to stop, so ask for fail-closed wherever a decision is expected.
-        # fail_closed=False marks an observer (the capture probe): wired as a gate it would block the user's command whenever it cannot launch.
         if fail_closed and name in _GATES:
             entry["failClosed"] = True
         hooks.setdefault(name, []).append(entry)

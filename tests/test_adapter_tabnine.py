@@ -19,20 +19,7 @@ def _at(event, **over):
 
 
 def test_its_gating_events_resolve_to_it_rather_than_being_swallowed():
-    """This used to be ambiguous with Gemini, and the ambiguity was not survivable.
-
-    Every Tabnine event name is Gemini CLI's, and Gemini claimed anything without a foreign
-    `client_type` -- reasoning from the absence of somebody else's nameplate. So both
-    claimed, detect() declined, and the dispatcher ALLOWED: a deny at pre_tool,
-    prompt_submit or stop produced silence under auto-detection. `timestamp` is Tabnine's
-    documented base-schema field; Gemini now defers to it, as it does to every other
-    vendor's positive nameplate.
-
-    The residual risk is stated rather than hidden: Gemini's own base schema is not
-    established, so if a real Gemini build also sends `timestamp`, its payloads would now
-    be claimed by Tabnine -- the same error mirrored. That trade is deliberate. Tabnine's
-    gates being dead is certain; the mirror is hypothetical and needs a Gemini capture.
-    """
+    """This used to be ambiguous with Gemini, and the ambiguity was not survivable."""
     for event in (A.PRE_TOOL, A.PROMPT_SUBMIT, A.STOP):
         raw = _at(event)
         claimants = sorted(n for n, m in A.adapters.ADAPTERS.items() if m.claims(raw))
@@ -56,17 +43,13 @@ def test_after_tool_can_block_which_most_agents_cannot():
 
 
 def test_a_non_blocking_event_stays_silent():
-    """Stray stdout breaks Tabnine's parsing, and a broken parse is treated as allow -- so
-    emitting JSON where it is not read is worse than saying nothing.
-    """
+    """Stray stdout breaks Tabnine's parsing, and a broken parse is treated as allow -- so"""
     text, code, _e, _d = A.handle(_at(A.SESSION_START), lambda e: Decision.deny("no"), agent="tabnine")
     assert (text, code) == ("", 0)
 
 
 def test_respond_answers_a_hand_built_event_not_just_a_parsed_one():
-    """respond() is public adapter API -- a consumer replaying a captured event or building
-    one directly (raw defaulting to {}) must get an honest deny at a real blocking event,
-    not silence because event.raw['hook_event_name'] was never populated."""
+    """respond() is public adapter API -- a consumer replaying a captured event or building"""
     from agentseam.contract import Event
 
     mod = A.adapters.get("tabnine")
@@ -75,8 +58,6 @@ def test_respond_answers_a_hand_built_event_not_just_a_parsed_one():
     assert json.loads(text) == {"decision": "deny", "reason": "real command"}
     assert code == 0
 
-    # A canonically-unmapped event (no raw name available, no canonical match either) must
-    # still stay silent rather than guess.
     unknown = Event("tabnine", A.UNKNOWN, raw=None)
     assert mod.respond(Decision.deny("x"), unknown) == ("", 0)
 
@@ -93,18 +74,13 @@ def test_ask_and_rewrite_both_deny_and_name_the_real_cause():
 
 
 def test_no_rewrite_is_claimed_even_though_the_vendor_advertises_one():
-    """The overview says "rewrite tool arguments"; the field carrying it was not in the
-    documentation read here. An advertised capability with no established mechanism is a
-    claim this project does not make.
-    """
+    """The overview says "rewrite tool arguments"; the field carrying it was not in the"""
     assert not A.can_rewrite("tabnine", A.PRE_TOOL)
     assert "advertised" in A.MATRIX["tabnine"]["notes"]
 
 
 def test_the_notes_record_how_broadly_it_fails_open():
-    """Not pedantry: stdout that is not valid JSON is treated as a message and the action is
-    ALLOWED, so a chatty hook is a permitted action rather than a failure.
-    """
+    """Not pedantry: stdout that is not valid JSON is treated as a message and the action is"""
     notes = A.MATRIX["tabnine"]["notes"]
     assert "ALLOWED" in notes
     assert A.enforcement_level("tabnine", A.PRE_TOOL) == "best-effort"

@@ -1,14 +1,4 @@
-"""How each matrix row's claims were established, kept apart from the claims themselves.
-
-Two different activities. A row's `events` table says what an agent can do; its evidence
-says how anyone knows. The second is what an adopter should read first -- `basis` names the
-kind of evidence in a closed vocabulary, and most rows here are `vendor-docs`, which is a
-claim about what a vendor says rather than an observation of what their build does.
-
-Separating them makes the honest shape of this project visible in one file: three rows rest
-on a live run, and only one of those saw every event it claims. Each live round has corrected
-something source or docs had been read wrongly, which is the argument for running more.
-"""
+"""How each matrix row's claims were established, kept apart from the claims themselves."""
 
 from __future__ import annotations
 
@@ -39,9 +29,6 @@ EVIDENCE = {
             "honour permissionDecision, so the three blocking events this row claims are now "
             "each backed by an observation rather than by inference from the other two."
         ),
-        # Canonical events whose RESPONSE contract was verified in that round. pre_tool is
-        # included: permissionDecision blocked a Write there outright, and the agent's next
-        # Bash call too, so it is established rather than inherited from documentation.
         "observed": ("pre_tool", "prompt_submit", "stop"),
     },
     "codex_cli": {
@@ -59,9 +46,6 @@ EVIDENCE = {
             "binding for the App Server's IDE-facing protocol, not the CLI hook dialect this "
             "adapter speaks, and citing it is what put camelCase event names here."
         ),
-        # Canonical events seen against the running agent -- NOT a claim about the four this
-        # row also asserts (pre_compact, session_end, subagent_start, subagent_stop), which
-        # simply did not fire in either session.
         "observed": (
             "post_tool",
             "pre_tool",
@@ -71,11 +55,6 @@ EVIDENCE = {
         ),
     },
     "copilot": {
-        # Not the vscode_copilot row's product -- this is the honesty gate for hooks shipped
-        # inside an Agent Plugins 1.0 MARKETPLACE bundle specifically (packaging_data.py's
-        # "copilot" row). No adapter is registered under this name (see matrix_gaps.py's
-        # "copilot" row for why), so this evidence documents what was found, not a dispatch
-        # path reachable from here.
         "basis": BASIS_DOCS,
         "version": "VS Code 1.110+ (Agent Plugins 1.0); Copilot CLI per docs, no build pinned",
         "date": "2026-08-29",
@@ -114,8 +93,6 @@ EVIDENCE = {
             "retries once unsandboxed) and confirmed beforeShellExecution fires when wired -- "
             "the earlier captures never saw it because REVERSE_EVENT_MAP wires preToolUse."
         ),
-        # Canonical events seen against the running agent. Deliberately NOT a claim about the
-        # five this row also asserts -- see NOTES for what three sessions failed to observe.
         "observed": (
             "file_changed",
             "post_tool",
@@ -146,8 +123,6 @@ EVIDENCE = {
             "points at once: `ask` is honoured at BeforeTool and this adapter was denying "
             "instead, and `allow` is read nowhere at all."
         ),
-        # Not a live run: no event here has been seen fire against a running Gemini CLI.
-        # This row says what the code does with a reply, not that a reply was ever sent.
     },
     "grok": {
         "basis": BASIS_DOCS,
@@ -194,8 +169,6 @@ EVIDENCE = {
             "`initial_prompt` (SessionStart) and `stop_reason` (Stop), which appear in no "
             "vendor doc read here."
         ),
-        # Canonical events seen against the running agent. NOT a claim about subagent_start
-        # or subagent_stop, which this row also asserts and which did not fire.
         "observed": ("post_tool", "pre_tool", "prompt_submit", "session_start", "stop"),
     },
     "windsurf": {

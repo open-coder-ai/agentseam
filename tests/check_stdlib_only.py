@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
-"""Assert that importing agentseam pulls in nothing outside the standard library.
-
-Runnable standalone (CI) and imported by the test suite, deliberately: the first
-version of this check lived inline in the workflow, drifted from the local test, and
-shipped a red pipeline. One implementation, two callers.
-
-Semantics: diff sys.modules before and after the import, so pre-existing environment
-artifacts (sitecustomize, coverage hooks, whatever the runner injects) are not
-attributed to us. Compare TOP-LEVEL package names, since sys.stdlib_module_names
-lists `os`, not `os.path`.
-"""
+"""Assert that importing agentseam pulls in nothing outside the standard library."""
 
 import sys
 from pathlib import Path
@@ -25,7 +15,7 @@ def offending_imports():
     import agentseam  # noqa: F401
 
     stdlib = getattr(sys, "stdlib_module_names", None)
-    if stdlib is None:  # py<3.10 has no inventory; the AST test covers those runs
+    if stdlib is None:
         return []
     added = set(sys.modules) - before
     return sorted(

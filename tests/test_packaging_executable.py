@@ -1,8 +1,4 @@
-"""Tests for the EXECUTABLE part (R1): the consumer-supplied script a HOOKS command runs.
-
-Kept apart from test_packaging.py's general assertions -- this is one feature, exercised
-per supporting format, and the pairing keeps each file under the 300-line budget.
-"""
+"""Tests for the EXECUTABLE part (R1): the consumer-supplied script a HOOKS command runs."""
 
 from __future__ import annotations
 
@@ -26,8 +22,7 @@ def test_every_agent_answers_the_executable_question(agent):
 
 @pytest.mark.parametrize("agent", ["claude_code", "gemini_cli", "vscode_copilot"])
 def test_a_bundle_with_an_executable_and_hooks_renders_both(agent):
-    """The acceptance shape from the spec: the file lands at the row's path, marked
-    executable, and a hook command can reach it through the correct plugin_root token."""
+    """The acceptance shape from the spec: the file lands at the row's path, marked"""
     bundle = Bundle(
         "guard-bundle",
         parts=[
@@ -46,7 +41,7 @@ def test_a_bundle_with_an_executable_and_hooks_renders_both(agent):
     ref = packaging.executable_ref(agent, expected_path)
     row = PACKAGING[agent]
     if row["unit"] is None:
-        assert ref == expected_path  # repo-local: nothing relocates, the path is the reference
+        assert ref == expected_path
     else:
         assert ref == "%s/%s" % (packaging.plugin_root(agent), expected_path)
 

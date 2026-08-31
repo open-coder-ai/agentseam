@@ -31,10 +31,7 @@ def test_pascalcase_tool_args_are_read_into_the_canonical_fields():
 
 
 def test_stepidx_correlates_pre_and_post_tool_use():
-    """The docstring's own pre/post correlation key -- PreToolUse and PostToolUse carry the
-    same stepIdx -- was never plumbed into tool_use_id, leaving it None on the one agent
-    that names a correlation field. A handler timing a call or verifying a denied one
-    produced no output needs this."""
+    """The docstring's own pre/post correlation key -- PreToolUse and PostToolUse carry the"""
     _, _, event, _ = A.handle(AG_PRE_TOOL, deny_all)
     assert event.tool_use_id == "19"
 
@@ -67,11 +64,7 @@ def test_post_tool_use_is_told_apart_by_its_error_field_and_returns_empty():
 
 
 def test_an_unidentifiable_tool_payload_is_treated_as_pre_tool_use():
-    """The tie is broken toward the gate on purpose.
-
-    Guessing post-tool on a pre-tool payload would skip the gate and let the call run.
-    Guessing pre-tool on a post-tool payload only emits a decision Antigravity ignores.
-    """
+    """The tie is broken toward the gate on purpose."""
     ambiguous = {k: v for k, v in AG_POST_TOOL.items() if k != "error"}
     _, _, event, _ = A.handle(ambiguous, deny_all)
     assert event.event == A.PRE_TOOL
@@ -85,9 +78,7 @@ def test_stop_can_refuse_to_let_the_agent_stop():
 
 
 def test_stop_names_why_ask_or_rewrite_became_continue():
-    """Without the annotation, ASK/REWRITE at Stop read exactly like a DENY: 'continue' with
-    the handler's raw reason, as though the handler had asked to keep working. The user
-    never learns confirmation or a change was actually needed and could not be expressed."""
+    """Without the annotation, ASK/REWRITE at Stop read exactly like a DENY: 'continue' with"""
     ask = json.loads(A.handle(AG_STOP, lambda e: Decision.ask("confirm"))[0])
     assert ask["decision"] == "continue"
     assert "confirm" in ask["reason"] and "cannot prompt at Stop" in ask["reason"]
@@ -98,10 +89,7 @@ def test_stop_names_why_ask_or_rewrite_became_continue():
 
 
 def test_invocation_events_are_unmapped_because_they_are_indistinguishable():
-    """PreInvocation and PostInvocation carry identical fields, so nothing could tell them
-    apart. They fall back to the gate rather than being bent into a canonical event that
-    would mean something else.
-    """
+    """PreInvocation and PostInvocation carry identical fields, so nothing could tell them"""
     mod = A.adapters.get("antigravity")
     assert mod._infer_event(AG_INVOCATION) is None
     assert set(mod.REVERSE_EVENT_MAP) == {A.PRE_TOOL, A.POST_TOOL, A.STOP}

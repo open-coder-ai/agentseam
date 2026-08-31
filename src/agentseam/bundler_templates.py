@@ -1,8 +1,4 @@
-"""Bundler templates: the header banner and the single-agent runtime `bundle()` composes.
-
-Split out of `bundler.py` (which does the source-level composition) to stay under the
-file-size convention -- this module owns the literal text, that one owns the assembly.
-"""
+"""Bundler templates: the header banner and the single-agent runtime `bundle()` composes."""
 
 from __future__ import annotations
 

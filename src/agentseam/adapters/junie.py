@@ -1,38 +1,4 @@
-"""Junie CLI adapter.
-
-The inherited matrix row said "a Junie CLI hook surface is reported but unverified". It has
-one, and it is among the strongest here: `PreToolUse` returns `allow` / `ask` / `block` and
-carries `updatedInput`, so all three of block, ask and rewrite are native -- no degradation.
-Junie states outright that its field names follow Claude Code's wire protocol so a script
-can be shared between the two.
-
-That shared protocol is also the hazard: the event names ARE Claude Code's. `project_path`
-is the separator -- Junie sends it, Claude Code does not -- so `claims()` requires it and
-Claude Code's adapter declines a payload carrying it.
-
-Three behaviours worth carrying into the notes because they change what a policy means:
-
-  * **Project-local hooks are ignored by default.** `<project>/.junie/config.json` is
-    repository-controlled, so Junie will not run shell commands from it without
-    `--config-location`. A guardrail committed to a repo therefore does *not* take effect
-    for a teammate who clones it -- the opposite of every other agent here, and the reason
-    `CONFIG_PATH` points at the user file.
-  * **PermissionRequest inverts the usual default.** A hook that exits 0 without a blocking
-    decision *approves* the action and skips the dialog the user would otherwise have seen.
-    `parse()`/`respond()` handle it (mapped to PRE_TOOL, in BLOCKING_EVENTS), but
-    `install()` cannot wire it on its own: both PreToolUse and PermissionRequest map to the
-    one canonical `pre_tool`, and `REVERSE_EVENT_MAP` -- a single vendor name per canonical
-    event -- names only PreToolUse. This is deliberate, not an oversight: PermissionRequest
-    approves-by-default, the opposite of PreToolUse's deny-by-default gate, so bundling the
-    two under one `install('junie', ['pre_tool'])` call would silently hand a consumer a
-    second, higher-stakes gate with inverted semantics they did not ask for. A consumer who
-    wants PermissionRequest covered must wire it by hand in `~/.junie/config.json`.
-  * **StopFailure is observability-only** -- output and exit code are ignored -- and it
-    fires on LLM/API failures, not tool failures, so it is not `tool_failure` and is left
-    unmapped rather than bent into it.
-
-Verified against Junie CLI's hooks documentation (2026-08-26).
-"""
+"""Junie CLI adapter."""
 
 from __future__ import annotations
 
@@ -62,9 +28,6 @@ EVENT_MAP = {
     "PreToolUse": PRE_TOOL,
     "PermissionRequest": PRE_TOOL,
     "Stop": STOP,
-    # StopFailure fires on a classified LLM/API failure, not a tool failure -- the vendor
-    # says a PostToolUseFailure hook is future work -- so mapping it to tool_failure would
-    # be a different claim than the one it supports.
 }
 REVERSE_EVENT_MAP = {
     SESSION_START: "SessionStart",
@@ -74,11 +37,8 @@ REVERSE_EVENT_MAP = {
     STOP: "Stop",
 }
 
-#: Junie sends this on session-scoped events; Claude Code, whose event names these are, does
-#: not. Without it the two are indistinguishable.
 MARKER = "project_path"
 
-#: Events whose stdout is read. SessionEnd's output is documented as discarded entirely.
 BLOCKING_EVENTS = ("UserPromptSubmit", "PreToolUse", "PermissionRequest", "Stop")
 
 
@@ -91,9 +51,6 @@ def claims(raw):
 def parse(raw):
     ti = raw.get("tool_input")
     ti = tool_input_of(ti)
-    # The docstring stakes everything on Junie's field names following Claude Code's wire
-    # protocol exactly, so MultiEdit's edits[].new_string and NotebookEdit's new_source get
-    # the same fallback chain claude_code.parse uses -- not a guess, a claim we already made.
     content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
     if content is None and isinstance(ti.get("edits"), list):
         joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"] if isinstance(e, dict))
@@ -113,9 +70,6 @@ def parse(raw):
     )
 
 
-#: Decision words this vendor accepts, per the docstring above and the matrix note. The
-#: blocking word is "block"; respond() said "deny" until 2026-08-28, and since Junie fails
-#: open an unrecognised value there was no refusal at all. This constant exists to stop that.
 DECISION_VOCABULARY = frozenset({"allow", "ask", "block"})
 
 
@@ -125,8 +79,6 @@ def respond(decision, event):
         return "", 0
 
     if name == "Stop":
-        # Stop speaks retry, not permission: a block feeds the reason back and the agent
-        # tries again, bounded by JUNIE_STOP_HOOK_BLOCK_CAP.
         if decision.outcome in (DENY, ASK, REWRITE):
             return _json.dumps({"decision": "block", "reason": decision.reason or "not finished"}), 0
         return "", 0
@@ -139,19 +91,11 @@ def respond(decision, event):
     if decision.outcome == ASK:
         return _json.dumps({"decision": "ask", "reason": decision.reason or "confirmation required"}), 0
     if decision.outcome in (DENY, REWRITE):
-        # "block", not "deny". This adapter's own docstring and its matrix note both record
-        # Junie's gate vocabulary as allow/ask/block, and the Stop branch above already
-        # spells it that way -- only this branch said "deny", a word nothing in this
-        # repository records Junie as accepting. Junie fails OPEN (non-zero exits other
-        # than 2 are warnings and execution proceeds), so an unrecognised decision value at
-        # the strongest gate in the matrix is not a louder refusal, it is no refusal.
         reason = decision.reason
         if decision.outcome == REWRITE:
             reason = "%s (no replacement input was supplied)" % (reason or "input requires modification")
         return _json.dumps({"decision": "block", "reason": reason or "blocked by policy"}), 0
 
-    # An explicit allow, deliberately: on PermissionRequest an empty success already
-    # approves and skips the user's dialog, so silence here would be a decision too.
     body = {"decision": "allow"}
     if decision.outcome == ALLOW and decision.reason:
         body["additionalContext"] = decision.reason
@@ -159,12 +103,7 @@ def respond(decision, event):
 
 
 def hook_config(canonical_events, command, matcher=None):
-    """Junie's own user-level file.
-
-    Not the project file: Junie ignores hooks in a repository-controlled config unless it is
-    passed with --config-location, so writing there would produce a guardrail that silently
-    does not run.
-    """
+    """Junie's own user-level file."""
     hooks = {}
     for ev in canonical_events:
         name = REVERSE_EVENT_MAP.get(ev)
@@ -177,6 +116,4 @@ def hook_config(canonical_events, command, matcher=None):
     return {"hooks": hooks}
 
 
-#: Project-local hooks are ignored by default, so the user file is the only location that
-#: takes effect without an explicit --config-location.
 CONFIG_PATH = "~/.junie/config.json"

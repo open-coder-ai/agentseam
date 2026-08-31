@@ -1,34 +1,12 @@
-"""Primitive 4 data: where each agent keeps its permission config, and what that config can say.
-
-Two tables, and the second one is the point.
-
-`CONFIG_FILES` is the boring half: the files, in the order the agent resolves them.
-`CAPABILITY` is the half that stops a policy from being a lie -- for each agent it records
-*which of allow/ask/deny that agent's config can actually express*, and under which key.
-A `None` there means the agent has no way to say it, and a rule asking for it must be
-reported back to the caller rather than rendered into something weaker that looks similar.
-
-That distinction is not academic. VS Code's terminal auto-approve map takes `false` for a
-pattern, which reads like a denylist and is not one: `false` withholds auto-approval, so the
-command still runs once a human clicks through. Writing a "deny" there would hand someone a
-guardrail that never blocks anything.
-
-Every row carries `verified`, naming what was actually read. Rows whose source could not be
-reached from here say so and claim nothing.
-"""
+"""Primitive 4 data: where each agent keeps its permission config, and what that config can say."""
 
 from __future__ import annotations
 
-# --- what a rule can ask for ----------------------------------------------------
 ALLOW = "allow"
 ASK = "ask"
 DENY = "deny"
 ACTIONS = (ALLOW, ASK, DENY)
 
-# --- what a rule can be about ---------------------------------------------------
-# Deliberately *capabilities*, not tool names. "Bash", "run_shell_command" and
-# "runInTerminal" are three vendors' spellings of one idea; a policy should be written
-# once against the idea and spelled by the adapter.
 SHELL = "shell"
 FILE_READ = "file_read"
 FILE_WRITE = "file_write"
@@ -36,7 +14,6 @@ NETWORK_FETCH = "network_fetch"
 MCP = "mcp"
 CAPABILITIES = (SHELL, FILE_READ, FILE_WRITE, NETWORK_FETCH, MCP)
 
-# --- config scopes, highest precedence first where an agent has several ----------
 MANAGED = "managed"
 LOCAL = "local"
 PROJECT = "project"
@@ -130,8 +107,6 @@ CAPABILITY = {
             ASK: 'prefix_rule(decision="prompt")',
             DENY: 'prefix_rule(decision="forbidden")',
         },
-        # The vocabulary is source-verified; whether "forbidden" survives every approval
-        # and sandbox combination was not established here, so this stays unanswered.
         "deny_authoritative": None,
         "sandbox": "sandbox_mode (read-only | workspace-write | danger-full-access | external-sandbox)",
         "tools": {
@@ -190,16 +165,6 @@ CAPABILITY = {
     },
 }
 
-#: Every agent the matrix knows that has no permission model recorded here, and why.
-#:
-#: The list is exhaustive on purpose, and a test enforces that: recorded plus unrecorded
-#: must equal the matrix exactly. An agent simply *missing* from both is the failure this
-#: module exists to prevent -- it reads as "nothing to say here" when the truth is "nobody
-#: looked". Four agents sat in that state until this table was completed.
-#:
-#: Note what is deliberately NOT inferred. An agent with no hook surface (Aider, Zed) may
-#: still have a permission config; the two are unrelated, and treating "cannot hook" as
-#: "cannot restrict" would be a different claim than the one we are entitled to make.
 UNRECORDED = {
     "copilot": "a distribution-only identity (the Agent Plugins 1.0 marketplace bundle format, "
     "see packaging_data.PACKAGING), not a live settings surface of its own -- a repo running "

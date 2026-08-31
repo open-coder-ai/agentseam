@@ -28,9 +28,7 @@ def test_project_path_separates_junie_from_claude_code():
 
 
 def test_multiedit_and_notebookedit_content_reach_a_content_policy():
-    """The docstring stakes everything on Junie's field names following Claude Code's wire
-    protocol -- so a policy that already works on claude_code's MultiEdit/NotebookEdit must
-    not go blind here just because project_path marks it as Junie."""
+    """The docstring stakes everything on Junie's field names following Claude Code's wire"""
     multiedit = _pre(
         tool_name="MultiEdit",
         tool_input={
@@ -54,12 +52,7 @@ def test_multiedit_and_notebookedit_content_reach_a_content_policy():
     ],
 )
 def test_block_and_ask_are_native(decision, expected):
-    """The blocking word is `block`. This test asserted `deny` until 2026-08-28, pinning a
-    value nothing in this repository records Junie as accepting: the module docstring and
-    the matrix note both give the vocabulary as allow/ask/block, and respond()'s own Stop
-    branch already spelled it that way. Junie fails OPEN, so an unrecognised decision value
-    at the strongest gate in the matrix is not a louder refusal -- it is no refusal.
-    """
+    """The blocking word is `block`. This test asserted `deny` until 2026-08-28, pinning a"""
     text, code, _e, final = A.handle(_pre(), lambda e: decision(), agent="junie")
     assert json.loads(text) == expected
     assert code == 0
@@ -85,9 +78,7 @@ def test_a_rewrite_without_replacement_input_denies_rather_than_allowing():
 
 
 def test_permission_request_is_answered_explicitly_because_silence_approves():
-    """A hook exiting 0 without a decision approves and skips the dialog the user would
-    otherwise have seen, so staying silent there is itself a decision.
-    """
+    """A hook exiting 0 without a decision approves and skips the dialog the user would"""
     raw = _pre(hook_event_name="PermissionRequest", permission_reason="writes outside project")
     text, code, event, _d = A.handle(raw, lambda e: Decision.allow(), agent="junie")
     assert event.event == A.PRE_TOOL
@@ -97,11 +88,7 @@ def test_permission_request_is_answered_explicitly_because_silence_approves():
 
 
 def test_permission_request_is_not_bundled_into_a_pre_tool_install():
-    """PermissionRequest approves by default; PreToolUse denies by default. Both map to
-    canonical pre_tool, but install('junie', ['pre_tool']) must wire only PreToolUse --
-    bundling the two would hand a consumer a second, higher-stakes gate with inverted
-    semantics they never asked for. Deliberate, not a coverage gap; documented in the
-    module docstring and the matrix note."""
+    """PermissionRequest approves by default; PreToolUse denies by default. Both map to"""
     mod = A.adapters.get("junie")
     config = mod.hook_config([A.PRE_TOOL], "handler.py")
     assert list(config["hooks"]) == ["PreToolUse"]
@@ -122,11 +109,7 @@ def test_stop_failure_is_not_mapped_to_tool_failure():
 
 
 def test_config_targets_the_user_file_because_project_hooks_are_ignored():
-    """A guardrail committed to a repo does not run for a teammate who clones it.
-
-    Junie skips hooks from a repository-controlled config unless it is passed explicitly,
-    so writing there would produce a config that silently never fires.
-    """
+    """A guardrail committed to a repo does not run for a teammate who clones it."""
     mod = A.adapters.get("junie")
     assert mod.CONFIG_PATH.startswith("~/")
     assert "IGNORED by default" in A.MATRIX["junie"]["notes"]

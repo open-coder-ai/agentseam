@@ -1,32 +1,4 @@
-"""Antigravity adapter.
-
-Two things make this one different from every other adapter here.
-
-**The payload does not name its event.** There is no `hookEventName` field, so the event has
-to be inferred from shape. That inference has a genuine ambiguity in it: PreToolUse and
-PostToolUse carry the same `toolCall` and `stepIdx`, separated only by PostToolUse's `error`
-field, which is documented as empty rather than absent on success. So the tie is broken
-*toward* PRE_TOOL, deliberately. Guessing post-tool on a pre-tool payload would skip the gate
-and let the call through; guessing pre-tool on a post-tool payload only produces a decision
-that Antigravity ignores, because PostToolUse output is `{}`. One direction fails open, the
-other fails harmlessly.
-
-`PreInvocation` and `PostInvocation` are left unmapped for the same reason taken to its
-conclusion: their payloads are documented as *identical*, so nothing could tell them apart,
-and neither has a canonical counterpart worth bending one into.
-
-**The decision vocabulary is richer than ours.** PreToolUse accepts `allow`, `deny`, `ask`,
-`force_ask` and `deny_unless_prior_grant`. agentseam's contract has three of those, so the
-last two are reachable only by a handler writing Antigravity's dialect directly -- recorded
-here rather than quietly dropped. `ask` is honoured, but respects a user's "Always Allow";
-`force_ask` is the one that ignores cached permissions, and a handler that means "prompt
-every time" is not getting it through this contract today.
-
-Tool arguments are PascalCase (`CommandLine`, `TargetFile`, `CodeContent`), which is why the
-field extraction below is explicit rather than a generic lookup.
-
-Verified against Antigravity's hooks documentation (2026-08-26).
-"""
+"""Antigravity adapter."""
 
 from __future__ import annotations
 
@@ -36,22 +8,15 @@ from ..contract import ASK, DENY, POST_TOOL, PRE_TOOL, REWRITE, STOP, UNKNOWN, E
 
 AGENT = "antigravity"
 
-#: Canonical -> the event key used in hooks.json.
 REVERSE_EVENT_MAP = {PRE_TOOL: "PreToolUse", POST_TOOL: "PostToolUse", STOP: "Stop"}
 
-#: Per-tool argument names. Antigravity's tools take PascalCase args that differ by tool,
-#: so a guardrail asking "which file, what content" needs this table to get an answer.
 _COMMAND_ARG = "CommandLine"
 _PATH_ARGS = ("TargetFile", "AbsolutePath")
 _CONTENT_ARGS = ("CodeContent", "ReplacementContent")
 
 
 def claims(raw):
-    """Structural: `conversationId` with `workspacePaths` is Antigravity's own envelope.
-
-    Cursor's near-equivalents are `conversation_id` and `workspace_roots`, so the two do not
-    collide. No event name is checked because the payload does not carry one.
-    """
+    """Structural: `conversationId` with `workspacePaths` is Antigravity's own envelope."""
     if not isinstance(raw, dict):
         return False
     return "conversationId" in raw and isinstance(raw.get("workspacePaths"), list)
@@ -63,7 +28,6 @@ def _infer_event(raw):
         return "Stop"
     if isinstance(raw.get("toolCall"), dict):
         return "PostToolUse" if "error" in raw else "PreToolUse"
-    # PreInvocation / PostInvocation are indistinguishable from each other and unmapped.
     return None
 
 
@@ -90,9 +54,6 @@ def parse(raw):
             break
     return Event(
         AGENT,
-        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
-        # nearest canonical one: relabelling it invites a guardrail to evaluate the
-        # wrong policy against it.
         {"PreToolUse": PRE_TOOL, "PostToolUse": POST_TOOL, "Stop": STOP}.get(name, UNKNOWN),
         tool=call.get("name"),
         command=args.get(_COMMAND_ARG),
@@ -100,18 +61,12 @@ def parse(raw):
         content=_content_of(args),
         output=raw.get("error") or None,
         session_id=raw.get("conversationId"),
-        # The docstring's own pre/post correlation key -- PreToolUse and PostToolUse carry
-        # the same stepIdx. Left unplumbed, a handler correlating a gate decision with its
-        # post-tool result (timing, verifying a denied call produced no output, per-call
-        # audit trails) found tool_use_id always None on the one agent that names one.
         tool_use_id=str(raw["stepIdx"]) if "stepIdx" in raw else None,
         cwd=args.get("Cwd") or (roots[0] if roots else None),
         raw=raw,
     )
 
 
-#: Decision words this vendor accepts. PreToolUse takes the five in the docstring above;
-#: Stop takes continue/stop, where anything but "continue" lets the stop happen.
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "force_ask", "deny_unless_prior_grant", "continue", "stop"})
 
 
@@ -119,15 +74,9 @@ def respond(decision, event):
     name = _infer_event(event.raw or {})
 
     if name == "PostToolUse":
-        # Documented as returning an empty object. Nothing here can undo the call.
         return _json.dumps({}), 0
 
     if name == "Stop":
-        # "continue" re-enters the execution loop; any other value lets the stop happen.
-        # ASK and REWRITE need the same degradation annotation the gate branch below gives
-        # them -- without it, "continue" with the handler's raw reason reads as though the
-        # handler asked to keep working, when it actually asked for confirmation or a
-        # change Stop cannot express either of.
         if decision.outcome == ASK:
             note = (
                 "Antigravity cannot modify a tool call"
@@ -144,20 +93,14 @@ def respond(decision, event):
         return _json.dumps({"decision": "stop"}), 0
 
     if decision.outcome == REWRITE:
-        # No updatedInput equivalent: permissionOverrides widens permissions, it does not
-        # change arguments. Allowing the unmodified call through would be the wrong read.
         return _json.dumps(
             {"decision": "deny", "reason": _because(decision.reason, "Antigravity cannot modify a tool call")}
         ), 0
     if decision.outcome == ASK:
         if degraded_from(decision) == REWRITE:
-            # A rewrite the dispatcher reduced. Prompting would offer the user the
-            # *unmodified* call to approve, which is the thing the handler rejected.
             return _json.dumps(
                 {"decision": "deny", "reason": _because(decision.reason, "Antigravity cannot modify a tool call")}
             ), 0
-        # A real ask is honoured, but a user's "Always Allow" still applies. force_ask is
-        # the variant that ignores cached permissions, and our contract cannot request it.
         return _json.dumps({"decision": "ask", "reason": decision.reason or "confirmation required"}), 0
     if decision.outcome == DENY:
         return _json.dumps({"decision": "deny", "reason": decision.reason or "blocked by policy"}), 0
@@ -168,8 +111,6 @@ def _because(reason, note):
     return "%s (%s)" % (reason, note) if reason else note
 
 
-#: The group name we own in hooks.json. Antigravity keys the file by hook *name*, which
-#: gives ownership a natural home: our entries live under one key nobody else writes.
 GROUP = "agentseam"
 
 

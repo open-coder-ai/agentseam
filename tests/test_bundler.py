@@ -1,10 +1,4 @@
-"""Bundler unit tests: the composed source itself -- compiles, is self-contained, is
-deterministic, and never collides two sections' top-level names.
-
-The stronger claim -- that the bundle actually RUNS correctly, standalone, with no
-agentseam installed -- is tests/test_bundler_subprocess.py; this file only has to prove
-the text `bundle()` produces is well-formed and honest about what it depends on.
-"""
+"""Bundler unit tests: the composed source itself -- compiles, is self-contained, is"""
 
 from __future__ import annotations
 
@@ -59,8 +53,7 @@ def test_bundle_compiles_as_a_standalone_module(agent):
 
 @pytest.mark.parametrize("agent", bundler.SUPPORTED_AGENTS)
 def test_bundle_never_imports_agentseam(agent):
-    """The one claim this whole primitive exists to make good on: vendored into an adopter
-    repo with agentseam not installed, this file must still run."""
+    """The one claim this whole primitive exists to make good on: vendored into an adopter"""
     tree = ast.parse(bundler.bundle(agent))
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -72,8 +65,7 @@ def test_bundle_never_imports_agentseam(agent):
 
 @pytest.mark.parametrize("agent", bundler.SUPPORTED_AGENTS)
 def test_bundle_has_no_colliding_top_level_names(agent):
-    """Two sections defining the same name would silently shadow one another -- Python does
-    not error on a duplicate top-level def, it just makes the first one dead code."""
+    """Two sections defining the same name would silently shadow one another -- Python does"""
     names = _top_level_names(ast.parse(bundler.bundle(agent)))
     dupes = sorted({n for n in names if names.count(n) > 1})
     assert not dupes, "%s: %s" % (agent, dupes)
@@ -89,8 +81,7 @@ def test_bundle_leaves_a_marked_unimplemented_handler_slot(agent):
 
 
 def test_cross_adapter_dependency_is_inlined_where_actually_used():
-    """gemini_cli and devin borrow claude_code's payload-envelope discriminator; their
-    bundles need it and claude_code's own AGENT identity name must not leak in with it."""
+    """gemini_cli and devin borrow claude_code's payload-envelope discriminator; their"""
     for agent in ("gemini_cli", "devin"):
         src = bundler.bundle(agent)
         assert "def looks_like_claude_code(raw):" in src
@@ -106,14 +97,7 @@ def test_windows_helper_is_inlined_only_where_the_adapter_actually_needs_it():
 
 
 def test_no_module_is_imported_twice_at_module_level():
-    """Composing sources that each legitimately `import json` used to emit one module-level
-    import per source. Harmless at runtime, but every consumer's static analysis reports it
-    against their repository -- 7 CodeQL alerts on chock's vendored runners was what surfaced
-    it. The bundle should say each import once, because that is what it means.
-
-    Deliberately counts by MODULE, not by bound name: `import json` and `import json as
-    _json` are two bindings of one module, which is exactly the case that regressed.
-    """
+    """Composing sources that each legitimately `import json` used to emit one module-level"""
     for agent in bundler.SUPPORTED_AGENTS:
         tree = ast.parse(bundler.bundle(agent))
         modules = []
@@ -127,9 +111,7 @@ def test_no_module_is_imported_twice_at_module_level():
 
 
 def test_every_name_a_source_imported_is_still_bound():
-    """Hoisting must not lose an alias. Each bundle is compiled and executed in a namespace
-    of its own; a name a composed source relied on going missing shows up here rather than
-    in a consumer's repo at hook time."""
+    """Hoisting must not lose an alias. Each bundle is compiled and executed in a namespace"""
     for agent in bundler.SUPPORTED_AGENTS:
         src = bundler.bundle(agent)
         namespace = {"__name__": "_bundle_%s" % agent}
@@ -138,8 +120,7 @@ def test_every_name_a_source_imported_is_still_bound():
 
 
 def test_function_local_imports_are_left_alone():
-    """A source's decision to import inside a function body is its own; a source-composer
-    rewriting function bodies would be doing more than composing. Only module level moves."""
+    """A source's decision to import inside a function body is its own; a source-composer"""
     src = bundler.bundle("claude_code")
     tree = ast.parse(src)
     local = [

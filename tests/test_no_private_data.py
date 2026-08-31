@@ -1,10 +1,4 @@
-"""No local or personal data may reach a commit, a PR, or a published artifact.
-
-This repo is developed partly by AI agents running in ephemeral containers. Those
-environments carry paths, session identifiers, and account details that are of no use
-to anyone reading the repo and should not be published. Reviewing for it by eye works
-until the one time it does not, so it is a test.
-"""
+"""No local or personal data may reach a commit, a PR, or a published artifact."""
 
 import re
 import subprocess
@@ -12,8 +6,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Each pattern is something that identifies a machine, a person, or a work session --
-# never something the repository needs in order to be useful.
 FORBIDDEN = {
     "absolute home path": re.compile(r"/(?:home|Users)/(?!user\b)[A-Za-z0-9._-]+/|/home/user/|C:\\\\Users\\\\"),
     "agent session id": re.compile(r"\bsession_[0-9A-Za-z]{12,}\b"),
@@ -25,7 +17,6 @@ FORBIDDEN = {
     ),
 }
 
-# Documentation may legitimately name the patterns it forbids.
 ALLOWED_FILES = {"tests/test_no_private_data.py"}
 
 
@@ -43,12 +34,10 @@ def test_no_private_data_in_tracked_files():
         try:
             text = path.read_text(encoding="utf-8")
         except (UnicodeDecodeError, OSError):
-            continue  # binary or unreadable: nothing textual to leak
+            continue
         for label, pattern in FORBIDDEN.items():
             match = pattern.search(text)
             if match:
-                # Report the KIND and the location, never the matched value itself:
-                # a test that echoes the secret has published it to the CI log.
                 violations.append("%s: %s at offset %d" % (rel, label, match.start()))
     assert not violations, "Private/local data in tracked files:\n" + "\n".join(violations)
 

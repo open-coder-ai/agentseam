@@ -28,8 +28,6 @@ def test_pre_tool_use_blocks_with_the_reason_in_the_json_form():
     text, code, event, _ = A.handle(KM_SHELL, deny_all)
     assert event.event == A.PRE_TOOL and event.command == "rm -rf /"
     body = json.loads(text)["hookSpecificOutput"]
-    # hookEventName is part of the shape: the recorded claim is that Kimi takes Claude
-    # Code's hookSpecificOutput wholesale, and Claude Code's carries it.
     assert body == {
         "hookEventName": "PreToolUse",
         "permissionDecision": "deny",
@@ -51,9 +49,7 @@ def test_observation_only_events_stay_silent():
 
 
 def test_multiedit_and_notebookedit_content_reach_a_content_policy():
-    """The docstring stakes everything on this envelope being Claude Code's exactly (same
-    tool_input) -- so a policy that already works on claude_code's MultiEdit/NotebookEdit
-    must not go blind here just because client_type marks it as Kimi."""
+    """The docstring stakes everything on this envelope being Claude Code's exactly (same"""
     multiedit = dict(KM_WRITE)
     multiedit["tool_name"] = "MultiEdit"
     multiedit["tool_input"] = {
@@ -99,11 +95,7 @@ def test_a_command_with_quotes_survives_the_toml_round_trip():
 
 
 def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_path, monkeypatch):
-    """config.toml is the user's whole CLI configuration, not a hooks file.
-
-    It is also user-scoped -- ~/.kimi-code/config.toml -- so HOME is what decides where it
-    lands, not the repository we happen to be standing in.
-    """
+    """config.toml is the user's whole CLI configuration, not a hooks file."""
     monkeypatch.setenv("HOME", str(tmp_path))
     config = Path(tmp_path) / ".kimi-code" / "config.toml"
     config.parent.mkdir(parents=True)

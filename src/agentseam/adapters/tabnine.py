@@ -1,31 +1,4 @@
-"""Tabnine CLI adapter.
-
-Eleven events, six of which can block -- including `AfterTool`, which is unusual: most
-agents treat post-execution as observation only, and Tabnine lets a hook there force a
-retry.
-
-Two things shape this adapter, and both narrow what may be promised:
-
-  * **Its event names are Gemini CLI's exactly.** BeforeTool, AfterTool, BeforeAgent,
-    AfterAgent, SessionStart, SessionEnd, PreCompress -- every one is shared. The only
-    documented separator is `timestamp`, which Tabnine puts in its base schema, so
-    `claims()` requires it. That is enough to identify Tabnine but not enough to *exclude*
-    Gemini, whose full base schema is not established here, so both adapters claim these
-    payloads and `detect()` declines. **Pass `agent="tabnine"` explicitly.** Guessing
-    between two adapters that answer differently is worse than saying so.
-  * **It fails open in an unusually broad way.** Any exit code other than 0 or 2 is a
-    warning and execution proceeds; and stdout that is not valid JSON does not fail the
-    hook, it is treated as a `systemMessage` and the action is *allowed*. A crashed or
-    chatty hook is therefore a permitted action, which is why the vendor's own warning
-    about stray output on stdout is repeated in `respond`.
-
-Rewrite is advertised in the vendor's overview ("Rewrite tool arguments before execution")
-but the field carrying it is in a page not read here, so no rewrite is claimed. An
-advertised capability with no established mechanism is exactly the kind of claim this
-project treats as a bug.
-
-Verified against Tabnine CLI's hooks documentation (2026-08-26).
-"""
+"""Tabnine CLI adapter."""
 
 from __future__ import annotations
 
@@ -58,9 +31,6 @@ EVENT_MAP = {
     "BeforeTool": PRE_TOOL,
     "AfterTool": POST_TOOL,
     "PreCompress": PRE_COMPACT,
-    # BeforeModel, AfterModel, BeforeToolSelection and Notification have no canonical
-    # counterpart. Leaving them unmapped keeps the matrix honest rather than inventing
-    # coverage; a payload for one resolves to UNKNOWN and is allowed, not guessed at.
 }
 REVERSE_EVENT_MAP = {
     SESSION_START: "SessionStart",
@@ -72,17 +42,10 @@ REVERSE_EVENT_MAP = {
     PRE_COMPACT: "PreCompress",
 }
 
-#: The events whose decision reaches the agent loop. Six of eleven, which is more than most.
 BLOCKING_EVENTS = ("BeforeAgent", "AfterAgent", "BeforeModel", "AfterModel", "BeforeTool", "AfterTool")
 
-#: Canonical form of the four of BLOCKING_EVENTS that have a canonical mapping (BeforeModel/
-#: AfterModel do not -- they resolve to UNKNOWN and stay raw-only). respond() is public
-#: adapter API: a caller who replays a captured event or builds one directly (raw defaulting
-#: to {}) must still get an honest deny, not silence, at a real blocking event.
 _BLOCKING_CANONICAL = (PROMPT_SUBMIT, STOP, PRE_TOOL, POST_TOOL)
 
-#: In Tabnine's base schema on every event, and the only documented field separating its
-#: payloads from Gemini CLI's identically-named ones.
 MARKER = "timestamp"
 
 
@@ -118,24 +81,12 @@ def _because(reason, note):
 
 
 #: Decision words this vendor accepts -- UNVERIFIED, and the only such entry here. Nothing
-#: in this repository records Tabnine's decision values: the docstring above is thorough
-#: about events, detection and fail-open and silent on this. These two are what respond()
-#: has always emitted, not what the vendor is known to read. If the word is "block" (as it
-#: is for Junie and Devin) every deny here is ignored -- and Tabnine treats non-JSON stdout
-#: as an allow, so an unrecognised value is a permitted action. Settle it in the live round
-#: tabnine already needs; do NOT swap the words on inference.
 DECISION_VOCABULARY = frozenset({"allow", "deny"})
 
 
 def respond(decision, event):
-    # event.event first: a caller replaying a captured event or building one directly (raw
-    # defaulting to {}) still gets an honest answer at the four blocking events that have a
-    # canonical mapping. The raw name catches BeforeModel/AfterModel too, which do not.
     name = (event.raw or {}).get("hook_event_name")
     if event.event not in _BLOCKING_CANONICAL and name not in BLOCKING_EVENTS:
-        # Nothing here reaches the agent loop. Emitting JSON anyway would be worse than
-        # silence: stdout that is not the final JSON object breaks Tabnine's parsing, and
-        # a broken parse is treated as allow.
         return "", 0
 
     if decision.outcome == DENY or decision.outcome == ASK or decision.outcome == REWRITE:

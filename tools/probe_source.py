@@ -1,15 +1,5 @@
 #!/usr/bin/env python3
-"""The recording probe, as source text.
-
-Split out of `capture.py` because writing the program that runs inside somebody else's agent
-is a different activity from installing it and reporting on what it caught -- and because
-capture.py hit the 300-line review budget, where the remedy is splitting by activity rather
-than raising the number.
-
-The probe is emitted as text rather than shipped as a file so it can be dropped anywhere
-without an install: it carries its own sys.path setup and imports nothing that is not either
-stdlib or vendored beside it.
-"""
+"""The recording probe, as source text."""
 
 from __future__ import annotations
 
@@ -17,11 +7,7 @@ import os
 
 
 def render(here, capture_dir):
-    """The recording hook, as source text with this machine's paths baked in.
-
-    Written as a standalone file so no install is needed to run it: the probe carries its
-    own sys.path setup and imports nothing that is not stdlib or vendored beside it.
-    """
+    """The recording hook, as source text with this machine's paths baked in."""
     lines = [
         "#!/usr/bin/env python3",
         "# agentseam capture probe. Records the payload shape, then allows.",

@@ -1,17 +1,4 @@
-"""The per-vendor answers a caller needs and can get nowhere else.
-
-These three lookups exist because a policy engine building a hook command has to know things
-that differ per product and are invisible when wrong:
-
-  * which token reaches the plugin's own directory,
-  * which tool name a shell command arrives under,
-  * whether a `matcher` even means a tool name at this event.
-
-Each has the same failure shape. Get it wrong and nothing raises: the command resolves to a
-path that is not there, or the matcher matches nothing, and the install still reports success
-while the guard never fires. That is why they are recorded rather than passed in by callers,
-and why an unestablished answer is an empty one rather than a plausible guess.
-"""
+"""The per-vendor answers a caller needs and can get nowhere else."""
 
 from __future__ import annotations
 
@@ -39,14 +26,9 @@ def test_every_packaging_format_answers_the_plugin_root_question():
     "agent,expected",
     [
         ("claude_code", "${CLAUDE_PLUGIN_ROOT}"),
-        # Codex sets PLUGIN_ROOT as its own name and CLAUDE_PLUGIN_ROOT beside it "for OOTB
-        # compat with existing plugins that use this env var" (discovery.rs). Its own name is
-        # preferred; both work.
         ("codex_cli", "${PLUGIN_ROOT}"),
         ("cursor", "${CURSOR_PLUGIN_ROOT}"),
         ("vscode_copilot", "${PLUGIN_ROOT}"),
-        # Gemini's own spelling, established from docs/extensions/reference.md: substitution
-        # is documented inside both gemini-extension.json and hooks/hooks.json.
         ("gemini_cli", "${extensionPath}"),
     ],
 )
@@ -60,12 +42,7 @@ def test_an_unestablished_plugin_root_is_none_not_a_guess():
 
 
 def test_codex_plugin_root_the_trap_is_written_down():
-    """`${CODEX_PLUGIN_ROOT}` appears in Codex's own TUI sample and is set nowhere.
-
-    A hook command copied from that sample resolves to nothing and the guard never launches.
-    It is exactly the plausible-looking wrong answer this lookup exists to prevent, so the
-    module says so where someone reaching for it would look.
-    """
+    """`${CODEX_PLUGIN_ROOT}` appears in Codex's own TUI sample and is set nowhere."""
     import agentseam.packaging_data as data
 
     source = Path(data.__file__).read_text()
@@ -88,12 +65,7 @@ def test_every_adapter_answers_the_shell_tool_question():
 
 
 def test_cursor_writes_no_matcher_because_its_meaning_is_unestablished():
-    """Under beforeShellExecution the matcher is a COMMAND-TEXT regex, not a tool name.
-
-    A caller passing the reasonable "Bash" would match almost nothing and silently disable the
-    gate. What preToolUse's matcher matches was not established, so none is written: no matcher
-    gates every call, which over-gates rather than under-gates.
-    """
+    """Under beforeShellExecution the matcher is a COMMAND-TEXT regex, not a tool name."""
     config = adapters.get("cursor").hook_config(["pre_tool"], "CMD", matcher="Bash")
     for entries in config["hooks"].values():
         for entry in entries:

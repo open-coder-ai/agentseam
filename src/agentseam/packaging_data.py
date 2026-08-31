@@ -1,57 +1,18 @@
-"""Primitive 3 data: how each agent packages reusable parts, and where it looks for them.
-
-The surprise here is how much already lines up. A Claude Code plugin and a Gemini CLI
-extension are, underneath two different manifests, close to the same directory:
-
-    skills/<name>/SKILL.md      identical
-    agents/<name>.md            identical
-    hooks/hooks.json            identical
-    commands/<name>.{md,toml}   same folder, different file format
-
-So one directory can serve both, and the only real work is writing the second manifest and
-the commands twice. VS Code goes further and reads several of Claude Code's own folders --
-`.claude/skills`, `.claude/agents`, `.claude/rules`, and hooks straight out of
-`.claude/settings.json` -- which is recorded in ALSO_READS because it means a repository
-often already ships parts to an agent nobody wired it to.
-
-`parts` maps a canonical part to a path template, or to None where the agent has no
-equivalent. As everywhere else here, None is a claim, not an oversight.
-"""
+"""Primitive 3 data: how each agent packages reusable parts, and where it looks for them."""
 
 from __future__ import annotations
 
-# --- canonical parts of a bundle ------------------------------------------------
-SKILL = "skill"  # a capability folder the agent loads on demand
-SUBAGENT = "subagent"  # a delegated persona
-COMMAND = "command"  # a user-invoked prompt, /like-this
-HOOKS = "hooks"  # lifecycle hook config (primitive 1's install target)
-MCP = "mcp"  # MCP server declarations
-EXECUTABLE = "executable"  # a consumer-supplied script a HOOKS command runs
+SKILL = "skill"
+SUBAGENT = "subagent"
+COMMAND = "command"
+HOOKS = "hooks"
+MCP = "mcp"
+EXECUTABLE = "executable"
 PARTS = (SKILL, SUBAGENT, COMMAND, HOOKS, MCP, EXECUTABLE)
 
-#: The neutral namespace. `.agents/skills` is to packaging what AGENTS.md is to
-#: instructions: a vendor-independent location more than one agent already reads.
 SHARED_SKILL_DIR = ".agents/skills"
 
-#: The token a hook command uses to reach its own plugin directory, most-preferred first.
-#: An empty tuple is "not established here", as everywhere else in this module.
-#:
-#: This is the single clearest piece of per-vendor mess in primitive 3: three products, four
-#: spellings, and a fourth that looks official and is not.
-#:
-#:   claude_code      ${CLAUDE_PLUGIN_ROOT}
-#:   codex_cli        ${PLUGIN_ROOT} and ${CLAUDE_PLUGIN_ROOT} -- discovery.rs sets BOTH, the
-#:                    second with the comment "For OOTB compat with existing plugins that use
-#:                    this env var" (PLUGIN_DATA / CLAUDE_PLUGIN_DATA are paired the same way)
-#:   vscode_copilot   both, listed as pluginRootTokens in pluginParsers.ts
-#:   cursor           ${CURSOR_PLUGIN_ROOT}
-#:   gemini_cli       ${extensionPath} -- its own spelling; docs/extensions/reference.md
-#:                    documents substitution inside both the manifest and hooks/hooks.json
-#:
 #: **${CODEX_PLUGIN_ROOT} is a trap.** It appears in Codex's own TUI hook browser as sample
-#: text and is set NOWHERE in the tree, so a hook command written with it resolves to nothing
-#: and the guard silently fails to launch. Recorded because the sample is the likeliest place
-#: someone would copy it from.
 
 PACKAGING = {
     "claude_code": {
@@ -120,8 +81,6 @@ PACKAGING = {
         "unit": "plugin",
         "manifest": ".codex-plugin/plugin.json",
         "manifest_format": "json",
-        # A Codex plugin is a self-contained directory; the host decides where it lives
-        # (marketplace roots under a plugins/ folder), so the bundle name IS the root.
         "project_root": "{bundle}",
         "plugin_root": ("${PLUGIN_ROOT}", "${CLAUDE_PLUGIN_ROOT}"),
         "parts": {
@@ -132,8 +91,6 @@ PACKAGING = {
             MCP: None,
             EXECUTABLE: None,
         },
-        # Codex RESOLVES components from the manifest rather than finding them by location,
-        # so a manifest without these keys ships a plugin whose parts are never loaded.
         "declares": {SKILL: ("skills", "./skills"), HOOKS: ("hooks", "./hooks/hooks.json")},
         "notes": (
             "Two formats exist and only one carries hooks. `.codex-plugin/plugin.json` is the "
@@ -191,13 +148,9 @@ PACKAGING = {
         },
     },
     "vscode_copilot": {
-        # No bundle format: parts are found by location, so there is nothing to install
-        # and nothing to name. That is a real difference, not a missing feature.
         "unit": None,
         "manifest": None,
         "manifest_format": None,
-        # Repo root, because the part paths below are already repo-relative: with no bundle
-        # there is nothing to nest them inside.
         "project_root": ".",
         "plugin_root": ("${PLUGIN_ROOT}", "${CLAUDE_PLUGIN_ROOT}"),
         "parts": {
@@ -225,18 +178,9 @@ PACKAGING = {
         },
     },
     "copilot": {
-        # The Agent Plugins 1.0 MARKETPLACE bundle -- a distinct artifact from vscode_copilot's
-        # repo-local .github/hooks/agentseam.json, per the spec: skills and MCP are the
-        # standard's own portable component types, found by location; everything else Copilot
-        # can hold is client-specific and lives under the com.github.copilot/ namespace inside
-        # the bundle. No "declares": both portable and namespaced parts are discovered by
-        # location, never resolved from the manifest.
         "unit": "plugin",
         "manifest": "plugin.json",
         "manifest_format": "json",
-        # Required and fixed, not bundle-varying: without it a rendered plugin.json is
-        # auto-detected as the unrelated Legacy "Copilot" format instead (VS Code's own
-        # fallback rule -- see the row's "verified" -- silently mislabeling the whole bundle).
         "manifest_fixed": {"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"},
         "project_root": "{bundle}",
         "plugin_root": ("${PLUGIN_ROOT}",),
@@ -272,7 +216,4 @@ PACKAGING = {
     },
 }
 
-#: PART_LIMITS, ALSO_READS, and UNRECORDED moved to packaging_limits.py to keep this module
-#: under the line budget; re-exported here so `from .packaging_data import ...` still works
-#: everywhere it already did.
 from .packaging_limits import ALSO_READS, PART_LIMITS, UNRECORDED  # noqa: E402,F401

@@ -1,20 +1,4 @@
-"""Primitive 2: instruction files -- where each agent reads its standing instructions.
-
-Every multi-agent repository ends up hand-maintaining a drawer of near-identical files:
-CLAUDE.md, AGENTS.md, .cursor/rules/*, .github/copilot-instructions.md, GEMINI.md,
-.windsurfrules, codex.md... They drift, and the drift is invisible until an agent
-behaves differently from its neighbour.
-
-This module owns the map and the writing. Two rules shape the design:
-
-  * **Never clobber.** Instruction files hold human-authored content. We write a
-    marker-delimited block and touch nothing outside it, so a rewrite updates our block
-    and leaves the rest of the file exactly as it was.
-  * **Prefer the shared file.** AGENTS.md is read natively by a large and growing set of
-    agents. Writing one AGENTS.md and pointing the stragglers at it beats maintaining
-    fifteen copies, so `plan()` says which agents are covered by the shared file and
-    which genuinely need their own.
-"""
+"""Primitive 2: instruction files -- where each agent reads its standing instructions."""
 
 from __future__ import annotations
 
@@ -23,15 +7,8 @@ import os
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
 
-#: The shared convention. Where an agent reads this natively, a pointer file is waste.
 SHARED_FILE = "AGENTS.md"
 
-#: agent -> instruction files it reads, most-preferred first.
-#:
-#: `shared` records whether the agent reads AGENTS.md natively. It is deliberately
-#: conservative: False means "not established here", not "confirmed absent", and a
-#: False costs only a small pointer file while a wrong True silently drops an agent's
-#: instructions entirely.
 INSTRUCTION_FILES = {
     "claude_code": {"files": ["CLAUDE.md", ".claude/CLAUDE.md"], "shared": False, "imports": "@AGENTS.md"},
     "codex_cli": {"files": ["AGENTS.md", "codex.md"], "shared": True, "imports": None},
@@ -41,9 +18,6 @@ INSTRUCTION_FILES = {
         "shared": True,
         "imports": None,
     },
-    # Not a second product: a repo running an installed Agent Plugins 1.0 "copilot" bundle
-    # (packaging_data.PACKAGING) is running actual GitHub Copilot, which reads the same
-    # repo-level instructions file regardless of which surface installed the plugin.
     "copilot": {
         "files": [".github/copilot-instructions.md", ".github/agents/agentseam.agent.md"],
         "shared": True,
@@ -51,13 +25,6 @@ INSTRUCTION_FILES = {
     },
     "gemini_cli": {"files": ["GEMINI.md", ".gemini/GEMINI.md"], "shared": True, "imports": None},
     "windsurf": {"files": [".windsurf/rules/agentseam.md", ".windsurfrules"], "shared": True, "imports": None},
-    # Aider discovers nothing by convention: it reads the files listed under `read:` in
-    # .aider.conf.yml and nothing else, which is why a sibling guardrail in this org ships
-    # that conf file alongside its CONVENTIONS.md. `shared` was True here, claiming aider
-    # picks up AGENTS.md natively -- the exact "wrong True" the comment above warns about,
-    # which would have `discover()` write only AGENTS.md and report aider as covered while
-    # aider read none of it. False is the conservative answer; the conf file itself is a
-    # mechanism this module cannot yet express (`imports` renders a note, not a second file).
     "aider": {"files": ["CONVENTIONS.md"], "shared": False, "imports": None},
     "zed": {"files": [".rules"], "shared": True, "imports": None},
     "junie": {"files": [".junie/guidelines.md"], "shared": False, "imports": None},
@@ -86,11 +53,7 @@ def reads_shared(agent):
 
 
 def discover(repo_root="."):
-    """Which instruction files actually exist here, per agent.
-
-    Answers "what is this repo already telling its agents, and where", which is the
-    question anyone auditing a multi-agent repo starts with.
-    """
+    """Which instruction files actually exist here, per agent."""
     found = {}
     for agent in agents():
         present = [p for p in paths(agent) if os.path.exists(os.path.join(repo_root, p))]
@@ -100,12 +63,7 @@ def discover(repo_root="."):
 
 
 def plan(targets=None, repo_root="."):
-    """Decide the smallest set of writes that reaches every requested agent.
-
-    Returns {"shared": path_or_None, "per_agent": {agent: path}, "covered": [agents]}.
-    Agents that read AGENTS.md natively are listed under `covered` and get no file of
-    their own -- writing them one would be a second copy to drift.
-    """
+    """Decide the smallest set of writes that reaches every requested agent."""
     targets = sorted(targets) if targets else agents()
     unknown = [a for a in targets if a not in INSTRUCTION_FILES]
     if unknown:
@@ -129,11 +87,7 @@ def _managed_block(text, agent=None):
 
 
 def render(existing, text, agent=None):
-    """Return `existing` with our managed block inserted or replaced.
-
-    Content outside the markers is preserved byte for byte -- this is the whole
-    contract, since these files are mostly human-written.
-    """
+    """Return `existing` with our managed block inserted or replaced."""
     block = _managed_block(text, agent)
     if existing and BEGIN in existing and END in existing:
         head, rest = existing.split(BEGIN, 1)
@@ -146,10 +100,7 @@ def render(existing, text, agent=None):
 
 
 def write(text, targets=None, repo_root=".", dry_run=False):
-    """Write `text` as a managed block into the fewest files that reach `targets`.
-
-    Returns {path: "created"|"updated"|"unchanged"}.
-    """
+    """Write `text` as a managed block into the fewest files that reach `targets`."""
     decided = plan(targets, repo_root)
     results = {}
     wanted = []

@@ -37,8 +37,6 @@ CAPTURE_DIR = os.environ.get("AGENTSEAM_CAPTURE_DIR", os.path.join(HERE, "..", "
 CAPTURE_FILE = os.path.join(CAPTURE_DIR, "captured.jsonl")
 OWNER = "agentseam-capture"
 
-#: Where each agent keeps state, used only to guess what is installed. A miss here means
-#: "not found in the usual place", never "you do not have it".
 FOOTPRINTS = {
     "claude_code": ("~/.claude", ".claude"),
     "codex_cli": ("~/.codex", ".codex"),
@@ -80,25 +78,7 @@ def cmd_detect(args):
 
 
 def _probe_command(path, agent):
-    """The probe invocation, spelled so every shell an agent might wrap it in will RUN it.
-
-    The quoted form -- `"C:\\py.exe" "probe.py" agent` -- is correct for POSIX shells and
-    cmd.exe, and was chosen for interpreters under paths with spaces. PowerShell is the gap
-    it did not cover: there, a line BEGINNING with a quoted path parses as a string
-    expression rather than an invocation, so nothing runs at all. Two vendors are now known
-    to wrap hooks that way on Windows -- Codex, and VS Code Copilot via hookExecutor.ts's
-    getShellCommand -- and both were silently recording nothing.
-
-    Those two have per-platform override fields in their own config schema and use them. The
-    other ten have no such field recorded, so the only lever left is this string. An
-    UNQUOTED interpreter path parses in command mode in all three shells, and needs no
-    vendor support -- so it is used whenever the path has no spaces, which is the common
-    case. A path with spaces still needs the quotes, and there is no single string that
-    works everywhere; install() warns rather than silently choosing one shell.
-
-    Safe here in a way it would not be in a real guard: this probe always allows. An
-    invocation that fails to resolve costs a capture, not a gate.
-    """
+    """The probe invocation, spelled so every shell an agent might wrap it in will RUN it."""
     interpreter = sys.executable
     if " " not in interpreter:
         return '%s "%s" %s' % (interpreter, path, agent)
@@ -110,14 +90,7 @@ def _detected_agents():
 
 
 def cmd_install(args):
-    """Wire the probe. `--agent detected` does every agent whose config location exists.
-
-    Wiring several at once is deliberate for a capture evening: the probe always allows, so
-    the cost of an extra one is a few recorded payloads, and the benefit is that whichever
-    agent you happen to open is already recording. It also makes double-firing visible --
-    that is how Cursor was found to load Claude Code's config as well as its own, with every
-    event arriving twice.
-    """
+    """Wire the probe. `--agent detected` does every agent whose config location exists."""
     if args.agent == "detected":
         found = _detected_agents()
         if not found:
@@ -138,15 +111,10 @@ def cmd_install(args):
     mod = adapters.get(args.agent)
     events = sorted(mod.REVERSE_EVENT_MAP)
     command = _probe_command(path, args.agent)
-    # fail_closed=False: this is an observer, not a gate. On Cursor a gate is wired
-    # failClosed:true, so a probe that cannot launch would BLOCK the user's real command --
-    # and verification that costs someone a broken session is not worth running.
     written = install_mod.install(args.agent, events, command, repo_root=args.repo, owner=OWNER, fail_closed=False)
     print("probe:  %s" % path)
     print("wired:  %s" % written)
     print("events: %s" % ", ".join(events))
-    # A module that imports powershell_command emits a per-platform override, so a quoted
-    # command is safe there; the rest have only the one string.
     if " " in sys.executable and not hasattr(mod, "powershell_command"):
         print(
             "\nWARNING: your interpreter path contains spaces, so the command must stay quoted --\n"
@@ -178,13 +146,7 @@ def _installed_configs(repo_root):
 
 
 def cmd_conflicts(args):
-    """Say which configs fire our probe, and warn when more than one will.
-
-    Agents read each other's config files -- Cursor loads Claude Code-format hooks, VS Code
-    reads several of Claude Code's folders. Two installs in one repo therefore means the same
-    hook fires twice for one action, and the payloads split across two labels for no reason a
-    reader could guess.
-    """
+    """Say which configs fire our probe, and warn when more than one will."""
     found = _installed_configs(args.repo)
     if not found:
         print("No agentseam capture probe is installed in %s" % os.path.abspath(args.repo))
@@ -211,8 +173,6 @@ def main(argv=None):
         ("uninstall", cmd_uninstall, "remove the probe"),
     ):
         s = sub.add_parser(name, help=helptext)
-        # "detected" wires every agent whose config location exists here, so one evening
-        # yields payloads from whichever the user actually opens rather than one guess.
         s.add_argument("--agent", required=True, choices=sorted(adapters.ADAPTERS) + ["detected"])
         s.add_argument("--repo", default=".")
         s.set_defaults(fn=fn)
@@ -224,11 +184,6 @@ def main(argv=None):
     return args.fn(args)
 
 
-# Re-exported: tests and callers address the report through `capture`, and keeping that
-# address stable is cheaper than teaching every caller about the split. Imported here, after
-# every name in this module is bound, so capture_report's lazy `from capture import ...`
-# (inside its own functions) always finds a fully-initialized module -- but still before
-# __main__ runs main(), which needs cmd_report bound to build the "report" subcommand.
 from capture_report import _capture_files, _load, _versions_in, cmd_report  # noqa: E402,F401
 
 if __name__ == "__main__":

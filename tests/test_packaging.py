@@ -1,9 +1,4 @@
-"""Primitive 3 tests.
-
-The load-bearing assertions are the ones about overlap: that a skill really is the same
-file in two bundle formats, and that VS Code really does read another agent's folders. Get
-either wrong and the module's main claim -- write it once -- stops being true.
-"""
+"""Primitive 3 tests."""
 
 from __future__ import annotations
 
@@ -59,13 +54,7 @@ def test_every_agent_records_how_it_was_verified(agent):
 
 
 def test_a_skill_is_literally_the_same_file_in_every_bundle_format():
-    """The claim the module is built on. If this drifts, "write it once" is a lie.
-
-    It got stronger when Codex and Cursor were recorded: four plugin formats, four different
-    manifests, and one identical `skills/<name>/SKILL.md`. Hooks agree across all four too.
-    Subagents do not -- only the two location-discovered formats have a place for them --
-    which is why this asserts each part separately rather than a single agent list.
-    """
+    """The claim the module is built on. If this drifts, "write it once" is a lie."""
     shared = packaging.same_path_for(SKILL)
     assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "copilot", "cursor", "gemini_cli"]
     hooks = packaging.same_path_for(HOOKS)["hooks/hooks.json"]
@@ -123,7 +112,7 @@ def test_vscode_gets_doubled_extensions_and_no_manifest(bundle):
     assert ".github/agents/auditor.agent.md" in result.files
     assert ".github/prompts/scan.prompt.md" in result.files
     assert not any(name.endswith("plugin.json") or name.endswith("gemini-extension.json") for name in result.files)
-    assert result.root == "."  # part paths are already repo-relative
+    assert result.root == "."
 
 
 def test_an_unsupported_part_is_reported_with_the_agents_own_reason():
@@ -142,14 +131,7 @@ def test_unrecorded_agents_raise_rather_than_returning_an_empty_layout(bundle):
 
 
 def test_codex_declares_its_components_and_only_one_format_carries_hooks():
-    """Codex's layout was UNRECORDED until 2026-08-29, when it was read from the loader.
-
-    Two facts make it different from the location-discovered formats beside it, and both
-    are load-bearing. Components are resolved from the manifest, so a manifest without
-    `skills`/`hooks` ships a plugin whose parts never load. And of the two manifest formats
-    only Legacy carries hooks at all -- an Agent Plugins 1.0 manifest has its hooks
-    discarded outright at load time, which would install a guard that silently does nothing.
-    """
+    """Codex's layout was UNRECORDED until 2026-08-29, when it was read from the loader."""
     row = PACKAGING["codex_cli"]
     assert row["manifest"] == ".codex-plugin/plugin.json"
     assert row["declares"][SKILL] == ("skills", "./skills")
@@ -176,11 +158,7 @@ def test_every_packaging_agent_is_an_agent_the_matrix_knows():
 
 
 def test_every_matrix_agent_is_accounted_for():
-    """Recorded plus unrecorded must equal the matrix, exactly. See the permissions twin.
-
-    Without this, an agent that joins the matrix is silently absent here, and silence in
-    this module reads as "nothing to package" rather than "nobody looked".
-    """
+    """Recorded plus unrecorded must equal the matrix, exactly. See the permissions twin."""
     from agentseam.matrix_data import MATRIX
 
     assert set(PACKAGING) | set(UNRECORDED) == set(MATRIX)
@@ -195,11 +173,7 @@ def test_no_unrecorded_reason_is_empty():
 
 
 def test_proven_but_unlocated_parts_are_distinguished_from_absent_ones():
-    """ "We could not find the layout" and "there is no such thing" are different answers.
-
-    Where a vendor's own hook documentation proves subagents or skills exist, the reason
-    says so -- otherwise the row would quietly understate the agent.
-    """
+    """ "We could not find the layout" and "there is no such thing" are different answers."""
     for agent in ("antigravity", "devin", "grok", "junie", "kimi_code"):
         assert "exist" in UNRECORDED[agent], agent
     for agent in ("aider", "replit", "zed"):

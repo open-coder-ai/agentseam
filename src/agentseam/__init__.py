@@ -1,19 +1,4 @@
-"""agentseam — the primitives layer for every coding agent.
-
-Write one handler; run it on Claude Code, Cursor, VS Code Copilot and friends.
-agentseam owns the per-agent differences: payload shapes, response dialects, config
-file formats, and an explicit capability matrix that says what each agent can
-actually enforce.
-
-    from agentseam import run, Decision
-
-    def handler(event):
-        if event.event == "pre_tool" and event.command == "rm -rf /":
-            return Decision.deny("no")
-        return Decision.allow()
-
-    run(handler)
-"""
+"""agentseam — the primitives layer for every coding agent."""
 
 __version__ = "0.1.1"
 

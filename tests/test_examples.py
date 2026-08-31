@@ -1,13 +1,4 @@
-"""The generated vendor examples must stay true, and must cover every hook we claim.
-
-Documentation describing behaviour the code no longer has is worse than none: it is a
-confident wrong answer. The pages are generated from the real code paths and this file
-fails when the committed ones drift.
-
-The coverage assertions matter as much. A page missing a hook the matrix claims leaves a
-capability with nothing showing what it looks like; a page with a hook the matrix does not
-claim documents coverage that does not exist.
-"""
+"""The generated vendor examples must stay true, and must cover every hook we claim."""
 
 from __future__ import annotations
 
@@ -50,9 +41,7 @@ def test_no_committed_page_is_orphaned(generated):
 
 @pytest.mark.parametrize("agent", sorted(SCENARIOS))
 def test_every_hook_the_matrix_claims_has_an_example(agent):
-    """Both directions. A claimed hook with no example hides a capability; an example for an
-    unclaimed hook documents one that does not exist.
-    """
+    """Both directions. A claimed hook with no example hides a capability; an example for an"""
     assert set(SCENARIOS[agent]) == set(A.MATRIX[agent]["events"])
 
 
@@ -70,13 +59,7 @@ def test_each_payload_is_claimed_by_its_own_adapter(agent, event):
 
 @pytest.mark.parametrize("agent,event", PAIRS)
 def test_a_payload_is_never_claimed_by_exactly_one_wrong_adapter(agent, event):
-    """Ambiguity is allowed and documented; being confidently wrong is not.
-
-    Several vendors spell SessionStart identically, so more than one adapter claiming a
-    payload is honest -- `detect()` declines and the page says to name the agent. What must
-    never happen is a single claimant that is the wrong one, because that is answered with
-    confidence and acted on.
-    """
+    """Ambiguity is allowed and documented; being confidently wrong is not."""
     raw = SCENARIOS[agent][event]
     claimants = [n for n, m in A.adapters.ADAPTERS.items() if m.claims(raw)]
     detected = A.adapters.detect(raw)
@@ -98,11 +81,7 @@ def test_every_adapted_agent_has_a_page():
 
 @pytest.mark.parametrize("agent", sorted(SCENARIOS))
 def test_the_pre_tool_example_really_is_the_shared_story(agent):
-    """Pages only compare if the situation is held constant.
-
-    Windsurf is the documented exception and the reason is the finding: it has no
-    file-write event, so the nearest thing it can see is the command that would write.
-    """
+    """Pages only compare if the situation is held constant."""
     event = A.adapters.get(agent).parse(SCENARIOS[agent][A.PRE_TOOL])
     assert SECRET in (event.content or "") or SECRET in (event.command or ""), agent
 
@@ -124,18 +103,6 @@ def test_the_index_says_the_pages_are_not_observations(generated):
     assert "Verify against your own installation" in index
 
 
-#: The only shipping payloads that more than one adapter claims, with the reason each is
-#: irreducible from what we know. Gemini's session envelope carries no field of its own --
-#: its payload is a strict subset of Claude Code's -- so the two are genuinely
-#: indistinguishable here. Both are `detect` at these events, so no gate is lost: detect()
-#: returns None and the dispatcher allows, which is the honest answer to "we cannot tell".
-#: Whether real Gemini CLI sends `client_type` would settle it, and needs a live capture.
-#:
-#: Tabnine and VS Code Copilot collide at SessionStart, and only there -- it is the one
-#: event name their maps share, and both put `timestamp` on every payload. VS Code's
-#: SessionStartHookInput sends source: "new" where Tabnine's example sends "startup", but
-#: that is an enum value, not a field, and resting on it means resting on Tabnine never
-#: emitting "new". Both are `detect` at session_start, so declining costs no gate.
 KNOWN_AMBIGUOUS = {
     ("gemini_cli", "session_start"),
     ("gemini_cli", "session_end"),
@@ -145,14 +112,7 @@ KNOWN_AMBIGUOUS = {
 
 
 def test_every_shipping_payload_resolves_to_its_own_adapter():
-    """The corpus that generates the published docs, not just the hand-kept fixture list.
-
-    `test_no_two_adapters_claim_the_same_payload` walks tests/payloads.py. It never touched
-    examples/scenarios.py -- the payloads that render examples/generated/ -- and 15 of those
-    91 were claimed by the wrong adapter or by two at once, including all four of Tabnine's
-    gating events, whose deny vanished entirely under auto-detection. The test that was
-    meant to catch this class was not looking at the shipping corpus.
-    """
+    """The corpus that generates the published docs, not just the hand-kept fixture list."""
     from scenarios import SCENARIOS
 
     from agentseam import adapters
@@ -167,11 +127,7 @@ def test_every_shipping_payload_resolves_to_its_own_adapter():
 
 
 def test_the_known_ambiguous_set_is_still_ambiguous():
-    """A pinned exception must expire when it stops being true.
-
-    Otherwise the allowlist outlives the ambiguity and silently excuses a future collision
-    at the same coordinates.
-    """
+    """A pinned exception must expire when it stops being true."""
     from scenarios import SCENARIOS
 
     from agentseam import adapters

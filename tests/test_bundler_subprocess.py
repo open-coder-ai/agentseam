@@ -1,17 +1,4 @@
-"""The bundler's real claim, proven rather than asserted: a vendored bundle run as a
-subprocess with **no agentseam installation reachable** produces byte-identical output to
-the real, installed adapter's own dispatch.handle() on the exact same payload.
-
-`python -S` is how "not installed" is made real here rather than assumed: it skips the
-`site` module, so nothing under the venv's site-packages (including this editable-installed
-agentseam) is ever added to sys.path -- only the interpreter's own compiled-in stdlib.
-`tests/test_bundler.py` separately proves, statically, that no bundle even tries to import
-it; this file proves the subprocess actually runs correctly without it regardless.
-
-Payloads are `examples.scenarios.SCENARIOS` -- the same per-agent, per-event fixtures the
-generated example pages and (via `test_decision_vocabulary.py`) the adapter test suite
-itself are built from, not a second, bundler-only corpus that could drift from the first.
-"""
+"""The bundler's real claim, proven rather than asserted: a vendored bundle run as a"""
 
 from __future__ import annotations
 
@@ -100,10 +87,7 @@ def test_bundle_subprocess_matches_the_installed_adapter(agent, outcome, tmp_pat
 
 
 def test_a_payload_this_adapter_does_not_recognise_allows_silently_in_the_bundle_too(tmp_path):
-    """Mirrors dispatch.handle()'s own contract for an unmapped event: handle() is never
-    called, and the bundle allows in silence -- exit 0, empty stdout -- exactly like the
-    installed adapter does for the same unrecognised payload.
-    """
+    """Mirrors dispatch.handle()'s own contract for an unmapped event: handle() is never"""
     handler_source, handler_fn = _HANDLERS["deny"]
     raw = {"hook_event_name": "SomeFutureEventNoAdapterMapsYet"}
 
@@ -134,9 +118,7 @@ def test_malformed_stdin_allows_silently_in_the_bundle_too(tmp_path):
 
 
 def test_the_unmodified_handler_stub_fails_loudly_rather_than_allowing_everything(tmp_path):
-    """An un-filled-in bundle must not quietly behave like an always-allow guard -- that is
-    the one failure mode this project exists to prevent, and it would be easy to get here
-    by accident (vendor the file, forget to edit the handler, ship it)."""
+    """An un-filled-in bundle must not quietly behave like an always-allow guard -- that is"""
     src = bundler.bundle("claude_code")
     raw = SCENARIOS["claude_code"]["pre_tool"]
     _text, code, stderr = _run_bundle(src, raw, tmp_path, "unfilled")

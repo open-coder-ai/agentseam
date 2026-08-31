@@ -1,8 +1,4 @@
-"""Claude Code adapter.
-
-Payload: {"tool_name", "tool_input", "session_id", "tool_use_id", "hook_event_name", ...}
-Response: {"hookSpecificOutput": {"hookEventName", "permissionDecision", ...}} on stdout;
-exit 2 also blocks. Verified live against Claude Code 2.1.245 (2026-08-25)."""
+"""Claude Code adapter."""
 
 from __future__ import annotations
 
@@ -31,7 +27,6 @@ from ..contract import (
 
 AGENT = "claude_code"
 
-# vendor event name -> canonical
 EVENT_MAP = {
     "PreToolUse": PRE_TOOL,
     "PostToolUse": POST_TOOL,
@@ -43,29 +38,16 @@ EVENT_MAP = {
     "PreCompact": PRE_COMPACT,
     "SubagentStart": SUBAGENT_START,
     "SubagentStop": SUBAGENT_STOP,
-    # Both were claimed by the matrix long before they were mapped here, so an install for
-    # them wired nothing at all and said nothing about it. FileChanged fires when a watched
-    # file changes on disk (the matcher names the files); InstructionsLoaded fires when a
-    # CLAUDE.md or .claude/rules/*.md is read into context, at session start and again
-    # whenever one is loaded lazily.
     "InstructionsLoaded": INSTRUCTIONS_LOADED,
     "FileChanged": FILE_CHANGED,
 }
 REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
-# Tools whose input carries file content rather than a shell command.
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
 
-#: The tool a shell command arrives under, and therefore what a PreToolUse `matcher` must say
-#: to gate shell. A wrong value fails silently: it matches nothing, and the install looks fine.
 SHELL_TOOLS = ("Bash",)
 
 
-#: Fields observed in real Claude Code payloads (live capture, v3.17.8 era, 2026-08-27) that
-#: no other adapter's documented envelope lists. Positive evidence, not inferred absence --
-#: which is the distinction that broke detection here. `prompt_id` was once treated as proof
-#: a payload was NOT Claude Code's; Claude Code now sends it on nearly every event, so that
-#: negative test rejected 38 of 42 real payloads and handed them to Devin instead.
 OBSERVED_MARKERS = (
     "transcript_path",
     "permission_mode",
@@ -79,11 +61,7 @@ OBSERVED_MARKERS = (
 
 
 def looks_like_claude_code(raw):
-    """True when the payload carries a field only Claude Code has been seen to send.
-
-    Imported by the adapters that share this envelope, so the discriminator lives in one
-    place and cannot drift into two disagreeing copies.
-    """
+    """True when the payload carries a field only Claude Code has been seen to send."""
     return isinstance(raw, dict) and any(marker in raw for marker in OBSERVED_MARKERS)
 
 
@@ -92,23 +70,10 @@ def claims(raw):
     if not isinstance(raw, dict):
         return False
     if raw.get("hook_event_name") in EVENT_MAP:
-        # Codex reuses tool_input but adds turn identifiers, and Devin reuses the whole
-        # event vocabulary but adds a per-turn prompt_id. Claiming either would make
-        # detect() ambiguous, and an unidentified payload is allowed through.
-        # Kimi Code CLI is Claude Code's envelope exactly -- same PascalCase events, same
-        # snake_case fields -- and names itself only in client_type.
         if raw.get("client_type") not in (None, "claude_code"):
             return False
-        # Junie reuses this whole event vocabulary on purpose -- it says so -- and sends
-        # project_path, which Claude Code does not. Without this the two are one payload.
-        # Foreign nameplates: Codex's turn_id, Junie's project_path, Tabnine's timestamp.
-        # None appears in any real Claude Code payload observed live, and each is the only
-        # documented thing separating that vendor's identically-named events from ours.
         if "turn_id" in raw or "project_path" in raw or "timestamp" in raw:
             return False
-        # `prompt_id` used to be treated as proof this was Devin's payload, not ours. Claude
-        # Code now sends it too, so the field alone settles nothing: it is only Devin's when
-        # nothing we have actually observed from Claude Code is alongside it.
         if "prompt_id" in raw and not looks_like_claude_code(raw):
             return False
         return True
@@ -117,14 +82,8 @@ def claims(raw):
 
 def parse(raw):
     ti = raw.get("tool_input")
-    # A guard that crashes is a guard that allows: dispatch only wraps the JSON decode, so
-    # an exception here kills the hook with exit 1, which most vendors treat as a
-    # non-blocking error and let the call through. tool_input is whatever the agent chose
-    # to serialise, so it is not ours to assume the shape of.
     ti = tool_input_of(ti)
     tool = raw.get("tool_name")
-    # new_source is NotebookEdit's cell body -- the tool is in WRITE_TOOLS, so claiming to
-    # handle it while dropping its content is an internal contradiction, not a vendor guess.
     content = ti.get("content") or ti.get("new_string") or ti.get("new_source") or None
     if content is None and isinstance(ti.get("edits"), list):
         joined = "\n".join(str(e.get("new_string", "")) for e in ti["edits"] if isinstance(e, dict))
@@ -136,15 +95,9 @@ def parse(raw):
         out = _json.dumps(out)
     return Event(
         AGENT,
-        # An event this adapter has no mapping for resolves to UNKNOWN, never to the
-        # nearest canonical one: relabelling it invites a guardrail to evaluate the
-        # wrong policy against it.
         EVENT_MAP.get(raw.get("hook_event_name"), UNKNOWN),
         tool=tool,
         command=ti.get("command"),
-        # InstructionsLoaded and FileChanged carry no tool_input at all -- file_path (and,
-        # for InstructionsLoaded, content) sit at the top level instead, per the project's
-        # own recorded example payloads (examples/generated/claude_code.md).
         path=ti.get("file_path") or ti.get("path") or ti.get("notebook_path") or raw.get("file_path"),
         content=content or raw.get("content"),
         output=out,
@@ -156,18 +109,11 @@ def parse(raw):
     )
 
 
-#: Events that read a TOP-LEVEL {"decision": "block", "reason": ...} and ignore
-#: hookSpecificOutput.permissionDecision entirely. Established live against 2.1.247
-#: (2026-08-28) -- two reads of the vendor page gave contradictory answers. See respond().
 _BLOCK_DIALECT_EVENTS = (PROMPT_SUBMIT, STOP)
 
 
 def _refusal_reason(decision):
-    """One reason string for the events that can only block -- no ask, no rewrite.
-
-    Both degrade to a block with the degradation named rather than being dropped: silence
-    at a blocking event is the dispatcher's allow, which is not what the caller asked for.
-    """
+    """One reason string for the events that can only block -- no ask, no rewrite."""
     reason = decision.reason or "blocked by policy"
     if decision.outcome == ASK:
         return reason + " (confirmation requested; this event cannot prompt, so it blocks)"
@@ -176,16 +122,9 @@ def _refusal_reason(decision):
     return reason
 
 
-#: Decision words this vendor accepts. allow/deny/ask are permissionDecision's, honoured at
-#: pre_tool; "block" is the top-level dialect prompt_submit and stop read. Established live
-#: against 2.1.247 (2026-08-28).
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
 
-#: hookSpecificOutput.additionalContext -- docs-basis, NOT the live-verified 2.1.247
-#: experiment below. code.claude.com/docs/en/hooks documents this as how a hook injects text
-#: into Claude's own context, explicitly nested (top-level is silently ignored), with a
-#: SessionStart example naming it and a UserPromptSubmit section for the same purpose.
 def _additional_context_output(event, context):
     return {
         "hookSpecificOutput": {
@@ -196,61 +135,16 @@ def _additional_context_output(event, context):
 
 
 def respond(decision, event):
-    """(stdout_text, exit_code) for this decision -- three dialects, not one.
-
-    Until 2026-08-28 this emitted hookSpecificOutput.permissionDecision at EVERY event.
-    A live experiment against Claude Code 2.1.247 settled what each event actually reads,
-    by wiring one candidate shape per trial and watching the agent rather than the hook:
-
-        event             {"decision": "block"}   hookSpecificOutput   exit 2
-        UserPromptSubmit  honoured                IGNORED              honoured
-        Stop              honoured                IGNORED              honoured
-        PreToolUse        --                      honoured             --
-
-    So every prompt_submit and stop deny this library has ever produced on its most-used
-    adapter was silently discarded: the handler refused, the dispatcher reported a block,
-    and the prompt reached the model anyway. At prompt_submit the trial prompt asked the
-    agent to write a marker file and the file appeared; at stop the agent carried on and
-    the Stop hook re-fired with stop_hook_active set. Both signals are things the agent
-    did, not things the probe claimed.
-
-    exit 2 works at both, and is deliberately NOT used: it collapses to 1 under the
-    PowerShell wrapper some vendors apply, and it leaks the full hook command line into the
-    UI where the JSON form does not. The JSON block also carries the reason into context.
-
-    pre_tool keeps hookSpecificOutput.permissionDecision, and that was verified in the same
-    round rather than assumed: a deny there blocked the Write outright, and the agent's next
-    Bash call too, so the gate fires for every tool. It must keep this shape in any case --
-    it is the only one carrying updatedInput, which rewrite depends on. Everything else is
-    observation-only in this row and gets silence: a verdict there was never read.
-
-    A bare ALLOW is SILENCE, not permissionDecision:"allow".
-
-    "The handler has no objection" and "skip the user's own permission prompt" are different
-    statements, and only the first is what a guardrail means. The vendor's documentation
-    settles what silence does, verbatim: "Exit code 0 with no output means the hook has no
-    decision to report, so the tool call continues through the normal permission flow."
-    What an explicit "allow" does there is NOT documented -- so the recorded option keeps
-    the user's own protection. VS Code's languageModelToolsService, read from source, returns
-    `autoConfirmed: ConfirmationNotNeeded` on exactly this value -- which VOUCH exists to
-    speak on purpose (see below, and allow_semantics.VOUCH_SPEAKS) on the two vendors this is
-    established for. REWRITE still sends an explicit allow, since updatedInput is the only
-    way to express one and approving the *substituted* call is what was asked for.
-    """
+    """(stdout_text, exit_code) for this decision -- three dialects, not one."""
     import json as _json
 
     if event.event in _BLOCK_DIALECT_EVENTS:
-        # VOUCH has no word here either -- only ever spoken at pre_tool below -- so it is a
-        # louder allow this dialect cannot hear.
         out = {} if decision.outcome in (ALLOW, VOUCH) else {"decision": "block", "reason": _refusal_reason(decision)}
-        # additionalContext is a second, independent key; only UserPromptSubmit of this pair
-        # is documented to take it.
         if event.event == PROMPT_SUBMIT and decision.context:
             out.update(_additional_context_output(event, decision.context))
         return (_json.dumps(out), 0) if out else ("", 0)
 
     if event.event == SESSION_START:
-        # Silent regardless of outcome (no block/rewrite claimed here) except for context.
         if decision.context:
             return _json.dumps(_additional_context_output(event, decision.context)), 0
         return "", 0
@@ -263,8 +157,6 @@ def respond(decision, event):
 
     out = {"hookEventName": REVERSE_EVENT_MAP.get(event.event, "PreToolUse")}
     if decision.outcome == VOUCH:
-        # Reaches here undegraded only because allow_semantics.VOUCH_SPEAKS names
-        # claude_code (see dispatch.degrade()) -- the word a bare ALLOW withholds above.
         out["permissionDecision"] = "allow"
         if decision.reason:
             out["permissionDecisionReason"] = decision.reason

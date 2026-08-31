@@ -1,10 +1,4 @@
-"""Primitive 4 tests.
-
-Most of these guard one property: that a rendered policy never claims more than the agent
-can enforce. The renderers are easy to make "helpful" in exactly the wrong way -- emitting a
-nearby key that looks like a deny -- so the tests assert on what comes back in the
-`unrepresentable` list as carefully as on what comes back in the fragment.
-"""
+"""Primitive 4 tests."""
 
 from __future__ import annotations
 
@@ -143,14 +137,7 @@ def test_every_agent_with_a_permission_model_is_an_agent_the_matrix_knows():
 
 
 def test_every_matrix_agent_is_accounted_for():
-    """Recorded plus unrecorded must equal the matrix, exactly.
-
-    This is the invariant the module is for. An agent missing from both tables reads as
-    "nothing to say here" when the truth is "nobody looked" -- and four agents sat in that
-    state after their adapters landed, because nothing forced the tables to keep up. Adding
-    an agent to the matrix now fails here until somebody records what its config can say,
-    or states plainly that it is unknown.
-    """
+    """Recorded plus unrecorded must equal the matrix, exactly."""
     from agentseam.matrix_data import MATRIX
 
     assert set(CAPABILITY) | set(UNRECORDED) == set(MATRIX)
@@ -166,14 +153,9 @@ def test_no_unrecorded_reason_is_empty():
 
 
 def test_a_missing_hook_surface_is_not_recorded_as_a_missing_permission_model():
-    """Two unrelated facts. Aider and Zed expose no hooks; that says nothing about what
-    their config files can restrict, and the reasons say so rather than conflating them.
-    """
+    """Two unrelated facts. Aider and Zed expose no hooks; that says nothing about what"""
     for agent in ("aider", "zed"):
         assert "independent of its lack of a hook surface" in UNRECORDED[agent]
-
-
-# --- ContentRule: content-pattern deny (honesty gate) ----------------------------------
 
 
 def test_content_rule_rejects_vocabulary_it_does_not_know():
@@ -185,16 +167,7 @@ def test_content_rule_rejects_vocabulary_it_does_not_know():
 
 @pytest.mark.parametrize("agent", sorted(CAPABILITY))
 def test_no_agent_recorded_here_can_express_a_content_rule(agent):
-    """Verified 2026-08-29 against each vendor directly: every permission surface recorded
-    here matches a tool name, a command prefix, or a path glob -- never file/text content.
-
-    Claude Code looked like the one plausible candidate (the richest rule syntax of the
-    four); a native content-pattern permission rule was requested there and closed 'not
-    planned' upstream (anthropics/claude-code#37509). Rendering a ContentRule into any of
-    these configs would produce a fragment that reads like a content policy and enforces
-    nothing -- exactly the overclaim this module exists to prevent, so every agent must
-    refuse it, honestly, rather than the render finding one lucky vendor to special-case.
-    """
+    """Verified 2026-08-29 against each vendor directly: every permission surface recorded"""
     rule = ContentRule(ContentRule.FILE, r"AKIA[0-9A-Z]{16}", message="AWS key")
     result = permissions.plan(agent, [rule])
     assert not result.complete
@@ -212,9 +185,7 @@ def test_content_rule_reason_is_specific_per_vendor_not_a_blanket_message():
 
 
 def test_content_rules_do_not_disturb_tool_rules_rendered_alongside_them():
-    """A mixed rules list renders each kind on its own path and reports both gaps -- one
-    kind's refusal must not swallow or corrupt the other kind's real fragment.
-    """
+    """A mixed rules list renders each kind on its own path and reports both gaps -- one"""
     result = permissions.plan(
         "claude_code", [Rule(DENY, FILE_WRITE, ".env"), ContentRule(ContentRule.FILE, r"AKIA[0-9A-Z]{16}")]
     )

@@ -1,15 +1,4 @@
-"""`parse()` must not raise, whatever the payload looks like.
-
-A guard that crashes is a guard that allows. `dispatch.run` wraps only the JSON decode --
-everything after it, including `parse()`, runs unprotected -- so an exception here kills the
-hook process with exit 1, and exit 1 is a non-blocking error on almost every vendor here.
-The call proceeds. The one thing this library exists to prevent, caused by the library.
-
-Six adapters crashed on a non-dict `tool_input` and three on an `edits` list containing
-non-dicts, while five others already hardened with `isinstance` -- the inconsistency is what
-made it invisible. `tool_input` is whatever the agent chose to serialise; its shape is not
-ours to assume.
-"""
+"""`parse()` must not raise, whatever the payload looks like."""
 
 from __future__ import annotations
 
@@ -24,8 +13,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from agentseam import adapters  # noqa: E402
 from agentseam.contract import PRE_TOOL  # noqa: E402
 
-#: Shapes a payload could take that are not the one the adapter expects. Not exotic: a
-#: vendor adding a scalar-argument tool, or a serialiser that flattens, produces these.
 _HOSTILE = {
     "tool_input is a string": {"tool_input": "rm -rf /"},
     "tool_input is a list": {"tool_input": ["a"]},
@@ -60,22 +47,7 @@ def test_parse_never_raises(agent, label):
 
 @pytest.mark.parametrize("agent", sorted(adapters.ADAPTERS))
 def test_a_json_string_tool_input_reads_the_same_as_the_object(agent):
-    """`tool_input` is not always an object, and the string form must not blind the guard.
-
-    Witnessed live on VS Code Copilot (2026-08-29), same `Edit` tool in two runs routed to
-    different models: once an object carrying path/old_str/new_str, once a 129-character
-    JSON string. The object form parsed to a file and its content; the string form parsed
-    to nothing, so a policy denying on secret content saw an empty write and allowed it.
-
-    The isinstance guard added when `parse()` was made total stopped the crash -- and a
-    crash is an allow -- but resolved the string to `{}`, which is the same blindness
-    without the traceback.
-
-    Stated as an equivalence rather than an assertion about fields, so it scopes itself: an
-    adapter whose vendor does not use `tool_input` at all (antigravity reads PascalCase tool
-    args, windsurf reads the top level) reads nothing from either shape and is not accused
-    of a bug. What is forbidden is reading the object and not the string.
-    """
+    """`tool_input` is not always an object, and the string form must not blind the guard."""
     mod = adapters.get(agent)
     vendor_event = getattr(mod, "REVERSE_EVENT_MAP", {}).get(PRE_TOOL)
     if not vendor_event:

@@ -1,25 +1,4 @@
-"""Hooks, rendered standalone: bundler assembles dispatch + one adapter into one file.
-
-Resolves the migration risk a consumer like chock names precisely: a vendored PreToolUse
-runner must stay a self-contained, stdlib-only file with **no agentseam import**, because
-it ships INTO an adopter repo that may never install this package at all. `bundle(agent)`
-renders exactly that file -- the normalized-stdin-to-vendor-dialect plumbing this project
-already owns, plus the one adapter named, with nothing left importing `agentseam`.
-
-The composition is source-level, not a copy-paste: each section is extracted from this
-package's own real modules with `ast` (stdlib), so a bundle can never drift from the
-adapter it was built from -- there is only one copy of `claude_code.py`'s parse/respond
-logic, and the bundler reads it, it does not re-describe it. Byte-stable for one agentseam
-version: the same `(agent, __version__)` always renders the same bytes, because every
-input is source text this package ships (no wall-clock, no filesystem ordering, no
-environment-dependent branch) -- see `bundle()`'s own note on what that buys a consumer.
-
-The one piece deliberately left a stub: `handle(event)`, the consumer's policy. Follows the
-same scope discipline as `packaging`'s `EXECUTABLE` part (R1) -- agentseam carries the slot
-and the plumbing around it; the handler BODY is never agentseam's to write. It is fenced
-between marker comments (the same convention `install.py` uses for a block it owns in
-someone else's file) so a consumer's own tooling can find and replace it reliably.
-"""
+"""Hooks, rendered standalone: bundler assembles dispatch + one adapter into one file."""
 
 from __future__ import annotations
 
@@ -37,8 +16,6 @@ __all__ = ["bundle", "SUPPORTED_AGENTS"]
 _HERE = os.path.dirname(__file__)
 _ADAPTERS_DIR = os.path.join(_HERE, "adapters")
 
-#: Every agent this can bundle -- exactly the agents with a real adapter module. An agent
-#: with no adapter (instruction-files-only, or unadapted) has nothing here to vendor.
 SUPPORTED_AGENTS = tuple(sorted(adapters.ADAPTERS))
 
 
@@ -59,25 +36,7 @@ def _adapter_source(agent):
 
 
 def _strip_own_imports(source, hoist=None):
-    """`source` minus `from __future__ import annotations`, every relative import, and --
-    when `hoist` is given -- every module-level absolute import, collected into it instead.
-
-    The relative ones are satisfied once, elsewhere in the bundle, by the sections this one
-    is stitched after: contract's names, `_windows`'s, another adapter's.
-
-    The absolute ones used to be left where they stood, on the reasoning that they still
-    need to run there. In one file they do not: composing N sources that each legitimately
-    `import json` produces N module-level imports of the same module, which every static
-    analyser then reports against the consumer's repository (7 CodeQL alerts on chock's
-    vendored runners, open-coder-ai/chock#73). Hoisting them into one deduplicated preamble
-    is strictly safer than leaving them -- a module-level import moved earlier in the same
-    module is bound before anything that could use it -- and it makes the bundle say each
-    import once, which is what it means.
-
-    Imports inside a function body are NOT touched: those are the source module's own
-    decision about when to pay for an import, and rewriting a function body is more than a
-    source-composer should do. `ast.parse(...).body` is module level by construction.
-    """
+    """`source` minus `from __future__ import annotations`, every relative import, and --"""
     tree = ast.parse(source)
     drop = set()
     for node in tree.body:
@@ -96,12 +55,7 @@ def _strip_own_imports(source, hoist=None):
 
 
 def _render_imports(hoisted):
-    """One `import` statement per module, however many names the sources bound it to.
-
-    A module reached under two names (`json` and `_json`) is still one import; the extra
-    names become plain assignments rather than a second import of the same module, which is
-    what a static analyser reads as redundant. Sorted, so the bundle stays byte-stable.
-    """
+    """One `import` statement per module, however many names the sources bound it to."""
     by_module = {}
     for module, asname in hoisted:
         by_module.setdefault(module, set()).add(asname)
@@ -109,7 +63,7 @@ def _render_imports(hoisted):
     for module in sorted(by_module):
         names = sorted(n for n in by_module[module] if n is not None)
         plain = None in by_module[module]
-        if "." in module:  # came from `from pkg import name`
+        if "." in module:
             pkg, attr = module.rsplit(".", 1)
             out.append(
                 "from %s import %s" % (pkg, attr)
@@ -128,8 +82,7 @@ def _render_imports(hoisted):
 
 
 def _cross_module_imports(source):
-    """`{module: [names]}` for every `from .<module> import ...` this source makes,
-    excluding `_windows` (handled by name, not folded in with a real adapter's deps)."""
+    """`{module: [names]}` for every `from .<module> import ...` this source makes,"""
     tree = ast.parse(source)
     deps = {}
     for node in tree.body:
@@ -144,14 +97,9 @@ def _needs_windows_helper(source):
 
 
 def _extract_with_deps(source, names):
-    """The top-level defs/assignments named, plus whatever OTHER top-level names their
-    bodies reference -- transitively -- so the result stands alone.
-
-    Order follows the source file, not the request, so something is always defined before
-    whatever uses it (`OBSERVED_MARKERS` before `looks_like_claude_code`, which reads it).
-    """
+    """The top-level defs/assignments named, plus whatever OTHER top-level names their"""
     tree = ast.parse(source)
-    owner = {}  # name -> defining node
+    owner = {}
     order = []
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -183,36 +131,13 @@ def _extract_with_deps(source, names):
 
 
 def bundle(agent):
-    """Render `agent`'s dispatch runtime as one self-contained, stdlib-only Python file.
-
-    Deterministic: the same `(agent, agentseam version)` always renders identical bytes.
-    Every input is source text this package ships -- no wall-clock, no filesystem
-    ordering, no environment-dependent branch -- which is what lets a consumer pin the
-    result byte-for-byte (chock's `VENDORED_RUNTIMES` drift check is exactly this).
-
-    The version this was rendered from is stamped in the header, as part of those bytes --
-    the only honest way to answer "is this file stale" without re-running the bundler.
-
-    Raises KeyError for an agent with no adapter module (`SUPPORTED_AGENTS` lists what is
-    bundleable).
-
-    Everything in the result is agentseam's: normalizing stdin, degrading a decision to
-    what `agent` can honor, speaking `agent`'s response dialect. The one exception is
-    `handle()`, fenced between "agentseam handler" marker comments -- that is the
-    consumer's policy, and this function never writes it. A caller that regenerates the
-    surrounding file (a new agentseam version, a config change) can locate that block by
-    its markers and carry the existing body forward, the same way `install.py` preserves
-    everything outside its own marker block in a file it does not fully own.
-    """
+    """Render `agent`'s dispatch runtime as one self-contained, stdlib-only Python file."""
     if agent not in SUPPORTED_AGENTS:
         raise KeyError("%s: no adapter module to bundle (have: %s)" % (agent, ", ".join(SUPPORTED_AGENTS)))
 
     adapter_source = _adapter_source(agent)
     cross = _cross_module_imports(adapter_source)
 
-    # Every module-level absolute import from every composed source lands here and is
-    # emitted once, at the top, instead of once per source. `json` and `sys` seed it
-    # because the runtime section below uses them and has no source of its own.
     hoisted = {("json", None), ("sys", None)}
 
     body = []
