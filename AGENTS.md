@@ -12,6 +12,9 @@ adapters: {one_module_per_agent, owns: [payload_parse, response_dialect, config_
 matrix: {is: data, not: code; every_row_requires: [version, date, method]}
 claims: {never_exceed: capability_matrix; degrade: honestly}
 files: {max_lines: 300, remedy: split_by_activity}
+code_comments: {docstring: one_line, inline: nonobvious_only, why: [pr_body, docs/],
+                keep: [noqa, pragma, runtime_printed_docstrings, test_pinned_markers, generated, adopter_templates],
+                target: prose_to_code <=0.15, enforcement: advisory}
 commits: {signed_off: required}
 ```
 
