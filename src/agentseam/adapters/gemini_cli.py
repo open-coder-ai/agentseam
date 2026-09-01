@@ -18,7 +18,7 @@ from ..contract import (
     tool_input_of,
 )
 from ._common import make_hook_config
-from .claude_code import looks_like_claude_code
+from ._probes import looks_like_claude_code
 
 AGENT = "gemini_cli"
 

@@ -313,8 +313,14 @@ first, D3/D4 swap cleanly — they share only D1+D2.
 
 ## 7. Open questions carried as hypotheses
 
-- **[h]** Bundle size estimates in §4 are composition arithmetic, not measurements;
-  D3 should publish real numbers next to them.
+- **[v]** (was [h]) Bundle size estimates in §4 were composition arithmetic; D3's real
+  numbers, measured at its base (main `b6142bd`, where the pre-fold bundles had grown to
+  claude_code 494 / codex_cli 452 / kimi_code 458 / devin 451): claude_code 650,
+  codex_cli 636, kimi_code 624, devin 650 — +32% to +44%, a little above the §4 estimate
+  of +20–30%, mostly the engine's G1/G2 renderers and the inlined `VENDOR` literal. The
+  §4 payoff side held: the four deleted adapter modules were 624 lines; the engine that
+  replaces them (`_hook_json` + `_hook_entry` + `_probes` + `_family`) is ~390 shared
+  across the family.
 - **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn
@@ -322,8 +328,17 @@ first, D3/D4 swap cleanly — they share only D1+D2.
   exactly one named probe (`looks_like_claude_code`), used by `gemini_cli` and `devin` --
   well inside the budget (`tests/test_vendor_config.py::
   test_reject_probes_stay_under_the_three_probe_budget`). The design stands as written.
-- **[h]** vscode_copilot's dual-casing may be cleaner as two config entries sharing a
-  family than one entry with paired key chains; decide in D3 with the fixtures open.
+- **[v]** (was [h]) vscode_copilot's dual-casing as two config entries: decided in D3,
+  with the fixtures open, **against folding it at all this wave**. The dual-casing is the
+  small part; what keeps vscode_copilot a dialect module is `claims()`'s three disjoint
+  acceptance paths (envelope marker, lowercase-first name with its own reject list, a
+  memory-tool call with no event name) and `parse()`'s branch on
+  `tool in MEMORY_TOOLS and command in MEMORY_WRITE_COMMANDS` selecting a second field
+  chain — branching on payload content, which §3.1's line says is dialect code. Splitting
+  into two entries would not remove either branch, only duplicate the verdict tables. If a
+  later wave wants it folded anyway, the honest device is a named accept-probe (the
+  `reject_probes` crack widened to the accept side), which is a design decision, not an
+  implementation detail — see W38's report.
 - **[v]** (was [h]) PR #89's loader restores every JSON array as a tuple; `fields` chains
   here are order-sensitive lists and unaffected, but D2 must confirm the loader's
   tuple-restore doesn't collide with schema types. **Answered by D2**: a tuple preserves

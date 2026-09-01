@@ -95,9 +95,13 @@ these: it allows, silently, and still returns the event so a caller can log the 
 
 ## 4. Adapters own all vendor knowledge
 
-An adapter is a module with `AGENT`, `CONFIG_PATH`, `claims()`, `parse()`, `respond()`, and
-`hook_config()` — the six the interface test requires. Adding an agent is a module plus a
-matrix row: no consumer changes, no dispatcher changes, no `if agent == ...` anywhere.
+An adapter is a module-like object with `AGENT`, `CONFIG_PATH`, `claims()`, `parse()`,
+`respond()`, and `hook_config()` — the six the interface test requires. Most are still
+hand-written modules; the `hook_json` family (claude_code, codex_cli, devin, kimi_code) is
+one shared engine (`adapters/_hook_json.py`) bound to that vendor's
+`data/vendors/<agent>.json` entry (`docs/design/dialect-families.md`). Adding an agent is a
+module (or, in a covered family, a config entry) plus a matrix row: no consumer changes,
+no dispatcher changes, no `if agent == ...` anywhere.
 
 `test_every_adapter_implements_the_interface` and `test_every_adapter_has_a_matrix_row`
 keep that true, because a rule this load-bearing erodes the first time somebody is in a
