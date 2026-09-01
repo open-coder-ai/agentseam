@@ -1,29 +1,19 @@
-"""The F1 `hook_json` / F2 `flat_decision` engine: claims/parse/respond driven by a vendor config entry.
+"""The F1 `hook_json` / F2 `flat_decision` engine: respond rendering for a vendor config entry.
 
 Every function takes the vendor's `data/vendors/<agent>.json` entry as its first argument;
-`_family.bind()` closes them over one entry, and a bundle inlines this module next to a
-`VENDOR` literal. What varies per vendor is only the data the entry carries (dialect-
-families.md §3.1: words, key chains, flags, note strings); the shapes rendered here are the
-family's G1/G2 grammars and the shared `hookSpecificOutput` context/transform bodies.
+`_family.bind()` closes them over one entry (with `_payload.py`'s claims/parse side), and a
+bundle inlines both modules next to a `VENDOR` literal. What varies per vendor is only the
+data the entry carries (dialect-families.md §3.1: words, key chains, flags, note strings);
+the shapes rendered here are the family's G1/G2 grammars and the shared
+`hookSpecificOutput` context/transform bodies.
 """
 
 from __future__ import annotations
 
 import json as _json
 
-from ..contract import (
-    ALLOW,
-    DENY,
-    ESCALATE,
-    TRANSFORM,
-    UNKNOWN,
-    VOUCH,
-    WARN,
-    Event,
-    degraded_from,
-    tool_input_of,
-)
-from ._probes import PROBES
+from ..contract import ALLOW, DENY, ESCALATE, TRANSFORM, UNKNOWN, VOUCH, WARN, degraded_from
+from ._payload import _wire_name
 
 
 def hj_reverse(cfg):
@@ -34,104 +24,6 @@ def hj_reverse(cfg):
             reverse[canonical] = name
     reverse.update(cfg.get("wire_events", {}))
     return reverse
-
-
-def _wire_name(cfg, raw):
-    for key in cfg["claims"].get("event_key", ()):
-        name = raw.get(key)
-        if name is not None:
-            return name
-    return None
-
-
-def hj_claims(cfg, raw):
-    """True when this payload matches the entry's marker discipline."""
-    if not isinstance(raw, dict):
-        return False
-    c = cfg["claims"]
-    name = _wire_name(cfg, raw)
-    if name in c.get("accept_names", ()):
-        return True
-    if name not in cfg["events"]:
-        return False
-    if "client_types" in c and raw.get("client_type") not in c["client_types"]:
-        return False
-    for marker in c.get("reject_markers", ()):
-        if marker in raw:
-            return False
-    for probe, markers in c.get("reject_markers_unless_probe", {}).items():
-        if any(marker in raw for marker in markers) and not PROBES[probe](raw):
-            return False
-    for probe in c.get("reject_probes", ()):
-        if PROBES[probe](raw):
-            return False
-    accept = c.get("accept_markers", ())
-    if accept and not any(marker in raw for marker in accept):
-        for event_name, required in c.get("accept_when_all", {}).items():
-            if name == event_name and all(key in raw for key in required):
-                return True
-        return False
-    return True
-
-
-def _lookup(raw, ti, key):
-    """One dotted key: `tool_input.x` off the decoded tool input, `x[].y` joining a list."""
-    if key.startswith("tool_input."):
-        rest = key[len("tool_input.") :]
-        if "[]." in rest:
-            list_key, sub = rest.split("[].", 1)
-            items = ti.get(list_key)
-            if not isinstance(items, (list, tuple)):
-                return None
-            joined = "\n".join(str(item.get(sub, "")) for item in items if isinstance(item, dict))
-            return joined or None
-        return ti.get(rest)
-    return raw.get(key)
-
-
-def _field(raw, ti, chain):
-    value = None
-    for key in chain:
-        if value:
-            break
-        value = value or _lookup(raw, ti, key)
-    return value
-
-
-#: `fields` keys that steer the extraction rather than naming an Event field.
-_FIELD_META = ("tool_input", "content_only_for_write_tools")
-
-
-def _tool_input_raw(cfg, raw):
-    for key in cfg["fields"].get("tool_input", ("tool_input",)):
-        value = raw.get(key)
-        if value is not None:
-            return value
-    return None
-
-
-def hj_parse(cfg, raw):
-    """Normalise one payload along the entry's ordered field-fallback chains."""
-    ti = tool_input_of(_tool_input_raw(cfg, raw))
-    fields = {name: _field(raw, ti, chain) for name, chain in cfg["fields"].items() if name not in _FIELD_META}
-    if cfg["fields"].get("content_only_for_write_tools") and fields.get("tool") not in cfg["tools"].get("write", ()):
-        fields["content"] = None
-    if isinstance(fields.get("output"), (dict, list)):
-        fields["output"] = _json.dumps(fields["output"])
-    return Event(
-        cfg["agent"],
-        cfg["events"].get(_wire_name(cfg, raw), UNKNOWN),
-        tool=fields.get("tool"),
-        command=fields.get("command"),
-        path=fields.get("path"),
-        content=fields.get("content"),
-        output=fields.get("output"),
-        prompt=fields.get("prompt"),
-        session_id=fields.get("session_id"),
-        tool_use_id=fields.get("tool_use_id"),
-        cwd=fields.get("cwd"),
-        raw=raw,
-    )
 
 
 def _context_value(v, decision):
@@ -188,7 +80,8 @@ def _refusal_text(v, decision, at_gate, wire=None):
 
 def _g1(v, gate, decision, wire, name):
     """Block dialect: a top-level decision word, or silence/context where nothing is read."""
-    words = v.get("words", {})
+    words = dict(v.get("words", {}))
+    words.update(v.get("words_at", {}).get(wire, {}))
     at_context_event = wire in v.get("context_events", ())
     if decision.outcome in (ALLOW, VOUCH, WARN):
         value = _context_value(v, decision)
@@ -214,7 +107,14 @@ def _g1(v, gate, decision, wire, name):
             return _json.dumps(
                 {"hookSpecificOutput": {"hookEventName": name, "updatedInput": decision.updated_input}}
             ), 0
-    if decision.outcome == ESCALATE and gate["honours_escalate"] and "escalate" in words:
+    if (
+        decision.outcome == ESCALATE
+        and gate["honours_escalate"]
+        and "escalate" in words
+        # An escalate the dispatcher degraded a transform into is a block where the entry
+        # names that degradation (antigravity): prompting would offer the unmodified call.
+        and not (degraded_from(decision) == TRANSFORM and "escalate_from_transform" in v.get("degrade_notes", {}))
+    ):
         reason = decision.reason or _default_for(v, decision, True, wire)
         return _json.dumps({"decision": words["escalate"], "reason": reason}), 0
     out = {"decision": words.get("block", "block"), "reason": _refusal_text(v, decision, False, wire)}
@@ -253,10 +153,17 @@ def _g2(v, gate, decision, name):
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
-def hj_respond(cfg, decision, event):
-    """(stdout_text, exit_code) in this entry's dialect for the gate the payload names."""
+def hj_respond(cfg, decision, event, wire=None):
+    """(stdout_text, exit_code) in this entry's dialect for the gate the payload names.
+
+    `wire` is the pre-resolved wire event name for the shape-inferred families; the
+    marker families resolve it from the payload's own event key.
+    """
     v = cfg["verdicts"]
-    wire = _wire_name(cfg, event.raw or {})
+    if wire is None:
+        wire = _wire_name(cfg, event.raw or {})
+    if wire in v.get("empty_object_events", ()):
+        return _json.dumps({}), 0
     if wire is None:
         wire = v.get("default_wire_event")
         if wire is None and v.get("missing_wire") == "reverse_map":

@@ -198,6 +198,41 @@ _VERDICT_DIALECT = {
         },
         "note_style": "because",
     },
+    "cursor": {
+        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
+        "degrade_notes": {
+            "escalate": "%s cannot prompt for confirmation, so this is a block",
+            "escalate_from_transform": "%s cannot modify a tool call, so this is a block",
+            "transform": "input requires modification, which this gate cannot express",
+        },
+        "flag_note": "observed after the fact (%s cannot prevent it): %s",
+        "flag_note_default": "policy violation",
+        "default_wire_event": "beforeShellExecution",
+    },
+    "windsurf": {
+        "degrade_notes": {
+            "escalate": "this agent cannot prompt for confirmation; blocking instead",
+            "escalate_from_transform": "this agent cannot rewrite tool input; blocking instead",
+            "transform": "this agent cannot rewrite tool input; blocking instead",
+        },
+        "reason_defaults": {"escalate": "confirmation required", "transform": "input requires modification"},
+        "note_style": "suffix",
+        "flag_note": "windsurf: flagged after the fact (%s cannot block): %s",
+        "flag_note_default": "policy violation",
+    },
+    "antigravity": {
+        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
+        "words_at": {"Stop": {"allow": "stop", "block": "continue"}},
+        "degrade_notes": {
+            "escalate": "Antigravity cannot prompt at Stop",
+            "escalate_from_transform": "Antigravity cannot modify a tool call",
+            "transform": "Antigravity cannot modify a tool call",
+        },
+        "reason_defaults": {"escalate": "confirmation required"},
+        "gate_reason_defaults": {"Stop": "policy requires more work"},
+        "note_style": "because",
+        "default_wire_event": "PreToolUse",
+    },
 }
 
 

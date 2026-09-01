@@ -80,8 +80,8 @@
     ]
   },
   "hook_entry": {
-    "entry_extra": {
-      "pre_tool_also_wires": "pre_mcp_tool_use"
+    "also_wires": {
+      "pre_tool": "pre_mcp_tool_use"
     },
     "matcher": false,
     "wrapper": "flat_entries"
@@ -90,11 +90,24 @@
   "tools": {},
   "verdicts": {
     "answer_events": [
+      "pre_mcp_tool_use",
       "pre_run_command",
       "pre_user_prompt"
     ],
     "bare_allow": "silent",
+    "degrade_notes": {
+      "escalate": "this agent cannot prompt for confirmation; blocking instead",
+      "escalate_from_transform": "this agent cannot rewrite tool input; blocking instead",
+      "transform": "this agent cannot rewrite tool input; blocking instead"
+    },
+    "flag_note": "windsurf: flagged after the fact (%s cannot block): %s",
+    "flag_note_default": "policy violation",
     "gates": {
+      "pre_mcp_tool_use": {
+        "grammar": "G5",
+        "honours_escalate": false,
+        "honours_transform": false
+      },
       "pre_run_command": {
         "grammar": "G5",
         "honours_escalate": false,
@@ -105,6 +118,11 @@
         "honours_escalate": false,
         "honours_transform": false
       }
+    },
+    "note_style": "suffix",
+    "reason_defaults": {
+      "escalate": "confirmation required",
+      "transform": "input requires modification"
     },
     "vocabulary": [],
     "vocabulary_basis": "verified"

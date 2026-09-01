@@ -60,6 +60,10 @@
         "content_only_for_write_tools": {
           "type": "boolean",
           "description": "read the content chain only when the parsed tool is in tools.write (gemini_cli's write-gated content)."
+        },
+        "stringify": {
+          "$ref": "#/$defs/stringList",
+          "description": "Event fields coerced to str when present (antigravity's integer stepIdx as tool_use_id). Not an Event field."
         }
       }
     },
@@ -126,10 +130,29 @@
             "block": {"type": "string", "minLength": 1}
           }
         },
+        "words_at": {
+          "type": "object",
+          "description": "vendor wire event name -> word overrides merged over `words` at that gate only (antigravity's Stop speaks stop/continue where its gate speaks allow/deny).",
+          "additionalProperties": {"$ref": "#/$defs/wordTable"}
+        },
+        "empty_object_events": {
+          "$ref": "#/$defs/stringList",
+          "description": "vendor wire event names answered with a literal `{}` whatever the decision (antigravity's PostToolUse acknowledgement)."
+        },
+        "flag_note": {
+          "type": "string",
+          "minLength": 1,
+          "description": "template spoken where a refusal can only be flagged, never enforced -- filled with (the wire event name, the reason or flag_note_default). The cursor family wraps it in an additional_context body; the windsurf family prints it with exit 0."
+        },
+        "flag_note_default": {
+          "type": "string",
+          "minLength": 1,
+          "description": "reason text filling flag_note when the handler gave none."
+        },
         "degrade_notes": {
           "type": "object",
           "additionalProperties": false,
-          "description": "the degradation-note strings, verbatim from the adapter they replaced so wire output stays byte-identical (dialect-families.md §3.1). `*_gate` keys apply at G2 gates; `escalate_from_transform` wins when the escalate was degraded from a transform. A note carrying `%s` is a template the engine fills with (the reason or its default, the wire event name) instead of joining it by note_style (gemini_cli's escalate note, dialect-families.md §3.2).",
+          "description": "the degradation-note strings, verbatim from the adapter they replaced so wire output stays byte-identical (dialect-families.md §3.1). `*_gate` keys apply at G2 gates; `escalate_from_transform` wins when the escalate was degraded from a transform -- and at a G1 gate that honours escalate, its presence turns that degraded escalate into a block (antigravity). A note carrying `%s` is a template the engine fills with (the reason or its default, the wire event name) instead of joining it by note_style (gemini_cli's escalate note, dialect-families.md §3.2); the cursor family's G4 renderer instead fills its notes' one `%s` with the wire event name and joins reason (note).",
           "properties": {
             "escalate": {"type": "string", "minLength": 1},
             "escalate_gate": {"type": "string", "minLength": 1},
@@ -203,8 +226,13 @@
         "group": {"type": "string", "description": "top-level wrapper key when the hooks table sits inside one (antigravity's GROUP)."},
         "entry_extra": {
           "type": "object",
-          "description": "flat map of the vendor-specific extra fields this adapter's hook_config() entries carry (commandWindows, name, windows, or windsurf's extra pre_mcp_tool_use wiring), verbatim.",
+          "description": "flat map of the vendor-specific extra fields this adapter's hook_config() entries carry (commandWindows, name, windows), verbatim.",
           "additionalProperties": {"type": "string"}
+        },
+        "also_wires": {
+          "type": "object",
+          "description": "canonical event -> a second wire event name also wired whenever that canonical event is (windsurf's pre_mcp_tool_use beside pre_run_command). Event wiring, not an entry field, which is why it does not live in entry_extra.",
+          "additionalProperties": {"type": "string", "minLength": 1}
         }
       }
     },
@@ -236,6 +264,18 @@
       ]
     },
     "stringList": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "wordTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {"type": "string", "minLength": 1},
+        "deny": {"type": "string", "minLength": 1},
+        "escalate": {"type": "string", "minLength": 1},
+        "transform": {"type": "string", "minLength": 1},
+        "vouch": {"type": "string", "minLength": 1},
+        "block": {"type": "string", "minLength": 1}
+      }
+    },
     "keyChain": {
       "type": "array",
       "minItems": 1,

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from . import _hook_json
 from ._hook_entry import hook_entry_config, render_config
-from ._hook_json import hj_claims, hj_parse, hj_respond, hj_reverse
+from ._hook_json import hj_respond, hj_reverse
+from ._payload import hj_claims, hj_parse
 from ._windows import powershell_command
 
 

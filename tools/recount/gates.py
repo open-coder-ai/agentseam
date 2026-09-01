@@ -121,6 +121,9 @@ _EXTRA_GATE_NAMES = {
     "cursor": ("beforeShellExecution", "beforeMCPExecution", "beforeReadFile", "beforeTabFileRead"),
     "devin": ("PermissionRequest",),
     "junie": ("PermissionRequest",),
+    # windsurf's REVERSE_EVENT_MAP emits pre_run_command for pre_tool, so D1's fixture
+    # never exercises its second, equally blocking pre_tool wire name.
+    "windsurf": ("pre_mcp_tool_use",),
 }
 
 
@@ -154,7 +157,12 @@ def _gates(agent, mod):
     reverse = getattr(mod, "REVERSE_EVENT_MAP", {})
     gates = {}
     transform_grammar = None
+    empty_object = []
     for canonical_event, entry in sorted(fixture["events"].items()):
+        vendor_name = reverse.get(canonical_event, canonical_event)
+        if all(o == {"stdout": "{}", "exit": 0} for o in entry["outcomes"].values()):
+            empty_object.append(vendor_name)  # a fixed acknowledgement, not a verdict
+            continue
         deny = entry["outcomes"]["deny"]
         ask = entry["outcomes"]["ask"]
         rewrite = entry["outcomes"]["rewrite"]
@@ -163,11 +171,10 @@ def _gates(agent, mod):
             continue  # not a gate: this canonical event never speaks a verdict
         if classified["honours_transform"]:
             transform_grammar = _classify_transform_grammar(rewrite["stdout"])
-        vendor_name = reverse.get(canonical_event, canonical_event)
         gates[vendor_name] = classified
         if canonical_event == "pre_tool":
             gates.update(_extra_gates(agent, canonical_event))
-    return gates, transform_grammar
+    return gates, transform_grammar, empty_object
 
 
 def _vocabulary_basis(agent):
@@ -181,7 +188,7 @@ def _vocabulary_basis(agent):
 def verdicts(agent, mod):
     from .tables import verdict_dialect
 
-    gates, transform_grammar = _gates(agent, mod)
+    gates, transform_grammar, empty_object = _gates(agent, mod)
     out = {
         "vocabulary": sorted(mod.DECISION_VOCABULARY),
         "vocabulary_basis": _vocabulary_basis(agent),
@@ -191,5 +198,7 @@ def verdicts(agent, mod):
     }
     if transform_grammar:
         out["transform_grammar"] = transform_grammar
+    if empty_object:
+        out["empty_object_events"] = sorted(empty_object)
     out.update(verdict_dialect(agent))
     return out

@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from .gates import _load_fixture
 
-_ENTRY_EXTRA = {
-    "windsurf": {"pre_tool_also_wires": "pre_mcp_tool_use"},
-    "codex_cli": {"commandWindows": "powershell wrapper (_windows.py)"},
-    "tabnine": {"name": "agentseam"},
-    "vscode_copilot": {"windows": "powershell wrapper (_windows.py)"},
+_EXTRA = {
+    # Event wiring, not an entry field: pre_mcp_tool_use is wired BESIDE pre_run_command
+    # whenever pre_tool is (windsurf.py:106-107), so it must not be copied into entries.
+    "windsurf": {"also_wires": {"pre_tool": "pre_mcp_tool_use"}},
+    "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
+    "tabnine": {"entry_extra": {"name": "agentseam"}},
+    "vscode_copilot": {"entry_extra": {"windows": "powershell wrapper (_windows.py)"}},
 }
 
 
@@ -33,8 +35,7 @@ def _classify(agent, no_matcher, with_matcher):
         out["bare"] = True
     if group:
         out["group"] = group
-    if agent in _ENTRY_EXTRA:
-        out["entry_extra"] = _ENTRY_EXTRA[agent]
+    out.update(_EXTRA.get(agent, {}))
     return out
 
 

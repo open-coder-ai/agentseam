@@ -144,6 +144,26 @@ def _fields_vscode_copilot(mod):
     }
 
 
+def _fields_cursor(mod):
+    """Bespoke: `content` lives in `_content_of` (cursor.py:101-109) -- a top-level `edits`
+    join before the `tool_input` fallbacks -- and `tool` falls back to the wire event name,
+    which is the cursor family module's job, not a chain's, so the chain stops at
+    `tool_name`."""
+    return {
+        "fields": {
+            "tool": ["tool_name"],
+            "command": ["command", "tool_input.command"],
+            "path": ["file_path", "tool_input.file_path", "tool_input.path"],
+            "content": ["edits[].new_string", "tool_input.content", "tool_input.new_string", "content"],
+            "output": ["tool_output", "output", "result_json"],
+            "prompt": ["prompt"],
+            "session_id": ["conversation_id"],
+            "tool_use_id": ["tool_use_id"],
+            "cwd": ["cwd"],
+        }
+    }
+
+
 def _fields_windsurf(mod):
     """Bespoke: keys live on `tool_info` (local var `info`, windsurf.py:37-56), a root the
     generic walker does not know, and `tool` is built from an if/else, not an `or` chain."""
@@ -176,12 +196,14 @@ def _fields_antigravity(mod):
             "session_id": ["conversationId"],
             "tool_use_id": ["stepIdx"],
             "cwd": ["toolCall.args.Cwd", "workspacePaths[0]"],
+            "stringify": ["tool_use_id"],
         }
     }
 
 
 _OVERRIDE = {
     "vscode_copilot": _fields_vscode_copilot,
+    "cursor": _fields_cursor,
     "windsurf": _fields_windsurf,
     "antigravity": _fields_antigravity,
 }

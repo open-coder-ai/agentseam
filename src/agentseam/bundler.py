@@ -197,6 +197,8 @@ def _engine_bundle(agent):
         body.append(
             section("windows helper (used by the %s hook entries)" % agent, _strip_own_imports(windows_source, hoisted))
         )
+    payload_source = _read(os.path.join(_ADAPTERS_DIR, "_payload.py"))
+    body.append(section("payload engine (claims + parse)", _strip_own_imports(payload_source, hoisted)))
     engine_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_json.py"))
     body.append(section("hook_json family engine", _strip_own_imports(engine_source, hoisted)))
     entry_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_entry.py"))
