@@ -4,7 +4,10 @@ version: 2
 # things to watch are dev tooling and the actions themselves.
 updates:
   - package-ecosystem: pip
-    directory: "/"
+    # Both the declared floors in pyproject.toml and the resolved lockfiles the
+    # workflows install with --require-hashes; a lockfile nothing bumps is a pin
+    # that quietly stops tracking upstream fixes.
+    directories: ["/", "/.github/requirements"]
     schedule:
       interval: weekly
       day: monday
@@ -15,6 +18,10 @@ updates:
       default-days: 7
     open-pull-requests-limit: 5
     labels: [dependencies]
+    groups:
+      # Six lockfiles moving together would otherwise be six PRs a week.
+      ci-tooling:
+        patterns: ["*"]
 
   # Workflow actions run with repository credentials; a stale action version is a
   # larger supply-chain risk here than any library bump.

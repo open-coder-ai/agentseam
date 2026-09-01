@@ -92,7 +92,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install the asset renderer
-        run: pip install "cairosvg==2.9.0"
+        run: pip install --require-hashes -r .github/requirements/assets.txt
       - name: Check the social preview matches the package
         run: cd docs/assets && python gen_brand_assets.py --check
 
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: "3.11"
-      - run: pip install ruff
+      - run: pip install --require-hashes -r .github/requirements/lint.txt
       - run: ruff check .
       - run: ruff format --check .
 
@@ -134,7 +134,11 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev]"
+      - run: pip install --require-hashes -r .github/requirements/dev.txt
+      # --no-deps because dev.txt already carries every dependency, hash-verified;
+      # the package itself declares none. Resolving here would reintroduce an
+      # unverified fetch on top of a verified set.
+      - run: pip install --no-deps -e .
       - run: pytest -q
       - name: CLI smoke
         shell: bash
