@@ -23,11 +23,16 @@ asked for the mechanism instead. Concretely:
 ## Adding an agent adapter
 
 ```
-src/agentseam/adapters/<agent>.py     AGENT, claims(), parse(), respond(),
-                                      hook_config(), CONFIG_PATH
-src/agentseam/matrix.py               one MATRIX row, incl. a `verified` record
-tests/test_adapters.py                fixtures using the vendor's REAL payloads
+src/agentseam/data/vendors/<agent>.json   the vendor entry: family, events, claims,
+                                          fields, verdicts, hook_entry (schema.json beside it)
+src/agentseam/adapters/__init__.py        the agent's name added to _CONFIG_DRIVEN
+src/agentseam/data/matrix.json            one MATRIX row, incl. a `verified` record
+tests/test_adapter_<agent>.py             fixtures using the vendor's REAL payloads
+tests/fixtures/golden/<agent>.json        golden wire fixtures (tools/capture_fixtures.py)
 ```
+
+An agent whose grammar or shape inference no existing family speaks also gets a small
+family module — the config/code line is `docs/design/dialect-families.md` §3.1.
 
 Payload fixtures must come from primary sources — the vendor's own docs, their example
 repo, or a captured live run — and the `verified` record must say which. Shapes invented

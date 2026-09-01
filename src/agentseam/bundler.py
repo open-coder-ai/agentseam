@@ -1,4 +1,4 @@
-"""Hooks, rendered standalone: bundler assembles dispatch + one adapter into one file."""
+"""Hooks, rendered standalone: bundler assembles the engine + one vendor entry into one file."""
 
 from __future__ import annotations
 
@@ -11,12 +11,24 @@ from .bundler_templates import HEADER, RUNTIME, section
 from .contract import EVENTS
 from .matrix import capability
 
-__all__ = ["bundle", "SUPPORTED_AGENTS"]
+__all__ = ["bundle", "bundle_entry", "SUPPORTED_AGENTS"]
 
 _HERE = os.path.dirname(__file__)
 _ADAPTERS_DIR = os.path.join(_HERE, "adapters")
 
 SUPPORTED_AGENTS = tuple(sorted(adapters.ADAPTERS))
+
+#: The one dialect module (dialect-families.md §7: vscode_copilot stays code); its bundle
+#: splices the module itself, every other agent composes an engine + `VENDOR` entry.
+_DIALECT_MODULES = ("vscode_copilot",)
+
+#: Families with their own engine module beside `_payload`/`_hook_json`; the F1/F2
+#: families bind the shared `hj_*` entry points instead.
+_SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity": "_antigravity"}
+
+#: Grammar -> the renderer `hj_respond` routes to it. A bundle carries only the renderers
+#: its entry's gates speak; the reference left behind is unreachable for that entry's data.
+_GRAMMAR_RENDERERS = {"G1": "_g1", "G2": "_g2"}
 
 
 def _read(path):
@@ -28,11 +40,8 @@ def _module_source(name):
     return _read(os.path.join(_HERE, "%s.py" % name))
 
 
-def _adapter_source(agent):
-    path = os.path.join(_ADAPTERS_DIR, "%s.py" % agent)
-    if not os.path.exists(path):
-        raise KeyError("%s: no adapter module to bundle (have: %s)" % (agent, ", ".join(SUPPORTED_AGENTS)))
-    return _read(path)
+def _adapter_module_source(name):
+    return _read(os.path.join(_ADAPTERS_DIR, "%s.py" % name))
 
 
 def _strip_own_imports(source, hoist=None):
@@ -81,22 +90,7 @@ def _render_imports(hoisted):
     return "\n".join(out)
 
 
-def _cross_module_imports(source):
-    """`{module: [names]}` for every `from .<module> import ...` this source makes,"""
-    tree = ast.parse(source)
-    deps = {}
-    for node in tree.body:
-        if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module and node.module != "_windows":
-            deps.setdefault(node.module, []).extend(alias.name for alias in node.names)
-    return deps
-
-
-def _needs_windows_helper(source):
-    tree = ast.parse(source)
-    return any(isinstance(node, ast.ImportFrom) and node.level == 1 and node.module == "_windows" for node in tree.body)
-
-
-def _extract_with_deps(source, names):
+def _extract_with_deps(source, names, skip=()):
     """The top-level defs/assignments named, plus whatever OTHER top-level names their"""
     tree = ast.parse(source)
     owner = {}
@@ -114,7 +108,7 @@ def _extract_with_deps(source, names):
     needed, queue = set(), list(names)
     while queue:
         name = queue.pop()
-        if name in needed or name not in owner:
+        if name in needed or name in skip or name not in owner:
             continue
         needed.add(name)
         for sub in ast.walk(owner[name]):
@@ -154,10 +148,6 @@ def _runtime_section(agent):
     )
 
 
-#: Families with their own engine module beside `_payload`/`_hook_json`; the F1/F2
-#: families bind the shared `hj_*` entry points instead.
-_SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity": "_antigravity"}
-
 _BINDING = """\
 AGENT = "{agent}"
 
@@ -181,37 +171,50 @@ def hook_config(canonical_events, command, matcher=None):
 """
 
 
-def _engine_bundle(agent):
-    """Engine + inlined vendor config (dialect-families.md §4) for a config-driven adapter."""
-    cfg = adapters.get(agent).CONFIG
+def _engine_modules(cfg):
+    """The engine modules this entry's data can reach, in splice order."""
+    modules = []
+    claims_cfg = cfg["claims"]
+    if claims_cfg.get("reject_probes") or claims_cfg.get("reject_markers_unless_probe"):
+        modules.append("_probes")
+    if any(key in ("commandWindows", "windows") for key in cfg["hook_entry"].get("entry_extra", {})):
+        modules.append("_windows")
+    modules += ["_payload", "_hook_json", "_hook_entry"]
+    if cfg["family"] in _SINGLETON_MODULES:
+        modules.append(_SINGLETON_MODULES[cfg["family"]])
+    return modules
+
+
+def _engine_source(cfg, prefix, hoisted):
+    """One family-engine body: the reachable modules, trimmed to what this entry binds."""
+    combined = "\n\n".join(_strip_own_imports(_adapter_module_source(name), hoisted) for name in _engine_modules(cfg))
+    entry_points = ["%s_claims" % prefix, "%s_parse" % prefix, "%s_respond" % prefix, "hook_entry_config"]
+    if cfg["config_format"] == "toml":
+        entry_points.append("render_config")
+    spoken = {gate["grammar"] for gate in cfg["verdicts"]["gates"].values()}
+    skip = tuple(fn for grammar, fn in sorted(_GRAMMAR_RENDERERS.items()) if grammar not in spoken)
+    return _extract_with_deps(combined, entry_points, skip)
+
+
+def bundle_entry(cfg):
+    """Render one vendor config entry as a self-contained, stdlib-only hook file.
+
+    Public so an entry not (yet) registered in `adapters` -- the thirteenth vendor --
+    bundles exactly the way the registered ones do.
+    """
+    agent = cfg["agent"]
+    prefix = cfg["family"] if cfg["family"] in _SINGLETON_MODULES else "hj"
     hoisted = {("json", None), ("sys", None)}
 
     body = []
     body.append(
         section("contract (agentseam %s)" % __version__, _strip_own_imports(_module_source("contract"), hoisted))
     )
-    claims_cfg = cfg["claims"]
-    if claims_cfg.get("reject_probes") or claims_cfg.get("reject_markers_unless_probe"):
-        probes_source = _read(os.path.join(_ADAPTERS_DIR, "_probes.py"))
-        body.append(
-            section("payload probes (cited by the %s config)" % agent, _strip_own_imports(probes_source, hoisted))
+    body.append(
+        section(
+            "%s family engine (trimmed to what this entry uses)" % cfg["family"], _engine_source(cfg, prefix, hoisted)
         )
-    if any(key in ("commandWindows", "windows") for key in cfg["hook_entry"].get("entry_extra", {})):
-        windows_source = _read(os.path.join(_ADAPTERS_DIR, "_windows.py"))
-        body.append(
-            section("windows helper (used by the %s hook entries)" % agent, _strip_own_imports(windows_source, hoisted))
-        )
-    payload_source = _read(os.path.join(_ADAPTERS_DIR, "_payload.py"))
-    body.append(section("payload engine (claims + parse)", _strip_own_imports(payload_source, hoisted)))
-    engine_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_json.py"))
-    body.append(section("hook_json family engine", _strip_own_imports(engine_source, hoisted)))
-    entry_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_entry.py"))
-    body.append(section("hook-entry renderer", _strip_own_imports(entry_source, hoisted)))
-    family = cfg["family"]
-    if family in _SINGLETON_MODULES:
-        family_source = _read(os.path.join(_ADAPTERS_DIR, "%s.py" % _SINGLETON_MODULES[family]))
-        body.append(section("%s family engine" % family, _strip_own_imports(family_source, hoisted)))
-    prefix = family if family in _SINGLETON_MODULES else "hj"
+    )
     body.append(
         section(
             "%s vendor config + engine binding" % agent,
@@ -226,40 +229,33 @@ def _engine_bundle(agent):
     return "\n".join(sections)
 
 
-def bundle(agent):
-    """Render `agent`'s dispatch runtime as one self-contained, stdlib-only Python file."""
-    if agent not in SUPPORTED_AGENTS:
-        raise KeyError("%s: no adapter module to bundle (have: %s)" % (agent, ", ".join(SUPPORTED_AGENTS)))
-
-    if not os.path.exists(os.path.join(_ADAPTERS_DIR, "%s.py" % agent)):
-        return _engine_bundle(agent)
-
-    adapter_source = _adapter_source(agent)
-    cross = _cross_module_imports(adapter_source)
-
+def _dialect_bundle(agent):
+    """Contract + the dialect module itself: the composition for the one module vendor."""
     hoisted = {("json", None), ("sys", None)}
 
     body = []
     body.append(
         section("contract (agentseam %s)" % __version__, _strip_own_imports(_module_source("contract"), hoisted))
     )
-
-    for module, names in sorted(cross.items()):
-        dep_source = _adapter_source(module)
-        body.append(
-            section("from %s (used by the %s adapter)" % (module, agent), _extract_with_deps(dep_source, names))
+    body.append(
+        section(
+            "windows helper (used by the %s adapter)" % agent,
+            _strip_own_imports(_adapter_module_source("_windows"), hoisted),
         )
-
-    if _needs_windows_helper(adapter_source):
-        windows_source = _read(os.path.join(_ADAPTERS_DIR, "_windows.py"))
-        body.append(
-            section("windows helper (used by the %s adapter)" % agent, _strip_own_imports(windows_source, hoisted))
-        )
-
-    body.append(section("%s adapter" % agent, _strip_own_imports(adapter_source, hoisted)))
+    )
+    body.append(section("%s adapter" % agent, _strip_own_imports(_adapter_module_source(agent), hoisted)))
 
     sections = [HEADER.format(version=__version__, agent=agent)]
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
     sections.extend(body)
     sections.append(_runtime_section(agent))
     return "\n".join(sections)
+
+
+def bundle(agent):
+    """Render `agent`'s dispatch runtime as one self-contained, stdlib-only Python file."""
+    if agent not in SUPPORTED_AGENTS:
+        raise KeyError("%s: no adapter to bundle (have: %s)" % (agent, ", ".join(SUPPORTED_AGENTS)))
+    if agent in _DIALECT_MODULES:
+        return _dialect_bundle(agent)
+    return bundle_entry(adapters.get(agent).CONFIG)

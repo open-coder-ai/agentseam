@@ -30,6 +30,29 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   chains (demonstrated, not merely asserted).
 
 ### Changed
+- **The bundler composes engine + entry for every config-driven vendor, trimmed to what
+  the entry uses; the legacy adapter-splice path is deleted**
+  (`docs/design/dialect-families.md` D6). `bundle()` now has exactly two compositions:
+  `bundle_entry(cfg)` (public, so a thirteenth vendor's entry bundles without being
+  registered) renders contract + one family-engine section + the inlined `VENDOR` literal +
+  the runtime, and a dedicated dialect composition for `vscode_copilot` whose output is
+  byte-identical to the legacy splice it replaces. The engine section is trimmed by
+  composition, never by editing engine code: the family's bound entry points plus their
+  transitive dependencies are extracted from the shared modules, minus the grammar
+  renderers no gate of the entry speaks, the TOML emitter unless `config_format` is
+  `toml`, and the probe/windows helpers the entry does not cite. Bundle sizes at the
+  same base: cursor 883→608, windsurf 814→581, antigravity 796→643, F1 members −11–15%,
+  F2 members −14% (`docs/design/dialect-families.md` §7 has the full table). The golden
+  wire fixtures pass **byte-for-byte unchanged**, and the 12-agent bundler subprocess
+  replay passes identically before and after the trim. New tests: every bundle replays
+  the whole golden set (payloads x outcomes, plus both `hook_config` paths) through its
+  own `main()`; every config-driven bundle carries exactly one family-engine section and
+  exactly one `VENDOR` literal; grammar-renderer/TOML/probe presence is derived from the
+  entry; and the §5.4 thirteenth-vendor test adds a synthetic vendor by config alone —
+  schema-validated, bound, wired and bundled with no code. The dead
+  `adapters/_common.py` helper (last user deleted in D3–D5) is removed, and the
+  README/AGENTS.md/CONTRIBUTING "adding an agent" paths now describe the config entry
+  rather than a hand-written module.
 - **The three singleton adapters are folded onto the engine**
   (`docs/design/dialect-families.md` D5). `cursor`, `windsurf` and `antigravity` are no
   longer hand-written modules: each is a small family module (shape-inferred claims and

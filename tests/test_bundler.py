@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import re
 import sys
 from pathlib import Path
 
@@ -80,13 +81,60 @@ def test_bundle_leaves_a_marked_unimplemented_handler_slot(agent):
     assert "NotImplementedError" in src
 
 
-def test_cross_adapter_dependency_is_inlined_where_actually_used():
-    """gemini_cli and devin borrow claude_code's payload-envelope discriminator; their"""
+_CONFIG_DRIVEN = tuple(a for a in bundler.SUPPORTED_AGENTS if a not in bundler._DIALECT_MODULES)
+
+
+def test_the_probe_module_is_inlined_exactly_where_the_entry_cites_it():
+    """The `reject_probes` device rides only in bundles whose config entry names a probe."""
     for agent in ("gemini_cli", "devin"):
         src = bundler.bundle(agent)
         assert "def looks_like_claude_code(raw):" in src
         assert "OBSERVED_MARKERS" in src
         assert 'AGENT = "claude_code"' not in src
+    assert "def looks_like_claude_code(raw):" in bundler.bundle("claude_code")
+    for agent in ("codex_cli", "junie", "cursor"):
+        assert "def looks_like_claude_code(raw):" not in bundler.bundle(agent)
+
+
+@pytest.mark.parametrize("agent", _CONFIG_DRIVEN)
+def test_exactly_one_family_engine_and_one_vendor_literal_per_bundle(agent):
+    """Engine + config splice correctness (dialect-families.md §5): one of each, the right one."""
+    src = bundler.bundle(agent)
+    engines = re.findall(r"^# (\S+) family engine", src, flags=re.MULTILINE)
+    assert engines == [adapters.get(agent).CONFIG["family"]]
+    assert _top_level_names(ast.parse(src)).count("VENDOR") == 1
+    assert 'AGENT = "%s"' % agent in src
+
+
+def test_the_dialect_module_bundle_has_no_engine_and_no_vendor_literal():
+    src = bundler.bundle("vscode_copilot")
+    assert "family engine" not in src
+    assert "VENDOR" not in _top_level_names(ast.parse(src))
+
+
+@pytest.mark.parametrize("agent", _CONFIG_DRIVEN)
+def test_the_engine_is_trimmed_to_what_the_entry_uses(agent):
+    """Presence of every trimmable engine device is derivable from the entry itself."""
+    cfg = adapters.get(agent).CONFIG
+    src = bundler.bundle(agent)
+    spoken = {gate["grammar"] for gate in cfg["verdicts"]["gates"].values()}
+    routes = "def hj_respond(" in src
+    assert ("def _g1(" in src) == (routes and "G1" in spoken)
+    assert ("def _g2(" in src) == (routes and "G2" in spoken)
+    assert ("def render_config(" in src) == (cfg["config_format"] == "toml")
+
+
+def test_the_dialect_renderers_leave_the_engine_respond_side_behind():
+    """cursor (G4) and windsurf (G5) speak their own grammar; antigravity's G1 is the engine's.
+
+    All three claim by shape, so the marker-claims engine never rides with them."""
+    for agent in ("cursor", "windsurf"):
+        src = bundler.bundle(agent)
+        assert "def hj_respond(" not in src
+        assert "def hj_claims(" not in src
+    src = bundler.bundle("antigravity")
+    assert "def hj_respond(" in src
+    assert "def hj_claims(" not in src
 
 
 def test_windows_helper_is_inlined_only_where_the_adapter_actually_needs_it():
