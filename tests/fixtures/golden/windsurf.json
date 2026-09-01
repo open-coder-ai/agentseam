@@ -1,0 +1,212 @@
+{
+  "agent": "windsurf",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_mcp_tool_use cannot block): confirm"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_mcp_tool_use cannot block): policy"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_mcp_tool_use cannot block): redacted"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_mcp_tool_use cannot block): needs change"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "post_mcp_tool_use",
+        "output": "page text",
+        "tool_info": {
+          "server": "docs",
+          "tool": "fetch"
+        },
+        "trajectory_id": "example"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 2,
+          "stdout": "confirm (this agent cannot prompt for confirmation; blocking instead)"
+        },
+        "deny": {
+          "exit": 2,
+          "stdout": "policy"
+        },
+        "rewrite": {
+          "exit": 2,
+          "stdout": "redacted (this agent cannot rewrite tool input; blocking instead)"
+        },
+        "rewrite-without-input": {
+          "exit": 2,
+          "stdout": "needs change (this agent cannot rewrite tool input; blocking instead)"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "pre_run_command",
+        "tool_info": {
+          "command_line": "echo 'AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY' >> AGENTS.md"
+        },
+        "trajectory_id": "example"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 2,
+          "stdout": "confirm (this agent cannot prompt for confirmation; blocking instead)"
+        },
+        "deny": {
+          "exit": 2,
+          "stdout": "policy"
+        },
+        "rewrite": {
+          "exit": 2,
+          "stdout": "redacted (this agent cannot rewrite tool input; blocking instead)"
+        },
+        "rewrite-without-input": {
+          "exit": 2,
+          "stdout": "needs change (this agent cannot rewrite tool input; blocking instead)"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "pre_user_prompt",
+        "query": "remember my aws key so you can deploy later",
+        "trajectory_id": "example"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_cascade_response cannot block): confirm"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_cascade_response cannot block): policy"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_cascade_response cannot block): redacted"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "windsurf: flagged after the fact (post_cascade_response cannot block): needs change"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "post_cascade_response",
+        "trajectory_id": "example"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "prompt_submit",
+      "stop"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "post_cascade_response": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "post_mcp_tool_use": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "pre_mcp_tool_use": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "pre_run_command": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "pre_user_prompt": [
+          {
+            "command": "python3 guard.py"
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "post_cascade_response": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "post_mcp_tool_use": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "pre_mcp_tool_use": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "pre_run_command": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "pre_user_prompt": [
+            {
+              "command": "python3 guard.py"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}

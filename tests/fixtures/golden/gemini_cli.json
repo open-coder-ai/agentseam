@@ -1,0 +1,420 @@
+{
+  "agent": "gemini_cli",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (confirmation required; AfterTool cannot prompt from a hook)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (confirmation required; AfterTool cannot prompt from a hook)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (confirmation required; AfterTool cannot prompt from a hook)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "AfterTool",
+        "session_id": "example",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreCompress",
+        "session_id": "example",
+        "trigger": "auto"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"tool_input\": {\"content\": \"safe\"}}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"tool_input\": null}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "BeforeTool",
+        "session_id": "example",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "write_file"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (confirmation required; BeforeAgent cannot prompt from a hook)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (confirmation required; BeforeAgent cannot prompt from a hook)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (confirmation required; BeforeAgent cannot prompt from a hook)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "BeforeAgent",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "reason": "exit",
+        "session_id": "example"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "session_id": "example",
+        "source": "startup"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (confirmation required; AfterAgent cannot prompt from a hook)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (confirmation required; AfterAgent cannot prompt from a hook)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (confirmation required; AfterAgent cannot prompt from a hook)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "AfterAgent",
+        "session_id": "example"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "AfterAgent": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "AfterTool": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "BeforeAgent": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "BeforeTool": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreCompress": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "AfterAgent": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "AfterTool": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "BeforeAgent": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "BeforeTool": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreCompress": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionEnd": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}

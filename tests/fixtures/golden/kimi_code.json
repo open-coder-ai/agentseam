@@ -1,0 +1,489 @@
+{
+  "agent": "kimi_code",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "PostToolUse",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "PreCompact",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "trigger": "auto"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"confirm (Kimi Code cannot prompt for confirmation)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"redacted (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"needs change (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Write"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"confirm (Kimi Code cannot prompt for confirmation)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"redacted (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"needs change (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example",
+        "session_title": "Fix login"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "reason": "exit",
+        "session_id": "example",
+        "session_title": "Fix login"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "source": "startup"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"confirm (Kimi Code cannot prompt for confirmation)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"redacted (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"needs change (Kimi Code cannot modify a tool call)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "Stop",
+        "session_id": "example",
+        "session_title": "Fix login"
+      }
+    },
+    "subagent_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "SubagentStart",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "subagent_type": "explore"
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "hook_event_name": "SubagentStop",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "subagent_type": "explore"
+      }
+    },
+    "tool_failure": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "client_type": "kimi_code_cli",
+        "cwd": "/repo",
+        "error": "1 test failed",
+        "hook_event_name": "PostToolUseFailure",
+        "session_id": "example",
+        "session_title": "Fix login",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "1 test failed"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop",
+      "subagent_start",
+      "subagent_stop",
+      "tool_failure"
+    ],
+    "no_matcher": [
+      {
+        "command": "python3 guard.py",
+        "event": "PostToolUse"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "PreCompact"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "PreToolUse"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "UserPromptSubmit"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "SessionEnd"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "SessionStart"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "Stop"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "SubagentStart"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "SubagentStop"
+      },
+      {
+        "command": "python3 guard.py",
+        "event": "PostToolUseFailure"
+      }
+    ],
+    "with_matcher": {
+      "config": [
+        {
+          "command": "python3 guard.py",
+          "event": "PostToolUse",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "PreCompact",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "PreToolUse",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "UserPromptSubmit",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "SessionEnd",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "SessionStart",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "Stop",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "SubagentStart",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "SubagentStop",
+          "matcher": "Bash"
+        },
+        {
+          "command": "python3 guard.py",
+          "event": "PostToolUseFailure",
+          "matcher": "Bash"
+        }
+      ],
+      "matcher": "Bash"
+    }
+  }
+}

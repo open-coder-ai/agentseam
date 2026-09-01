@@ -1,0 +1,441 @@
+{
+  "agent": "tabnine",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Tabnine cannot prompt for confirmation)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Tabnine cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Tabnine cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "AfterTool",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreCompress",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z",
+        "trigger": "auto"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Tabnine cannot prompt for confirmation)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Tabnine cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Tabnine cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "BeforeTool",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Write"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Tabnine cannot prompt for confirmation)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Tabnine cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Tabnine cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "BeforeAgent",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "reason": "exit",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "session_id": "example",
+        "source": "startup",
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Tabnine cannot prompt for confirmation)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Tabnine cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Tabnine cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "AfterAgent",
+        "session_id": "example",
+        "timestamp": "2026-08-26T00:00:00.000Z"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "AfterAgent": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "AfterTool": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "BeforeAgent": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "BeforeTool": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreCompress": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "name": "agentseam",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "AfterAgent": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "AfterTool": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "BeforeAgent": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "BeforeTool": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreCompress": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionEnd": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "name": "agentseam",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}

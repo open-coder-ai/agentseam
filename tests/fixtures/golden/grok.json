@@ -1,0 +1,603 @@
+{
+  "agent": "grok",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "PostToolUse",
+        "sessionId": "example",
+        "toolInput": {
+          "command": "npm test"
+        },
+        "toolName": "Bash",
+        "toolOutput": "ok",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "PreCompact",
+        "sessionId": "example",
+        "trigger": "auto",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Grok cannot prompt for confirmation)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Grok cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Grok cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "PreToolUse",
+        "sessionId": "example",
+        "toolInput": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "toolName": "Write",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "UserPromptSubmit",
+        "prompt": "remember my aws key so you can deploy later",
+        "sessionId": "example",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "SessionEnd",
+        "reason": "exit",
+        "sessionId": "example",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "SessionStart",
+        "sessionId": "example",
+        "source": "startup",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "Stop",
+        "sessionId": "example",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "subagent_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "SubagentStart",
+        "sessionId": "example",
+        "subagent_type": "explore",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hookEventName": "SubagentStop",
+        "sessionId": "example",
+        "subagent_type": "explore",
+        "workspaceRoot": "/repo"
+      }
+    },
+    "tool_failure": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "error": "1 test failed",
+        "hookEventName": "PostToolUseFailure",
+        "sessionId": "example",
+        "toolInput": {
+          "command": "npm test"
+        },
+        "toolName": "Bash",
+        "toolOutput": "1 test failed",
+        "workspaceRoot": "/repo"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop",
+      "subagent_start",
+      "subagent_stop",
+      "tool_failure"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "PostToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PostToolUseFailure": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreCompact": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SubagentStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SubagentStop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "PostToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PostToolUseFailure": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreCompact": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionEnd": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "Stop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SubagentStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SubagentStop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "UserPromptSubmit": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}

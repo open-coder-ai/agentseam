@@ -1,0 +1,600 @@
+{
+  "agent": "cursor",
+  "events": {
+    "file_changed": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "file_path": "AGENTS.md",
+        "generation_id": "gen-1",
+        "hook_event_name": "afterFileEdit",
+        "model": "claude-opus-4-7-thinking-max",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUse cannot prevent it): confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUse cannot prevent it): policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUse cannot prevent it): redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUse cannot prevent it): needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "postToolUse",
+        "model": "claude-opus-4-7-thinking-max",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "preCompact",
+        "model": "claude-opus-4-7-thinking-max",
+        "trigger": "auto",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"deny\", \"user_message\": \"confirm (preToolUse cannot prompt for confirmation, so this is a block)\", \"agent_message\": \"confirm (preToolUse cannot prompt for confirmation, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"deny\", \"user_message\": \"policy\", \"agent_message\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"allow\", \"updated_input\": {\"content\": \"safe\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"deny\", \"user_message\": \"needs change (input requires modification, which this gate cannot express)\", \"agent_message\": \"needs change (input requires modification, which this gate cannot express)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"permission\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "preToolUse",
+        "model": "claude-opus-4-7-thinking-max",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Write",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"continue\": true}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"continue\": false, \"user_message\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"continue\": false, \"user_message\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"continue\": false, \"user_message\": \"redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"continue\": false, \"user_message\": \"needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"continue\": true, \"user_message\": \"trusted\"}"
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "beforeSubmitPrompt",
+        "model": "claude-opus-4-7-thinking-max",
+        "prompt": "remember my aws key so you can deploy later",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "sessionEnd",
+        "model": "claude-opus-4-7-thinking-max",
+        "reason": "exit",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "sessionStart",
+        "model": "claude-opus-4-7-thinking-max",
+        "source": "startup",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "stop",
+        "model": "claude-opus-4-7-thinking-max",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "subagent_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "subagentStart",
+        "model": "claude-opus-4-7-thinking-max",
+        "subagent_type": "explore",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "generation_id": "gen-1",
+        "hook_event_name": "subagentStop",
+        "model": "claude-opus-4-7-thinking-max",
+        "subagent_type": "explore",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    },
+    "tool_failure": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUseFailure cannot prevent it): confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUseFailure cannot prevent it): policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUseFailure cannot prevent it): redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"additional_context\": \"observed after the fact (postToolUseFailure cannot prevent it): needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "conversation_id": "example",
+        "cursor_version": "1.7.2",
+        "cwd": "/repo",
+        "error": "1 test failed",
+        "generation_id": "gen-1",
+        "hook_event_name": "postToolUseFailure",
+        "model": "claude-opus-4-7-thinking-max",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "1 test failed",
+        "workspace_roots": [
+          "/repo"
+        ]
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "file_changed",
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop",
+      "subagent_start",
+      "subagent_stop",
+      "tool_failure"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "afterFileEdit": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "beforeSubmitPrompt": [
+          {
+            "command": "python3 guard.py",
+            "failClosed": true
+          }
+        ],
+        "postToolUse": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "postToolUseFailure": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "preCompact": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "preToolUse": [
+          {
+            "command": "python3 guard.py",
+            "failClosed": true
+          }
+        ],
+        "sessionEnd": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "sessionStart": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "stop": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "subagentStart": [
+          {
+            "command": "python3 guard.py"
+          }
+        ],
+        "subagentStop": [
+          {
+            "command": "python3 guard.py"
+          }
+        ]
+      },
+      "version": 1
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "afterFileEdit": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "beforeSubmitPrompt": [
+            {
+              "command": "python3 guard.py",
+              "failClosed": true
+            }
+          ],
+          "postToolUse": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "postToolUseFailure": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "preCompact": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "preToolUse": [
+            {
+              "command": "python3 guard.py",
+              "failClosed": true
+            }
+          ],
+          "sessionEnd": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "sessionStart": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "stop": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "subagentStart": [
+            {
+              "command": "python3 guard.py"
+            }
+          ],
+          "subagentStop": [
+            {
+              "command": "python3 guard.py"
+            }
+          ]
+        },
+        "version": 1
+      },
+      "matcher": "Bash"
+    }
+  }
+}

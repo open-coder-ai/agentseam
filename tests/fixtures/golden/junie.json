@@ -1,0 +1,309 @@
+{
+  "agent": "junie",
+  "events": {
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\", \"updatedInput\": {\"content\": \"safe\"}, \"reason\": \"redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (no replacement input was supplied)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\", \"additionalContext\": \"trusted\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "project_path": "/repo",
+        "session_id": "example",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Write"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\", \"additionalContext\": \"trusted\"}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "UserPromptSubmit",
+        "project_path": "/repo",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "project_path": "/repo",
+        "reason": "exit",
+        "session_id": "example"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "project_path": "/repo",
+        "session_id": "example",
+        "source": "startup"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "Stop",
+        "project_path": "/repo",
+        "session_id": "example"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "PreToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionEnd": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "Stop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "UserPromptSubmit": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}
