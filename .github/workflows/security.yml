@@ -48,7 +48,7 @@ jobs:
       # can write that branch runs code in this job. `go install` resolves through
       # the module proxy and verifies the download against sum.golang.org, so the
       # version below is what actually gets built.
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e  # v7.0.0
         with:
           go-version: "1.25"
       - name: Run actionlint
