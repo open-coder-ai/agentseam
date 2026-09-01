@@ -79,6 +79,12 @@
     "command": [
       "tool_input.command"
     ],
+    "content": [
+      "tool_input.content",
+      "tool_input.new_string",
+      "tool_input.new_str"
+    ],
+    "content_only_for_write_tools": true,
     "cwd": [
       "cwd"
     ],
@@ -124,6 +130,9 @@
       "BeforeTool"
     ],
     "bare_allow": "inert",
+    "degrade_notes": {
+      "escalate": "%s (confirmation required; %s cannot prompt from a hook)"
+    },
     "gates": {
       "AfterAgent": {
         "grammar": "G1",
@@ -146,12 +155,21 @@
         "honours_transform": true
       }
     },
+    "reason_defaults": {
+      "escalate": "policy requires confirmation",
+      "escalate_gate": "confirmation required"
+    },
     "transform_grammar": "hook_specific_tool_input",
     "vocabulary": [
       "allow",
       "ask",
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "allow": "allow",
+      "block": "deny",
+      "escalate": "ask"
+    }
   }
 }

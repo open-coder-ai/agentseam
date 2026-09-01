@@ -52,7 +52,15 @@
         "prompt": {"$ref": "#/$defs/keyChain"},
         "session_id": {"$ref": "#/$defs/keyChain"},
         "cwd": {"$ref": "#/$defs/keyChain"},
-        "tool_use_id": {"$ref": "#/$defs/keyChain"}
+        "tool_use_id": {"$ref": "#/$defs/keyChain"},
+        "tool_input": {
+          "$ref": "#/$defs/keyChain",
+          "description": "ordered payload keys the tool-input envelope itself is read from, present only where it is not `tool_input` (grok's toolInput). Not an Event field."
+        },
+        "content_only_for_write_tools": {
+          "type": "boolean",
+          "description": "read the content chain only when the parsed tool is in tools.write (gemini_cli's write-gated content)."
+        }
       }
     },
     "fields_memory_write": {
@@ -121,7 +129,7 @@
         "degrade_notes": {
           "type": "object",
           "additionalProperties": false,
-          "description": "the degradation-note strings, verbatim from the adapter they replaced so wire output stays byte-identical (dialect-families.md §3.1). `*_gate` keys apply at G2 gates; `escalate_from_transform` wins when the escalate was degraded from a transform.",
+          "description": "the degradation-note strings, verbatim from the adapter they replaced so wire output stays byte-identical (dialect-families.md §3.1). `*_gate` keys apply at G2 gates; `escalate_from_transform` wins when the escalate was degraded from a transform. A note carrying `%s` is a template the engine fills with (the reason or its default, the wire event name) instead of joining it by note_style (gemini_cli's escalate note, dialect-families.md §3.2).",
           "properties": {
             "escalate": {"type": "string", "minLength": 1},
             "escalate_gate": {"type": "string", "minLength": 1},
@@ -145,6 +153,24 @@
         "note_style": {
           "enum": ["suffix", "because"],
           "description": "suffix: default the reason first, then always append \" (note)\"; because: \"reason (note)\" only when both exist, then default an empty result."
+        },
+        "gate_reason_defaults": {
+          "type": "object",
+          "additionalProperties": {"type": "string", "minLength": 1},
+          "description": "vendor wire event name -> reason text spoken for ANY refusal kind at that gate when the handler gave none; wins over reason_defaults (junie's Stop: \"not finished\")."
+        },
+        "allow_context_key": {
+          "type": "string",
+          "minLength": 1,
+          "description": "top-level key a G1 allow body carries context_source's value under, when the decision is a plain allow with one (junie's additionalContext)."
+        },
+        "allow_silent_events": {
+          "$ref": "#/$defs/stringList",
+          "description": "vendor wire event names whose gate answers refusals but keeps every allow silent (junie's Stop)."
+        },
+        "missing_wire": {
+          "enum": ["reverse_map"],
+          "description": "how respond() finds the gate when the payload carries no wire event name and default_wire_event is unset: reverse_map looks the parsed canonical event back up through this entry's canonical->wire mapping (tabnine answers hand-built events)."
         },
         "echo": {
           "enum": ["payload", "reverse_map"],

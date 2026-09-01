@@ -13,9 +13,11 @@ _WINDOWS_KEYS = ("commandWindows", "windows")
 
 def _hook_dict(cfg, command):
     entry = {"type": "command", "command": command}
-    for key in cfg["hook_entry"].get("entry_extra", {}):
+    for key, value in cfg["hook_entry"].get("entry_extra", {}).items():
         if key in _WINDOWS_KEYS:
             entry[key] = powershell_command(command)
+        else:
+            entry[key] = value
     return entry
 
 

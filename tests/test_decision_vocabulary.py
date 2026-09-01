@@ -86,14 +86,6 @@ def test_respond_never_emits_a_word_its_vendor_does_not_accept(agent):
     assert not violations, "decision words no recorded vendor vocabulary accepts:\n  " + "\n  ".join(violations)
 
 
-def test_the_unverified_vocabulary_is_still_only_tabnine():
-    """One vocabulary here rests on nothing recorded: tabnine's. That is a known gap with a"""
-    unverified = {
-        agent for agent in sorted(adapters.ADAPTERS) if "UNVERIFIED" in (Path(adapters.get(agent).__file__).read_text())
-    }
-    assert unverified == {"tabnine"}, unverified
-
-
 @pytest.mark.parametrize("agent", sorted(SCENARIOS))
 def test_respond_speaks_a_verdict_only_where_the_matrix_says_one_is_read(agent):
     """A decision word at a detect-only event is a refusal nobody reads."""

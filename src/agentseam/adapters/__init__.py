@@ -6,27 +6,19 @@ from .._data import load
 from . import (
     antigravity,
     cursor,
-    gemini_cli,
-    grok,
-    junie,
-    tabnine,
     vscode_copilot,
     windsurf,
 )
 from ._family import bind
 
-#: hook_json vendors driven by engine + data/vendors entry (dialect-families.md D3);
+#: hook_json (D3) and flat_decision (D4) vendors driven by engine + data/vendors entry;
 #: vscode_copilot stays a dialect module -- its three-path claims() and memory-tool
 #: branching are beyond what the flat config may carry (§3.1).
-_CONFIG_DRIVEN = ("claude_code", "codex_cli", "devin", "kimi_code")
+_CONFIG_DRIVEN = ("claude_code", "codex_cli", "devin", "gemini_cli", "grok", "junie", "kimi_code", "tabnine")
 
 ADAPTERS = {
     antigravity.AGENT: antigravity,
     cursor.AGENT: cursor,
-    gemini_cli.AGENT: gemini_cli,
-    grok.AGENT: grok,
-    junie.AGENT: junie,
-    tabnine.AGENT: tabnine,
     vscode_copilot.AGENT: vscode_copilot,
     windsurf.AGENT: windsurf,
 }

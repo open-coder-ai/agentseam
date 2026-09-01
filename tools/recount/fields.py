@@ -101,6 +101,9 @@ def _generic_fields(mod):
     """The `fields` chains for the 9 adapters whose `parse()` is `ti.get(...) or ...` chains."""
     assigns, event_kwargs, edits_guarded = _analyze_parse(mod.parse)
     result = {}
+    ti_chain = _resolve_chain(assigns["ti"], assigns) if "ti" in assigns else []
+    if ti_chain and ti_chain != ["tool_input"]:
+        result["tool_input"] = ti_chain
     for name in FIELD_NAMES:
         node = event_kwargs.get(name)
         if node is None:
@@ -189,7 +192,12 @@ def fields(agent, mod):
         # Config-driven adapter: the chains ARE its parse() (the engine executes them), so
         # there is no second source to derive from; behaviour is held by the golden fixtures
         # and the per-adapter suites.
-        out = {"fields": {name: list(chain) for name, chain in mod.CONFIG["fields"].items()}}
+        out = {
+            "fields": {
+                name: list(chain) if isinstance(chain, (list, tuple)) else chain
+                for name, chain in mod.CONFIG["fields"].items()
+            }
+        }
         if "fields_memory_write" in mod.CONFIG:
             out["fields_memory_write"] = {k: list(v) for k, v in mod.CONFIG["fields_memory_write"].items()}
         return out

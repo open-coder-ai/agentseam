@@ -111,6 +111,11 @@
       "BeforeTool"
     ],
     "bare_allow": "unverified",
+    "degrade_notes": {
+      "escalate": "Tabnine cannot prompt for confirmation",
+      "escalate_from_transform": "Tabnine cannot modify a tool call",
+      "transform": "Tabnine cannot modify a tool call"
+    },
     "gates": {
       "AfterAgent": {
         "grammar": "G1",
@@ -133,10 +138,16 @@
         "honours_transform": false
       }
     },
+    "missing_wire": "reverse_map",
+    "note_style": "because",
     "vocabulary": [
       "allow",
       "deny"
     ],
-    "vocabulary_basis": "unverified"
+    "vocabulary_basis": "unverified",
+    "words": {
+      "allow": "allow",
+      "block": "deny"
+    }
   }
 }

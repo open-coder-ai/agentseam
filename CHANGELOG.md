@@ -30,6 +30,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   chains (demonstrated, not merely asserted).
 
 ### Changed
+- **The four `flat_decision` adapters are folded onto the same engine**
+  (`docs/design/dialect-families.md` D4). `gemini_cli`, `tabnine`, `junie` and `grok` are
+  no longer hand-written modules: the D3 engine executes their `data/vendors/<agent>.json`
+  entries, which now carry the G1 renderer data (verdict `words`, `degrade_notes` verbatim
+  from the deleted adapters, `reason_defaults`). The golden wire fixtures pass
+  **byte-for-byte unchanged**. The devices F2 needed are all word/grammar-table
+  extensions, each an opt-in schema field: an escalate word path in the G1 renderer, the
+  `hook_specific_tool_input` (gemini) and `top_level_updated_input` (junie) transform
+  bodies, template degrade notes filling (reason, wire event) slots (gemini's
+  ask-degradation), per-gate reason defaults and allow-silence and allow-body context
+  (junie's Stop/`additionalContext`), a reverse-map fallback for payloads carrying no wire
+  event name (tabnine's hand-built events), a `tool_input` envelope chain (grok's
+  `toolInput`), write-gated content (gemini), and literal hook-entry extras (tabnine's
+  `name`). junie's `PermissionRequest` alias gate is recounted explicitly via
+  `_EXTRA_GATE_NAMES`, same as devin's. `bundle()` now composes engine + inlined `VENDOR`
+  literal for these four too (measured: gemini_cli 690, tabnine 664, junie 664, grok 664
+  lines, from 458/409/429/439 — real numbers in the design doc §7). Two respond()-direct
+  behaviours the events table cannot express did not survive the fold: tabnine no longer
+  answers the undocumented `BeforeModel`/`AfterModel` wire names (they map to no canonical
+  event, and the dispatcher never reached them), and gemini_cli no longer honours a
+  rewrite at gates whose recounted capability is deny-only — both unreachable through
+  `handle()`, so the wire through the dispatcher is unchanged.
+  `test_the_unverified_vocabulary_is_still_only_tabnine` is retired exactly as §5's table
+  prescribed; its intent lives on as
+  `test_vendor_config.py::test_vocabulary_basis_is_unverified_only_for_tabnine`, a config
+  derivation instead of a source grep.
 - **Four `hook_json` adapters are now one engine plus their vendor config entries**
   (`docs/design/dialect-families.md` D3). `claude_code`, `codex_cli`, `kimi_code` and
   `devin` are no longer hand-written modules: `adapters/_hook_json.py` (marker claims,
