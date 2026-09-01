@@ -1,0 +1,115 @@
+{
+  "agent": "windsurf",
+  "claims": {
+    "mode": "shape_inferred"
+  },
+  "config_format": "json",
+  "config_path": ".windsurf/hooks.json",
+  "display": "Windsurf (Cascade)",
+  "events": {
+    "post_cascade_response": "stop",
+    "post_mcp_tool_use": "post_tool",
+    "pre_mcp_tool_use": "pre_tool",
+    "pre_run_command": "pre_tool",
+    "pre_user_prompt": "prompt_submit"
+  },
+  "evidence": {
+    "claims": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+    },
+    "config_path": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+    },
+    "events": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
+    },
+    "family": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    },
+    "fields": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "hook_entry": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "tools": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "verdicts": {
+      "basis": "third-party-install",
+      "date": "2026-08-26",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    }
+  },
+  "family": "windsurf",
+  "fields": {
+    "command": [
+      "tool_info.command_line"
+    ],
+    "cwd": [
+      "cwd"
+    ],
+    "output": [
+      "output",
+      "result"
+    ],
+    "path": [
+      "path",
+      "tool_info.path"
+    ],
+    "prompt": [
+      "query",
+      "prompt"
+    ],
+    "session_id": [
+      "trajectory_id"
+    ]
+  },
+  "hook_entry": {
+    "entry_extra": {
+      "pre_tool_also_wires": "pre_mcp_tool_use"
+    },
+    "matcher": false,
+    "wrapper": "flat_entries"
+  },
+  "needs_trust": false,
+  "tools": {},
+  "verdicts": {
+    "answer_events": [
+      "pre_run_command",
+      "pre_user_prompt"
+    ],
+    "bare_allow": "silent",
+    "gates": {
+      "pre_run_command": {
+        "grammar": "G5",
+        "honours_escalate": false,
+        "honours_transform": false
+      },
+      "pre_user_prompt": {
+        "grammar": "G5",
+        "honours_escalate": false,
+        "honours_transform": false
+      }
+    },
+    "vocabulary": [],
+    "vocabulary_basis": "verified"
+  },
+  "wire_events": {
+    "pre_tool": "pre_run_command"
+  }
+}

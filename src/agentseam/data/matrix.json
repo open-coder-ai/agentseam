@@ -158,7 +158,7 @@
   "kimi_code": {
     "display": "Kimi Code CLI",
     "tier": "block",
-    "config": "config.toml",
+    "config": "~/.kimi-code/config.toml",
     "verified": {
       "basis": "vendor-docs",
       "version": "CLI",

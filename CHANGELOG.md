@@ -6,6 +6,29 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **The vendor config schema and all 12 entries** (`docs/design/dialect-families.md` D2):
+  `src/agentseam/data/vendors/schema.json` and one `data/vendors/<agent>.json` per adapted
+  agent, unused by the runtime yet (D3+ wires an engine onto this data). Every entry is
+  produced by `tools/recount_vendor_config.py`, which derives each field by executing or
+  AST-reading the current adapter and its D1 golden fixture rather than by hand -- module
+  constants read directly, `parse()`'s field-fallback chains AST-walked, and every gate's
+  grammar/`honours_escalate`/`honours_transform` replayed straight out of the frozen (payload ->
+  stdout) wire truth. Family assignment and the marker-based `claims` table are the design's
+  own stated judgment calls, recorded as small tables and pinned by
+  `tests/test_vendor_config_claims.py`, which mutates a real claimed payload per declared
+  marker and replays `claims()`. Per-claim evidence (owner decision 2026-09-01,
+  `plan/agentseam-project.md` in org-plan) gives every claim group a `basis` (from
+  `matrix_terms.BASES`), `date`, and the test that exercises it; schema validation fails a
+  claim with none. `tools/validate_vendor_config.py` is a small stdlib-only JSON Schema
+  subset validator (no third-party dependency) run as a test, not a runtime cost.
+  `tests/test_vendor_config.py` adds the §3.3 consistency tests (config gates are a subset
+  of the matrix's block-capable events; `config_path` agrees with the matrix) and answers
+  both [h] hypotheses the design carried into D2: the `reject_probes` device stays at one
+  named predicate (`looks_like_claude_code`, used by two vendors) against the ~3-probe
+  budget, and PR #89's tuple-restoring loader is order-safe for `fields`' order-sensitive
+  chains (demonstrated, not merely asserted).
+
 ### Changed
 - **The `Decision` vocabulary is aligned to the Agent Control Standard's verdict names**
   (`plan/acs-alignment-and-delegation.md` §1 in the org-plan repo). `ASK` is renamed to
@@ -47,6 +70,11 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **`pyproject.toml`'s `version` was unchecked against `agentseam.__version__`.** Only
   `CITATION.cff` was verified to track the package; a wheel could ship with the two
   disagreeing. `test_repo_standards.py` now checks both.
+- **`matrix.json`'s `kimi_code` row named the wrong config file (`config.toml`, missing
+  the `~/.kimi-code/` directory `kimi_code.py`'s own `CONFIG_PATH` has always used).** Found
+  while implementing D2's `config_path` agrees with the matrix consistency test.
+  `data/vendors/*.json` was not shipped as package data; `pyproject.toml`'s
+  `package-data` now also matches `data/vendors/*.json`.
 
 ### Internal
 - `claude_code`, `gemini_cli`, `grok`, and `junie` shared an identical `hook_config` body;

@@ -105,7 +105,7 @@ Consequences, applied to today's code:
 | :--- | :--- |
 | The five grammar renderers G1–G5 | which grammar each event group uses, and the word tables filling it |
 | Ordered-fallback field extraction machinery, `tool_input_of` (`contract.py:139-150`) | the per-vendor key chains (e.g. path = `file_path→absolute_path→path` `gemini_cli.py:79`; content gated to write tools `gemini_cli.py:71-73`; output = `last_assistant_message` `junie.py:65`) |
-| `degrade()` semantics (`dispatch.py:26-38`) and its generated-runtime twin (`bundler_templates.py:26-40`) | per-gate capability flags (`honours_ask`, `honours_rewrite`, `honours_block`) and the degradation-note strings, verbatim from today's adapters so wire output stays byte-identical |
+| `degrade()` semantics (`dispatch.py:26-38`) and its generated-runtime twin (`bundler_templates.py:26-40`) | per-gate capability flags (`honours_escalate`, `honours_transform`, `honours_block`) and the degradation-note strings, verbatim from today's adapters so wire output stays byte-identical |
 | Shape-inference `claims`/event-naming for cursor, windsurf, antigravity (`cursor.py:96-98`, `windsurf.py:27-32`, `antigravity.py:25-31`) | marker-based `claims`: required markers, foreign markers, client_type allowlists (`junie.py:45-48`, `tabnine.py:52-55`, `gemini_cli.py:57-64`, `codex_cli.py:43-52`) |
 | vscode_copilot's memory-tool argument scheme (`vscode_copilot.py:77-83,103-107`) | `MEMORY_TOOLS` / `WRITE_TOOLS` / `SHELL_TOOLS` name lists |
 | kimi's TOML emitter (`kimi_code.py:155-164`) — one renderer, selected by `config_format` | `config_path`, `config_format`, hook-entry wrapper style and extra entry fields (`commandWindows` `codex_cli.py:137`, `name` `tabnine.py:113`, `failClosed`+`version` `cursor.py:225-228`, group nesting `antigravity.py:117-127`, no-wrapper `devin.py:121-132`, extra `pre_mcp_tool_use` wiring `windsurf.py:106-107`) |
@@ -152,13 +152,13 @@ Consequences, applied to today's code:
     "bare_allow": "inert",                    // allow_semantics.py:70-77 key, cross-checked
     "answer_events": ["BeforeTool", "AfterTool", "BeforeAgent", "AfterAgent"],
     "gates": {                                // gemini_cli.py:104-121
-      "BeforeTool": { "grammar": "G1", "honours_ask": true,  "honours_rewrite": true },
-      "AfterTool":  { "grammar": "G1", "honours_ask": false },
-      "BeforeAgent":{ "grammar": "G1", "honours_ask": false },
-      "AfterAgent": { "grammar": "G1", "honours_ask": false }
+      "BeforeTool": { "grammar": "G1", "honours_escalate": true,  "honours_transform": true },
+      "AfterTool":  { "grammar": "G1", "honours_escalate": false },
+      "BeforeAgent":{ "grammar": "G1", "honours_escalate": false },
+      "AfterAgent": { "grammar": "G1", "honours_escalate": false }
     },
     "words": { "allow": "allow", "deny": "deny", "ask": "ask", "block": "deny" },
-    "rewrite_grammar": "hook_specific_tool_input",   // gemini_cli.py:119-120
+    "transform_grammar": "hook_specific_tool_input",   // gemini_cli.py:119-120
     "degrade_notes": {                        // verbatim today's strings, gemini_cli.py:109-117
       "ask_unhonoured": "%s (confirmation required; %s cannot prompt from a hook)"
     }
@@ -167,7 +167,15 @@ Consequences, applied to today's code:
 }
 ```
 
-Where the degradation lives (the brief's codex question): `honours_ask: false` on the
+Field names above (`honours_escalate`, `honours_transform`, `transform_grammar`) follow the
+post-W35 ACS vocabulary (`contract.py`: `escalate`/`transform`), not the pre-ACS `ask`/
+`rewrite` this section was drafted with at W31, before ACS alignment was sequenced ahead of
+D2 (org-plan `plan/agentseam-project.md`: "D2 schema (written in ACS words)"). Vendor
+wire-word *data* is untouched by that rename: `vocabulary`/`words` above are correct as
+written, because that is the literal word gemini_cli's own dialect speaks on the wire, not
+agentseam's name for the concept.
+
+Where the degradation lives (the brief's codex question): `honours_escalate: false` on the
 gate + the vendor's note string. codex_cli's ask→deny with *"Codex CLI does not support
 ask; asking would fail open"* (`codex_cli.py:121-124`) is a flag plus a string — no
 conditional survives in config. The engine's degrade step already exists twice
@@ -269,7 +277,7 @@ instructions/capture suites (untouched paths).
 **Must be written:**
 
 1. Config schema validation: every `data/vendors/*.json` validates; unknown keys are
-   an error (a typo'd `honours_ask` must fail loud, not fail open).
+   an error (a typo'd `honours_escalate` must fail loud, not fail open).
 2. Config completeness: every `ADAPTERS` name is config-backed; every config gate maps
    to a matrix block-capable event; `config_path`/`bare_allow` agree with
    `MATRIX`/`ALLOW_SEMANTICS`.
@@ -307,12 +315,19 @@ first, D3/D4 swap cleanly — they share only D1+D2.
 
 - **[h]** Bundle size estimates in §4 are composition arithmetic, not measurements;
   D3 should publish real numbers next to them.
-- **[h]** The `reject_probes: ["looks_like_claude_code"]` device (named engine
+- **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn
-  wrong, and the design should be revisited rather than the list grown.
+  wrong, and the design should be revisited rather than the list grown. **Answered by D2**:
+  exactly one named probe (`looks_like_claude_code`), used by `gemini_cli` and `devin` --
+  well inside the budget (`tests/test_vendor_config.py::
+  test_reject_probes_stay_under_the_three_probe_budget`). The design stands as written.
 - **[h]** vscode_copilot's dual-casing may be cleaner as two config entries sharing a
   family than one entry with paired key chains; decide in D3 with the fixtures open.
-- **[h]** PR #89's loader restores every JSON array as a tuple; `fields` chains here
-  are order-sensitive lists and unaffected, but D2 must confirm the loader's
-  tuple-restore doesn't collide with schema types.
+- **[v]** (was [h]) PR #89's loader restores every JSON array as a tuple; `fields` chains
+  here are order-sensitive lists and unaffected, but D2 must confirm the loader's
+  tuple-restore doesn't collide with schema types. **Answered by D2**: a tuple preserves
+  the exact sequence its JSON array was written in, so the restore is order-safe; nothing
+  in `vendor_config.py` or its tests ever compares one of these tuples against a list
+  literal with `==` (`tests/test_vendor_config.py::
+  test_loader_tuple_restore_preserves_field_chain_order`).

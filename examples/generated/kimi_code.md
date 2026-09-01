@@ -21,7 +21,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | enforcement at `pre_tool` | **best-effort** |
 | can block / transform | yes / no |
 | hooks covered | 10 |
-| hook config | `config.toml` |
+| hook config | `~/.kimi-code/config.toml` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (event table, return values, config fields) |
 
 Twenty events, of which exactly three block: PreToolUse, UserPromptSubmit and Stop. The rest are documented as fire-and-forget, so a decision returned there changes nothing. Accepts Claude Code's hookSpecificOutput.permissionDecision shape, and exit 2 blocks too -- but the JSON form carries the reason back into the model's context. No rewrite. Config is TOML ([[hooks]] in config.toml, four fields only; a fifth makes the whole file fail to load), so installation appends a marker-delimited block rather than rewriting the user's settings. Fails OPEN, and the vendor says outright that hooks here are not a sole security barrier. Only client_type separates its payloads from Claude Code's.

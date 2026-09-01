@@ -1,0 +1,167 @@
+{
+  "agent": "claude_code",
+  "claims": {
+    "client_types": [
+      null,
+      "claude_code"
+    ],
+    "event_key": [
+      "hook_event_name"
+    ],
+    "mode": "marker",
+    "notes": "prompt_id is rejected only when looks_like_claude_code(raw) is also false (claude_code.py:79-80); a real Claude Code payload may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27).",
+    "reject_markers": [
+      "turn_id",
+      "project_path",
+      "timestamp"
+    ],
+    "reject_probes": [
+      "looks_like_claude_code"
+    ]
+  },
+  "config_format": "json",
+  "config_path": ".claude/settings.json",
+  "display": "Claude Code",
+  "events": {
+    "FileChanged": "file_changed",
+    "InstructionsLoaded": "instructions_loaded",
+    "PostToolUse": "post_tool",
+    "PostToolUseFailure": "tool_failure",
+    "PreCompact": "pre_compact",
+    "PreToolUse": "pre_tool",
+    "SessionEnd": "session_end",
+    "SessionStart": "session_start",
+    "Stop": "stop",
+    "SubagentStart": "subagent_start",
+    "SubagentStop": "subagent_stop",
+    "UserPromptSubmit": "prompt_submit"
+  },
+  "evidence": {
+    "claims": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+    },
+    "config_path": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+    },
+    "events": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
+    },
+    "family": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    },
+    "fields": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "hook_entry": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "tools": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "verdicts": {
+      "basis": "live-run",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    }
+  },
+  "family": "hook_json",
+  "fields": {
+    "command": [
+      "tool_input.command"
+    ],
+    "content": [
+      "tool_input.content",
+      "tool_input.new_string",
+      "tool_input.new_source",
+      "content",
+      "tool_input.edits[].new_string"
+    ],
+    "cwd": [
+      "cwd"
+    ],
+    "output": [
+      "tool_output"
+    ],
+    "path": [
+      "tool_input.file_path",
+      "tool_input.path",
+      "tool_input.notebook_path",
+      "file_path"
+    ],
+    "prompt": [
+      "prompt"
+    ],
+    "session_id": [
+      "session_id"
+    ],
+    "tool": [
+      "tool_name"
+    ],
+    "tool_use_id": [
+      "tool_use_id"
+    ]
+  },
+  "hook_entry": {
+    "matcher": true,
+    "wrapper": "hooks_map"
+  },
+  "needs_trust": false,
+  "tools": {
+    "shell": [
+      "Bash"
+    ],
+    "write": [
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "NotebookEdit"
+    ]
+  },
+  "verdicts": {
+    "answer_events": [
+      "PreToolUse",
+      "Stop",
+      "UserPromptSubmit"
+    ],
+    "bare_allow": "silent",
+    "gates": {
+      "PreToolUse": {
+        "grammar": "G2",
+        "honours_escalate": true,
+        "honours_transform": true
+      },
+      "Stop": {
+        "grammar": "G1",
+        "honours_escalate": false,
+        "honours_transform": false
+      },
+      "UserPromptSubmit": {
+        "grammar": "G1",
+        "honours_escalate": false,
+        "honours_transform": false
+      }
+    },
+    "transform_grammar": "hook_specific_updated_input",
+    "vocabulary": [
+      "allow",
+      "ask",
+      "block",
+      "deny"
+    ],
+    "vocabulary_basis": "verified"
+  }
+}

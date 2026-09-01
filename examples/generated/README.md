@@ -23,7 +23,7 @@ without notice. Verify against your own installation before relying on any of it
 | [Gemini CLI](gemini_cli.md) | 7 | best-effort | yes | yes | `vendor-source` | `.gemini/settings.json` |
 | [Grok CLI](grok.md) | 10 | best-effort | yes | no | `vendor-docs` | `.grok/hooks/agentseam.json` |
 | [Junie CLI](junie.md) | 5 | best-effort | yes | yes | `vendor-docs` | `~/.junie/config.json` |
-| [Kimi Code CLI](kimi_code.md) | 10 | best-effort | yes | no | `vendor-docs` | `config.toml` |
+| [Kimi Code CLI](kimi_code.md) | 10 | best-effort | yes | no | `vendor-docs` | `~/.kimi-code/config.toml` |
 | [Tabnine CLI](tabnine.md) | 7 | best-effort | yes | no | `vendor-docs` | `.tabnine/agent/settings.json` |
 | [GitHub Copilot (VS Code agent mode / CLI)](vscode_copilot.md) | 7 | best-effort | yes | yes | `live-run-partial` | `.github/hooks/*.json` |
 | [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.windsurf/hooks.json` |
