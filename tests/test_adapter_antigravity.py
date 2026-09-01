@@ -91,7 +91,7 @@ def test_stop_names_why_ask_or_rewrite_became_continue():
 def test_invocation_events_are_unmapped_because_they_are_indistinguishable():
     """PreInvocation and PostInvocation carry identical fields, so nothing could tell them"""
     mod = A.adapters.get("antigravity")
-    assert mod._infer_event(AG_INVOCATION) is None
+    assert mod.parse(AG_INVOCATION).event == A.UNKNOWN
     assert set(mod.REVERSE_EVENT_MAP) == {A.PRE_TOOL, A.POST_TOOL, A.STOP}
 
 

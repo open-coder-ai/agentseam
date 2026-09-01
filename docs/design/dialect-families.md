@@ -332,6 +332,23 @@ first, D3/D4 swap cleanly — they share only D1+D2.
   (escalate word path, two transform-body variants, template notes, per-gate reason
   defaults, allow-body context/silence, a reverse-map wire fallback, a tool-input
   envelope chain, write-gated content, literal hook-entry extras).
+- **[v]** D5's singleton numbers, measured at its base (main `38023f4`, where the pre-fold
+  bundles stood at cursor 524 / windsurf 424 / antigravity 442): cursor 883, windsurf 814,
+  antigravity 796 — +69% to +92%, the steepest growth of the three folds and far above §4's
+  "singletons roughly unchanged" estimate. The composition explains it: a singleton's legacy
+  bundle spliced only its own small module, while an engine bundle inlines the whole shared
+  engine (accessor, G1/G2 renderers, hook-entry wrappers) plus the family module plus the
+  `VENDOR` literal — the same trade D3/D4 made, and D6 owns any trimming. The source-tree
+  payoff held a third time: the three deleted modules were 472 lines, replaced by three
+  family modules of 219 (cursor's G4 renderer and shape claims, windsurf's G5 exit-code
+  renderer, antigravity's 3-line shape functions over the engine's G1) — everything
+  word-shaped moved into the entries as opt-in schema keys (`words_at` per-gate overrides,
+  `empty_object_events`, `flag_note`/`flag_note_default`, `stringify`, `also_wires`, a
+  generic dotted-path accessor with `[0]`/top-level `[].` forms, and a block reroute for an
+  escalate degraded from a transform where the entry names that degradation). The
+  config/code line held without a new named probe: shape inference stays the three family
+  modules' code, exactly as §3.3 drew it, and windsurf's two-key pre_tool fan-out folded as
+  `hook_entry.also_wires` (wiring data) rather than an `entry_extra` entry field.
 - **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn

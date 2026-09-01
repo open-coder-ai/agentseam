@@ -3,25 +3,27 @@
 from __future__ import annotations
 
 from .._data import load
-from . import (
-    antigravity,
-    cursor,
-    vscode_copilot,
-    windsurf,
-)
+from . import vscode_copilot
 from ._family import bind
 
-#: hook_json (D3) and flat_decision (D4) vendors driven by engine + data/vendors entry;
+#: Every vendor but one is a family engine (D3-D5) bound to its data/vendors entry;
 #: vscode_copilot stays a dialect module -- its three-path claims() and memory-tool
 #: branching are beyond what the flat config may carry (§3.1).
-_CONFIG_DRIVEN = ("claude_code", "codex_cli", "devin", "gemini_cli", "grok", "junie", "kimi_code", "tabnine")
+_CONFIG_DRIVEN = (
+    "antigravity",
+    "claude_code",
+    "codex_cli",
+    "cursor",
+    "devin",
+    "gemini_cli",
+    "grok",
+    "junie",
+    "kimi_code",
+    "tabnine",
+    "windsurf",
+)
 
-ADAPTERS = {
-    antigravity.AGENT: antigravity,
-    cursor.AGENT: cursor,
-    vscode_copilot.AGENT: vscode_copilot,
-    windsurf.AGENT: windsurf,
-}
+ADAPTERS = {vscode_copilot.AGENT: vscode_copilot}
 ADAPTERS.update({agent: bind(load("vendors/%s.json" % agent)) for agent in _CONFIG_DRIVEN})
 
 
