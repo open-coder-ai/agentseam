@@ -24,12 +24,7 @@ def test_no_hook_agents_claim_nothing():
 
 
 def test_cursor_pre_tool_is_enforceable_neither_enforced_nor_merely_best_effort():
-    """Cursor blocks and fails OPEN by default, but failClosed:true makes it fail closed.
-
-    "best-effort" would understate a surface a user can make airtight; "enforced" would
-    claim a default that is not there. What a consumer may claim depends on how the hook
-    was installed, and `enforceable` is the word for that.
-    """
+    """Cursor blocks and fails OPEN by default, but failClosed:true makes it fail closed."""
     assert A.can_block("cursor", A.PRE_TOOL)
     assert A.enforcement_level("cursor", A.PRE_TOOL) == "enforceable"
 
@@ -41,30 +36,20 @@ def test_devin_pre_tool_is_best_effort():
 
 def test_cursor_file_writes_are_gated_before_the_write_and_observed_after():
     """Two different Cursor events, two different honest answers about the same file."""
-    # preToolUse fires for every tool, so a write can still be stopped.
     assert A.can_block("cursor", A.PRE_TOOL) and A.can_rewrite("cursor", A.PRE_TOOL)
-    # afterFileEdit lands after the write and supports no output fields at all.
     assert A.enforcement_level("cursor", A.FILE_CHANGED) == "detect"
     assert not A.can_block("cursor", A.FILE_CHANGED)
 
 
 def test_full_tier_agents_can_block_and_rewrite():
-    """block+rewrite is a capability claim, not a fail-mode one -- both hold regardless of
-    whether a crashed hook fails open or closed. vscode_copilot's fail mode moved to open
-    in 2026-08; these two claims must not have moved with it."""
+    """block+rewrite is a capability claim, not a fail-mode one -- both hold regardless of"""
     for agent in ("claude_code", "vscode_copilot"):
         assert A.can_block(agent, A.PRE_TOOL)
         assert A.can_rewrite(agent, A.PRE_TOOL)
 
 
 def test_no_agent_is_rated_enforced_because_none_has_been_shown_to_fail_closed():
-    """`enforced` requires FAIL_CLOSED. vscode_copilot was the only row claiming it, and
-    the vendor's source removed it: hookExecutor treats exit 2 as a blocking error and any
-    other non-zero exit as a NonBlockingError, which becomes a warning the call proceeds
-    past -- a guard that crashes, times out or is missing does not block. So the matrix now
-    tops out at best-effort: a claim about this project's evidence, not about the agents.
-    Pinned so restoring FAIL_CLOSED anywhere comes with the observation justifying it.
-    """
+    """`enforced` requires FAIL_CLOSED. vscode_copilot was the only row claiming it, and"""
     assert not [
         (agent, event)
         for agent, row in A.MATRIX.items()
@@ -74,21 +59,13 @@ def test_no_agent_is_rated_enforced_because_none_has_been_shown_to_fail_closed()
 
 
 def test_claude_code_pre_tool_is_best_effort_not_enforced():
-    """pre_tool and prompt_submit rested on FAIL_CLOSED -- 'enforced', the strongest claim
-    in the whole vocabulary -- with no basis anywhere in this project: not the docstring,
-    not the note, not the evidence record, not the CHANGELOG. Every other agent's fail-mode
-    claim is justified in its note; this was the one unsupported exception. Downgraded to
-    the honest default (FAIL_OPEN) pending a live observation that would justify closing it
-    back up -- the same rule antigravity's row already follows ('the weaker claim is
-    recorded rather than a guess in our own favour')."""
+    """pre_tool and prompt_submit rested on FAIL_CLOSED -- 'enforced', the strongest claim"""
     assert A.enforcement_level("claude_code", A.PRE_TOOL) == "best-effort"
     assert A.enforcement_level("claude_code", A.PROMPT_SUBMIT) == "best-effort"
 
 
 def test_claude_code_pre_compact_is_detect_only():
-    """block=True at pre_compact had no basis either -- the hooks reference at the time
-    this adapter was written suggests PreCompact's exit 2 writes to stderr without blocking
-    anything. Downgraded to detect rather than claim a gate that may not exist."""
+    """block=True at pre_compact had no basis either -- the hooks reference at the time"""
     assert A.enforcement_level("claude_code", A.PRE_COMPACT) == "detect"
     assert not A.can_block("claude_code", A.PRE_COMPACT)
 
@@ -102,48 +79,26 @@ def test_rewrite_degrades_to_ask_where_unsupported():
 
 
 def test_unadapted_is_distinct_from_no_surface():
-    """Two different facts that must not be collapsed.
-
-    `none` says the AGENT exposes nothing to hook. `unadapted` says WE have no adapter.
-    Collapsing them would either slander an agent or overstate our coverage; a user
-    reading the matrix needs to know which of the two they are looking at.
-    """
+    """Two different facts that must not be collapsed."""
     from agentseam.matrix import TIER_NONE, TIER_UNADAPTED
 
     assert A.MATRIX["zed"]["tier"] == TIER_NONE
     assert A.MATRIX["replit"]["tier"] == TIER_UNADAPTED
-    # Both mean "cannot gate here", so the enforcement answer is the same...
     assert A.enforcement_level("zed", A.PRE_TOOL) == "none"
     assert A.enforcement_level("replit", A.PRE_TOOL) == "none"
-    # ...but the reason differs, and the notes say so.
     assert "no user hooks" in A.MATRIX["zed"]["notes"].lower()
     assert "no hook surface found" in A.MATRIX["replit"]["notes"].lower()
 
 
 def test_the_codex_note_does_not_claim_a_field_the_code_deliberately_ignores():
-    """codex_cli.claims()'s own docstring: 'model used to count as a third marker and no
-    longer does -- Cursor's base hook schema sends model on every event too'. The note is a
-    source of truth by project policy; a maintainer trusting a stale note that still lists
-    `model` as a bare discriminator could re-add it to claims() and make every Cursor
-    payload ambiguous again -- the exact regression the docstring was written to prevent."""
+    """codex_cli.claims()'s own docstring: 'model used to count as a third marker and no"""
     note = A.MATRIX["codex_cli"]["notes"]
     assert "turn_id" in note and "permission_mode" in note
     assert "cannot discriminate" in note or "cursor also sends" in note.lower()
 
 
 def test_an_unadapted_row_is_a_placeholder_that_can_turn_out_wrong():
-    """Every inherited row that has since been checked had MORE surface than it claimed --
-    Devin's said "no pre-tool-use surface" and was false, Kimi's was false in all three of
-    its clauses. This names every row still at this tier, for two different reasons.
-
-    Replit's docs were searched and no hook surface was found -- a checked answer, basis
-    vendor-docs -- but a hosted agent's absence can never be fully confirmed, so it stays
-    UNADAPTED rather than promoting to TIER_NONE the way aider and zed did.
-
-    copilot is not an inherited placeholder: it is PACKAGING's identity for the Agent
-    Plugins 1.0 marketplace bundle, deliberately unadapted -- an adapter here would claim
-    every payload vscode_copilot's already claims and break dispatch for both.
-    """
+    """Every inherited row that has since been checked had MORE surface than it claimed --"""
     from agentseam.matrix import TIER_UNADAPTED
     from agentseam.matrix_gaps import GAPS
 
@@ -175,13 +130,7 @@ def test_unadapted_agents_still_have_instruction_files():
 
 @pytest.mark.parametrize("agent", sorted(A.adapters.ADAPTERS))
 def test_every_event_the_matrix_claims_can_actually_be_wired(agent):
-    """A matrix row claiming an event its adapter cannot install is a claim with no mechanism.
-
-    Claude Code's row claimed `file_changed` and `instructions_loaded` for a long time while
-    its adapter had no name for either, so `install` for them wrote nothing and said nothing.
-    Both events are real -- FileChanged and InstructionsLoaded -- so the fix was the mapping,
-    not a narrower claim. This test is what makes the next one impossible to miss.
-    """
+    """A matrix row claiming an event its adapter cannot install is a claim with no mechanism."""
     claimed = set(A.MATRIX[agent]["events"])
     wireable = set(A.adapters.get(agent).REVERSE_EVENT_MAP)
     assert claimed <= wireable, "cannot wire: %s" % sorted(claimed - wireable)
@@ -202,47 +151,30 @@ def test_install_refuses_an_event_it_cannot_wire(tmp_path):
     with pytest.raises(ValueError) as exc:
         install_mod.install("windsurf", ["pre_tool", "subagent_start"], "guard.py", str(tmp_path))
     assert "subagent_start" in str(exc.value)
-    # And it names what *is* possible, so the error is actionable.
     assert "pre_tool" in str(exc.value)
 
 
 @pytest.mark.parametrize("agent", sorted(A.MATRIX))
 def test_every_row_says_what_kind_of_evidence_it_rests_on(agent):
-    """`method` says what was read; `basis` says what kind of thing it was.
-
-    An adopter needs the second to know how much weight a row carries, and free text is not
-    something you can filter on. The vocabulary is closed so a new row cannot invent a
-    reassuring-sounding basis of its own.
-    """
+    """`method` says what was read; `basis` says what kind of thing it was."""
     from agentseam.matrix import BASES
 
     assert A.MATRIX[agent]["verified"]["basis"] in BASES
 
 
 def test_only_rows_actually_observed_claim_a_live_run():
-    """The honest shape of this project's evidence, stated rather than implied.
-
-    Most rows are read from vendor documentation. That is a claim about what a vendor says,
-    not an observation of what their build does, and this test exists so the distinction
-    cannot quietly erode into everything looking equally verified.
-    """
+    """The honest shape of this project's evidence, stated rather than implied."""
     from agentseam.matrix import BASIS_INHERITED, BASIS_LIVE, basis
 
     live = sorted(a for a in A.MATRIX if basis(a) == BASIS_LIVE)
     assert live == ["claude_code"]
-    # And the weakest basis is confined to rows with no adapter, where it cannot mislead
-    # anyone into trusting a capability claim.
     for agent in A.MATRIX:
         if basis(agent) == BASIS_INHERITED:
             assert agent not in A.adapters.ADAPTERS, agent
 
 
 def test_a_partial_live_run_says_which_events_it_actually_saw():
-    """The whole point of the term: `basis` says what KIND of evidence, `observed` how far.
-
-    A partial row without an observed list would be strictly worse than `vendor-docs` -- it
-    would advertise a live run and then decline to say of what.
-    """
+    """The whole point of the term: `basis` says what KIND of evidence, `observed` how far."""
     from agentseam.matrix import BASIS_LIVE_PARTIAL, basis, observed
 
     partial = [a for a in A.MATRIX if basis(a) == BASIS_LIVE_PARTIAL]
@@ -252,11 +184,7 @@ def test_a_partial_live_run_says_which_events_it_actually_saw():
 
 
 def test_an_observed_event_is_one_the_row_actually_claims():
-    """You cannot observe an event this row does not assert exists.
-
-    Catches the copy-paste that would let an `observed` list drift into advertising a
-    capability the matrix never claimed -- claim inflation by a side door.
-    """
+    """You cannot observe an event this row does not assert exists."""
     from agentseam.matrix import observed
 
     for agent in A.MATRIX:
@@ -266,11 +194,7 @@ def test_an_observed_event_is_one_the_row_actually_claims():
 
 
 def test_a_partial_live_run_is_not_a_live_run():
-    """`live-run` must keep meaning "observed everywhere this row claims".
-
-    If a partial row could also answer to `live-run`, a consumer filtering for observed rows
-    would get back exactly the rows the new term exists to distinguish.
-    """
+    """`live-run` must keep meaning "observed everywhere this row claims"."""
     from agentseam.matrix import BASIS_LIVE, BASIS_LIVE_PARTIAL, basis, observed
 
     for agent in A.MATRIX:
@@ -284,11 +208,7 @@ def test_a_partial_live_run_is_not_a_live_run():
 
 
 def test_every_basis_has_a_caveat_a_reader_can_understand():
-    """A vocabulary term with no prose behind it is a label, not an explanation.
-
-    The generated pages look the caveat up with no default, so a new basis fails the build
-    rather than emitting a page whose provenance line silently went missing.
-    """
+    """A vocabulary term with no prose behind it is a label, not an explanation."""
     import sys
     from pathlib import Path
 

@@ -59,16 +59,10 @@ def test_every_agent_with_a_surface_can_be_wired(tmp_path):
 
 
 def test_the_marker_never_lands_on_a_top_level_container(tmp_path):
-    """Codex CLI < 0.143.0 rejects its whole hooks file over one unexpected top-level key
-    (openai/codex#30397: "unknown field `_agentseam`, expected `description` or `hooks`",
-    witnessed live installing here 2026-08-27) -- silently dropping every hook, not just
-    ours. The marker must only ever land on a list item (a leaf command entry, or a
-    matcher/hooks group wrapping one), never on the container object every adapter's
-    hook_config() returns.
-    """
+    """Codex CLI < 0.143.0 rejects its whole hooks file over one unexpected top-level key"""
     for agent in sorted(adapters.ADAPTERS):
         if getattr(adapters.get(agent), "CONFIG_FORMAT", "json") == "toml":
-            continue  # TOML configs use the marker-delimited block instead, not this path
+            continue
         path = Path(I.install(agent, ["pre_tool"], "handler", str(tmp_path / agent)))
         body = json.loads(path.read_text())
         assert I.MARKER not in body, agent
@@ -88,16 +82,12 @@ def test_codex_cli_install_round_trips_without_a_top_level_marker(tmp_path):
 
 
 def test_devin_install_round_trips_in_its_wrapperless_file(tmp_path):
-    """`.devin/hooks.v1.json` holds the hooks object as the whole file, with no wrapper key.
-
-    The installer is format-agnostic by design, so this is the test that proves it rather
-    than a special case in the code.
-    """
+    """`.devin/hooks.v1.json` holds the hooks object as the whole file, with no wrapper key."""
     root = str(tmp_path)
     path = Path(I.install("devin", ["pre_tool"], "guard.py", repo_root=root))
     assert path.name == "hooks.v1.json"
     body = json.loads(path.read_text())
-    assert "PreToolUse" in body and "hooks" not in body  # the object IS the file
+    assert "PreToolUse" in body and "hooks" not in body
     assert I.installed("devin", root)
 
     assert I.uninstall("devin", root) is True
@@ -129,13 +119,7 @@ def test_cursor_install_writes_the_generic_gate_with_fail_closed(tmp_path):
 
 
 def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkeypatch):
-    """`~/...` means the user's home, not a directory literally named `~` in the repo.
-
-    `_resolve` joined every CONFIG_PATH onto repo_root, so Junie's user-scoped path became
-    `./~/.junie/config.json` -- a real file, written where no agent will ever read it. At
-    capture time that is indistinguishable from a vendor whose hooks do not fire, which is
-    the worst way to be wrong: it reads as evidence against the vendor.
-    """
+    """`~/...` means the user's home, not a directory literally named `~` in the repo."""
     monkeypatch.setenv("HOME", str(tmp_path))
     written = I.install("junie", ["pre_tool"], "guard.py", str(tmp_path))
 
@@ -145,32 +129,22 @@ def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkey
 
 
 def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
-    """The data-loss bug: _load returned {} on any parse failure, so install merged its
-    fragment into an empty object and wrote that back -- wiping the user's whole config.
-
-    For Junie, config.json IS the CLI configuration, so a stray byte cost everything. A
-    UTF-8 BOM (Windows editors add one) is the common trigger and is not corruption, so it
-    must be tolerated; genuine corruption must stop install, never overwrite.
-    """
+    """The data-loss bug: _load returned {} on any parse failure, so install merged its"""
     monkeypatch.setenv("HOME", str(tmp_path))
     cfg = tmp_path / ".junie" / "config.json"
     cfg.parent.mkdir()
 
-    # A BOM-prefixed real config: tolerated, preserved, and wired.
     cfg.write_bytes(b"\xef\xbb\xbf" + json.dumps({"theme": "dark", "customModel": "keep-me"}).encode())
     I.install("junie", ["pre_tool"], "guard.py")
     after = json.loads(cfg.read_text())
     assert after["customModel"] == "keep-me" and after["theme"] == "dark", "user settings were destroyed"
     assert "hooks" in after, "the hook was not wired"
 
-    # Genuine corruption: install refuses rather than clobbering.
     cfg.write_text("{ this is not json ,,, }")
     with pytest.raises(I.ConfigUnreadable):
         I.install("junie", ["pre_tool"], "guard.py")
     assert cfg.read_text() == "{ this is not json ,,, }", "a config we could not parse was overwritten"
 
-    # An undecodable encoding (UTF-16) is unreadable, not corruption-in-JSON, but must take
-    # the same preserve-and-report path rather than crashing with a raw UnicodeDecodeError.
     cfg.write_bytes(json.dumps({"keep": "me"}).encode("utf-16"))
     with pytest.raises(I.ConfigUnreadable):
         I.install("junie", ["pre_tool"], "guard.py")
@@ -178,8 +152,7 @@ def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
 
 
 def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
-    """installed() is a read-only question; a corrupt file means "not known to be there",
-    not a crash. uninstall() is where an unreadable file must stop instead."""
+    """installed() is a read-only question; a corrupt file means "not known to be there","""
     monkeypatch.setenv("HOME", str(tmp_path))
     cfg = tmp_path / ".junie" / "config.json"
     cfg.parent.mkdir()
@@ -192,9 +165,7 @@ def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
 
 
 def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatch):
-    """The TOML branch of installed() must uphold the same "never raises" contract as the
-    JSON branch: a config that exists but is not UTF-8 (a UTF-16 file, a stray byte) means
-    "not known to be there", not a crash. It read the file with no guard before."""
+    """The TOML branch of installed() must uphold the same "never raises" contract as the"""
     monkeypatch.setenv("HOME", str(tmp_path))
     cfg = tmp_path / ".kimi-code" / "config.toml"
     cfg.parent.mkdir()
@@ -205,15 +176,7 @@ def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatc
 
 
 def test_uninstalling_one_owner_leaves_another_owners_mark_intact(tmp_path):
-    """Ownership is the only thing that makes uninstall surgical, so erasing someone else's
-    mark is not cosmetic -- it strands their entries in the user's real settings file with
-    nothing left to identify them.
-
-    `_strip_owned` dropped MARKER from every dict regardless of owner, so a second
-    `install(..., owner="b")` silently un-owned everything "a" had written, and afterwards
-    NEITHER could be uninstalled. Permanent pollution, from the one operation whose whole
-    purpose is to be reversible.
-    """
+    """Ownership is the only thing that makes uninstall surgical, so erasing someone else's"""
     from agentseam import install as install_mod
 
     install_mod.install("cursor", ["pre_tool"], "guard-A", repo_root=str(tmp_path), owner="team-a")
@@ -230,14 +193,7 @@ def test_uninstalling_one_owner_leaves_another_owners_mark_intact(tmp_path):
 
 
 def test_an_observer_is_not_wired_as_a_fail_closed_gate(tmp_path):
-    """The capture probe always allows. Wired as a gate on Cursor it inherits
-    failClosed:true, so a probe that cannot launch -- moved repo, wrong interpreter --
-    BLOCKS the user's real command. Verification that costs someone a broken session is
-    not worth running, so `install(fail_closed=False)` says observer explicitly.
-
-    Guards keep the default. This does not weaken a real gate; it stops a recorder from
-    pretending to be one.
-    """
+    """The capture probe always allows. Wired as a gate on Cursor it inherits"""
     from agentseam import install as install_mod
 
     install_mod.install("cursor", ["pre_tool"], "probe", repo_root=str(tmp_path), fail_closed=False)
@@ -250,18 +206,7 @@ def test_an_observer_is_not_wired_as_a_fail_closed_gate(tmp_path):
 
 
 def test_the_witness_asks_about_ownership_not_about_a_substring(tmp_path):
-    """`installed()` used to be `owner in json.dumps(config)` -- a substring test over the
-    whole serialised file, which answers a different question than the one it was asked.
-
-    Two ways it lied, both real:
-
-    * Antigravity's config group is literally named "agentseam", the default owner. After
-      `uninstall` the leftover empty group kept the witness True forever, so `installed()`
-      reported a guard that was gone.
-    * `agentseam-capture` CONTAINS `agentseam`, so asking whether the default owner had a
-      guard installed answered True when only the capture probe was wired. This repo's own
-      capture test asserted that, which is how long a prefix collision can hide.
-    """
+    """`installed()` used to be `owner in json.dumps(config)` -- a substring test over the"""
     from agentseam import install as install_mod
 
     install_mod.install("antigravity", ["pre_tool"], "g", repo_root=str(tmp_path))

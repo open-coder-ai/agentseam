@@ -60,16 +60,13 @@ def test_rewrite_blocks_rather_than_passing_input_through():
 
 
 def test_mcp_events_expose_the_tool_identity_not_the_vendor_event_name():
-    """A cross-agent handler written as `event.tool in RISKY_TOOLS` (works on
-    claude_code/devin) must also match Windsurf's MCP calls, not just see the constant
-    vendor event name on every one of them."""
+    """A cross-agent handler written as `event.tool in RISKY_TOOLS` (works on"""
     ev = A.adapters.get("windsurf").parse(WS_POST_MCP)
     assert ev.tool == "docs/fetch"
 
 
 def test_pre_mcp_tool_use_still_blocks_after_losing_its_place_in_event_tool():
-    """Blocking must not silently break once event.tool stops doubling as the vendor
-    event name for MCP events."""
+    """Blocking must not silently break once event.tool stops doubling as the vendor"""
     pre_mcp = {
         "hook_event_name": "pre_mcp_tool_use",
         "trajectory_id": "traj-4",
@@ -81,17 +78,14 @@ def test_pre_mcp_tool_use_still_blocks_after_losing_its_place_in_event_tool():
 
 
 def test_install_wires_both_pre_tool_gates_not_just_the_shell_one():
-    """pre_mcp_tool_use is a documented BLOCKING gate mapped to PRE_TOOL, same as
-    pre_run_command -- an install for pre_tool must wire both or half the vendor's own
-    pre-surface runs unhooked."""
+    """pre_mcp_tool_use is a documented BLOCKING gate mapped to PRE_TOOL, same as"""
     mod = A.adapters.get("windsurf")
     rules = mod.hook_config([A.PRE_TOOL], "guard.py")["hooks"]
     assert "pre_run_command" in rules and "pre_mcp_tool_use" in rules
 
 
 def test_matrix_records_that_no_file_write_event_exists():
-    """The absence is the point: a memory-file write is invisible to a Windsurf hook,
-    so nothing downstream may claim to gate one on this agent."""
+    """The absence is the point: a memory-file write is invisible to a Windsurf hook,"""
     row = A.MATRIX["windsurf"]
     assert A.FILE_CHANGED not in row["events"]
     assert "NO file-write event" in row["notes"]

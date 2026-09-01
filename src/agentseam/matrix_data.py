@@ -1,7 +1,4 @@
-"""Per-agent capability data. Declaring what an agent can do is a different activity
-from answering questions about it, so the table lives here and the queries live in
-`matrix.py`. Import from `agentseam.matrix` (or the package root) rather than from here.
-"""
+"""Per-agent capability data. Declaring what an agent can do is a different activity"""
 
 from __future__ import annotations
 
@@ -57,8 +54,6 @@ MATRIX = {
         "config": ".cursor/hooks.json",
         "verified": EVIDENCE["cursor"],
         "events": {
-            # preToolUse is generic -- it fires for every tool, not just shell -- and its
-            # response carries updated_input, so this is a real block-and-rewrite gate.
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_CONFIGURABLE),
             POST_TOOL: _cap(),
             TOOL_FAILURE: _cap(),
@@ -69,7 +64,6 @@ MATRIX = {
             SUBAGENT_STOP: _cap(),
             STOP: _cap(),
             PRE_COMPACT: _cap(),
-            # afterFileEdit lands after the write and supports no output fields at all.
             FILE_CHANGED: _cap(),
         },
         "notes": NOTES["cursor"],
@@ -126,31 +120,16 @@ MATRIX = {
     "vscode_copilot": {
         "display": "GitHub Copilot (VS Code agent mode / CLI)",
         "tier": TIER_FULL,
-        "config": ".github/hooks/*.json",  # also ~/.copilot/hooks/*.json for the CLI
+        "config": ".github/hooks/*.json",
         "verified": EVIDENCE["vscode_copilot"],
         "events": {
-            # FAIL_CLOSED here was the strongest claim in the vocabulary and had no basis.
-            # hookExecutor's own contract: exit 0 succeeds, exit 2 is a blocking error, and
-            # "other non-zero exit codes" are NonBlockingError -- which _toHookResult turns
-            # into a warning and processHookResults lets through. A crashed or missing
-            # guard warns the user and the tool call proceeds. That is fail-open.
             PRE_TOOL: _cap(block=True, rewrite=True, fail=FAIL_OPEN),
-            # Not observation-only: IPostToolUseHookResult carries {decision: 'block',
-            # reason} and executePostToolUseHook reads a top-level `decision` from stdout.
             POST_TOOL: _cap(block=True, fail=FAIL_OPEN),
-            # UserPromptSubmitHookOutput.decision === 'block' throws HookAbortError, which
-            # stops the prompt reaching the model.
             PROMPT_SUBMIT: _cap(block=True, fail=FAIL_OPEN),
-            # ignoreErrors: true at both start events -- even exit 2 is swallowed there.
             SESSION_START: _cap(),
             SUBAGENT_START: _cap(),
-            # StopHookOutput / SubagentStopHookOutput both take a nested decision: 'block',
-            # which makes the loop continue instead of stopping.
             STOP: _cap(block=True, fail=FAIL_OPEN),
             SUBAGENT_STOP: _cap(block=True, fail=FAIL_OPEN),
-            # TOOL_FAILURE and SESSION_END are gone. `postToolUseFailure` is in neither
-            # vendor's name map, so it never existed; `sessionEnd` is a Copilot CLI name VS
-            # Code does not fire and cannot be installed for from this adapter's config.
         },
         "notes": NOTES["vscode_copilot"],
     },
@@ -250,9 +229,6 @@ MATRIX = {
 }
 
 
-# The gap rows are maintained in their own module but belong to one table: a consumer
-# asking about a known agent should get its row, not a KeyError that reads as though the
-# agent were unheard of.
 from .matrix_gaps import GAPS  # noqa: E402  (below MATRIX so the import resolves)
 
 MATRIX.update(GAPS)

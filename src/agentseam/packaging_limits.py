@@ -1,18 +1,9 @@
-"""Primitive 3 data, split out of packaging_data.py to keep both under the line budget.
-
-Three tables that are all "the honest gap," not "the format," which is why they live apart
-from PACKAGING itself: why a specific agent cannot hold a specific part, which folders an
-agent reads that belong to another agent, and which matrix agents have no packaging format
-recorded here at all.
-"""
+"""Primitive 3 data, split out of packaging_data.py to keep both under the line budget."""
 
 from __future__ import annotations
 
 from .packaging_data import COMMAND, EXECUTABLE, HOOKS, MCP, SHARED_SKILL_DIR, SKILL, SUBAGENT
 
-#: Why a specific agent cannot hold a specific part. Without these the generic message
-#: ("this format has no place for it") would understate Gemini, which supports MCP servers
-#: perfectly well -- just in the manifest rather than in a file of its own.
 PART_LIMITS = {
     ("codex_cli", MCP): "MCP servers are declared inside .codex-plugin/plugin.json under "
     "`mcp_servers`, not in a file of their own",
@@ -39,8 +30,6 @@ PART_LIMITS = {
     "failure mode PART_LIMITS already records for codex_cli",
 }
 
-#: Folders an agent reads that belong to *another* agent. This is the interop surface:
-#: a repository that ships .claude/skills is already shipping skills to VS Code.
 ALSO_READS = {
     "vscode_copilot": {
         SKILL: (SHARED_SKILL_DIR, ".claude/skills", "~/.agents/skills", "~/.copilot/skills", "~/.claude/skills"),
@@ -49,16 +38,6 @@ ALSO_READS = {
     },
 }
 
-#: Every agent the matrix knows that has no packaging format recorded here, and why.
-#:
-#: Exhaustive on purpose, and enforced by a test: recorded plus unrecorded must equal the
-#: matrix exactly. A missing agent reads as "nothing to package here" when the truth is
-#: "nobody looked", and that is the one thing this module must never say by accident.
-#:
-#: Several of these are *not* blanks. Where a vendor's own hook documentation proves that
-#: skills or subagents exist -- a SubagentStop event, a define_subagent tool, a loader that
-#: mentions skills -- that is recorded, because "we could not find the layout" and "there is
-#: no such thing" are different answers and only one of them is true.
 UNRECORDED = {
     "aider": "no packaging format established here",
     "antigravity": "subagents provably exist -- define_subagent and invoke_subagent are tools it "

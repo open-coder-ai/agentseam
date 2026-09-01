@@ -1,18 +1,4 @@
-"""Agents we do not hook, and why -- kept apart from the rows we actively maintain.
-
-Two different states live here, and collapsing them would be a lie in one direction or the
-other:
-
-  * `TIER_NONE` is a claim about the **agent**: it exposes no hook surface at all.
-  * `TIER_UNADAPTED` is a claim about **us**: the agent may well expose one, we just have
-    no adapter for it. Instruction files still reach these agents; only tool-call gating
-    is missing.
-
-The second kind is a placeholder, and placeholders go stale in a way verified claims do
-not -- Cursor and Devin both sat here until their vendor documentation turned up, and one
-of these rows asserted Devin had "no pre-tool-use surface" when it has had one all along.
-Keeping them in a separate file is a reminder that they are inherited, not established.
-"""
+"""Agents we do not hook, and why -- kept apart from the rows we actively maintain."""
 
 from __future__ import annotations
 
@@ -22,12 +8,6 @@ from .matrix_terms import TIER_NONE, TIER_UNADAPTED
 
 GAPS = {
     "copilot": {
-        # Not "no surface" (TIER_NONE would say that, and it would be false -- see
-        # EVIDENCE/NOTES) and not "nobody built the adapter yet" in the usual TIER_UNADAPTED
-        # sense either: an adapter under this name would collide with vscode_copilot's, which
-        # already dispatches this exact wire dialect. This row exists so
-        # packaging_data.PACKAGING's "copilot" identity (the Agent Plugins 1.0 marketplace
-        # bundle) has a matrix row at all, per test_packaging's completeness invariant.
         "display": "GitHub Copilot (Agent Plugins 1.0 marketplace bundle)",
         "tier": TIER_UNADAPTED,
         "config": None,

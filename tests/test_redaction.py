@@ -1,14 +1,4 @@
-"""Redaction: keys and types survive, values do not.
-
-Split from the probe tests because reducing a payload to its shape is a different activity
-from running a hook inside somebody else's agent -- and because the combined file hit the
-300-line review budget, where the remedy is splitting by activity rather than raising the
-number.
-
-The strong claim is asserted rather than inspected: no string from the input may appear in
-the output, checked against the real redact() over a payload full of things that must not
-travel.
-"""
+"""Redaction: keys and types survive, values do not."""
 
 from __future__ import annotations
 
@@ -22,9 +12,6 @@ sys.path.insert(0, str(ROOT / "tools"))
 
 import pytest  # noqa: E402
 from redact import STRUCTURAL_KEYS, keys_of, redact  # noqa: E402
-
-# Paths use /workspace/alice deliberately: the repository's own privacy scanner rejects a tracked
-# file containing a realistic home directory, and it was right to reject the first version of
 
 SENSITIVE = {
     "hook_event_name": "PreToolUse",
@@ -68,10 +55,7 @@ def test_the_protocol_enums_do_survive():
 
 
 def test_a_long_mcp_tool_name_survives_but_long_prose_in_the_same_key_does_not():
-    """mcp__<server>__<tool> routinely exceeds the general 48-char enum cap, so a capture
-    session gating MCP calls lost WHICH tool fired -- exactly the surface several matrix
-    rows most need verified. Tool-name-shaped keys get a longer cap, but the key is still
-    checked for separators/length so actual prose in the same key still falls back."""
+    """mcp__<server>__<tool> routinely exceeds the general 48-char enum cap, so a capture"""
     long_tool = "mcp__github__list_repository_collaborators_and_members_extended"
     assert len(long_tool) > 48
     out = redact({"tool_name": long_tool})
@@ -82,9 +66,7 @@ def test_a_long_mcp_tool_name_survives_but_long_prose_in_the_same_key_does_not()
 
 
 def test_a_structural_key_carrying_prose_is_still_redacted():
-    """The allowlist is by key AND by shape, so a vendor reusing a name for something
-    richer cannot smuggle content through it.
-    """
+    """The allowlist is by key AND by shape, so a vendor reusing a name for something"""
     out = redact({"tool_name": "/workspace/alice/secret/path/with/separators"})
     assert out["tool_name"].startswith("<str:")
 
@@ -110,13 +92,7 @@ def test_redaction_never_raises_on_anything_a_vendor_might_send(value):
 
 
 def test_a_json_encoded_string_is_unwrapped_to_its_shape():
-    """A vendor may send a sub-payload as a string. VS Code Copilot does.
-
-    Witnessed live 2026-08-29: `Edit` sends `tool_input` as a JSON *string* while `Read`
-    and `Glob` send objects. Recorded as an opaque `<str:129>`, the capture loses exactly
-    what it exists to learn -- which keys the write tool carries -- and the report reads
-    like the field held an id.
-    """
+    """A vendor may send a sub-payload as a string. VS Code Copilot does."""
     shaped = redact({"tool_name": "Edit", "tool_input": '{"path":"/r/README.md","new_string":"x"}'})
     assert shaped["tool_name"] == "Edit"
     inner = shaped["tool_input"]["<json-string>"]
@@ -126,12 +102,7 @@ def test_a_json_encoded_string_is_unwrapped_to_its_shape():
 
 
 def test_unwrapping_never_loosens_redaction():
-    """Every leaf inside an embedded payload goes through the same allowlist.
-
-    The risk of unwrapping is that it becomes a hole: content that would have been shaped
-    as `<str:N>` at the top level travelling verbatim because it sat inside a string. It
-    does not -- a secret in an embedded field is redacted by the identical rules.
-    """
+    """Every leaf inside an embedded payload goes through the same allowlist."""
     secret = "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG"
     shaped = redact({"tool_input": '{"new_string": "%s"}' % secret})
     assert secret not in json.dumps(shaped)
@@ -139,11 +110,7 @@ def test_unwrapping_never_loosens_redaction():
 
 
 def test_a_string_that_is_not_json_stays_a_string():
-    """Only dicts and lists are unwrapped.
-
-    A bare JSON scalar is still a value: `json.loads` would turn a user's typed `true`
-    into a bool and claim a structure that is not there.
-    """
+    """Only dicts and lists are unwrapped."""
     assert redact({"cwd": "/srv/checkout/notes"}) == {"cwd": "<str:19>"}
     assert redact({"x": "42"}) == {"x": "<str:2>"}
     assert redact({"y": "true"}) == {"y": "<str:4>"}

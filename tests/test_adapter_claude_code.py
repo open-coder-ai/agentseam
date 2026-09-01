@@ -37,12 +37,7 @@ def test_claude_deny_dialect():
 
 
 def test_claude_allow_and_rewrite():
-    """A bare allow is SILENCE. It used to emit permissionDecision:"allow", which is a
-    different statement: the vendor documents that exit 0 with no output "continues through
-    the normal permission flow", while an explicit allow is undocumented there and proven in
-    VS Code's source to auto-approve. A policy that simply did not match -- every tool call
-    it had no opinion on -- was disabling the user's own confirmation prompts.
-    """
+    """A bare allow is SILENCE. It used to emit permissionDecision:"allow", which is a"""
     assert A.handle(CC_WRITE, allow_all)[0] == ""
     text, _, _, _ = A.handle(CC_WRITE, lambda e: Decision.rewrite({"file_path": "CLAUDE.md", "content": "redacted"}))
     out = json.loads(text)["hookSpecificOutput"]
@@ -50,14 +45,7 @@ def test_claude_allow_and_rewrite():
 
 
 def test_a_real_modern_payload_is_claimed_by_this_adapter():
-    """The bug this fixture exists for: 38 of 42 real payloads went to the wrong adapter.
-
-    `prompt_id` was treated as proof a payload was Devin's, not Claude Code's. Claude Code
-    now sends it on nearly every event, so `claims()` rejected its own traffic -- and
-    because Devin claimed exactly those payloads, detect() returned "devin" with no
-    ambiguity at all. A deny then rendered as {"decision": "block"}, which Claude Code does
-    not read: the gate was silently open on the one agent whose row says `live-run`.
-    """
+    """The bug this fixture exists for: 38 of 42 real payloads went to the wrong adapter."""
     from payloads import CC_LIVE_PRE_TOOL, CC_LIVE_SUBAGENT_START
 
     for payload in (CC_LIVE_PRE_TOOL, CC_LIVE_SUBAGENT_START):
@@ -67,11 +55,7 @@ def test_a_real_modern_payload_is_claimed_by_this_adapter():
 
 
 def test_prompt_id_alone_no_longer_decides_between_claude_code_and_devin():
-    """A negative discriminator -- "vendor X lacks field F" -- breaks the day X adds F.
-
-    That is exactly how this broke, so the rule is pinned: the same event name with the same
-    prompt_id resolves by what is *alongside* it, not by the field's presence.
-    """
+    """A negative discriminator -- "vendor X lacks field F" -- breaks the day X adds F."""
     from payloads import DV_PRE_TOOL
 
     devin_shaped = dict(DV_PRE_TOOL)
@@ -82,10 +66,7 @@ def test_prompt_id_alone_no_longer_decides_between_claude_code_and_devin():
 
 
 def test_notebookedit_cell_content_reaches_a_content_policy():
-    """NotebookEdit is in WRITE_TOOLS, so the adapter claims to handle it -- but its cell
-    body arrives as `new_source`, which parse() did not read, so a content policy saw None.
-    Claiming to gate a write while dropping the write is an internal contradiction, not a
-    vendor guess: MultiEdit (edits[].new_string) and the rest were already read."""
+    """NotebookEdit is in WRITE_TOOLS, so the adapter claims to handle it -- but its cell"""
     ev = A.adapters.get("claude_code").parse(
         {
             "hook_event_name": "PreToolUse",
@@ -99,9 +80,7 @@ def test_notebookedit_cell_content_reaches_a_content_policy():
 
 
 def test_instructionsloaded_and_filechanged_read_top_level_fields():
-    """These two events carry no tool_input at all -- file_path (and, for InstructionsLoaded,
-    content) sit at the top level instead, per the project's own recorded example payloads.
-    parse() only ever read from tool_input, so both events lost path (and content) entirely."""
+    """These two events carry no tool_input at all -- file_path (and, for InstructionsLoaded,"""
     ev = A.adapters.get("claude_code").parse(
         {
             "hook_event_name": "InstructionsLoaded",
@@ -116,8 +95,6 @@ def test_instructionsloaded_and_filechanged_read_top_level_fields():
     assert ev.path == "AGENTS.md"
 
 
-#: A real Claude Code prompt_submit payload. transcript_path is one of the fields
-#: OBSERVED_MARKERS records as Claude Code's, so this resolves without ambiguity.
 CC_PROMPT_SUBMIT = {
     "hook_event_name": "UserPromptSubmit",
     "session_id": "s1",
@@ -135,16 +112,7 @@ CC_STOP = {
 
 
 def test_prompt_submit_blocks_with_a_top_level_decision_not_the_pretooluse_gate():
-    """Settled by live experiment against Claude Code 2.1.247 (2026-08-28), because the
-    documentation could not settle it -- two reads of the vendor page disagreed, and one of
-    them said these events had no JSON decision control at all.
-
-    Wiring one candidate shape per trial and watching the AGENT (not the hook) gave:
-    {"decision": "block"} honoured, hookSpecificOutput IGNORED, exit 2 honoured. The trial
-    prompt asked the agent to write a marker file; under hookSpecificOutput the file
-    appeared, which is the prompt reaching the model -- so every prompt_submit deny this
-    library produced on its most-used adapter was silently discarded.
-    """
+    """Settled by live experiment against Claude Code 2.1.247 (2026-08-28), because the"""
     text, code, event, _ = A.handle(CC_PROMPT_SUBMIT, deny_all)
     assert event.event == A.PROMPT_SUBMIT
     assert json.loads(text) == {"decision": "block", "reason": "test-deny"}
@@ -153,11 +121,7 @@ def test_prompt_submit_blocks_with_a_top_level_decision_not_the_pretooluse_gate(
 
 
 def test_stop_blocks_with_the_same_top_level_decision():
-    """Same experiment, same result, and the stop signal was the agent's own: a honoured
-    block makes it continue instead of stopping, so the Stop hook re-fires with
-    stop_hook_active true. That second invocation was observed for {"decision": "block"}
-    and for exit 2, and was absent for hookSpecificOutput.
-    """
+    """Same experiment, same result, and the stop signal was the agent's own: a honoured"""
     text, code, event, _ = A.handle(CC_STOP, deny_all)
     assert event.event == A.STOP
     assert json.loads(text) == {"decision": "block", "reason": "test-deny"}
@@ -165,15 +129,13 @@ def test_stop_blocks_with_the_same_top_level_decision():
 
 
 def test_an_allow_at_a_block_only_event_says_nothing():
-    """The block dialect has no allow verb -- there is nothing to say, and saying the
-    gate shape instead is what got ignored."""
+    """The block dialect has no allow verb -- there is nothing to say, and saying the"""
     assert A.handle(CC_PROMPT_SUBMIT, allow_all)[0] == ""
     assert A.handle(CC_STOP, allow_all)[0] == ""
 
 
 def test_ask_and_rewrite_degrade_to_a_block_that_names_the_degradation():
-    """Neither is expressible at these events. Dropping them would leave the dispatcher's
-    silent allow, which is the opposite of what the handler asked for."""
+    """Neither is expressible at these events. Dropping them would leave the dispatcher's"""
     ask = json.loads(A.handle(CC_PROMPT_SUBMIT, lambda e: Decision.ask("confirm"))[0])
     assert ask["decision"] == "block" and "confirm" in ask["reason"] and "cannot prompt" in ask["reason"]
 
@@ -182,16 +144,13 @@ def test_ask_and_rewrite_degrade_to_a_block_that_names_the_degradation():
 
 
 def test_pre_tool_keeps_the_permission_decision_contract():
-    """pre_tool was not part of the experiment and keeps its established contract. The fix
-    is per-event, not a wholesale switch of dialect."""
+    """pre_tool was not part of the experiment and keeps its established contract. The fix"""
     out = json.loads(A.handle(CC_WRITE, deny_all)[0])["hookSpecificOutput"]
     assert out["permissionDecision"] == "deny"
 
 
 def test_observation_only_events_get_silence_rather_than_a_verdict():
-    """post_tool and friends are detect-only in this row: nothing returned there was ever
-    read as a decision, so emitting a gate-shaped verdict only invited a reader to believe
-    one had been made."""
+    """post_tool and friends are detect-only in this row: nothing returned there was ever"""
     assert A.handle(CC_POST, deny_all)[0] == ""
 
 
@@ -205,14 +164,12 @@ CC_SESSION_START = {
 
 
 def test_session_start_is_silent_with_no_context():
-    """No block/rewrite is claimed here either way -- silence is the whole answer absent
-    a handler that has something to tell the model."""
+    """No block/rewrite is claimed here either way -- silence is the whole answer absent"""
     assert A.handle(CC_SESSION_START, allow_all)[0] == ""
 
 
 def test_session_start_carries_context_in_the_documented_shape():
-    """code.claude.com/docs/en/hooks' own SessionStart example names this exact field,
-    nested -- top-level would be silently ignored per the same page."""
+    """code.claude.com/docs/en/hooks' own SessionStart example names this exact field,"""
     text, code, event, _ = A.handle(CC_SESSION_START, lambda e: Decision.allow(context="prod deploy in progress"))
     assert event.event == A.SESSION_START
     assert json.loads(text) == {
@@ -230,8 +187,7 @@ def test_prompt_submit_carries_context_alongside_an_allow():
 
 
 def test_prompt_submit_carries_context_alongside_a_block():
-    """additionalContext and the block dialect are different top-level keys -- a deny with
-    context should still block, and still say why the model is being told what it is told."""
+    """additionalContext and the block dialect are different top-level keys -- a deny with"""
     text, _, _, _ = A.handle(CC_PROMPT_SUBMIT, lambda e: Decision.deny("secret detected", context="see redaction log"))
     payload = json.loads(text)
     assert payload["decision"] == "block" and payload["reason"] == "secret detected"
@@ -242,7 +198,6 @@ def test_prompt_submit_carries_context_alongside_a_block():
 
 
 def test_stop_does_not_speak_additional_context():
-    """Rider A's brief named SessionStart and UserPromptSubmit specifically -- Stop keeps
-    its existing block-only dialect rather than gaining a third, unverified shape."""
+    """Rider A's brief named SessionStart and UserPromptSubmit specifically -- Stop keeps"""
     text, _, _, _ = A.handle(CC_STOP, lambda e: Decision.allow(context="ignored here"))
     assert text == ""

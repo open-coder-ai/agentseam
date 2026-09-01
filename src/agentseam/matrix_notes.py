@@ -1,10 +1,4 @@
-"""The caveats each matrix row carries, kept apart from the capabilities it declares.
-
-Two different activities. A row's `events` table is a set of capability tuples that a
-consumer queries; its note is prose telling a human what to watch out for -- which surface
-is missing, which decision word the vendor accepts but does not honour, what fails open.
-The prose is the part that grows, and it grows every time a vendor is read properly.
-"""
+"""The caveats each matrix row carries, kept apart from the capabilities it declares."""
 
 from __future__ import annotations
 

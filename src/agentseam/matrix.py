@@ -1,8 +1,4 @@
-"""Queries over the per-agent capability matrix.
-
-The data itself is in `matrix_data.py`; this module answers the question a consumer
-actually has: what may I honestly claim about this agent at this event?
-"""
+"""Queries over the per-agent capability matrix."""
 
 from __future__ import annotations
 
@@ -65,16 +61,7 @@ def can_rewrite(agent, event):
 
 
 def enforcement_level(agent, event):
-    """The honest word for what a consumer may claim at this surface.
-
-    enforced    - the agent blocks, and fails closed if our hook dies
-    enforceable - it blocks, and can be told to fail closed, but does not by default. What
-                  a consumer may claim therefore depends on how the hook was installed;
-                  agentseam's own installer asks for fail-closed on every gate it writes
-    best-effort - it blocks, but fails open (a crash silently allows)
-    detect      - we see it after the fact; prevention is not available
-    none        - no surface at all
-    """
+    """The honest word for what a consumer may claim at this surface."""
     cap = capability(agent, event)
     if cap["block"]:
         if cap["fail_mode"] == FAIL_CLOSED:
@@ -87,24 +74,13 @@ def enforcement_level(agent, event):
 
 
 def basis(agent):
-    """What KIND of evidence this agent's row rests on, from the closed `BASES` vocabulary.
-
-    An adopter should read this before trusting a row. `vendor-docs` means the claim is
-    about what the vendor *says*, not an observation of what their build does -- and it is
-    the most common basis here. Verify against your own installation before relying on it.
-    """
+    """What KIND of evidence this agent's row rests on, from the closed `BASES` vocabulary."""
     row = MATRIX.get(agent)
     return row["verified"].get("basis") if row else None
 
 
 def observed(agent):
-    """Canonical events actually seen fire against the running agent.
-
-    Empty for a row nobody has run. A `live-run-partial` row has some but not all of what it
-    claims, and this is the difference: `basis` says what KIND of evidence exists, `observed`
-    says how far it reaches. A consumer relying on a specific gate should check this rather
-    than the row-level basis, because an event a row claims is not an event anyone saw.
-    """
+    """Canonical events actually seen fire against the running agent."""
     row = MATRIX.get(agent)
     return tuple(row["verified"].get("observed", ())) if row else ()
 

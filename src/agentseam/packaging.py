@@ -1,15 +1,4 @@
-"""Primitive 3: packaging -- describe a bundle once, lay it out for every agent that has one.
-
-A `Bundle` is a name, a version, and some parts: skills, subagents, commands. `plan()` turns
-it into the exact files one agent expects, and -- as with permissions -- returns whatever
-that agent has no way to hold.
-
-The useful discovery is how much overlaps. `same_path_for()` reports the parts whose path is
-*byte-identical* across the agents you name, which is the set you only have to write once.
-For a skill, that is currently every agent with a recorded format: `skills/<name>/SKILL.md`
-is the same file in a Claude Code plugin and a Gemini CLI extension, and VS Code will read
-Claude Code's copy of it out of `.claude/skills` without being asked.
-"""
+"""Primitive 3: packaging -- describe a bundle once, lay it out for every agent that has one."""
 
 from __future__ import annotations
 
@@ -56,12 +45,7 @@ __all__ = [
 
 
 class Part:
-    """One piece of a bundle: a kind, a name, and its body text.
-
-    `executable` only means anything on an EXECUTABLE part -- the writer should mark the
-    rendered file executable. agentseam never inspects or authors the body of one: it is
-    opaque consumer bytes, placed at the vendor-correct path and nothing more.
-    """
+    """One piece of a bundle: a kind, a name, and its body text."""
 
     __slots__ = ("kind", "name", "body", "description", "executable")
 
@@ -110,12 +94,7 @@ class Unrepresentable:
 
 
 class Plan:
-    """The files to write, relative to the bundle root, plus what did not fit.
-
-    `executables` names the subset of `files` keys that need the executable bit set on
-    write -- every existing caller gets an empty frozenset, so nothing that predates this
-    breaks.
-    """
+    """The files to write, relative to the bundle root, plus what did not fit."""
 
     __slots__ = ("agent", "root", "files", "unrepresentable", "executables")
 
@@ -132,9 +111,6 @@ class Plan:
 
     def __repr__(self):
         return "Plan(%s, %d files, dropped=%d)" % (self.agent, len(self.files), len(self.unrepresentable))
-
-
-# --- queries --------------------------------------------------------------------
 
 
 def agents():
@@ -155,11 +131,7 @@ def supports(agent, part):
 
 
 def same_path_for(part, targets=None):
-    """Agents among `targets` whose path template for `part` is identical, grouped by template.
-
-    The single-entry groups are the interesting ones in reverse: they are the parts you have
-    to write more than once.
-    """
+    """Agents among `targets` whose path template for `part` is identical, grouped by template."""
     grouped = {}
     for agent in targets or agents():
         template = supports(agent, part)
@@ -169,18 +141,11 @@ def same_path_for(part, targets=None):
 
 
 def also_reads(agent, part=None):
-    """Folders `agent` reads that belong to another agent's layout.
-
-    Committing a part to one of these ships it to `agent` too, whether or not that was the
-    intent -- worth knowing in both directions.
-    """
+    """Folders `agent` reads that belong to another agent's layout."""
     rows = ALSO_READS.get(agent, {})
     if part is None:
         return {k: list(v) for k, v in rows.items()}
     return list(rows.get(part, ()))
-
-
-# --- rendering ------------------------------------------------------------------
 
 
 def _toml_string(text):
@@ -200,22 +165,7 @@ def _render_command(agent, part):
 
 
 def _manifest(agent, bundle, kinds):
-    """The bundle manifest, including any component paths this host declares rather than finds.
-
-    Two shapes hide behind one word. Claude Code and Gemini CLI find components by LOCATION:
-    `skills/<name>/SKILL.md` is loaded because of where it sits, and the manifest carries only
-    identity. Codex and Cursor RESOLVE components from the manifest -- Codex validates the
-    `./...` syntax of each declared path -- so a manifest carrying only name and version ships
-    a plugin whose skills and hooks are never loaded, and nothing reports an error.
-
-    Only the parts the bundle actually has are declared. Pointing at `./skills` in a bundle
-    with no skills advertises a directory that is not there.
-
-    `manifest_fixed` is a third thing again: fields a format requires on every manifest
-    regardless of what the bundle holds -- Agent Plugins 1.0's `$schema` is the only one
-    today, and it is load-bearing rather than decorative: without it the host falls back to
-    reading the file as an unrelated legacy format, silently mislabeling the whole bundle.
-    """
+    """The bundle manifest, including any component paths this host declares rather than finds."""
     row = PACKAGING[agent]
     if not row["manifest"]:
         return None
@@ -231,11 +181,7 @@ def _manifest(agent, bundle, kinds):
 
 
 def plan(agent, bundle):
-    """Lay `bundle` out for `agent`, reporting every part the format cannot hold.
-
-    Raises KeyError for an agent with no recorded format, including the ones in UNRECORDED --
-    an empty file list would read as "nothing to do" rather than "we do not know".
-    """
+    """Lay `bundle` out for `agent`, reporting every part the format cannot hold."""
     if agent not in PACKAGING:
         raise KeyError("%s: %s" % (agent, UNRECORDED.get(agent, "no packaging format recorded")))
     row = PACKAGING[agent]
@@ -265,31 +211,14 @@ def plan(agent, bundle):
 
 
 def plugin_root(agent):
-    """The token a hook command should use to reach its own plugin directory.
-
-    Returns the preferred spelling, or None where none is established. A caller building a
-    hook command needs exactly this and has no other place to get it: the value differs per
-    product, two products accept two spellings each, and one plausible-looking spelling
-    (${CODEX_PLUGIN_ROOT}) is never set at all. See PACKAGING's plugin_root note.
-    """
+    """The token a hook command should use to reach its own plugin directory."""
     row = PACKAGING.get(agent)
     tokens = row.get("plugin_root") if row else None
     return tokens[0] if tokens else None
 
 
 def executable_ref(agent, path):
-    """The string a HOOKS command should use to reach a rendered EXECUTABLE at `path`.
-
-    `path` is one of `Plan.executables` -- already root-relative, exactly as written to
-    disk. A format that relocates the bundle at install (`unit` is not None) needs it
-    composed with `plugin_root(agent)`, the one token a hardcoded relative path cannot
-    survive; a repo-local format (`unit` is None) never relocates -- committing the file
-    IS the install -- so the bare path is already correct and plugin_root's tokens (there
-    only for reading plugins THIS format did not build) do not apply.
-
-    Returns None where composing one would require a token this format has never
-    established -- never a guess at a spelling nothing has verified.
-    """
+    """The string a HOOKS command should use to reach a rendered EXECUTABLE at `path`."""
     row = PACKAGING.get(agent)
     if not row:
         return None

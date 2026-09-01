@@ -44,14 +44,7 @@ def test_gemini_rewrite_uses_hook_specific_tool_input():
 
 
 def test_gemini_ask_is_honoured_at_the_tool_gate():
-    """This test asserted the opposite until 2026-08-28, and it was wrong.
-
-    The hooks reference gives the vocabulary as allow/deny, so the adapter degraded an ask
-    to a deny "because no interactive confirmation exists in this protocol". Source says one
-    does: isAskDecision() -> hookDecision='ask' -> PolicyDecision.ASK_USER ->
-    resolveConfirmation(forcedDecision='ask_user'). A guardrail that meant "let the human
-    choose" was answered with "blocked", and the human never saw the choice.
-    """
+    """This test asserted the opposite until 2026-08-28, and it was wrong."""
     text, _, _, _ = A.handle(GM_WRITE, lambda e: Decision.ask("needs a human"))
     payload = json.loads(text)
     assert payload["decision"] == "ask"
@@ -59,9 +52,7 @@ def test_gemini_ask_is_honoured_at_the_tool_gate():
 
 
 def test_gemini_ask_still_degrades_where_no_ask_is_read():
-    """BeforeAgent consults only isBlockingDecision(), so an ask there is a word nothing
-    reads -- and a verdict nobody reads is a pass. The degradation is right here.
-    """
+    """BeforeAgent consults only isBlockingDecision(), so an ask there is a word nothing"""
     raw = dict(GM_WRITE, hook_event_name="BeforeAgent", prompt="hello")
     text, _, _, _ = A.handle(raw, lambda e: Decision.ask("needs a human"))
     payload = json.loads(text)

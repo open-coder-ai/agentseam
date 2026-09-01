@@ -50,8 +50,6 @@ def _cmd_doctor(args):
             print("%-16s no hook surface — %s" % (name, row["notes"].split(".")[0]))
             continue
         if row["tier"] == "unadapted":
-            # Known agent, no hook adapter here. Asking install_mod about it would raise;
-            # more importantly the useful answer is "instruction files only", not an error.
             print("%-16s no hook adapter — instruction files only" % name)
             continue
         wired = install_mod.installed(name, args.repo)
@@ -84,12 +82,6 @@ def _cmd_install(args):
         try:
             path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
         except ValueError as exc:
-            # install() raising is deliberate (an event it cannot wire must not be dropped
-            # silently), but for `all` one agent's gap must not take down the eleven that
-            # can be wired: both documented example commands crashed with a traceback and
-            # wired NOTHING, because at least one of twelve agents lacks a hook for any
-            # given event set. Mirror the permissions primitive instead -- do what can be
-            # done, name what cannot, exit non-zero so CI still notices.
             print("skipped %-14s %s" % (agent, exc), file=sys.stderr)
             skipped += 1
             continue
@@ -144,11 +136,7 @@ def _parse_rule(spec):
 
 
 def _print_unrecorded(rows, label):
-    """Render the agents we have nothing recorded for, wrapped so the reasons stay readable.
-
-    Printed rather than omitted: an agent missing from the listing would read as one we do
-    not know about, when in fact we know about it and have not established this part.
-    """
+    """Render the agents we have nothing recorded for, wrapped so the reasons stay readable."""
     if not rows:
         return
     print("\nno %s recorded (named rather than omitted):" % label)
@@ -166,8 +154,6 @@ def _cmd_permissions(args):
         for name in permissions_mod.agents():
             row = permissions_mod.capability(name)
             print("%-16s %-18s %s" % (name, row["shape"], permissions_mod.config_files(name)[0]["path"]))
-            # One action per line: Codex's prefix_rule spellings run past a terminal width
-            # when joined, and a wrapped key name is harder to read than three short rows.
             for action in ("allow", "ask", "deny"):
                 print("%-16s   %-5s %s" % ("", action, row["actions"][action] or "(cannot express)"))
         _print_unrecorded(permissions_mod.UNRECORDED, "permission model")
@@ -190,8 +176,6 @@ def _cmd_permissions(args):
         if not rendered.complete:
             rc = 1
         print()
-    # A non-zero exit is the useful answer in CI: it means at least one rule you wrote
-    # would not have been enforced on at least one agent you ship to.
     return rc
 
 
@@ -216,9 +200,6 @@ def _cmd_packaging(args):
 
 
 def main(argv=None):
-    # A CLI that dies on `| head` is a broken CLI: SIGPIPE arrives as BrokenPipeError
-    # in Python, and the interpreter also complains at shutdown unless stdout is
-    # redirected away from the closed pipe.
     try:
         return _main(argv)
     except BrokenPipeError:

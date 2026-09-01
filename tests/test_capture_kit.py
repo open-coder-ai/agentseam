@@ -1,9 +1,4 @@
-"""The capture kit: installing the probe, spotting conflicts, and reporting what it caught.
-
-The probe's own behaviour lives in test_capture_probe.py; redaction in test_redaction.py.
-What is left here is the wiring -- which configs get written, which of them fire the same
-probe twice, and whether the report says something true about what came back.
-"""
+"""The capture kit: installing the probe, spotting conflicts, and reporting what it caught."""
 
 from __future__ import annotations
 
@@ -16,20 +11,8 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 
-# Paths use /workspace/alice deliberately: the repository's own privacy scanner rejects a tracked
-# file containing a realistic home directory, and it was right to reject the first version of
-
-
 def test_install_wires_a_launchable_interpreter_and_the_agent_name(tmp_path, monkeypatch):
-    """The command must actually launch, which is not the same as being quoted.
-
-    An unquoted interpreter under 'C:\\Program Files' never launches, and that is
-    indistinguishable at capture time from a vendor whose hooks do not fire -- so quotes
-    stay whenever the path has spaces. But quoting unconditionally has the same failure on
-    the other side: PowerShell will not run a line beginning with a quoted path, and two
-    vendors wrap hooks in PowerShell on Windows. So the rule is conditional, and this test
-    asserts the property (it launches) rather than the spelling.
-    """
+    """The command must actually launch, which is not the same as being quoted."""
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
     sys.modules.pop("capture", None)
     import argparse
@@ -58,20 +41,12 @@ def test_install_wires_a_launchable_interpreter_and_the_agent_name(tmp_path, mon
             assert command.startswith("%s " % sys.executable), command
             assert not command.startswith('"'), "PowerShell cannot run a quoted-path line"
         assert command.endswith(" cursor"), command
-    # capture installs under its own owner. Asking with the default owner used to answer
-    # True purely because the substring witness matched "agentseam" inside
-    # "agentseam-capture" -- a prefix collision that reported a guard nobody had installed.
     assert install_mod.installed("cursor", str(tmp_path), owner=capture.OWNER)
     assert not install_mod.installed("cursor", str(tmp_path)), "the capture probe is not a guard"
 
 
 def test_every_adapter_can_be_detected():
-    """A footprint per adapter, or `detect` silently cannot find agents we support.
-
-    Junie and Tabnine were adapted after the capture kit was written and were missing here,
-    so `capture.py detect` reported them absent on a machine that had them -- which reads as
-    "you do not have it" rather than "we never looked".
-    """
+    """A footprint per adapter, or `detect` silently cannot find agents we support."""
     import sys
     from pathlib import Path
 
@@ -96,13 +71,7 @@ def _install(agent, repo, tmp_path, monkeypatch):
 
 
 def test_two_installs_in_one_repo_are_reported_as_a_conflict(tmp_path, monkeypatch, capsys):
-    """Witnessed live: 27 payloads labelled `cursor` beside 26 labelled `?`, near 1:1.
-
-    Cursor also loads Claude Code-format hooks, so a leftover .claude/settings.json entry
-    fires the same probe on the same events -- once with the agent argument install wired,
-    once without. Half the evidence then cannot be held against any adapter, and nothing in
-    the kit said why.
-    """
+    """Witnessed live: 27 payloads labelled `cursor` beside 26 labelled `?`, near 1:1."""
     import argparse
 
     capture = _install("cursor", tmp_path, tmp_path, monkeypatch)
@@ -124,11 +93,7 @@ def test_install_warns_when_another_config_here_already_fires_the_probe(tmp_path
 
 
 def test_an_unlabelled_payload_is_not_reported_as_an_unknown_agent(tmp_path, monkeypatch, capsys):
-    """`?` is not a vendor.
-
-    Calling it "no adapter for this agent yet" reads as a discovery when it is a labelling
-    miss, and sends the reader looking for a thirteenth agent that does not exist.
-    """
+    """`?` is not a vendor."""
     import argparse
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
@@ -145,12 +110,7 @@ def test_an_unlabelled_payload_is_not_reported_as_an_unknown_agent(tmp_path, mon
 
 
 def test_the_report_states_the_agent_version_it_captured(tmp_path, monkeypatch, capsys):
-    """The matrix records a version per row, and the payload carries one.
-
-    Redaction already lets it through -- `cursor_version` is on the structural allowlist and
-    a version is enum-like -- but the report printed only key *paths*, so the fact sat in the
-    capture file unread and had to be asked for by hand three times over.
-    """
+    """The matrix records a version per row, and the payload carries one."""
     import argparse
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
@@ -171,11 +131,7 @@ def test_the_report_states_the_agent_version_it_captured(tmp_path, monkeypatch, 
 
 
 def test_a_redacted_placeholder_is_never_reported_as_a_version(tmp_path, monkeypatch, capsys):
-    """A key merely containing "version" whose value did not survive redaction says nothing.
-
-    Printing `<str:12>` as the agent version would put a placeholder into a matrix row, which
-    is worse than leaving the field empty.
-    """
+    """A key merely containing "version" whose value did not survive redaction says nothing."""
     import argparse
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
@@ -190,12 +146,7 @@ def test_a_redacted_placeholder_is_never_reported_as_a_version(tmp_path, monkeyp
 
 
 def test_key_paths_are_attributed_to_the_event_that_carried_them(tmp_path, monkeypatch, capsys):
-    """A union across the session cannot say which event carries which key.
-
-    That ambiguity blocked four follow-ups from one live run -- whether `tool_output`
-    exists on failures, and which events carry `session_id`, could not be answered without
-    another capture, even though every record on disk knew its own event name.
-    """
+    """A union across the session cannot say which event carries which key."""
     import argparse
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path))
@@ -217,16 +168,7 @@ def test_key_paths_are_attributed_to_the_event_that_carried_them(tmp_path, monke
 
 
 def test_the_probe_command_is_runnable_by_powershell_too(monkeypatch):
-    """The quoted form is correct for POSIX shells and cmd.exe and unrunnable in PowerShell,
-    where a line beginning with a quoted path parses as a string expression rather than an
-    invocation. Two vendors are now known to wrap hooks that way on Windows -- Codex, and
-    VS Code Copilot via hookExecutor.ts's getShellCommand -- so a probe wired for either was
-    recording nothing at all, silently.
-
-    Those two carry a per-platform override in their own config schema. The other ten record
-    no such field, so the command string is the only lever: an unquoted interpreter path
-    parses in command mode in all three shells and needs no vendor support.
-    """
+    """The quoted form is correct for POSIX shells and cmd.exe and unrunnable in PowerShell,"""
     import capture
 
     monkeypatch.setattr(capture.sys, "executable", "C:/Python314/python.exe")
@@ -236,9 +178,7 @@ def test_the_probe_command_is_runnable_by_powershell_too(monkeypatch):
 
 
 def test_an_interpreter_path_with_spaces_keeps_its_quotes(monkeypatch):
-    """There is no single string that runs in every shell when the path contains spaces, so
-    the quoted form stays -- correct for POSIX and cmd -- rather than trading a working
-    invocation on two shells for a broken one on three. install() warns in that case."""
+    """There is no single string that runs in every shell when the path contains spaces, so"""
     import capture
 
     monkeypatch.setattr(capture.sys, "executable", "C:/Program Files/Py/python.exe")
@@ -247,9 +187,7 @@ def test_an_interpreter_path_with_spaces_keeps_its_quotes(monkeypatch):
 
 
 def test_detected_wires_every_agent_whose_config_location_exists(tmp_path, monkeypatch, capsys):
-    """One capture evening should not have to guess which agent will be opened. The probe
-    always allows, so an extra one costs a few recorded payloads; the benefit is that
-    whichever agent is actually used is already recording."""
+    """One capture evening should not have to guess which agent will be opened. The probe"""
     import capture
 
     monkeypatch.setenv("AGENTSEAM_CAPTURE_DIR", str(tmp_path / "cap"))

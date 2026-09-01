@@ -1,12 +1,4 @@
-"""The capture report: compare what arrived against what the adapters claim.
-
-Split from capture.py because reading a capture back and judging it is a different activity
-from installing the probe that produced it -- and because capture.py crossed the 300-line
-review budget, where the remedy is splitting by activity rather than raising the number.
-
-Imports its constants from capture so there is exactly one definition of where captures
-live; capture re-exports the entry point so the CLI surface is unchanged.
-"""
+"""The capture report: compare what arrived against what the adapters claim."""
 
 from __future__ import annotations
 
@@ -19,12 +11,7 @@ from agentseam import adapters
 
 
 def _capture_files():
-    """Every capture file: the per-process shards, plus the legacy shared file.
-
-    Sorted so a report is deterministic across runs. `capture` is imported lazily here and
-    in cmd_report -- report needs capture's constants, capture re-exports report's entry
-    point, and the lazy direction is the one free of a load-order-sensitive cycle.
-    """
+    """Every capture file: the per-process shards, plus the legacy shared file."""
     from capture import CAPTURE_DIR
 
     if not os.path.isdir(CAPTURE_DIR):
@@ -34,12 +21,7 @@ def _capture_files():
 
 
 def _load():
-    """Records from every capture file, skipping any line that is not whole.
-
-    A torn line is a fact about the capture, not a reason to lose the other 122 records. The
-    count is left on `_load.torn` so the report can say how much it skipped, rather than
-    quietly presenting a partial capture as a complete one.
-    """
+    """Records from every capture file, skipping any line that is not whole."""
     rows, torn = [], 0
     for path in _capture_files():
         with open(path, encoding="utf-8", errors="replace") as fh:
@@ -55,13 +37,7 @@ def _load():
 
 
 def _versions_in(value):
-    """Version strings the capture kept, wherever they are nested.
-
-    Redaction already allows these through -- `cursor_version` is on the structural
-    allowlist and `1.5.11` is enum-like -- but the report only ever printed key *paths*, so
-    the one fact the matrix requires for a `verified` record was sitting in the file
-    unread, and had to be asked for by hand.
-    """
+    """Version strings the capture kept, wherever they are nested."""
     found = []
     if isinstance(value, dict):
         for key, sub in value.items():
@@ -118,7 +94,7 @@ def cmd_report(args):
             if mod:
                 try:
                     seen_events.add(mod.parse(payload).event)
-                except Exception as exc:  # a real finding, not a crash to hide
+                except Exception as exc:
                     unparsed.append("%s: %s" % (type(exc).__name__, exc))
             seen = payload.get("hook_event_name") or payload.get("hookEventName")
             if seen:
@@ -141,11 +117,6 @@ def cmd_report(args):
         versions = sorted({str(v) for payload in payloads for v in _versions_in(payload)})
         if versions:
             print("- **agent version: %s**" % ", ".join(versions))
-        # Keys grouped per vendor event, not unioned across the session. A union cannot
-        # say which event carries which key, and that ambiguity blocked four follow-ups
-        # from one live run: nobody could tell whether tool_output exists on failures, or
-        # which events carry session_id, without another capture. The data was on disk the
-        # whole time -- one record per payload, hook_event_name preserved by redaction.
         print("\nKey paths observed, per event:\n```")
         by_event = {}
         for payload in payloads:

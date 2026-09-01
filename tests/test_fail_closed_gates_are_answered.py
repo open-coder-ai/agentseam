@@ -1,32 +1,4 @@
-"""Every gate installed fail-closed must be answered, because silence there is an error.
-
-The sixth invariant, and the only one resting on a controlled live experiment rather than
-on source or documentation.
-
-Cursor 3.17.8, Windows, 2026-08-28, two trials differing in one key:
-
-    hooks.json                                    hook            result
-    beforeShellExecution, no failClosed           exit 0, silent  `echo hello` RAN
-    beforeShellExecution, failClosed: true        exit 0, silent  BLOCKED by hook
-
-So an empty response at a Cursor gate is not a refusal and not an abstention -- it is a
-hook ERROR. Fail-open ignores it; fail-closed refuses on it. Both readings the matrix had
-carried since #23 collapse to the second, and the earlier note's "silence blocks" was true
-only because `hook_config()` set failClosed on every gate with no way to opt out.
-
-That makes a specific defect possible, and cheap to commit: make one Cursor gate silent on
-a bare ALLOW -- the direction four other adapters were deliberately moved in #62 and #64 --
-and every allowed tool call is blocked, on the vendor's strongest posture, with no error
-anyone would attribute to the guardrail. The user would see their agent refuse everything.
-
-Hence: wherever `hook_config()` marks an entry fail-closed, `respond()` must SAY something
-at that event for every outcome a handler can return. The gate we hardened is the gate that
-cannot be answered with nothing.
-
-Cursor is the only adapter that takes `fail_closed` today. The test is written against the
-capability rather than against Cursor, so an adapter that gains it is covered on arrival
-rather than remembered about.
-"""
+"""Every gate installed fail-closed must be answered, because silence there is an error."""
 
 from __future__ import annotations
 
@@ -41,8 +13,6 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from agentseam import Decision, adapters  # noqa: E402
 
-#: Keys a hook_config may use to ask a vendor for fail-closed behaviour. One today; named
-#: rather than inferred, so a new spelling is a deliberate addition here.
 _FAIL_CLOSED_KEYS = ("failClosed", "fail_closed")
 
 _OUTCOMES = (

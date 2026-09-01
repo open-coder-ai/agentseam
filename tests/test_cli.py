@@ -17,8 +17,6 @@ def _run(args, env=None, **kw):
 def test_matrix_renders():
     out = _run(["matrix"])
     assert out.returncode == 0
-    # "best-effort", not "enforced": no row claims FAIL_CLOSED any more (see
-    # test_no_agent_is_rated_enforced_because_none_has_been_shown_to_fail_closed).
     assert "claude_code" in out.stdout and "best-effort" in out.stdout
 
 
@@ -58,9 +56,8 @@ def test_doctor_runs(tmp_path):
 def test_permissions_lists_every_surface_including_the_ones_we_cannot_claim():
     out = _run(["permissions"])
     assert out.returncode == 0
-    assert "cannot express" in out.stdout  # VS Code has no deny to offer
+    assert "cannot express" in out.stdout
     assert "no permission model recorded" in out.stdout
-    # Every agent the matrix knows appears, recorded or named as unrecorded.
     for agent in ("cursor", "aider", "zed", "junie", "kimi_code"):
         assert agent in out.stdout, agent
 
@@ -92,17 +89,11 @@ def test_packaging_shows_the_layouts_and_what_is_shared():
     assert "skills/{name}/SKILL.md" in out.stdout
     assert "write once, works for several" in out.stdout
     assert "also reads another agent's" in out.stdout
-    assert "codex_cli" in out.stdout  # named as unrecorded, with the reason
+    assert "codex_cli" in out.stdout
 
 
 def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
-    """Both documented example commands used to crash with a traceback and wire NOTHING.
-
-    At least one of twelve agents lacks a hook for any given event set, and install()
-    raising for it is deliberate -- but `all` propagating that raise meant the eleven
-    wireable agents were taken down by the one gap. The permissions primitive already
-    solved this shape: do what can be done, name what cannot, exit non-zero.
-    """
+    """Both documented example commands used to crash with a traceback and wire NOTHING."""
     out = _run(
         [
             "install",
@@ -116,19 +107,16 @@ def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
             "--repo",
             str(tmp_path),
         ],
-        env={**ENV, "HOME": str(tmp_path)},  # kimi's config is user-scoped; keep it in the sandbox
+        env={**ENV, "HOME": str(tmp_path)},
     )
 
     assert out.returncode == 1, "a skipped agent must be visible to CI: %s" % out.stderr
-    # vscode_copilot joined the wired list once its REVERSE_EVENT_MAP stopped naming an
-    # event no vendor has (postToolUseFailure) and started naming the ones both do.
     for agent in ("claude_code", "cursor", "gemini_cli", "grok", "vscode_copilot"):
         assert "wired %-16s" % agent in out.stdout
     for agent in ("antigravity", "junie", "windsurf"):
         assert ("skipped %-14s" % agent) in out.stderr, "%s should be skipped whole" % agent
     assert "no hook for" in out.stderr
 
-    # And the wireable agents really were wired -- the skip must not have aborted the loop.
     sys.path.insert(0, str(ROOT / "src"))
     from agentseam import install as install_mod
 

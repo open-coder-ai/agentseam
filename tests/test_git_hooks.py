@@ -1,9 +1,4 @@
-"""The pre-commit hook must actually refresh the examples.
-
-An automation nobody tests is one that silently stops working, and this one fails quietly
-by design -- it exits 0 when there is nothing to do. So these tests drive the real hook
-through real commits in a throwaway clone rather than inspecting the script's text.
-"""
+"""The pre-commit hook must actually refresh the examples."""
 
 from __future__ import annotations
 
@@ -30,16 +25,10 @@ def clone(tmp_path):
         pytest.skip("git unavailable")
     target = tmp_path / "clone"
     assert _run(["git", "clone", "--quiet", "--local", str(ROOT), str(target)], tmp_path).returncode == 0
-    # A clone carries committed history, so it would exercise the *last committed* hook and
-    # generator. Copy the working tree's in: the point is to test the code under review.
     for rel in (".githooks", "examples", "src"):
         shutil.rmtree(target / rel, ignore_errors=True)
         shutil.copytree(ROOT / rel, target / rel, ignore=shutil.ignore_patterns("__pycache__"))
     assert _run(GIT + ["add", "-A"], target).returncode == 0
-    # Only commit when the copy actually changed something. On a clean checkout -- which is
-    # every CI run -- the working tree already matches HEAD and `git commit` exits 1 with
-    # "nothing to commit". Asserting success there passes locally with uncommitted work in
-    # progress and fails the moment the tree is clean, which is the worst way round.
     if _run(["git", "status", "--porcelain"], target).stdout.strip():
         assert _run(GIT + ["commit", "-q", "-m", "sync working tree", "--no-gpg-sign"], target).returncode == 0
     assert _run(["git", "config", "core.hooksPath", ".githooks"], target).returncode == 0
@@ -69,7 +58,6 @@ def test_changing_an_adapter_refreshes_the_pages_in_the_same_commit(clone):
     assert "examples/generated/windsurf.md" in committed
     assert "has no confirmation prompt" in (clone / "examples" / "generated" / "windsurf.md").read_text()
 
-    # And the tree the hook produced is the one CI would demand.
     check = _run(["python3", "examples/generate.py", "--check"], clone)
     assert check.returncode == 0, check.stderr
 
@@ -89,12 +77,7 @@ def test_a_commit_that_touches_nothing_generated_from_is_left_alone(clone):
 
 @pytest.mark.parametrize("source", ["examples/scenarios.py", "examples/vendor_payloads.py"])
 def test_editing_any_generator_input_refreshes(clone, source):
-    """The pages are generated from more than src/, and the hook has to know all of it.
-
-    vendor_payloads.py was added after the hook and was not in its watch list, so editing
-    the payloads changed every page and the hook stayed silent -- the one file most likely
-    to be edited for a docs change.
-    """
+    """The pages are generated from more than src/, and the hook has to know all of it."""
     target = clone / source
     target.write_text(target.read_text().replace("EXAMPLE-PLACEHOLDER-NOT-A-KEY", "EXAMPLE-PLACEHOLDER-XYZ"))
     if target.read_text() == (ROOT / source).read_text():

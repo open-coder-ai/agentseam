@@ -23,22 +23,14 @@ session that can settle it.
 
 from __future__ import annotations
 
-#: The adapter emits nothing. The vendor treats an empty exit-0 response as "no decision"
-#: and continues through its own permission flow, which is exactly what ALLOW means.
 ALLOW_SILENT = "silent"
 
-#: The adapter speaks an approval, and the vendor never reads that word. Equivalent to
-#: silence in effect; kept because it is what the vendor's own reference documents.
 ALLOW_INERT = "inert"
 
-#: The adapter must speak, because silence is NOT an abstention on this vendor -- it is
-#: itself a decision (a block, or an approval), so there is no way to have no opinion.
 ALLOW_REQUIRED = "required"
 
-#: No evidence distinguishes silence from an explicit approval here. Left exactly as found.
 ALLOW_UNVERIFIED = "unverified"
 
-#: agent -> (kind, why). `why` is the evidence, not the restatement.
 ALLOW_SEMANTICS = {
     "claude_code": (
         ALLOW_SILENT,
@@ -129,18 +121,4 @@ ALLOW_SEMANTICS = {
     ),
 }
 
-#: Agents where the explicit approval word ALLOW_SILENT withholds is confirmed, or strongly
-#: evidenced, to itself mean "skip the user's confirmation" -- Decision.VOUCH's one
-#: legitimate use of it. Deliberately NOT every ALLOW_SILENT row above, and not derived from
-#: one mechanically: codex_cli is silent by the same default, but its own evidence says the
-#: explicit word is REJECTED outright (a hook error, which fails OPEN) rather than honoured
-#: -- speaking it there would be actively counterproductive, the opposite of "skip
-#: confirmation." grok and windsurf have no allow word to speak at all. kimi_code's word
-#: exists but its effect was never established either way. Only claude_code and
-#: vscode_copilot have evidence, of differing strength, that this specific word does what
-#: VOUCH means: vscode_copilot's is proven from source (languageModelToolsService); claude_code's
-#: rests on its documented sibling-product analogy, undocumented for claude_code itself --
-#: weaker, but a real, cited claim rather than a guess, and the one the brief names.
-#: Every other agent's VOUCH degrades to a plain, honestly-labelled allow -- see
-#: dispatch.degrade().
 VOUCH_SPEAKS = frozenset({"claude_code", "vscode_copilot"})

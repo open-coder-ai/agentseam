@@ -1,9 +1,4 @@
-"""Tests for the Copilot Agent Plugins 1.0 marketplace bundle (R2).
-
-Fixture shape matches microsoft/vscode-docs' own example directory exactly: a
-`test-runner` skill, a `test-reviewer` agent, and a hook script -- see
-packaging_data.PACKAGING["copilot"]["verified"] for the source read.
-"""
+"""Tests for the Copilot Agent Plugins 1.0 marketplace bundle (R2)."""
 
 from __future__ import annotations
 
@@ -83,8 +78,7 @@ def test_slash_commands_have_no_established_file_format():
 
 
 def test_copilot_is_unadapted_but_not_unverified():
-    """No adapter is registered (it would collide with vscode_copilot's), but it is not a
-    stale inherited guess either -- the matrix row documents real, cited vendor evidence."""
+    """No adapter is registered (it would collide with vscode_copilot's), but it is not a"""
     from agentseam import adapters
     from agentseam.matrix import basis
     from agentseam.matrix_terms import BASIS_DOCS, BASIS_INHERITED

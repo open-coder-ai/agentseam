@@ -1,9 +1,4 @@
-"""Devin adapter, and the ambiguity it creates with Claude Code.
-
-Devin reuses Claude Code's event names and payload shape, so half of these tests are about
-detection rather than behaviour: if two adapters claim one payload the dispatcher cannot
-name the agent, and an unidentified payload is allowed through.
-"""
+"""Devin adapter, and the ambiguity it creates with Claude Code."""
 
 import json
 import sys
@@ -31,16 +26,10 @@ def test_a_devin_only_event_identifies_devin_without_prompt_id():
 
 
 def test_session_start_is_ambiguous_and_nobody_guesses():
-    """prompt_id is documented as absent before the first user prompt, so this payload is
-    indistinguishable from Claude Code's -- and from Gemini CLI's, which spells the event the
-    same way. Devin's own adapter therefore declines it, and the two that do claim it are
-    enough to make `detect` refuse. Note what this rules out: a lone claimant would have
-    been answered confidently and wrongly.
-    """
+    """prompt_id is documented as absent before the first user prompt, so this payload is"""
     claimants = sorted(n for n, m in A.adapters.ADAPTERS.items() if m.claims(DV_SESSION_START))
     assert claimants == ["claude_code", "gemini_cli"]
     assert A.adapters.detect(DV_SESSION_START) is None
-    # Naming the agent still works, which is the documented way out.
     _, _, event, _ = A.handle(DV_SESSION_START, lambda e: Decision.allow(), agent="devin")
     assert event.agent == "devin" and event.event == A.SESSION_START
 
@@ -65,7 +54,6 @@ def test_rewrite_uses_hook_specific_output_and_merges():
     text, _, _, _ = A.handle(DV_WRITE, lambda e: Decision.rewrite({"content": "redacted"}))
     body = json.loads(text)["hookSpecificOutput"]
     assert body["hookEventName"] == "PreToolUse"
-    # updatedInput is merged into the tool's arguments, so a partial object is correct.
     assert body["updatedInput"] == {"content": "redacted"}
 
 
@@ -98,11 +86,7 @@ def test_devin_pre_tool_is_best_effort_because_it_fails_open():
 
 
 def test_post_compaction_is_not_bent_into_pre_compact():
-    """PostCompaction fires AFTER compaction. Folding it into canonical PRE_COMPACT would
-    let a handler wired there believe it can flush or snapshot context before compaction --
-    the reason pre_compact exists -- when the context it wanted to save is already gone by
-    the time the hook runs. Left unmapped rather than claiming a "before" gate that is
-    actually "after"."""
+    """PostCompaction fires AFTER compaction. Folding it into canonical PRE_COMPACT would"""
     mod = A.adapters.get("devin")
     assert A.PRE_COMPACT not in mod.REVERSE_EVENT_MAP
     assert mod.parse({"hook_event_name": "PostCompaction", "prompt_id": "turn-1"}).event == A.UNKNOWN
