@@ -59,7 +59,7 @@ where = ["src"]
 # The vendor tables live in data/*.json and are read at import time. Without this the
 # wheel ships without them and every import raises FileNotFoundError from a pip install
 # while working perfectly from a source checkout -- the failure chock#87 caught on itself.
-agentseam = ["data/*.json"]
+agentseam = ["data/*.json", "data/vendors/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

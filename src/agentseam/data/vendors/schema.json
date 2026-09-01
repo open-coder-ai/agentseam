@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/open-coder-ai/agentseam/blob/main/src/agentseam/data/vendors/schema.json",
+  "title": "agentseam vendor config entry",
+  "description": [
+    "docs/design/dialect-families.md §3: config may carry strings, booleans, ordered lists",
+    "of strings, and flat maps of those -- nothing else. The single deliberate exception is",
+    "`evidence`, a map of claim-id to a flat {basis, date, test} record (owner decision",
+    "2026-09-01, org-plan plan/agentseam-project.md: every claim in a vendor entry carries",
+    "its own basis/date/test-id, and schema validation fails a claim with none). Unknown",
+    "keys are an error everywhere in this schema on purpose (§5 'Must be written' item 1):",
+    "a typo'd key must fail loud, not fail open."
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "agent", "display", "family", "config_path", "config_format", "needs_trust",
+    "events", "claims", "fields", "tools", "verdicts", "hook_entry", "evidence"
+  ],
+  "properties": {
+    "agent": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$"},
+    "display": {"type": "string", "minLength": 1},
+    "family": {"enum": ["hook_json", "flat_decision", "cursor", "windsurf", "antigravity"]},
+    "config_path": {"type": "string", "minLength": 1},
+    "config_format": {"enum": ["json", "toml"]},
+    "needs_trust": {"type": "boolean"},
+
+    "events": {
+      "type": "object",
+      "description": "vendor wire event name -> canonical event. Empty only for antigravity, whose payloads carry no event name at all (dialect-families.md §1).",
+      "additionalProperties": {"$ref": "#/$defs/canonicalEvent"}
+    },
+
+    "wire_events": {
+      "type": "object",
+      "description": "canonical event -> vendor wire name, present ONLY where it differs from the naive inverse of `events` (a many-to-one vendor vocabulary collapsed, with the emit direction pinned deliberately).",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    },
+
+    "claims": {"$ref": "#/$defs/claims"},
+
+    "fields": {
+      "type": "object",
+      "description": "canonical Event field -> ordered fallback chain of dotted vendor keys tried in `parse()`.",
+      "additionalProperties": false,
+      "properties": {
+        "tool": {"$ref": "#/$defs/keyChain"},
+        "command": {"$ref": "#/$defs/keyChain"},
+        "path": {"$ref": "#/$defs/keyChain"},
+        "content": {"$ref": "#/$defs/keyChain"},
+        "output": {"$ref": "#/$defs/keyChain"},
+        "prompt": {"$ref": "#/$defs/keyChain"},
+        "session_id": {"$ref": "#/$defs/keyChain"},
+        "cwd": {"$ref": "#/$defs/keyChain"},
+        "tool_use_id": {"$ref": "#/$defs/keyChain"}
+      }
+    },
+    "fields_memory_write": {
+      "type": "object",
+      "description": "vscode_copilot only: the field chains that apply instead of `fields` when the tool call is a memory-tool write (vscode_copilot.py:66-73).",
+      "additionalProperties": false,
+      "properties": {
+        "path": {"$ref": "#/$defs/keyChain"},
+        "content": {"$ref": "#/$defs/keyChain"}
+      }
+    },
+
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "write": {"$ref": "#/$defs/stringList"},
+        "shell": {"$ref": "#/$defs/stringList"},
+        "memory": {"$ref": "#/$defs/stringList"}
+      }
+    },
+
+    "verdicts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["vocabulary", "vocabulary_basis", "bare_allow", "answer_events", "gates"],
+      "properties": {
+        "vocabulary": {"$ref": "#/$defs/stringList"},
+        "vocabulary_basis": {"enum": ["verified", "unverified"]},
+        "bare_allow": {"enum": ["silent", "inert", "required", "unverified"]},
+        "answer_events": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "vendor wire event names at which this dialect ever speaks a verdict word (a subset of the keys of `gates`)."
+        },
+        "gates": {
+          "type": "object",
+          "description": "vendor wire event name -> what that gate honours. Keys are vendor names, not canonical ones, because one canonical event can carry several wire names with different honours_ask (cursor.py:51-57).",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["grammar", "honours_ask", "honours_rewrite"],
+            "properties": {
+              "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5"]},
+              "honours_ask": {"type": "boolean"},
+              "honours_rewrite": {"type": "boolean"}
+            }
+          }
+        },
+        "rewrite_grammar": {
+          "enum": ["hook_specific_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
+        }
+      }
+    },
+
+    "hook_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wrapper", "matcher"],
+      "properties": {
+        "wrapper": {"enum": ["hooks_map", "flat_entries", "flat_list", "cursor"]},
+        "matcher": {"type": "boolean", "description": "whether passing `matcher=` to hook_config() changes its output at all."},
+        "group": {"type": "string", "description": "top-level wrapper key when the hooks table sits inside one (antigravity's GROUP)."},
+        "entry_extra": {
+          "type": "object",
+          "description": "flat map of the vendor-specific extra fields this adapter's hook_config() entries carry (commandWindows, name, windows, or windsurf's extra pre_mcp_tool_use wiring), verbatim.",
+          "additionalProperties": {"type": "string"}
+        }
+      }
+    },
+
+    "evidence": {
+      "type": "object",
+      "description": "per-claim evidence (owner decision 2026-09-01). One entry per claim-id in $defs/claimIds; schema validation fails a claim with none.",
+      "additionalProperties": false,
+      "properties": {
+        "family": {"$ref": "#/$defs/evidenceRecord"},
+        "events": {"$ref": "#/$defs/evidenceRecord"},
+        "claims": {"$ref": "#/$defs/evidenceRecord"},
+        "fields": {"$ref": "#/$defs/evidenceRecord"},
+        "tools": {"$ref": "#/$defs/evidenceRecord"},
+        "verdicts": {"$ref": "#/$defs/evidenceRecord"},
+        "config_path": {"$ref": "#/$defs/evidenceRecord"},
+        "hook_entry": {"$ref": "#/$defs/evidenceRecord"}
+      },
+      "required": ["family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry"]
+    }
+  },
+
+  "$defs": {
+    "canonicalEvent": {
+      "enum": [
+        "session_start", "session_end", "prompt_submit", "pre_tool", "post_tool",
+        "tool_failure", "pre_compact", "stop", "subagent_start", "subagent_stop",
+        "instructions_loaded", "file_changed", "unknown"
+      ]
+    },
+    "stringList": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "keyChain": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "description": "ordered, first-present-wins; dotted (`tool_input.file_path`) for a nested key, `name[].key` for a fallback that joins a list."
+    },
+    "claims": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["marker", "shape_inferred"]},
+        "event_key": {"$ref": "#/$defs/stringList"},
+        "client_types": {
+          "type": "array",
+          "items": {"type": ["string", "null"]},
+          "description": "accepted values of the vendor's own client-type field; null means the field may be absent."
+        },
+        "accept_markers": {"$ref": "#/$defs/stringList"},
+        "reject_markers": {"$ref": "#/$defs/stringList"},
+        "reject_probes": {
+          "$ref": "#/$defs/stringList",
+          "description": "named engine predicates (e.g. looks_like_claude_code) -- the design's own [h]: config may cite one, never embed its logic (dialect-families.md §7)."
+        },
+        "notes": {"type": "string", "description": "residual claims() branching this flat marker set does not express; a citation, not a spec."}
+      },
+      "if": {"properties": {"mode": {"const": "marker"}}},
+      "then": {"required": ["event_key"]}
+    },
+    "evidenceRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basis", "date", "test"],
+      "properties": {
+        "basis": {"enum": ["live-run", "live-run-partial", "vendor-source", "vendor-docs", "third-party-install", "inherited"]},
+        "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+        "test": {
+          "type": ["string", "null"],
+          "description": "golden fixture id or pytest suite node id that exercises this claim against our runtime; null only where none does."
+        }
+      }
+    }
+  }
+}

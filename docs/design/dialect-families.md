@@ -307,12 +307,19 @@ first, D3/D4 swap cleanly — they share only D1+D2.
 
 - **[h]** Bundle size estimates in §4 are composition arithmetic, not measurements;
   D3 should publish real numbers next to them.
-- **[h]** The `reject_probes: ["looks_like_claude_code"]` device (named engine
+- **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn
-  wrong, and the design should be revisited rather than the list grown.
+  wrong, and the design should be revisited rather than the list grown. **Answered by D2**:
+  exactly one named probe (`looks_like_claude_code`), used by `gemini_cli` and `devin` --
+  well inside the budget (`tests/test_vendor_config.py::
+  test_reject_probes_stay_under_the_three_probe_budget`). The design stands as written.
 - **[h]** vscode_copilot's dual-casing may be cleaner as two config entries sharing a
   family than one entry with paired key chains; decide in D3 with the fixtures open.
-- **[h]** PR #89's loader restores every JSON array as a tuple; `fields` chains here
-  are order-sensitive lists and unaffected, but D2 must confirm the loader's
-  tuple-restore doesn't collide with schema types.
+- **[v]** (was [h]) PR #89's loader restores every JSON array as a tuple; `fields` chains
+  here are order-sensitive lists and unaffected, but D2 must confirm the loader's
+  tuple-restore doesn't collide with schema types. **Answered by D2**: a tuple preserves
+  the exact sequence its JSON array was written in, so the restore is order-safe; nothing
+  in `vendor_config.py` or its tests ever compares one of these tuples against a list
+  literal with `==` (`tests/test_vendor_config.py::
+  test_loader_tuple_restore_preserves_field_chain_order`).

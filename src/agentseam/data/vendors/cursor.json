@@ -1,0 +1,165 @@
+{
+  "agent": "cursor",
+  "claims": {
+    "mode": "shape_inferred"
+  },
+  "config_format": "json",
+  "config_path": ".cursor/hooks.json",
+  "display": "Cursor",
+  "events": {
+    "afterFileEdit": "file_changed",
+    "afterMCPExecution": "post_tool",
+    "afterShellExecution": "post_tool",
+    "afterTabFileEdit": "file_changed",
+    "beforeMCPExecution": "pre_tool",
+    "beforeReadFile": "pre_tool",
+    "beforeShellExecution": "pre_tool",
+    "beforeSubmitPrompt": "prompt_submit",
+    "beforeTabFileRead": "pre_tool",
+    "postToolUse": "post_tool",
+    "postToolUseFailure": "tool_failure",
+    "preCompact": "pre_compact",
+    "preToolUse": "pre_tool",
+    "sessionEnd": "session_end",
+    "sessionStart": "session_start",
+    "stop": "stop",
+    "subagentStart": "subagent_start",
+    "subagentStop": "subagent_stop"
+  },
+  "evidence": {
+    "claims": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+    },
+    "config_path": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+    },
+    "events": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
+    },
+    "family": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    },
+    "fields": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "hook_entry": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "tools": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "verdicts": {
+      "basis": "live-run-partial",
+      "date": "2026-08-27",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    }
+  },
+  "family": "cursor",
+  "fields": {
+    "command": [
+      "command",
+      "tool_input.command"
+    ],
+    "cwd": [
+      "cwd"
+    ],
+    "output": [
+      "tool_output",
+      "output",
+      "result_json"
+    ],
+    "path": [
+      "file_path",
+      "tool_input.file_path",
+      "tool_input.path"
+    ],
+    "prompt": [
+      "prompt"
+    ],
+    "session_id": [
+      "conversation_id"
+    ],
+    "tool": [
+      "tool_name",
+      "hook_event_name"
+    ],
+    "tool_use_id": [
+      "tool_use_id"
+    ]
+  },
+  "hook_entry": {
+    "matcher": false,
+    "wrapper": "cursor"
+  },
+  "needs_trust": false,
+  "tools": {},
+  "verdicts": {
+    "answer_events": [
+      "beforeMCPExecution",
+      "beforeReadFile",
+      "beforeShellExecution",
+      "beforeSubmitPrompt",
+      "beforeTabFileRead",
+      "preToolUse"
+    ],
+    "bare_allow": "required",
+    "gates": {
+      "beforeMCPExecution": {
+        "grammar": "G4",
+        "honours_ask": true,
+        "honours_rewrite": false
+      },
+      "beforeReadFile": {
+        "grammar": "G4",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "beforeShellExecution": {
+        "grammar": "G4",
+        "honours_ask": true,
+        "honours_rewrite": false
+      },
+      "beforeSubmitPrompt": {
+        "grammar": "G4",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "beforeTabFileRead": {
+        "grammar": "G4",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "preToolUse": {
+        "grammar": "G4",
+        "honours_ask": false,
+        "honours_rewrite": true
+      }
+    },
+    "rewrite_grammar": "permission_updated_input",
+    "vocabulary": [
+      "allow",
+      "ask",
+      "deny"
+    ],
+    "vocabulary_basis": "verified"
+  },
+  "wire_events": {
+    "file_changed": "afterFileEdit",
+    "post_tool": "postToolUse",
+    "pre_tool": "preToolUse"
+  }
+}

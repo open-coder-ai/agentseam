@@ -1,0 +1,191 @@
+{
+  "agent": "vscode_copilot",
+  "claims": {
+    "accept_markers": [
+      "timestamp"
+    ],
+    "event_key": [
+      "hook_event_name",
+      "hookEventName"
+    ],
+    "mode": "marker",
+    "notes": "Accepted three ways (vscode_copilot.py:44-58): (1) a name in EVENT_MAP with the vscode envelope marker timestamp present and turn_id absent -- the only unconditional reject, captured above; (2) any lowercase-first event name in EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, cursor_version, conversation_id, generation_id or workspace_roots is present -- these only reject payloads that fall through to path (2), not every payload, so they are not listed as unconditional reject_markers; (3) a memory-tool call carrying tool_input.command.",
+    "reject_markers": [
+      "turn_id"
+    ]
+  },
+  "config_format": "json",
+  "config_path": ".github/hooks/agentseam.json",
+  "display": "GitHub Copilot (VS Code agent mode / CLI)",
+  "events": {
+    "PostToolUse": "post_tool",
+    "PreToolUse": "pre_tool",
+    "SessionStart": "session_start",
+    "Stop": "stop",
+    "SubagentStart": "subagent_start",
+    "SubagentStop": "subagent_stop",
+    "UserPromptSubmit": "prompt_submit",
+    "agentStop": "stop",
+    "postToolUse": "post_tool",
+    "preToolUse": "pre_tool",
+    "sessionEnd": "session_end",
+    "sessionStart": "session_start",
+    "subagentStop": "subagent_stop",
+    "userPromptSubmitted": "prompt_submit"
+  },
+  "evidence": {
+    "claims": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+    },
+    "config_path": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+    },
+    "events": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
+    },
+    "family": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    },
+    "fields": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "hook_entry": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "tools": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "verdicts": {
+      "basis": "live-run-partial",
+      "date": "2026-08-28",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    }
+  },
+  "family": "hook_json",
+  "fields": {
+    "command": [
+      "tool_input.command"
+    ],
+    "content": [
+      "tool_input.content",
+      "tool_input.newText",
+      "tool_input.new_str"
+    ],
+    "cwd": [
+      "cwd"
+    ],
+    "output": [
+      "tool_output",
+      "tool_response"
+    ],
+    "path": [
+      "tool_input.filePath",
+      "tool_input.file_path",
+      "tool_input.path"
+    ],
+    "prompt": [
+      "prompt"
+    ],
+    "session_id": [
+      "session_id"
+    ],
+    "tool": [
+      "tool_name",
+      "toolName"
+    ],
+    "tool_use_id": [
+      "tool_use_id"
+    ]
+  },
+  "fields_memory_write": {
+    "content": [
+      "tool_input.file_text",
+      "tool_input.new_str",
+      "tool_input.insert_text"
+    ],
+    "path": [
+      "tool_input.path"
+    ]
+  },
+  "hook_entry": {
+    "entry_extra": {
+      "windows": "powershell wrapper (_windows.py)"
+    },
+    "matcher": false,
+    "wrapper": "flat_entries"
+  },
+  "needs_trust": false,
+  "tools": {
+    "memory": [
+      "memory",
+      "copilot_memory"
+    ]
+  },
+  "verdicts": {
+    "answer_events": [
+      "PostToolUse",
+      "PreToolUse",
+      "Stop",
+      "SubagentStop",
+      "UserPromptSubmit"
+    ],
+    "bare_allow": "silent",
+    "gates": {
+      "PostToolUse": {
+        "grammar": "G1",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "PreToolUse": {
+        "grammar": "G2",
+        "honours_ask": true,
+        "honours_rewrite": true
+      },
+      "Stop": {
+        "grammar": "G3",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "SubagentStop": {
+        "grammar": "G3",
+        "honours_ask": false,
+        "honours_rewrite": false
+      },
+      "UserPromptSubmit": {
+        "grammar": "G1",
+        "honours_ask": false,
+        "honours_rewrite": false
+      }
+    },
+    "rewrite_grammar": "hook_specific_updated_input",
+    "vocabulary": [
+      "allow",
+      "ask",
+      "block",
+      "deny"
+    ],
+    "vocabulary_basis": "verified"
+  },
+  "wire_events": {
+    "post_tool": "PostToolUse",
+    "pre_tool": "PreToolUse",
+    "prompt_submit": "UserPromptSubmit",
+    "session_start": "SessionStart",
+    "stop": "Stop",
+    "subagent_stop": "SubagentStop"
+  }
+}
