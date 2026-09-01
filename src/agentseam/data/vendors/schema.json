@@ -104,6 +104,64 @@
         },
         "transform_grammar": {
           "enum": ["hook_specific_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
+        },
+        "words": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "decision concept -> the word this dialect speaks for it (dialect-families.md §3.2). A missing key means the concept is never spoken (a bare allow stays silent, a vouch degrades to silence).",
+          "properties": {
+            "allow": {"type": "string", "minLength": 1},
+            "deny": {"type": "string", "minLength": 1},
+            "escalate": {"type": "string", "minLength": 1},
+            "transform": {"type": "string", "minLength": 1},
+            "vouch": {"type": "string", "minLength": 1},
+            "block": {"type": "string", "minLength": 1}
+          }
+        },
+        "degrade_notes": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "the degradation-note strings, verbatim from the adapter they replaced so wire output stays byte-identical (dialect-families.md §3.1). `*_gate` keys apply at G2 gates; `escalate_from_transform` wins when the escalate was degraded from a transform.",
+          "properties": {
+            "escalate": {"type": "string", "minLength": 1},
+            "escalate_gate": {"type": "string", "minLength": 1},
+            "escalate_from_transform": {"type": "string", "minLength": 1},
+            "transform": {"type": "string", "minLength": 1},
+            "transform_missing_input": {"type": "string", "minLength": 1}
+          }
+        },
+        "reason_defaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "reason text spoken when the handler gave none, per refusal kind; the engine falls back to \"blocked by policy\".",
+          "properties": {
+            "deny": {"type": "string", "minLength": 1},
+            "deny_gate": {"type": "string", "minLength": 1},
+            "escalate": {"type": "string", "minLength": 1},
+            "escalate_gate": {"type": "string", "minLength": 1},
+            "transform": {"type": "string", "minLength": 1}
+          }
+        },
+        "note_style": {
+          "enum": ["suffix", "because"],
+          "description": "suffix: default the reason first, then always append \" (note)\"; because: \"reason (note)\" only when both exist, then default an empty result."
+        },
+        "echo": {
+          "enum": ["payload", "reverse_map"],
+          "description": "where a hookSpecificOutput body's hookEventName comes from: the payload's own event name, or this entry's canonical->wire mapping."
+        },
+        "default_wire_event": {
+          "type": "string",
+          "minLength": 1,
+          "description": "wire event name respond() assumes when the payload carries none (devin's PreToolUse)."
+        },
+        "context_events": {
+          "$ref": "#/$defs/stringList",
+          "description": "vendor wire event names where additionalContext is spoken."
+        },
+        "context_source": {
+          "enum": ["context", "reason"],
+          "description": "which Decision field feeds additionalContext at context_events."
         }
       }
     },
@@ -115,6 +173,7 @@
       "properties": {
         "wrapper": {"enum": ["hooks_map", "flat_entries", "flat_list", "cursor"]},
         "matcher": {"type": "boolean", "description": "whether passing `matcher=` to hook_config() changes its output at all."},
+        "bare": {"type": "boolean", "description": "the hooks table IS the whole config value, with no wrapper key around it (devin's hooks.v1.json)."},
         "group": {"type": "string", "description": "top-level wrapper key when the hooks table sits inside one (antigravity's GROUP)."},
         "entry_extra": {
           "type": "object",
@@ -170,10 +229,24 @@
           "description": "accepted values of the vendor's own client-type field; null means the field may be absent."
         },
         "accept_markers": {"$ref": "#/$defs/stringList"},
+        "accept_names": {
+          "$ref": "#/$defs/stringList",
+          "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PermissionRequest/PostCompaction)."
+        },
+        "accept_when_all": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/stringList"},
+          "description": "vendor event name -> keys that must ALL be present for that event to be claimed when no accept_marker is (codex_cli's SessionStart compound check)."
+        },
         "reject_markers": {"$ref": "#/$defs/stringList"},
+        "reject_markers_unless_probe": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/stringList"},
+          "description": "probe name -> markers that reject the payload UNLESS the named probe passes it (claude_code's prompt_id, rescued by looks_like_claude_code)."
+        },
         "reject_probes": {
           "$ref": "#/$defs/stringList",
-          "description": "named engine predicates (e.g. looks_like_claude_code) -- the design's own [h]: config may cite one, never embed its logic (dialect-families.md §7)."
+          "description": "named engine predicates (e.g. looks_like_claude_code) -- the design's own [h]: config may cite one, never embed its logic (dialect-families.md §7). A payload any listed probe matches is rejected."
         },
         "notes": {"type": "string", "description": "residual claims() branching this flat marker set does not express; a citation, not a spec."}
       },

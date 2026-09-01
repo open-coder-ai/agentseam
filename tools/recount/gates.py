@@ -117,7 +117,10 @@ def _classify_outcomes(deny, ask, rewrite):
 #: exercises the other four. Recounted here by executing the real dispatcher
 #: (`agentseam.handle`, degrade() included) against the SAME frozen pre_tool payload with
 #: only `hook_event_name` swapped -- not a second, hand-guessed source of truth.
-_EXTRA_GATE_NAMES = {"cursor": ("beforeShellExecution", "beforeMCPExecution", "beforeReadFile", "beforeTabFileRead")}
+_EXTRA_GATE_NAMES = {
+    "cursor": ("beforeShellExecution", "beforeMCPExecution", "beforeReadFile", "beforeTabFileRead"),
+    "devin": ("PermissionRequest",),
+}
 
 
 def _extra_gates(agent, canonical_source_event):
@@ -175,6 +178,8 @@ def _vocabulary_basis(agent):
 
 
 def verdicts(agent, mod):
+    from .tables import verdict_dialect
+
     gates, transform_grammar = _gates(agent, mod)
     out = {
         "vocabulary": sorted(mod.DECISION_VOCABULARY),
@@ -185,4 +190,5 @@ def verdicts(agent, mod):
     }
     if transform_grammar:
         out["transform_grammar"] = transform_grammar
+    out.update(verdict_dialect(agent))
     return out

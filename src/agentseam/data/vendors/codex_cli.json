@@ -4,11 +4,21 @@
     "accept_markers": [
       "turn_id"
     ],
+    "accept_when_all": {
+      "SessionStart": [
+        "session_id",
+        "transcript_path",
+        "cwd",
+        "model",
+        "permission_mode",
+        "source"
+      ]
+    },
     "event_key": [
       "hook_event_name"
     ],
     "mode": "marker",
-    "notes": "Also accepted at SessionStart when session_id, transcript_path, cwd, model, permission_mode and source are all present (codex_cli.py:35-45); that compound check is not expressed above."
+    "notes": "Codex sends no turn_id at SessionStart, so that one event is claimed by the accept_when_all compound instead (confirmed live 2026-08-28)."
   },
   "config_format": "json",
   "config_path": ".codex/hooks.json",
@@ -113,6 +123,13 @@
       "UserPromptSubmit"
     ],
     "bare_allow": "silent",
+    "degrade_notes": {
+      "escalate": "Codex CLI cannot prompt for confirmation at this event",
+      "escalate_gate": "Codex CLI does not support ask; asking would fail open",
+      "transform": "Codex CLI cannot modify a tool call at this event",
+      "transform_missing_input": "Codex CLI cannot apply a rewrite with no updatedInput"
+    },
+    "echo": "reverse_map",
     "gates": {
       "PreToolUse": {
         "grammar": "G2",
@@ -130,12 +147,21 @@
         "honours_transform": false
       }
     },
+    "note_style": "because",
+    "reason_defaults": {
+      "deny_gate": "blocked"
+    },
     "transform_grammar": "hook_specific_updated_input",
     "vocabulary": [
       "allow",
       "block",
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "block": "block",
+      "deny": "deny",
+      "transform": "allow"
+    }
   }
 }
