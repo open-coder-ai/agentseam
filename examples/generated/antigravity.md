@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / no |
+| can block / transform | yes / no |
 | hooks covered | 3 |
 | hook config | `.agents/hooks.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (per-event schemas and decision vocabulary) |
@@ -125,7 +125,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"decision": "ask", "reason": "looks like a credential -- confirm?"}
@@ -133,12 +133,22 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
-> reduced to `ask`: this agent cannot rewrite
+> reduced to `escalate`: this agent cannot transform
 
 ```json
 {"decision": "deny", "reason": "redacting the secret (Antigravity cannot modify a tool call)"}
+```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+```json
+{"decision": "allow"}
 ```
 
 Exit code: `0`

@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 12 |
 | hook config | `.claude/settings.json` |
 | evidence | `live-run` — live headless run (2.1.245) for the payload shapes, plus a live response-contract experiment on Windows (2.1.247, 2026-08-28) for what each event actually READS: one candidate reply shape per trial, with the verdict taken from the agent's own behaviour rather than the hook's claim -- a marker file the trial prompt asked for at UserPromptSubmit, and the Stop hook re-firing with stop_hook_active at Stop. That run established {"decision": "block"} and exit 2 as honoured at both, and hookSpecificOutput.permissionDecision -- the shape this adapter had always emitted there -- as ignored at both. The official hooks reference could not settle it: two reads of the same page disagreed, and one said those events had no JSON decision control at all. pre_tool was checked in the same round and does honour permissionDecision, so the three blocking events this row claims are now each backed by an observation rather than by inference from the other two. |
@@ -299,7 +299,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "looks like a credential -- confirm?"}}
@@ -307,11 +307,19 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
 ```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 

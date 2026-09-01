@@ -73,8 +73,11 @@ floor, said out loud.
 needing something vendor-specific reaches through rather than being blocked by our
 vocabulary — otherwise every gap in the vocabulary becomes a fork.
 
-**`Decision` — allow / deny / ask / rewrite.** Four outcomes, because those are the four
-things the union of vendors can express. Not every vendor can express all four; see §5.
+**`Decision` — allow / deny / escalate / transform / warn / vouch.** Aligned to the Agent
+Control Standard's verdict names (`ask`→`escalate`, `rewrite`→`transform`, kept as
+deprecated aliases; `warn` added; `vouch` has no ACS verdict and degrades to a labelled
+`allow` on every host that cannot speak it — see `allow_semantics.py`). Not every vendor can
+express every outcome; see §5.
 
 ### `UNKNOWN` is deliberately outside `EVENTS`
 
@@ -132,11 +135,11 @@ When you add an adapter, add fixtures — the test is only as good as its corpus
 Every primitive has cases the target cannot represent. The rule is the same in all four:
 **hand back what could not be expressed, with a reason, and make the caller see it.**
 
-- **Hooks.** `Decision.rewrite` on an agent that cannot rewrite degrades to `ask` — never
-  to a silent pass-through, because the handler asked for the input to be *changed*. The
-  reduction records `degraded_from` in evidence, so a second degradation downstream reports
-  the right cause. Without it, a rewrite→ask→blocked chain gets reported as a failed
-  confirmation request, and it was never a confirmation request.
+- **Hooks.** `Decision.transform` on an agent that cannot transform degrades to `escalate`
+  — never to a silent pass-through, because the handler asked for the input to be *changed*.
+  The reduction records `degraded_from` in evidence, so a second degradation downstream
+  reports the right cause. Without it, a transform→escalate→blocked chain gets reported as a
+  failed confirmation request, and it was never a confirmation request.
 - **Permissions.** `plan()` returns `(fragment, unrepresentable)`. VS Code's auto-approve
   map takes `false` for a pattern, which reads like a denylist and is not one: the command
   still runs once a human clicks through. Rendering a "deny" there hands you a guardrail

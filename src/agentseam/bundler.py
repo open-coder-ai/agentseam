@@ -6,7 +6,7 @@ import ast
 import os
 
 from . import __version__, adapters
-from .allow_semantics import VOUCH_SPEAKS
+from .allow_semantics import VOUCH_SPEAKS, WARN_SPEAKS
 from .bundler_templates import HEADER, RUNTIME, section
 from .contract import EVENTS
 from .matrix import capability
@@ -163,8 +163,9 @@ def bundle(agent):
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
     sections.extend(body)
 
-    rewrite_events = sorted(ev for ev in EVENTS if capability(agent, ev)["rewrite"])
+    transform_events = sorted(ev for ev in EVENTS if capability(agent, ev)["transform"])
     vouch_speaks = agent in VOUCH_SPEAKS
+    warn_speaks = agent in WARN_SPEAKS
     note = (
         "claude_code and vscode_copilot are the only agents with real evidence that an "
         'explicit approval word means "skip confirmation"; see agentseam.allow_semantics'
@@ -179,7 +180,8 @@ def bundle(agent):
                 agent=agent,
                 vouch_speaks=vouch_speaks,
                 vouch_speaks_note=note,
-                rewrite_events=tuple(rewrite_events),
+                warn_speaks=warn_speaks,
+                transform_events=tuple(transform_events),
             ),
         )
     )

@@ -122,3 +122,8 @@ ALLOW_SEMANTICS = {
 }
 
 VOUCH_SPEAKS = frozenset({"claude_code", "vscode_copilot"})
+
+# Mirrors VOUCH_SPEAKS: agents with cited evidence that they have a real warning channel,
+# distinct from a plain allow. Starts empty -- no agent's warning channel has been established
+# to that standard yet, and an empty set is the honest starting point, not a placeholder.
+WARN_SPEAKS = frozenset()

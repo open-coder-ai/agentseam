@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / no |
+| can block / transform | yes / no |
 | hooks covered | 7 |
 | hook config | `.tabnine/agent/settings.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (event table, exit codes, output fields) |
@@ -258,7 +258,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"decision": "deny", "reason": "looks like a credential -- confirm? (Tabnine cannot prompt for confirmation)"}
@@ -266,12 +266,22 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
-> reduced to `ask`: this agent cannot rewrite
+> reduced to `escalate`: this agent cannot transform
 
 ```json
 {"decision": "deny", "reason": "redacting the secret (Tabnine cannot modify a tool call)"}
+```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+```json
+{"decision": "allow"}
 ```
 
 Exit code: `0`

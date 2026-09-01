@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 7 |
 | hook config | `.github/hooks/*.json` |
 | evidence | `live-run-partial` — microsoft/vscode source, read from a clone rather than from the docs: hookTypes.ts (HOOKS_BY_TARGET -- both products' event-name maps), hookSchema.ts and hookCompatibility.ts (parseCopilotHooks, the config shape actually parsed), hookCommandTypes.ts and chatHookService.ts (per-event input and output contracts, exit-code semantics), hookResultProcessor.ts, and languageModelToolsService.ts (where the decision is honoured). Extended 2026-08-29 by a LIVE CAPTURE on Windows -- the first real payloads this row has ever had: 5 vendor events across two sessions, all claimed, none carrying an event we do not map. It corrected the write-tool vocabulary (the tools are `Edit`, `Read`, `Glob`, sending path/old_str/new_str -- not the create_file/edit_file/apply_patch this adapter had waited on a capture to confirm) and found that `tool_input` arrives as an OBJECT in one run and a JSON STRING in another, same tool, different model routing. It also surfaced `initial_prompt` (SessionStart) and `stop_reason` (Stop), which appear in no vendor doc read here. |
@@ -200,7 +200,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "ask", "permissionDecisionReason": "looks like a credential -- confirm?"}}
@@ -208,11 +208,19 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
 ```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 

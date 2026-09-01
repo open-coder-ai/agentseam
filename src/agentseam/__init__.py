@@ -7,6 +7,7 @@ from .contract import (
     ALLOW,
     ASK,
     DENY,
+    ESCALATE,
     EVENTS,
     FILE_CHANGED,
     INSTRUCTIONS_LOADED,
@@ -21,12 +22,24 @@ from .contract import (
     SUBAGENT_START,
     SUBAGENT_STOP,
     TOOL_FAILURE,
+    TRANSFORM,
     UNKNOWN,
+    VOUCH,
+    WARN,
     Decision,
     Event,
 )
 from .dispatch import degrade, handle, run
-from .matrix import MATRIX, adapted_agents, agents, can_block, can_rewrite, capability, enforcement_level
+from .matrix import (
+    MATRIX,
+    adapted_agents,
+    agents,
+    can_block,
+    can_rewrite,
+    can_transform,
+    capability,
+    enforcement_level,
+)
 
 __all__ = [
     "run",
@@ -43,12 +56,17 @@ __all__ = [
     "ALLOW",
     "DENY",
     "ASK",
+    "ESCALATE",
     "REWRITE",
+    "TRANSFORM",
+    "WARN",
+    "VOUCH",
     "MATRIX",
     "agents",
     "capability",
     "can_block",
     "can_rewrite",
+    "can_transform",
     "enforcement_level",
     "adapted_agents",
     "SESSION_START",

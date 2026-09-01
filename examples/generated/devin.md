@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 6 |
 | hook config | `.devin/hooks.v1.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (events, output format, exit codes) |
@@ -233,7 +233,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"decision": "block", "reason": "looks like a credential -- confirm? (Devin cannot prompt for confirmation, so this is a block)"}
@@ -241,10 +241,20 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}}}
+```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+```json
+{"decision": "approve"}
 ```
 
 Exit code: `0`

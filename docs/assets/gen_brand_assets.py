@@ -83,10 +83,15 @@ def decision_outcomes():
     `rewrite` was added the card silently kept saying four. Anything that claims to be
     derived has to be able to discover a name nobody told it about.
     """
-    names = [n for n, v in vars(contract.Decision).items() if isinstance(v, classmethod)]
+    names = [
+        n
+        for n, v in vars(contract.Decision).items()
+        if isinstance(v, classmethod) and n not in contract.Decision.DEPRECATED_ALIASES
+    ]
     # Each constructor pairs with a module-level outcome constant of the same name. If that
     # stops holding, a classmethod that is not an outcome has been added and this needs a
-    # real discriminator rather than a quiet miscount.
+    # real discriminator rather than a quiet miscount. `ask`/`rewrite` are excluded above:
+    # they are pre-ACS aliases of `escalate`/`transform`, not a distinct outcome constant.
     for name in names:
         assert getattr(contract, name.upper(), None) == name, (
             f"Decision.{name} has no matching outcome constant; the derivation is unsound"

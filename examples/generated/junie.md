@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 5 |
 | hook config | `~/.junie/config.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (events, decisions, config merging, limitations) |
@@ -227,7 +227,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"decision": "ask", "reason": "looks like a credential -- confirm?"}
@@ -235,10 +235,20 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"decision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "reason": "redacting the secret"}
+```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+```json
+{"decision": "allow", "additionalContext": "looks slightly off, but not enough to stop it"}
 ```
 
 Exit code: `0`

@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 9 |
 | hook config | `.codex/hooks.json` |
 | evidence | `live-run-partial` — vendor source (codex-rs: config/src/hook_config.rs, hooks/src/schema.rs, engine/output_parser.rs, engine/discovery.rs), plus a live capture on Windows: 74 real payloads across two sessions, every one claimed by this adapter. That run is what corrected the event-name casing, the write-tool vocabulary and the per-event response dialects -- each of which source alone had been read wrongly. `observed` lists the events actually seen fire; the rest of this row still rests on source. HookEventName.ts is deliberately no longer cited: it is a ts-rs binding for the App Server's IDE-facing protocol, not the CLI hook dialect this adapter speaks, and citing it is what put camelCase event names here. |
@@ -282,7 +282,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "looks like a credential -- confirm? (Codex CLI does not support ask; asking would fail open)"}}
@@ -290,11 +290,19 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow", "updatedInput": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "permissionDecisionReason": "redacting the secret"}}
 ```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 
