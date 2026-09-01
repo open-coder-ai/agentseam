@@ -13,7 +13,7 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   produced by `tools/recount_vendor_config.py`, which derives each field by executing or
   AST-reading the current adapter and its D1 golden fixture rather than by hand -- module
   constants read directly, `parse()`'s field-fallback chains AST-walked, and every gate's
-  grammar/`honours_ask`/`honours_rewrite` replayed straight out of the frozen (payload ->
+  grammar/`honours_escalate`/`honours_transform` replayed straight out of the frozen (payload ->
   stdout) wire truth. Family assignment and the marker-based `claims` table are the design's
   own stated judgment calls, recorded as small tables and pinned by
   `tests/test_vendor_config_claims.py`, which mutates a real claimed payload per declared

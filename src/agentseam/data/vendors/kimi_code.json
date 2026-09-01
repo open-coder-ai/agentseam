@@ -120,18 +120,18 @@
     "gates": {
       "PreToolUse": {
         "grammar": "G2",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "Stop": {
         "grammar": "G2",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "UserPromptSubmit": {
         "grammar": "G2",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "vocabulary": [

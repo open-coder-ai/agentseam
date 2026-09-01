@@ -127,26 +127,26 @@
     "gates": {
       "AfterAgent": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "AfterTool": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "BeforeAgent": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "BeforeTool": {
         "grammar": "G1",
-        "honours_ask": true,
-        "honours_rewrite": true
+        "honours_escalate": true,
+        "honours_transform": true
       }
     },
-    "rewrite_grammar": "hook_specific_tool_input",
+    "transform_grammar": "hook_specific_tool_input",
     "vocabulary": [
       "allow",
       "ask",

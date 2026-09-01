@@ -97,13 +97,13 @@
     "gates": {
       "pre_run_command": {
         "grammar": "G5",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "pre_user_prompt": {
         "grammar": "G5",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "vocabulary": [],

@@ -1,12 +1,14 @@
 """Executed against the D1 golden fixture: which grammar each gate speaks, and what it honours.
 
-Every gate's `grammar`/`honours_ask`/`honours_rewrite` is read off `tests/fixtures/golden/
-<agent>.json` -- the frozen (payload -> stdout, exit) truth wave D1 captured by running the
-real dispatcher (`agentseam.handle`, `dispatch.degrade()` included). That is deliberate: a
-claim like "this gate honours ask" is only true operationally if the END-TO-END pipeline
-(matrix-aware degrade + adapter dialect) produces a distinguishable ask response, which
-matches this project's own definition of "tested" (org-plan plan/agentseam-project.md):
-"an automated check exercises the claim against OUR RUNTIME".
+Every gate's `grammar`/`honours_escalate`/`honours_transform` is read off `tests/fixtures/
+golden/<agent>.json` -- the frozen (payload -> stdout, exit) truth wave D1 captured by running
+the real dispatcher (`agentseam.handle`, `dispatch.degrade()` included). That is deliberate: a
+claim like "this gate honours escalate" is only true operationally if the END-TO-END pipeline
+(matrix-aware degrade + adapter dialect) produces a distinguishable response, which matches
+this project's own definition of "tested" (org-plan plan/agentseam-project.md): "an automated
+check exercises the claim against OUR RUNTIME". Field names follow the post-W35 ACS
+vocabulary (`contract.py`: `escalate`/`transform`, not the pre-ACS `ask`/`rewrite`) -- the
+local `ask`/`rewrite` names below are D1's own golden-fixture outcome labels, untouched here.
 """
 
 from __future__ import annotations
@@ -54,7 +56,7 @@ def _classify_grammar(stdout, exit_code):
     return None
 
 
-def _classify_rewrite_grammar(stdout):
+def _classify_transform_grammar(stdout):
     text = (stdout or "").strip()
     if not text:
         return None
@@ -104,13 +106,13 @@ def _classify_outcomes(deny, ask, rewrite):
     grammar = _classify_grammar(deny["stdout"], deny["exit"])
     if grammar is None:
         return None
-    honours_ask = ask != deny and bool(_words(ask["stdout"]) - _words(deny["stdout"]))
-    honours_rewrite = rewrite != deny and _classify_rewrite_grammar(rewrite["stdout"]) is not None
-    return {"grammar": grammar, "honours_ask": honours_ask, "honours_rewrite": honours_rewrite}
+    honours_escalate = ask != deny and bool(_words(ask["stdout"]) - _words(deny["stdout"]))
+    honours_transform = rewrite != deny and _classify_transform_grammar(rewrite["stdout"]) is not None
+    return {"grammar": grammar, "honours_escalate": honours_escalate, "honours_transform": honours_transform}
 
 
 #: Cursor names FIVE distinct wire events for canonical pre_tool (cursor.py:51-57's
-#: `_PERMISSION_GATES`), each with its own honours_ask -- but `REVERSE_EVENT_MAP` picks only
+#: `_PERMISSION_GATES`), each with its own honours_escalate -- but `REVERSE_EVENT_MAP` picks only
 #: "preToolUse" to emit, so D1's one-scenario-per-canonical-event golden fixture never
 #: exercises the other four. Recounted here by executing the real dispatcher
 #: (`agentseam.handle`, degrade() included) against the SAME frozen pre_tool payload with
@@ -147,7 +149,7 @@ def _gates(agent, mod):
     fixture = _load_fixture(agent)
     reverse = getattr(mod, "REVERSE_EVENT_MAP", {})
     gates = {}
-    rewrite_grammar = None
+    transform_grammar = None
     for canonical_event, entry in sorted(fixture["events"].items()):
         deny = entry["outcomes"]["deny"]
         ask = entry["outcomes"]["ask"]
@@ -155,13 +157,13 @@ def _gates(agent, mod):
         classified = _classify_outcomes(deny, ask, rewrite)
         if classified is None:
             continue  # not a gate: this canonical event never speaks a verdict
-        if classified["honours_rewrite"]:
-            rewrite_grammar = _classify_rewrite_grammar(rewrite["stdout"])
+        if classified["honours_transform"]:
+            transform_grammar = _classify_transform_grammar(rewrite["stdout"])
         vendor_name = reverse.get(canonical_event, canonical_event)
         gates[vendor_name] = classified
         if canonical_event == "pre_tool":
             gates.update(_extra_gates(agent, canonical_event))
-    return gates, rewrite_grammar
+    return gates, transform_grammar
 
 
 def _vocabulary_basis(agent):
@@ -173,7 +175,7 @@ def _vocabulary_basis(agent):
 
 
 def verdicts(agent, mod):
-    gates, rewrite_grammar = _gates(agent, mod)
+    gates, transform_grammar = _gates(agent, mod)
     out = {
         "vocabulary": sorted(mod.DECISION_VOCABULARY),
         "vocabulary_basis": _vocabulary_basis(agent),
@@ -181,6 +183,6 @@ def verdicts(agent, mod):
         "answer_events": sorted(gates),
         "gates": gates,
     }
-    if rewrite_grammar:
-        out["rewrite_grammar"] = rewrite_grammar
+    if transform_grammar:
+        out["transform_grammar"] = transform_grammar
     return out

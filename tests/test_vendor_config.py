@@ -63,6 +63,15 @@ def test_schema_rejects_an_unknown_gate_grammar():
     assert validate(SCHEMA, mutated) != []
 
 
+def test_schema_rejects_a_typoed_gate_field_name():
+    """Field names follow the post-W35 ACS vocabulary (escalate/transform); a reviewer's
+    typo back to the pre-ACS ask/rewrite spelling must fail loud, not fail open."""
+    mutated = copy.deepcopy(VENDOR_CONFIG["claude_code"])
+    gate = mutated["verdicts"]["gates"]["PreToolUse"]
+    gate["honours_ask"] = gate.pop("honours_escalate")
+    assert validate(SCHEMA, mutated) != []
+
+
 def test_schema_rejects_an_unrecognised_claims_mode():
     mutated = copy.deepcopy(VENDOR_CONFIG["cursor"])
     mutated["claims"]["mode"] = "psychic"

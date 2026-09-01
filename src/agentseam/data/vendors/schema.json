@@ -90,19 +90,19 @@
         },
         "gates": {
           "type": "object",
-          "description": "vendor wire event name -> what that gate honours. Keys are vendor names, not canonical ones, because one canonical event can carry several wire names with different honours_ask (cursor.py:51-57).",
+          "description": "vendor wire event name -> what that gate honours. Keys are vendor names, not canonical ones, because one canonical event can carry several wire names with different honours_escalate (cursor.py:51-57). Field names follow the post-W35 ACS vocabulary (contract.py: escalate/transform), not the pre-ACS ask/rewrite.",
           "additionalProperties": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["grammar", "honours_ask", "honours_rewrite"],
+            "required": ["grammar", "honours_escalate", "honours_transform"],
             "properties": {
               "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5"]},
-              "honours_ask": {"type": "boolean"},
-              "honours_rewrite": {"type": "boolean"}
+              "honours_escalate": {"type": "boolean"},
+              "honours_transform": {"type": "boolean"}
             }
           }
         },
-        "rewrite_grammar": {
+        "transform_grammar": {
           "enum": ["hook_specific_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
         }
       }

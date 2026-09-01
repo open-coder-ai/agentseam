@@ -110,8 +110,8 @@
     "gates": {
       "PreToolUse": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "vocabulary": [

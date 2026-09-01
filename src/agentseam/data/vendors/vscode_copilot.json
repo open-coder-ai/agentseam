@@ -147,31 +147,31 @@
     "gates": {
       "PostToolUse": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "PreToolUse": {
         "grammar": "G2",
-        "honours_ask": true,
-        "honours_rewrite": true
+        "honours_escalate": true,
+        "honours_transform": true
       },
       "Stop": {
         "grammar": "G3",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "SubagentStop": {
         "grammar": "G3",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "UserPromptSubmit": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
-    "rewrite_grammar": "hook_specific_updated_input",
+    "transform_grammar": "hook_specific_updated_input",
     "vocabulary": [
       "allow",
       "ask",

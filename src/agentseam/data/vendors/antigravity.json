@@ -96,13 +96,13 @@
     "gates": {
       "PreToolUse": {
         "grammar": "G1",
-        "honours_ask": true,
-        "honours_rewrite": false
+        "honours_escalate": true,
+        "honours_transform": false
       },
       "Stop": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "vocabulary": [

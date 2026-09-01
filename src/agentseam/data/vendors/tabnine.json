@@ -114,23 +114,23 @@
     "gates": {
       "AfterAgent": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "AfterTool": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "BeforeAgent": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "BeforeTool": {
         "grammar": "G1",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "vocabulary": [

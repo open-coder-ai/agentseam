@@ -120,36 +120,36 @@
     "gates": {
       "beforeMCPExecution": {
         "grammar": "G4",
-        "honours_ask": true,
-        "honours_rewrite": false
+        "honours_escalate": true,
+        "honours_transform": false
       },
       "beforeReadFile": {
         "grammar": "G4",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "beforeShellExecution": {
         "grammar": "G4",
-        "honours_ask": true,
-        "honours_rewrite": false
+        "honours_escalate": true,
+        "honours_transform": false
       },
       "beforeSubmitPrompt": {
         "grammar": "G4",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "beforeTabFileRead": {
         "grammar": "G4",
-        "honours_ask": false,
-        "honours_rewrite": false
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "preToolUse": {
         "grammar": "G4",
-        "honours_ask": false,
-        "honours_rewrite": true
+        "honours_escalate": false,
+        "honours_transform": true
       }
     },
-    "rewrite_grammar": "permission_updated_input",
+    "transform_grammar": "permission_updated_input",
     "vocabulary": [
       "allow",
       "ask",
