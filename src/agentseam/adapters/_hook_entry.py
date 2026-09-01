@@ -21,11 +21,16 @@ def _hook_dict(cfg, command):
     return entry
 
 
-def hook_entry_config(cfg, canonical_events, command, matcher=None):
-    """The vendor's hooks-config fragment wiring `command` for these canonical events."""
+def hook_entry_config(cfg, canonical_events, command, matcher=None, fail_closed=True):
+    """The vendor's hooks-config fragment wiring `command` for these canonical events.
+
+    `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the
+    entry says otherwise; a False installs an observer, not a gate.
+    """
     hook_entry = cfg["hook_entry"]
     reverse = hj_reverse(cfg)
-    if hook_entry["wrapper"] == "flat_list":
+    wrapper = hook_entry["wrapper"]
+    if wrapper == "flat_list":
         rules = []
         for ev in canonical_events:
             name = reverse.get(ev)
@@ -36,6 +41,29 @@ def hook_entry_config(cfg, canonical_events, command, matcher=None):
                 rule["matcher"] = matcher
             rules.append(rule)
         return rules
+    if wrapper == "cursor":
+        gates = cfg["verdicts"]["answer_events"]
+        hooks = {}
+        for ev in canonical_events:
+            name = reverse.get(ev)
+            if not name:
+                continue
+            entry = {"command": command}
+            if fail_closed and name in gates:
+                entry["failClosed"] = True
+            hooks.setdefault(name, []).append(entry)
+        return {"version": 1, "hooks": hooks}
+    if wrapper == "flat_entries":
+        hooks = {}
+        for ev in canonical_events:
+            name = reverse.get(ev)
+            if not name:
+                continue
+            hooks.setdefault(name, []).append({"command": command})
+            extra = hook_entry.get("also_wires", {}).get(ev)
+            if extra:
+                hooks.setdefault(extra, []).append({"command": command})
+        return {"hooks": hooks}
     hooks = {}
     for ev in canonical_events:
         name = reverse.get(ev)
@@ -45,6 +73,8 @@ def hook_entry_config(cfg, canonical_events, command, matcher=None):
         if matcher and hook_entry["matcher"]:
             entry["matcher"] = matcher
         hooks.setdefault(name, []).append(entry)
+    if hook_entry.get("group"):
+        return {hook_entry["group"]: hooks}
     return hooks if hook_entry.get("bare") else {"hooks": hooks}
 
 

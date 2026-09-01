@@ -46,10 +46,11 @@ def test_hook_is_executable():
 
 
 def test_changing_an_adapter_refreshes_the_pages_in_the_same_commit(clone):
-    """The point of the hook: the fix and its regenerated output land together."""
-    adapter = clone / "src" / "agentseam" / "adapters" / "windsurf.py"
-    adapter.write_text(adapter.read_text().replace("cannot prompt for confirmation", "has no confirmation prompt"))
-    assert _run(GIT + ["add", "src/agentseam/adapters/windsurf.py"], clone).returncode == 0
+    """The point of the hook: the fix and its regenerated output land together. An
+    adapter's dialect now lives in its data/vendors entry, so that is the file changed."""
+    entry = clone / "src" / "agentseam" / "data" / "vendors" / "windsurf.json"
+    entry.write_text(entry.read_text().replace("cannot prompt for confirmation", "has no confirmation prompt"))
+    assert _run(GIT + ["add", "src/agentseam/data/vendors/windsurf.json"], clone).returncode == 0
 
     result = _commit(clone, "change windsurf wording")
     assert result.returncode == 0, result.stderr

@@ -154,6 +154,10 @@ def _runtime_section(agent):
     )
 
 
+#: Families with their own engine module beside `_payload`/`_hook_json`; the F1/F2
+#: families bind the shared `hj_*` entry points instead.
+_SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity": "_antigravity"}
+
 _BINDING = """\
 AGENT = "{agent}"
 
@@ -161,15 +165,15 @@ VENDOR = {vendor}
 
 
 def claims(raw):
-    return hj_claims(VENDOR, raw)
+    return {prefix}_claims(VENDOR, raw)
 
 
 def parse(raw):
-    return hj_parse(VENDOR, raw)
+    return {prefix}_parse(VENDOR, raw)
 
 
 def respond(decision, event):
-    return hj_respond(VENDOR, decision, event)
+    return {prefix}_respond(VENDOR, decision, event)
 
 
 def hook_config(canonical_events, command, matcher=None):
@@ -197,11 +201,23 @@ def _engine_bundle(agent):
         body.append(
             section("windows helper (used by the %s hook entries)" % agent, _strip_own_imports(windows_source, hoisted))
         )
+    payload_source = _read(os.path.join(_ADAPTERS_DIR, "_payload.py"))
+    body.append(section("payload engine (claims + parse)", _strip_own_imports(payload_source, hoisted)))
     engine_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_json.py"))
     body.append(section("hook_json family engine", _strip_own_imports(engine_source, hoisted)))
     entry_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_entry.py"))
     body.append(section("hook-entry renderer", _strip_own_imports(entry_source, hoisted)))
-    body.append(section("%s vendor config + engine binding" % agent, _BINDING.format(agent=agent, vendor=repr(cfg))))
+    family = cfg["family"]
+    if family in _SINGLETON_MODULES:
+        family_source = _read(os.path.join(_ADAPTERS_DIR, "%s.py" % _SINGLETON_MODULES[family]))
+        body.append(section("%s family engine" % family, _strip_own_imports(family_source, hoisted)))
+    prefix = family if family in _SINGLETON_MODULES else "hj"
+    body.append(
+        section(
+            "%s vendor config + engine binding" % agent,
+            _BINDING.format(agent=agent, vendor=repr(cfg), prefix=prefix),
+        )
+    )
 
     sections = [HEADER.format(version=__version__, agent=agent)]
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))

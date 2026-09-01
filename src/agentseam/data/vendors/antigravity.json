@@ -73,6 +73,9 @@
     "session_id": [
       "conversationId"
     ],
+    "stringify": [
+      "tool_use_id"
+    ],
     "tool": [
       "toolCall.name"
     ],
@@ -93,6 +96,18 @@
       "Stop"
     ],
     "bare_allow": "unverified",
+    "default_wire_event": "PreToolUse",
+    "degrade_notes": {
+      "escalate": "Antigravity cannot prompt at Stop",
+      "escalate_from_transform": "Antigravity cannot modify a tool call",
+      "transform": "Antigravity cannot modify a tool call"
+    },
+    "empty_object_events": [
+      "PostToolUse"
+    ],
+    "gate_reason_defaults": {
+      "Stop": "policy requires more work"
+    },
     "gates": {
       "PreToolUse": {
         "grammar": "G1",
@@ -105,6 +120,10 @@
         "honours_transform": false
       }
     },
+    "note_style": "because",
+    "reason_defaults": {
+      "escalate": "confirmation required"
+    },
     "vocabulary": [
       "allow",
       "ask",
@@ -114,7 +133,18 @@
       "force_ask",
       "stop"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "allow": "allow",
+      "block": "deny",
+      "escalate": "ask"
+    },
+    "words_at": {
+      "Stop": {
+        "allow": "stop",
+        "block": "continue"
+      }
+    }
   },
   "wire_events": {
     "post_tool": "PostToolUse",

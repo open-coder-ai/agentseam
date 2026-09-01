@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from . import _hook_json
+from ._antigravity import antigravity_claims, antigravity_parse, antigravity_respond
+from ._cursor import cursor_claims, cursor_parse, cursor_respond
 from ._hook_entry import hook_entry_config, render_config
-from ._hook_json import hj_claims, hj_parse, hj_respond, hj_reverse
+from ._hook_json import hj_respond, hj_reverse
+from ._payload import hj_claims, hj_parse
 from ._windows import powershell_command
+from ._windsurf import windsurf_claims, windsurf_parse, windsurf_respond
 
 
 class ConfigAdapter:
@@ -48,10 +52,55 @@ class ConfigAdapter:
         return hook_entry_config(self.CONFIG, canonical_events, command, matcher)
 
 
+class _CursorAdapter(ConfigAdapter):
+    """F3: the G4 dialect, and the only hook_config that takes fail_closed."""
+
+    def claims(self, raw):
+        return cursor_claims(self.CONFIG, raw)
+
+    def parse(self, raw):
+        return cursor_parse(self.CONFIG, raw)
+
+    def respond(self, decision, event):
+        return cursor_respond(self.CONFIG, decision, event)
+
+    def hook_config(self, canonical_events, command, matcher=None, fail_closed=True):
+        return hook_entry_config(self.CONFIG, canonical_events, command, matcher, fail_closed)
+
+
+class _WindsurfAdapter(ConfigAdapter):
+    """F4: the G5 exit-code dialect."""
+
+    def claims(self, raw):
+        return windsurf_claims(self.CONFIG, raw)
+
+    def parse(self, raw):
+        return windsurf_parse(self.CONFIG, raw)
+
+    def respond(self, decision, event):
+        return windsurf_respond(self.CONFIG, decision, event)
+
+
+class _AntigravityAdapter(ConfigAdapter):
+    """F5: shape-inferred events over the engine's G1 renderer."""
+
+    def claims(self, raw):
+        return antigravity_claims(self.CONFIG, raw)
+
+    def parse(self, raw):
+        return antigravity_parse(self.CONFIG, raw)
+
+    def respond(self, decision, event):
+        return antigravity_respond(self.CONFIG, decision, event)
+
+
+_FAMILY_ADAPTERS = {"cursor": _CursorAdapter, "windsurf": _WindsurfAdapter, "antigravity": _AntigravityAdapter}
+
+
 def _hook_entry_windows(cfg):
     return tuple(cfg["hook_entry"].get("entry_extra", {}))
 
 
 def bind(cfg):
     """The adapter object for one vendor config entry."""
-    return ConfigAdapter(cfg)
+    return _FAMILY_ADAPTERS.get(cfg["family"], ConfigAdapter)(cfg)

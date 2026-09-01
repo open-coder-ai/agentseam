@@ -74,6 +74,12 @@
       "command",
       "tool_input.command"
     ],
+    "content": [
+      "edits[].new_string",
+      "tool_input.content",
+      "tool_input.new_string",
+      "content"
+    ],
     "cwd": [
       "cwd"
     ],
@@ -94,8 +100,7 @@
       "conversation_id"
     ],
     "tool": [
-      "tool_name",
-      "hook_event_name"
+      "tool_name"
     ],
     "tool_use_id": [
       "tool_use_id"
@@ -117,6 +122,14 @@
       "preToolUse"
     ],
     "bare_allow": "required",
+    "default_wire_event": "beforeShellExecution",
+    "degrade_notes": {
+      "escalate": "%s cannot prompt for confirmation, so this is a block",
+      "escalate_from_transform": "%s cannot modify a tool call, so this is a block",
+      "transform": "input requires modification, which this gate cannot express"
+    },
+    "flag_note": "observed after the fact (%s cannot prevent it): %s",
+    "flag_note_default": "policy violation",
     "gates": {
       "beforeMCPExecution": {
         "grammar": "G4",
@@ -155,7 +168,12 @@
       "ask",
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "allow": "allow",
+      "block": "deny",
+      "escalate": "ask"
+    }
   },
   "wire_events": {
     "file_changed": "afterFileEdit",

@@ -30,6 +30,25 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   chains (demonstrated, not merely asserted).
 
 ### Changed
+- **The three singleton adapters are folded onto the engine**
+  (`docs/design/dialect-families.md` D5). `cursor`, `windsurf` and `antigravity` are no
+  longer hand-written modules: each is a small family module (shape-inferred claims and
+  event naming, which §3.3 keeps as code, plus cursor's G4 permission-object renderer and
+  windsurf's G5 exit-code renderer) over the shared accessor and its
+  `data/vendors/<agent>.json` entry, which now carries the dialect's words and note strings
+  verbatim. The golden wire fixtures pass **byte-for-byte unchanged**. The engine devices
+  this needed are opt-in schema keys absent from every F1/F2 entry: a generic dotted-path
+  field accessor (`toolCall.args.X`, `workspacePaths[0]`, top-level `edits[].new_string`),
+  `stringify`, `empty_object_events`, per-gate `words_at` overrides, `flag_note` templates,
+  `hook_entry.also_wires` (windsurf's second pre_tool wire name, moved out of
+  `entry_extra`, which would have copied it into entries verbatim), the `cursor` and
+  `flat_entries` hook wrappers with `group` nesting, and a G1 block reroute for an escalate
+  degraded from a transform where the entry names that degradation. `_hook_json.py` split
+  by activity into `_payload.py` (claims/parse) and the renderers to stay in the review
+  budget. windsurf's `pre_mcp_tool_use` gate — blocking in the adapter but invisible to
+  D1's one-wire-per-canonical-event fixture — joins `_EXTRA_GATE_NAMES` and is recounted by
+  executing the dispatcher. vscode_copilot remains the one dialect module (W38's recorded
+  design feedback; folding it is an owner decision).
 - **The four `flat_decision` adapters are folded onto the same engine**
   (`docs/design/dialect-families.md` D4). `gemini_cli`, `tabnine`, `junie` and `grok` are
   no longer hand-written modules: the D3 engine executes their `data/vendors/<agent>.json`
