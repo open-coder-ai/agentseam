@@ -13,7 +13,7 @@ a live run; most are read from vendor documentation, and vendors change hook sur
 without notice. Verify against your own installation before relying on any of it.
 
 
-| agent | hooks | enforcement | block | rewrite | evidence | config |
+| agent | hooks | enforcement | block | transform | evidence | config |
 |---|---|---|---|---|---|---|
 | [Antigravity](antigravity.md) | 3 | best-effort | yes | no | `vendor-docs` | `.agents/hooks.json` |
 | [Claude Code](claude_code.md) | 12 | best-effort | yes | yes | `live-run` | `.claude/settings.json` |

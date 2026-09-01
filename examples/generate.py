@@ -34,12 +34,15 @@ OUT = os.path.join(os.path.dirname(__file__), "generated")
 DECISIONS = [
     ("allow", lambda: Decision.allow(), "the handler is happy"),
     ("deny", lambda: Decision.deny("secret detected in file content"), "the handler refuses"),
-    ("ask", lambda: Decision.ask("looks like a credential -- confirm?"), "the handler wants a human"),
+    ("escalate", lambda: Decision.escalate("looks like a credential -- confirm?"), "the handler wants a human"),
     (
-        "rewrite",
-        lambda: Decision.rewrite({"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "redacting the secret"),
+        "transform",
+        lambda: Decision.transform({"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "redacting the secret"),
         "the handler wants the input changed",
     ),
+    # WARN_SPEAKS starts empty, so this reduces to a plain `allow` everywhere today -- same
+    # shape as `vouch` below, shown for the same reason.
+    ("warn", lambda: Decision.warn("looks slightly off, but not enough to stop it"), "the handler flags a concern"),
     # The loud one, and the reason it belongs on these pages: on all but the two vendors in
     # allow_semantics.VOUCH_SPEAKS it reduces to a plain `allow`, and a reader needs to see
     # which side of that line their agent falls on before writing a handler that vouches.
@@ -47,9 +50,11 @@ DECISIONS = [
 ]
 # These pages are where a reader learns what a handler may return, so a missing outcome is a
 # missing part of the API. Checked rather than trusted: `rewrite` was added to the vocabulary
-# and this list did not notice, and neither did anything else.
+# and this list did not notice, and neither did anything else. `ask`/`rewrite` are excluded:
+# they are pre-ACS aliases of `escalate`/`transform` (Decision.DEPRECATED_ALIASES), producing
+# the identical outcome, so a separate page for each would only repeat the alias's target.
 assert [name for name, _make, _why in DECISIONS] == [
-    n for n, v in vars(Decision).items() if isinstance(v, classmethod)
+    n for n, v in vars(Decision).items() if isinstance(v, classmethod) and n not in Decision.DEPRECATED_ALIASES
 ], "examples/generate.py does not show every Decision outcome"
 
 #: What each basis means for someone deciding how far to trust a page.
@@ -154,10 +159,10 @@ def _page(agent):
     add("| tier | `%s` |" % row["tier"])
     add("| enforcement at `pre_tool` | **%s** |" % A.enforcement_level(agent, A.PRE_TOOL))
     add(
-        "| can block / rewrite | %s / %s |"
+        "| can block / transform | %s / %s |"
         % (
             "yes" if A.can_block(agent, A.PRE_TOOL) else "no",
-            "yes" if A.can_rewrite(agent, A.PRE_TOOL) else "no",
+            "yes" if A.can_transform(agent, A.PRE_TOOL) else "no",
         )
     )
     add("| hooks covered | %d |" % len(scenarios))
@@ -222,7 +227,7 @@ def _index():
         "a live run; most are read from vendor documentation, and vendors change hook surfaces\n"
         "without notice. Verify against your own installation before relying on any of it.\n"
     )
-    out.append("\n| agent | hooks | enforcement | block | rewrite | evidence | config |")
+    out.append("\n| agent | hooks | enforcement | block | transform | evidence | config |")
     out.append("|---|---|---|---|---|---|---|")
     for agent in sorted(SCENARIOS):
         row = A.MATRIX[agent]
@@ -234,7 +239,7 @@ def _index():
                 len(SCENARIOS[agent]),
                 A.enforcement_level(agent, A.PRE_TOOL),
                 "yes" if A.can_block(agent, A.PRE_TOOL) else "no",
-                "yes" if A.can_rewrite(agent, A.PRE_TOOL) else "no",
+                "yes" if A.can_transform(agent, A.PRE_TOOL) else "no",
                 basis(agent),
                 row["config"],
             )

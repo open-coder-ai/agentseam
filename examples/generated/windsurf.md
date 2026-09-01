@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / no |
+| can block / transform | yes / no |
 | hooks covered | 4 |
 | hook config | `.windsurf/hooks.json` |
 | evidence | `third-party-install` — a real working installation (.windsurf/hooks.json + hook scripts) in PaloAltoNetworks/prisma-airs-integrations; vendor docs unreachable from this network |
@@ -138,7 +138,7 @@ secret detected in file content
 
 Exit code: `2`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```
 looks like a credential -- confirm? (this agent cannot prompt for confirmation; blocking instead)
@@ -146,15 +146,23 @@ looks like a credential -- confirm? (this agent cannot prompt for confirmation; 
 
 Exit code: `2`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
-> reduced to `ask`: this agent cannot rewrite
+> reduced to `escalate`: this agent cannot transform
 
 ```
 redacting the secret (this agent cannot rewrite tool input; blocking instead)
 ```
 
 Exit code: `2`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+_No output; the exit code carries the answer._
+
+Exit code: `0`
 
 **`Decision.vouch()`** — the handler actively approves
 

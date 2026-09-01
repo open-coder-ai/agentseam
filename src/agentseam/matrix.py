@@ -24,6 +24,7 @@ __all__ = [
     "capability",
     "can_block",
     "can_rewrite",
+    "can_transform",
     "enforcement_level",
     "agents",
     "adapted_agents",
@@ -58,6 +59,11 @@ def can_block(agent, event):
 
 def can_rewrite(agent, event):
     return bool(capability(agent, event)["rewrite"])
+
+
+def can_transform(agent, event):
+    """ACS-named alias of can_rewrite() -- same capability, same value."""
+    return bool(capability(agent, event)["transform"])
 
 
 def enforcement_level(agent, event):

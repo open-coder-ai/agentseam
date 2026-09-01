@@ -6,8 +6,8 @@ import json
 import sys
 
 from . import adapters
-from .allow_semantics import VOUCH_SPEAKS
-from .contract import REWRITE, UNKNOWN, VOUCH, Decision
+from .allow_semantics import VOUCH_SPEAKS, WARN_SPEAKS
+from .contract import TRANSFORM, UNKNOWN, VOUCH, WARN, Decision
 from .matrix import capability
 
 
@@ -27,13 +27,17 @@ def degrade(decision, event, agent=None):
     """Reduce a decision to what the agent can actually honor, honestly."""
     agent = agent or event.agent
     cap = capability(agent, event.event)
-    if decision.outcome == REWRITE and not cap["rewrite"]:
+    if decision.outcome == TRANSFORM and not cap["transform"]:
         evidence = dict(decision.evidence)
-        evidence["degraded_from"] = REWRITE
-        return Decision.ask(decision.reason or "input requires modification before it can run", evidence=evidence)
+        evidence["degraded_from"] = TRANSFORM
+        return Decision.escalate(decision.reason or "input requires modification before it can run", evidence=evidence)
     if decision.outcome == VOUCH and agent not in VOUCH_SPEAKS:
         evidence = dict(decision.evidence)
         evidence["degraded_from"] = VOUCH
+        return Decision.allow(decision.reason, evidence=evidence, context=decision.context)
+    if decision.outcome == WARN and agent not in WARN_SPEAKS:
+        evidence = dict(decision.evidence)
+        evidence["degraded_from"] = WARN
         return Decision.allow(decision.reason, evidence=evidence, context=decision.context)
     return decision
 

@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / rewrite | yes / no |
+| can block / transform | yes / no |
 | hooks covered | 10 |
 | hook config | `config.toml` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (event table, return values, config fields) |
@@ -214,7 +214,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "looks like a credential -- confirm? (Kimi Code cannot prompt for confirmation)"}}
@@ -222,13 +222,21 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
-> reduced to `ask`: this agent cannot rewrite
+> reduced to `escalate`: this agent cannot transform
 
 ```json
 {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", "permissionDecisionReason": "redacting the secret (Kimi Code cannot modify a tool call)"}}
 ```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+_No output; the exit code carries the answer._
 
 Exit code: `0`
 

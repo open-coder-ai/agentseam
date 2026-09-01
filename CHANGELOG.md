@@ -7,6 +7,29 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Changed
+- **The `Decision` vocabulary is aligned to the Agent Control Standard's verdict names**
+  (`plan/acs-alignment-and-delegation.md` §1 in the org-plan repo). `ASK` is renamed to
+  `ESCALATE` and `REWRITE` to `TRANSFORM`; `ASK`/`REWRITE` and `Decision.ask()`/
+  `Decision.rewrite()` remain as aliases bound to the same strings, so every existing
+  `is`/`==` comparison against the old constants, and every `Decision("ask", …)` /
+  `Decision("rewrite", …)` call, keeps working unchanged (`Decision.ask()`/`.rewrite()` now
+  emit a `DeprecationWarning`). Added `WARN` (ACS `warn`): permits the action with no change
+  and records a warning; `allow_semantics.WARN_SPEAKS` starts **empty** -- no adapter's
+  warning channel is established yet, so `dispatch.degrade()` reduces every `warn` to a
+  plain, honestly-labelled `allow` (`degraded_from` recorded), the same shape `vouch` already
+  gets on ten of twelve adapted agents. `vouch` itself is unchanged: ACS's verdict set is
+  closed and cannot express it, so it keeps degrading to `allow` exactly as before -- ACS is
+  simply the thirteenth surface on which that happens. `pre_model_call`/`post_model_call` are
+  **not** adopted (no adapted agent exposes either hook yet; adding them now would be 16
+  matrix rows every one of which grades `none`).
+  `matrix.capability()` now returns both a `"rewrite"` and a `"transform"` key (same value)
+  for one minor version; `can_transform()` joins `can_rewrite()`. `degraded_from` now reports
+  the canonical ACS spelling (`"transform"` in place of `"rewrite"`) -- a real break, called
+  out here because it is a value inside `evidence`, not a name, so no alias can cover it. Both
+  `VOUCH` and `WARN` are now exported from the package top level, fixing the pre-existing
+  asymmetry where `VOUCH` was reachable only via `agentseam.contract.VOUCH`. No change to any
+  vendor wire format: adapters still speak `ask`/`rewrite`/etc. as the vendor's own words,
+  untouched, and W34's golden fixture replay suite passes unchanged as the proof.
 - **Bundle output bytes differ from 0.1.1.** The repo-wide comment strip and docstring
   collapse ([#88](https://github.com/open-coder-ai/agentseam/pull/88)) touched every source
   `bundler.bundle()` composes, including `bundler.py` itself, so a same-version rebuild no

@@ -19,7 +19,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 |---|---|
 | tier | `block+rewrite` |
 | enforcement at `pre_tool` | **enforceable** |
-| can block / rewrite | yes / yes |
+| can block / transform | yes / yes |
 | hooks covered | 11 |
 | hook config | `.cursor/hooks.json` |
 | evidence | `live-run-partial` — vendor hooks documentation, plus a live capture on Windows: 120 real payloads across four sessions, every one claimed by this adapter and none carrying a vendor event we do not map. `observed` lists the events actually seen fire; the rest of this row still rests on documentation. Extended 2026-08-28 by a live RESPONSE-contract experiment (3.17.8, Windows): two trials of one silent beforeShellExecution hook against `echo hello`, differing only in failClosed -- without it the command ran, with it the command was blocked. That is what established silence as a hook ERROR here rather than a refusal, and it corrected this row's own note, which had generalised the confound into 'an empty response is not an allow'. It also showed the gate firing twice per command (Cursor retries once unsandboxed) and confirmed beforeShellExecution fires when wired -- the earlier captures never saw it because REVERSE_EVENT_MAP wires preToolUse. |
@@ -258,7 +258,7 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.ask()`** — the handler wants a human
+**`Decision.escalate()`** — the handler wants a human
 
 ```json
 {"permission": "deny", "user_message": "looks like a credential -- confirm? (preToolUse cannot prompt for confirmation, so this is a block)", "agent_message": "looks like a credential -- confirm? (preToolUse cannot prompt for confirmation, so this is a block)"}
@@ -266,10 +266,20 @@ Exit code: `0`
 
 Exit code: `0`
 
-**`Decision.rewrite()`** — the handler wants the input changed
+**`Decision.transform()`** — the handler wants the input changed
 
 ```json
 {"permission": "allow", "updated_input": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}}
+```
+
+Exit code: `0`
+
+**`Decision.warn()`** — the handler flags a concern
+
+> reduced to `allow`: this agent cannot warn
+
+```json
+{"permission": "allow"}
 ```
 
 Exit code: `0`

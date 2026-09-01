@@ -23,7 +23,8 @@ commits: {signed_off: required}
 A consumer must never be told a policy is enforced where the agent cannot enforce it.
 `matrix.enforcement_level()` is the authority: `enforced` (blocks, fails closed) >
 `best-effort` (blocks, fails open) > `detect` (post-hoc only) > `none` (no surface).
-A `rewrite` on an agent that cannot rewrite degrades to `ask`, never to a silent pass.
+A `transform` on an agent that cannot transform degrades to `escalate`, never to a silent
+pass (`rewrite`/`ask` are deprecated aliases of the same two).
 
 ## Adding an agent
 

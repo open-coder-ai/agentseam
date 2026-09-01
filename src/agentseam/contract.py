@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json as _json
+import warnings as _warnings
 
 SESSION_START = "session_start"
 SESSION_END = "session_end"
@@ -88,9 +89,22 @@ class Event:
 
 ALLOW = "allow"
 DENY = "deny"
-ASK = "ask"
-REWRITE = "rewrite"
+ESCALATE = "escalate"
+TRANSFORM = "transform"
+WARN = "warn"
 VOUCH = "vouch"
+
+# Pre-ACS-alignment names. Same strings as their ACS-named counterparts, so every existing
+# `is`/`==` comparison against the old constant keeps working untouched.
+ASK = ESCALATE
+REWRITE = TRANSFORM
+
+_CANONICAL_OUTCOMES = (ALLOW, DENY, ESCALATE, TRANSFORM, WARN, VOUCH)
+
+# The literal spellings a caller might still pass to Decision(outcome, ...) directly, mapped
+# to the value that now backs them. Only needed for the raw-string constructor path --
+# Decision.ask()/.rewrite() below build the canonical outcome themselves.
+_LEGACY_SPELLING = {"ask": ESCALATE, "rewrite": TRANSFORM}
 
 
 class Decision:
@@ -98,8 +112,12 @@ class Decision:
 
     __slots__ = ("outcome", "reason", "updated_input", "evidence", "context")
 
+    #: Classmethods kept only so existing callers keep constructing; see .ask()/.rewrite().
+    DEPRECATED_ALIASES = frozenset({"ask", "rewrite"})
+
     def __init__(self, outcome, reason=None, updated_input=None, evidence=None, context=None):
-        if outcome not in (ALLOW, DENY, ASK, REWRITE, VOUCH):
+        outcome = _LEGACY_SPELLING.get(outcome, outcome)
+        if outcome not in _CANONICAL_OUTCOMES:
             raise ValueError("unknown outcome: %r" % (outcome,))
         self.outcome = outcome
         self.reason = reason
@@ -116,12 +134,31 @@ class Decision:
         return cls(DENY, reason, evidence=evidence, context=context)
 
     @classmethod
+    def escalate(cls, reason, evidence=None, context=None):
+        """Defer the action to the host's own approval path (ACS `escalate`)."""
+        return cls(ESCALATE, reason, evidence=evidence, context=context)
+
+    @classmethod
     def ask(cls, reason, evidence=None, context=None):
-        return cls(ASK, reason, evidence=evidence, context=context)
+        """Deprecated alias of escalate() -- kept so existing callers keep constructing."""
+        _warnings.warn("Decision.ask() is deprecated; use Decision.escalate()", DeprecationWarning, stacklevel=2)
+        return cls.escalate(reason, evidence=evidence, context=context)
+
+    @classmethod
+    def transform(cls, updated_input, reason=None, evidence=None, context=None):
+        """Replace the tool input wholesale (ACS `transform`, at whole-value granularity)."""
+        return cls(TRANSFORM, reason, updated_input=updated_input, evidence=evidence, context=context)
 
     @classmethod
     def rewrite(cls, updated_input, reason=None, evidence=None, context=None):
-        return cls(REWRITE, reason, updated_input=updated_input, evidence=evidence, context=context)
+        """Deprecated alias of transform() -- kept so existing callers keep constructing."""
+        _warnings.warn("Decision.rewrite() is deprecated; use Decision.transform()", DeprecationWarning, stacklevel=2)
+        return cls.transform(updated_input, reason, evidence=evidence, context=context)
+
+    @classmethod
+    def warn(cls, reason=None, evidence=None, context=None):
+        """Permit the action with no change, recording a warning (ACS `warn`)."""
+        return cls(WARN, reason, evidence=evidence, context=context)
 
     @classmethod
     def vouch(cls, reason=None, evidence=None, context=None):

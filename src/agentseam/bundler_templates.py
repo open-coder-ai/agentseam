@@ -20,7 +20,8 @@ HEADER = """\
 
 RUNTIME = '''\
 _VOUCH_SPEAKS = {vouch_speaks!r}
-_REWRITE_EVENTS = frozenset({rewrite_events!r})
+_WARN_SPEAKS = {warn_speaks!r}
+_TRANSFORM_EVENTS = frozenset({transform_events!r})
 
 
 def degrade(decision, event):
@@ -29,13 +30,19 @@ def degrade(decision, event):
     This is agentseam.dispatch.degrade(), specialized to one fixed agent so this file needs
     no "import agentseam" -- {vouch_speaks_note}.
     """
-    if decision.outcome == REWRITE and event.event not in _REWRITE_EVENTS:
+    if decision.outcome == TRANSFORM and event.event not in _TRANSFORM_EVENTS:
         evidence = dict(decision.evidence)
-        evidence["degraded_from"] = REWRITE
-        return Decision.ask(decision.reason or "input requires modification before it can run", evidence=evidence)
+        evidence["degraded_from"] = TRANSFORM
+        return Decision.escalate(
+            decision.reason or "input requires modification before it can run", evidence=evidence
+        )
     if decision.outcome == VOUCH and not _VOUCH_SPEAKS:
         evidence = dict(decision.evidence)
         evidence["degraded_from"] = VOUCH
+        return Decision.allow(decision.reason, evidence=evidence, context=decision.context)
+    if decision.outcome == WARN and not _WARN_SPEAKS:
+        evidence = dict(decision.evidence)
+        evidence["degraded_from"] = WARN
         return Decision.allow(decision.reason, evidence=evidence, context=decision.context)
     return decision
 
@@ -44,8 +51,8 @@ def degrade(decision, event):
 # Your policy goes here. `event` is a normalized Event: event.event is one of the
 # canonical EVENTS strings (e.g. "pre_tool"); event.command/path/content/output/prompt
 # carry whatever this event's real payload had, or None where it had nothing. Return a
-# Decision (Decision.allow/deny/ask/rewrite/vouch -- all defined above) or None, which
-# means an honest, unconditional allow.
+# Decision (Decision.allow/deny/escalate/transform/warn/vouch -- all defined above) or
+# None, which means an honest, unconditional allow.
 def handle(event):
     raise NotImplementedError(
         "fill in your policy: replace this function body, between the "
