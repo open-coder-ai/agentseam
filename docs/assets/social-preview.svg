@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640"
-     role="img" aria-label="agentseam — the primitives layer for every coding agent: one handler API over per-agent hooks, instruction files, plugin packaging, and config. 12 adapters (claude_code, antigravity, codex_cli, cursor, devin, gemini_cli, grok, junie, kimi_code, tabnine, vscode_copilot, windsurf); 12 normalized events (pre_tool, post_tool, tool_failure, prompt_submit, session_start, session_end, subagent_start, subagent_stop, instructions_loaded, file_changed, pre_compact, stop); 6 decision outcomes (allow, deny, escalate, transform, warn, vouch); and the 5 honest enforcement levels a consumer may claim (enforced, enforceable, best-effort, detect, none). 16 agents in the capability matrix, 12 adapted, zero dependencies, Apache-2.0, version 0.1.1.">
+     role="img" aria-label="agentseam — the primitives layer for every coding agent: one handler API over per-agent hooks, instruction files, plugin packaging, and config. 12 adapters (claude_code, antigravity, codex_cli, cursor, devin, gemini_cli, grok, junie, kimi_code, tabnine, vscode_copilot, windsurf); 12 normalized events (pre_tool, post_tool, tool_failure, prompt_submit, session_start, session_end, subagent_start, subagent_stop, instructions_loaded, file_changed, pre_compact, stop); 6 decision outcomes (allow, deny, escalate, transform, warn, vouch); and the 5 honest enforcement levels a consumer may claim (enforced, enforceable, best-effort, detect, none). 16 agents in the capability matrix, 12 adapted, zero dependencies, Apache-2.0, version 0.2.0.">
   <rect width="1280" height="640" fill="#0D1626"/>
   <rect x="45.0" y="39.0" width="38" height="38" rx="8.4" fill="#111E33"/>
   <line x1="51.1" y1="45.5" x2="64.0" y2="50.4" stroke="#D9B45C" stroke-width="1.33" stroke-opacity="0.55" stroke-linecap="round"/>
@@ -16,7 +16,7 @@
   <text x="206" y="64" font-family="Geist Mono" font-size="12" fill="#5A6B80">open-coder-ai/agentseam</text>
   <rect x="1042" y="44" width="190" height="27" rx="13" fill="#111E33" stroke="#D9B45C" stroke-opacity="0.22"/>
   <circle cx="1062" cy="57.5" r="3.2" fill="#D9B45C"/>
-  <text x="1074" y="62" font-family="Geist Mono" font-size="11" letter-spacing="0.2" fill="#D9B45C">v0.1.1 · APACHE-2.0</text>
+  <text x="1074" y="62" font-family="Geist Mono" font-size="11" letter-spacing="0.2" fill="#D9B45C">v0.2.0 · APACHE-2.0</text>
   <line x1="48" y1="92" x2="1232" y2="92" stroke="#D9B45C" stroke-opacity="0.13" stroke-width="1"/>
   <text x="48" y="140" font-family="Geist Mono" font-size="10.5" letter-spacing="3.4" fill="#8A7340">— THE PRIMITIVES LAYER</text>
   <text x="48" y="190" font-family="Geist Mono" font-size="33" font-weight="700" letter-spacing="-1.2" fill="#E8EEF6">One handler API for</text>
