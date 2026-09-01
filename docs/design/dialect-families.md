@@ -321,6 +321,17 @@ first, D3/D4 swap cleanly — they share only D1+D2.
   §4 payoff side held: the four deleted adapter modules were 624 lines; the engine that
   replaces them (`_hook_json` + `_hook_entry` + `_probes` + `_family`) is ~390 shared
   across the family.
+- **[v]** D4's F2 numbers, measured at its base (main `b9ae0a8`, where the pre-fold
+  bundles stood at gemini_cli 458 / tabnine 409 / junie 429 / grok 439): gemini_cli 690,
+  tabnine 664, junie 664, grok 664 — +51% to +62%, above both the §4 estimate (470–500)
+  and D3's +32–44%. The overshoot is composition, not dialect: an engine bundle inlines
+  the whole shared engine, G2 and the F1-only devices included — the trade D3 already
+  made, and the bundle-composition wave (D6) owns any trimming. The source-tree payoff
+  held again: the four deleted modules were 465 lines, replaced by no new engine module
+  at all — the D3 engine absorbed F2 with ~40 lines of word/grammar-table devices
+  (escalate word path, two transform-body variants, template notes, per-gate reason
+  defaults, allow-body context/silence, a reverse-map wire fallback, a tool-input
+  envelope chain, write-gated content, literal hook-entry extras).
 - **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn

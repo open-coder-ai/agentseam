@@ -180,20 +180,10 @@ def _fields_antigravity(mod):
     }
 
 
-def _fields_gemini_cli(mod):
-    """Bespoke: content is read only for write tools (gemini_cli.py:64-66), a guard the
-    first-assignment walker cannot see past the initial `content = None`."""
-    fields = _generic_fields(mod)
-    fields["content"] = ["tool_input.content", "tool_input.new_string", "tool_input.new_str"]
-    fields["content_only_for_write_tools"] = True
-    return {"fields": fields}
-
-
 _OVERRIDE = {
     "vscode_copilot": _fields_vscode_copilot,
     "windsurf": _fields_windsurf,
     "antigravity": _fields_antigravity,
-    "gemini_cli": _fields_gemini_cli,
 }
 
 

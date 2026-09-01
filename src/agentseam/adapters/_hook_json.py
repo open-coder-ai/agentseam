@@ -1,4 +1,4 @@
-"""The F1 `hook_json` family engine: claims/parse/respond driven by a vendor config entry.
+"""The F1 `hook_json` / F2 `flat_decision` engine: claims/parse/respond driven by a vendor config entry.
 
 Every function takes the vendor's `data/vendors/<agent>.json` entry as its first argument;
 `_family.bind()` closes them over one entry, and a bundle inlines this module next to a
@@ -211,7 +211,9 @@ def _g1(v, gate, decision, wire, name):
                 if decision.reason:
                     out["reason"] = decision.reason
                 return _json.dumps(out), 0
-            return _json.dumps({"hookSpecificOutput": {"hookEventName": name, "updatedInput": decision.updated_input}}), 0
+            return _json.dumps(
+                {"hookSpecificOutput": {"hookEventName": name, "updatedInput": decision.updated_input}}
+            ), 0
     if decision.outcome == ESCALATE and gate["honours_escalate"] and "escalate" in words:
         reason = decision.reason or _default_for(v, decision, True, wire)
         return _json.dumps({"decision": words["escalate"], "reason": reason}), 0
