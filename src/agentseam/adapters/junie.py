@@ -18,6 +18,7 @@ from ..contract import (
     Event,
     tool_input_of,
 )
+from ._common import make_hook_config
 
 AGENT = "junie"
 
@@ -102,18 +103,7 @@ def respond(decision, event):
     return _json.dumps(body), 0
 
 
-def hook_config(canonical_events, command, matcher=None):
-    """Junie's own user-level file."""
-    hooks = {}
-    for ev in canonical_events:
-        name = REVERSE_EVENT_MAP.get(ev)
-        if not name:
-            continue
-        entry = {"hooks": [{"type": "command", "command": command}]}
-        if matcher:
-            entry["matcher"] = matcher
-        hooks.setdefault(name, []).append(entry)
-    return {"hooks": hooks}
+hook_config = make_hook_config(REVERSE_EVENT_MAP)
 
 
 CONFIG_PATH = "~/.junie/config.json"

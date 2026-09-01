@@ -23,6 +23,7 @@ from ..contract import (
     degraded_from,
     tool_input_of,
 )
+from ._common import make_hook_config
 
 AGENT = "grok"
 
@@ -115,17 +116,7 @@ def _because(reason, note):
     return "%s (%s)" % (reason, note) if reason else note
 
 
-def hook_config(canonical_events, command, matcher=None):
-    hooks = {}
-    for ev in canonical_events:
-        name = REVERSE_EVENT_MAP.get(ev)
-        if not name:
-            continue
-        entry = {"hooks": [{"type": "command", "command": command}]}
-        if matcher:
-            entry["matcher"] = matcher
-        hooks.setdefault(name, []).append(entry)
-    return {"hooks": hooks}
+hook_config = make_hook_config(REVERSE_EVENT_MAP)
 
 
 NEEDS_TRUST = True

@@ -24,6 +24,7 @@ from ..contract import (
     Event,
     tool_input_of,
 )
+from ._common import make_hook_config
 
 AGENT = "claude_code"
 
@@ -174,18 +175,7 @@ def respond(decision, event):
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
-def hook_config(canonical_events, command, matcher=None):
-    """A settings.json `hooks` fragment wiring `command` for these canonical events."""
-    hooks = {}
-    for ev in canonical_events:
-        name = REVERSE_EVENT_MAP.get(ev)
-        if not name:
-            continue
-        entry = {"hooks": [{"type": "command", "command": command}]}
-        if matcher:
-            entry["matcher"] = matcher
-        hooks.setdefault(name, []).append(entry)
-    return {"hooks": hooks}
+hook_config = make_hook_config(REVERSE_EVENT_MAP)
 
 
 CONFIG_PATH = ".claude/settings.json"

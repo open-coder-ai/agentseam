@@ -4,6 +4,8 @@ import ast
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src" / "agentseam"
 MAX_LINES = 300
@@ -117,6 +119,20 @@ def test_citation_version_tracks_the_package():
     lines = (ROOT / "CITATION.cff").read_text(encoding="utf-8").splitlines()
     declared = [line.split(":", 1)[1].strip() for line in lines if line.startswith("version:")]
     assert declared == [agentseam.__version__], "CITATION.cff says %r, package is %r" % (
+        declared,
+        agentseam.__version__,
+    )
+
+
+def test_pyproject_version_tracks_the_package():
+    """A wheel built from a stale pyproject.toml ships disagreeing with the package it holds."""
+    tomllib = pytest.importorskip("tomllib")
+    sys.path.insert(0, str(ROOT / "src"))
+    import agentseam
+
+    data = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    declared = data["project"]["version"]
+    assert declared == agentseam.__version__, "pyproject.toml says %r, package is %r" % (
         declared,
         agentseam.__version__,
     )

@@ -6,6 +6,31 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+- **Bundle output bytes differ from 0.1.1.** The repo-wide comment strip and docstring
+  collapse ([#88](https://github.com/open-coder-ai/agentseam/pull/88)) touched every source
+  `bundler.bundle()` composes, including `bundler.py` itself, so a same-version rebuild no
+  longer produces identical bytes to a 0.1.1 bundle. No API, behaviour, or capability claim
+  changed. Consumers that pin the bundle by hash must regenerate and re-pin.
+
+### Fixed
+- **`tools/capture.py` wrote the recording probe world-readable-and-executable
+  (`0o755`).** The probe is written and then run by the same user's own agent tooling, so
+  owner-only access (`0o700`) is sufficient — the only `security-extended` CodeQL finding on
+  main.
+- **`gemini_cli` and `tabnine` hand-wrote `REVERSE_EVENT_MAP`.** Both are exact inverses of
+  their `EVENT_MAP`, like `claude_code`'s already-derived map; a hand-maintained copy could
+  drift from the map it mirrors with no check to catch it. Both now derive it the same way.
+- **`pyproject.toml`'s `version` was unchecked against `agentseam.__version__`.** Only
+  `CITATION.cff` was verified to track the package; a wheel could ship with the two
+  disagreeing. `test_repo_standards.py` now checks both.
+
+### Internal
+- `claude_code`, `gemini_cli`, `grok`, and `junie` shared an identical `hook_config` body;
+  it now lives once in `adapters/_common.py` and the four adapters bind it to their own
+  `REVERSE_EVENT_MAP`. `bundler.py`'s existing cross-module composition (already used for
+  `_windows.py`) carries it into each affected bundle unchanged.
+
 ## [0.1.1] - 2026-08-30
 
 ### Fixed

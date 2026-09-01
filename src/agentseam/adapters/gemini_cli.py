@@ -17,6 +17,7 @@ from ..contract import (
     Event,
     tool_input_of,
 )
+from ._common import make_hook_config
 from .claude_code import looks_like_claude_code
 
 AGENT = "gemini_cli"
@@ -30,15 +31,7 @@ EVENT_MAP = {
     "SessionEnd": SESSION_END,
     "PreCompress": PRE_COMPACT,
 }
-REVERSE_EVENT_MAP = {
-    PRE_TOOL: "BeforeTool",
-    POST_TOOL: "AfterTool",
-    PROMPT_SUBMIT: "BeforeAgent",
-    STOP: "AfterAgent",
-    SESSION_START: "SessionStart",
-    SESSION_END: "SessionEnd",
-    PRE_COMPACT: "PreCompress",
-}
+REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
 WRITE_TOOLS = ("write_file", "replace")
 SHELL_TOOLS = ("run_shell_command",)
@@ -121,17 +114,7 @@ def respond(decision, event):
     return _json.dumps({"decision": "allow"}), 0
 
 
-def hook_config(canonical_events, command, matcher=None):
-    hooks = {}
-    for ev in canonical_events:
-        name = REVERSE_EVENT_MAP.get(ev)
-        if not name:
-            continue
-        entry = {"hooks": [{"type": "command", "command": command}]}
-        if matcher:
-            entry["matcher"] = matcher
-        hooks.setdefault(name, []).append(entry)
-    return {"hooks": hooks}
+hook_config = make_hook_config(REVERSE_EVENT_MAP)
 
 
 CONFIG_PATH = ".gemini/settings.json"
