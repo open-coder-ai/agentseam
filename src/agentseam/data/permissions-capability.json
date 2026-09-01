@@ -1,0 +1,114 @@
+{
+  "claude_code": {
+    "shape": "ordered-rules",
+    "actions": {
+      "allow": "permissions.allow",
+      "ask": "permissions.ask",
+      "deny": "permissions.deny"
+    },
+    "deny_authoritative": true,
+    "sandbox": null,
+    "tools": {
+      "shell": [
+        "Bash"
+      ],
+      "file_read": [
+        "Read"
+      ],
+      "file_write": [
+        "Edit",
+        "Write"
+      ],
+      "network_fetch": [
+        "WebFetch"
+      ],
+      "mcp": [
+        "mcp__*"
+      ]
+    },
+    "notes": "Rules are evaluated deny, then ask, then allow; the first match wins and specificity does not reorder them, so a deny rule cannot carry allowlist exceptions. Denial is authoritative across scopes: a tool denied at any level cannot be re-allowed at another. allow rules in a committed .claude/settings.json wait on the workspace trust dialog; deny and ask do not, since they only restrict. A PreToolUse hook exiting 2 stops the call before rules are evaluated, and deny/ask rules still apply even when a hook returns allow -- so hooks and permissions each get the last word on the outcome they are stricter about.",
+    "verified": {
+      "method": "vendor documentation read directly (permissions and settings pages)",
+      "date": "2026-08-26"
+    }
+  },
+  "gemini_cli": {
+    "shape": "tool-allowlist",
+    "actions": {
+      "allow": "tools.allowed",
+      "ask": "tools.confirmationRequired",
+      "deny": "tools.exclude"
+    },
+    "deny_authoritative": true,
+    "sandbox": "tools.sandboxAllowedPaths / tools.sandboxNetworkAccess",
+    "tools": {
+      "shell": [
+        "run_shell_command"
+      ],
+      "file_read": [
+        "read_file"
+      ],
+      "file_write": [
+        "write_file",
+        "replace"
+      ],
+      "network_fetch": [
+        "web_fetch"
+      ],
+      "mcp": []
+    },
+    "notes": "tools.exclude removes a tool from discovery entirely, and its scopes merge by union -- so an exclusion set in one settings file cannot be dropped by another. That makes it a real deny, with one sharp edge: it excludes by *tool name*, so there is no way to exclude only some invocations of a tool. A deny that carries a specifier has no expression here and is reported as such. tools.confirmationRequired takes precedence over tools.allowed and tools.core.",
+    "verified": {
+      "method": "source read: packages/cli/src/config/settingsSchema.ts, docs/cli/settings.md",
+      "date": "2026-08-26"
+    }
+  },
+  "codex_cli": {
+    "shape": "sandbox+execpolicy",
+    "actions": {
+      "allow": "prefix_rule(decision=\"allow\")",
+      "ask": "prefix_rule(decision=\"prompt\")",
+      "deny": "prefix_rule(decision=\"forbidden\")"
+    },
+    "deny_authoritative": null,
+    "sandbox": "sandbox_mode (read-only | workspace-write | danger-full-access | external-sandbox)",
+    "tools": {
+      "shell": [
+        "prefix_rule"
+      ],
+      "file_read": [],
+      "file_write": [],
+      "network_fetch": [],
+      "mcp": []
+    },
+    "notes": "Permissions here are two separate mechanisms. approval_policy (untrusted | on-request | granular | never) and sandbox_mode decide the session's posture; note that on-failure is now an alias of on-request rather than a mode of its own. Per-command rules live in a separate Starlark policy file as prefix_rule(pattern=[...], decision=allow|prompt|forbidden), matching ordered command tokens. Because the rule language matches command prefixes, only shell rules can be expressed -- a rule about file writes or fetches has nowhere to go.",
+    "verified": {
+      "method": "source read: codex-rs/protocol/src/protocol.rs (AskForApproval, SandboxPolicy), codex-rs/execpolicy/README.md",
+      "date": "2026-08-26"
+    }
+  },
+  "vscode_copilot": {
+    "shape": "auto-approve-map",
+    "actions": {
+      "allow": "chat.tools.terminal.autoApprove",
+      "ask": "chat.tools.terminal.autoApprove",
+      "deny": null
+    },
+    "deny_authoritative": false,
+    "sandbox": "chat.agent.sandbox.fileSystem.{linux,mac,windows} (allowRead/denyRead/allowWrite/denyWrite)",
+    "tools": {
+      "shell": [
+        "chat.tools.terminal.autoApprove"
+      ],
+      "file_read": [],
+      "file_write": [],
+      "network_fetch": [],
+      "mcp": []
+    },
+    "notes": "The auto-approve map is {pattern: bool}, where a pattern wrapped in / is a regular expression. true auto-approves; false only withholds auto-approval and still lets a human approve the command, so false is not a block and no deny rule is rendered from it. The older github.copilot.chat.agent.terminal.allowList and .denyList keys are deprecated in favour of this map, and .denyList never blocked either. A genuine deny does exist, but for filesystem paths rather than commands: the agent sandbox settings take denyRead/denyWrite path lists, where allowRead overrides denyRead and denyWrite overrides allowWrite.",
+    "verified": {
+      "method": "source read: src/vs/workbench/contrib/terminalContrib/chatAgentTools/common/terminalChatAgentToolsConfiguration.ts",
+      "date": "2026-08-26"
+    }
+  }
+}
