@@ -35,6 +35,11 @@ def wire_events(mod):
     (dialect-families.md §3.2: "grok.py:44-55, kimi_code.py:49-60 collapse many-to-one and
     pin the emit direction"). This diff is exactly that pin, computed rather than transcribed.
     """
+    if hasattr(mod, "CONFIG"):
+        # Config-driven adapter: REVERSE_EVENT_MAP is built FROM the entry's wire_events, so
+        # the pin is the entry itself (re-deriving it off the alphabetised config map would
+        # erase a deliberate pin that happens to agree with that order, e.g. kimi_code's).
+        return dict(mod.CONFIG.get("wire_events", {}))
     reverse = getattr(mod, "REVERSE_EVENT_MAP", {})
     event_map = getattr(mod, "EVENT_MAP", {})
     naive = {}

@@ -30,7 +30,28 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   chains (demonstrated, not merely asserted).
 
 ### Changed
-- **The `Decision` vocabulary is aligned to the Agent Control Standard's verdict names**
+- **Four `hook_json` adapters are now one engine plus their vendor config entries**
+  (`docs/design/dialect-families.md` D3). `claude_code`, `codex_cli`, `kimi_code` and
+  `devin` are no longer hand-written modules: `adapters/_hook_json.py` (marker claims,
+  ordered field-fallback parse, G1/G2 verdict renderers and the shared
+  `hookSpecificOutput` context/transform bodies) and `adapters/_hook_entry.py` (hook-config
+  wrappers, kimi's TOML emitter) execute each vendor's `data/vendors/<agent>.json` entry,
+  bound behind the unchanged `adapters.get()` surface by `adapters/_family.py`. The golden
+  wire fixtures pass **byte-for-byte unchanged** — the D1 freeze was the acceptance gate
+  for the whole fold. To carry the dialect as data, the schema gains the §3.1 renderer
+  fields D2 deferred (verdict `words`, `degrade_notes` verbatim from the deleted adapters,
+  `reason_defaults`, `note_style`, `echo`, context-event lists) plus three claims fields
+  that replace notes-only caveats with checked data (`accept_names`, `accept_when_all`,
+  `reject_markers_unless_probe`), each with schema mutation tests and behavioural replay
+  tests. devin's `PermissionRequest` gate is now recounted explicitly (the W37
+  `_EXTRA_GATE_NAMES` generalization). `bundle()` composes engine + an inlined `VENDOR`
+  literal for config-driven agents (measured: claude_code 650, codex_cli 636, kimi_code
+  624, devin 650 lines, from 494/452/458/451 — the §4 growth-for-generality trade, real
+  numbers now in the design doc) and still splices the other eight adapters legacy-style.
+  `vscode_copilot` deliberately stays a dialect module: its three-path `claims()` and
+  memory-tool parse branch are payload-content branching the config/code line (§3.1)
+  keeps as code — recorded as an answered [h] in the design doc. `looks_like_claude_code`
+  moved to `adapters/_probes.py`, shared by the engine and `gemini_cli`.
   (`plan/acs-alignment-and-delegation.md` §1 in the org-plan repo). `ASK` is renamed to
   `ESCALATE` and `REWRITE` to `TRANSFORM`; `ASK`/`REWRITE` and `Decision.ask()`/
   `Decision.rewrite()` remain as aliases bound to the same strings, so every existing

@@ -56,6 +56,43 @@ def test_accept_markers_are_actually_required(agent):
 
 
 @pytest.mark.parametrize("agent", MARKER_AGENTS)
+def test_accept_names_are_accepted_unconditionally(agent):
+    """A declared accept_name is claimed on its own, with no marker to lean on."""
+    mod = adapters.get(agent)
+    for name in VENDOR_CONFIG[agent]["claims"].get("accept_names", ()):
+        assert mod.claims({"hook_event_name": name}), "%s: accept_name %r was not claimed" % (agent, name)
+
+
+@pytest.mark.parametrize("agent", MARKER_AGENTS)
+def test_reject_markers_unless_probe_reject_exactly_when_the_probe_fails(agent):
+    """The conditional marker rejects a probe-failing payload and spares a probe-passing one."""
+    from agentseam.adapters._probes import OBSERVED_MARKERS, PROBES
+
+    mod = adapters.get(agent)
+    payload = _sample_payload(agent)
+    for probe, markers in VENDOR_CONFIG[agent]["claims"].get("reject_markers_unless_probe", {}).items():
+        stripped = {k: v for k, v in payload.items() if k not in OBSERVED_MARKERS}
+        assert not PROBES[probe](stripped), "%s: sample still passes %s once stripped" % (agent, probe)
+        for marker in markers:
+            mutated = dict(stripped, **{marker: "probe-value"})
+            assert not mod.claims(mutated), "%s: %r did not reject a probe-failing payload" % (agent, marker)
+            mutated[OBSERVED_MARKERS[0]] = "/t.jsonl"
+            assert mod.claims(mutated), "%s: %r rejected a probe-passing payload" % (agent, marker)
+
+
+@pytest.mark.parametrize("agent", MARKER_AGENTS)
+def test_accept_when_all_is_a_real_compound(agent):
+    """All listed keys present claims the event without a marker; any one missing does not."""
+    mod = adapters.get(agent)
+    for event_name, required in VENDOR_CONFIG[agent]["claims"].get("accept_when_all", {}).items():
+        full = dict({key: "x" for key in required}, hook_event_name=event_name)
+        assert mod.claims(full), "%s: the %s compound was not claimed" % (agent, event_name)
+        for key in required:
+            partial = {k: v for k, v in full.items() if k != key}
+            assert not mod.claims(partial), "%s: %s claimed without %r" % (agent, event_name, key)
+
+
+@pytest.mark.parametrize("agent", MARKER_AGENTS)
 def test_client_types_bound_claims(agent):
     """Every listed value is accepted; a value outside the list is rejected."""
     client_types = VENDOR_CONFIG[agent]["claims"].get("client_types")

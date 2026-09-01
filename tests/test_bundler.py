@@ -120,8 +120,11 @@ def test_every_name_a_source_imported_is_still_bound():
 
 
 def test_function_local_imports_are_left_alone():
-    """A source's decision to import inside a function body is its own; a source-composer"""
-    src = bundler.bundle("claude_code")
+    """A source's decision to import inside a function body is its own; a source-composer
+
+    Sampled on a hand-written adapter: the config-driven engine has no function-local
+    imports left to preserve, so the property is vacuous there."""
+    src = bundler.bundle("vscode_copilot")
     tree = ast.parse(src)
     local = [
         node

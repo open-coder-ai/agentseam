@@ -130,10 +130,93 @@ def _extract_with_deps(source, names):
     return "\n\n".join(segments) + "\n"
 
 
+def _runtime_section(agent):
+    """The dispatch runtime, specialized to one agent's degrade facts."""
+    transform_events = sorted(ev for ev in EVENTS if capability(agent, ev)["transform"])
+    vouch_speaks = agent in VOUCH_SPEAKS
+    warn_speaks = agent in WARN_SPEAKS
+    note = (
+        "claude_code and vscode_copilot are the only agents with real evidence that an "
+        'explicit approval word means "skip confirmation"; see agentseam.allow_semantics'
+        if vouch_speaks
+        else "no evidence establishes that an explicit approval word means anything beyond "
+        "a plain allow here, so vouch degrades to one; see agentseam.allow_semantics"
+    )
+    return section(
+        "runtime (agentseam dispatch, specialized to %s)" % agent,
+        RUNTIME.format(
+            agent=agent,
+            vouch_speaks=vouch_speaks,
+            vouch_speaks_note=note,
+            warn_speaks=warn_speaks,
+            transform_events=tuple(transform_events),
+        ),
+    )
+
+
+_BINDING = """\
+AGENT = "{agent}"
+
+VENDOR = {vendor}
+
+
+def claims(raw):
+    return hj_claims(VENDOR, raw)
+
+
+def parse(raw):
+    return hj_parse(VENDOR, raw)
+
+
+def respond(decision, event):
+    return hj_respond(VENDOR, decision, event)
+
+
+def hook_config(canonical_events, command, matcher=None):
+    return hook_entry_config(VENDOR, canonical_events, command, matcher)
+"""
+
+
+def _engine_bundle(agent):
+    """Engine + inlined vendor config (dialect-families.md §4) for a config-driven adapter."""
+    cfg = adapters.get(agent).CONFIG
+    hoisted = {("json", None), ("sys", None)}
+
+    body = []
+    body.append(
+        section("contract (agentseam %s)" % __version__, _strip_own_imports(_module_source("contract"), hoisted))
+    )
+    claims_cfg = cfg["claims"]
+    if claims_cfg.get("reject_probes") or claims_cfg.get("reject_markers_unless_probe"):
+        probes_source = _read(os.path.join(_ADAPTERS_DIR, "_probes.py"))
+        body.append(
+            section("payload probes (cited by the %s config)" % agent, _strip_own_imports(probes_source, hoisted))
+        )
+    if any(key in ("commandWindows", "windows") for key in cfg["hook_entry"].get("entry_extra", {})):
+        windows_source = _read(os.path.join(_ADAPTERS_DIR, "_windows.py"))
+        body.append(
+            section("windows helper (used by the %s hook entries)" % agent, _strip_own_imports(windows_source, hoisted))
+        )
+    engine_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_json.py"))
+    body.append(section("hook_json family engine", _strip_own_imports(engine_source, hoisted)))
+    entry_source = _read(os.path.join(_ADAPTERS_DIR, "_hook_entry.py"))
+    body.append(section("hook-entry renderer", _strip_own_imports(entry_source, hoisted)))
+    body.append(section("%s vendor config + engine binding" % agent, _BINDING.format(agent=agent, vendor=repr(cfg))))
+
+    sections = [HEADER.format(version=__version__, agent=agent)]
+    sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
+    sections.extend(body)
+    sections.append(_runtime_section(agent))
+    return "\n".join(sections)
+
+
 def bundle(agent):
     """Render `agent`'s dispatch runtime as one self-contained, stdlib-only Python file."""
     if agent not in SUPPORTED_AGENTS:
         raise KeyError("%s: no adapter module to bundle (have: %s)" % (agent, ", ".join(SUPPORTED_AGENTS)))
+
+    if not os.path.exists(os.path.join(_ADAPTERS_DIR, "%s.py" % agent)):
+        return _engine_bundle(agent)
 
     adapter_source = _adapter_source(agent)
     cross = _cross_module_imports(adapter_source)
@@ -162,28 +245,5 @@ def bundle(agent):
     sections = [HEADER.format(version=__version__, agent=agent)]
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
     sections.extend(body)
-
-    transform_events = sorted(ev for ev in EVENTS if capability(agent, ev)["transform"])
-    vouch_speaks = agent in VOUCH_SPEAKS
-    warn_speaks = agent in WARN_SPEAKS
-    note = (
-        "claude_code and vscode_copilot are the only agents with real evidence that an "
-        'explicit approval word means "skip confirmation"; see agentseam.allow_semantics'
-        if vouch_speaks
-        else "no evidence establishes that an explicit approval word means anything beyond "
-        "a plain allow here, so vouch degrades to one; see agentseam.allow_semantics"
-    )
-    sections.append(
-        section(
-            "runtime (agentseam dispatch, specialized to %s)" % agent,
-            RUNTIME.format(
-                agent=agent,
-                vouch_speaks=vouch_speaks,
-                vouch_speaks_note=note,
-                warn_speaks=warn_speaks,
-                transform_events=tuple(transform_events),
-            ),
-        )
-    )
-
+    sections.append(_runtime_section(agent))
     return "\n".join(sections)

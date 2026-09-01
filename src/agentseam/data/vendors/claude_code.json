@@ -9,15 +9,17 @@
       "hook_event_name"
     ],
     "mode": "marker",
-    "notes": "prompt_id is rejected only when looks_like_claude_code(raw) is also false (claude_code.py:79-80); a real Claude Code payload may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27).",
+    "notes": "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real Claude Code payload may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27).",
     "reject_markers": [
       "turn_id",
       "project_path",
       "timestamp"
     ],
-    "reject_probes": [
-      "looks_like_claude_code"
-    ]
+    "reject_markers_unless_probe": {
+      "looks_like_claude_code": [
+        "prompt_id"
+      ]
+    }
   },
   "config_format": "json",
   "config_path": ".claude/settings.json",
@@ -138,6 +140,16 @@
       "UserPromptSubmit"
     ],
     "bare_allow": "silent",
+    "context_events": [
+      "SessionStart",
+      "UserPromptSubmit"
+    ],
+    "context_source": "context",
+    "degrade_notes": {
+      "escalate": "confirmation requested; this event cannot prompt, so it blocks",
+      "transform": "input rewrite requested; this event cannot modify input, so it blocks"
+    },
+    "echo": "reverse_map",
     "gates": {
       "PreToolUse": {
         "grammar": "G2",
@@ -155,6 +167,11 @@
         "honours_transform": false
       }
     },
+    "note_style": "suffix",
+    "reason_defaults": {
+      "deny_gate": "blocked",
+      "escalate_gate": "confirmation required"
+    },
     "transform_grammar": "hook_specific_updated_input",
     "vocabulary": [
       "allow",
@@ -162,6 +179,13 @@
       "block",
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "block": "block",
+      "deny": "deny",
+      "escalate": "ask",
+      "transform": "allow",
+      "vouch": "allow"
+    }
   }
 }

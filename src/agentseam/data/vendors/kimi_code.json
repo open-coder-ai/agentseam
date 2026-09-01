@@ -117,6 +117,12 @@
       "UserPromptSubmit"
     ],
     "bare_allow": "silent",
+    "degrade_notes": {
+      "escalate": "Kimi Code cannot prompt for confirmation",
+      "escalate_from_transform": "Kimi Code cannot modify a tool call",
+      "transform": "Kimi Code cannot modify a tool call"
+    },
+    "echo": "payload",
     "gates": {
       "PreToolUse": {
         "grammar": "G2",
@@ -134,12 +140,16 @@
         "honours_transform": false
       }
     },
+    "note_style": "because",
     "vocabulary": [
       "allow",
       "ask",
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "deny": "deny"
+    }
   },
   "wire_events": {
     "post_tool": "PostToolUse",

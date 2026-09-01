@@ -185,6 +185,14 @@ _OVERRIDE = {
 
 
 def fields(agent, mod):
+    if hasattr(mod, "CONFIG"):
+        # Config-driven adapter: the chains ARE its parse() (the engine executes them), so
+        # there is no second source to derive from; behaviour is held by the golden fixtures
+        # and the per-adapter suites.
+        out = {"fields": {name: list(chain) for name, chain in mod.CONFIG["fields"].items()}}
+        if "fields_memory_write" in mod.CONFIG:
+            out["fields_memory_write"] = {k: list(v) for k, v in mod.CONFIG["fields_memory_write"].items()}
+        return out
     if agent in _OVERRIDE:
         return _OVERRIDE[agent](mod)
     return {"fields": _generic_fields(mod)}

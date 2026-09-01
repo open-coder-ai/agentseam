@@ -4,11 +4,15 @@
     "accept_markers": [
       "prompt_id"
     ],
+    "accept_names": [
+      "PermissionRequest",
+      "PostCompaction"
+    ],
     "event_key": [
       "hook_event_name"
     ],
     "mode": "marker",
-    "notes": "PermissionRequest and PostCompaction (devin.py:37) are accepted unconditionally regardless of markers -- names Claude Code never sends. prompt_id above is required alongside looks_like_claude_code(raw) being false (devin.py:44-46).",
+    "notes": "accept_names are names Claude Code never sends, claimed before any marker check; prompt_id is required alongside looks_like_claude_code(raw) being false.",
     "reject_probes": [
       "looks_like_claude_code"
     ]
@@ -97,6 +101,7 @@
     ]
   },
   "hook_entry": {
+    "bare": true,
     "matcher": true,
     "wrapper": "hooks_map"
   },
@@ -104,12 +109,30 @@
   "tools": {},
   "verdicts": {
     "answer_events": [
+      "PermissionRequest",
       "PreToolUse",
       "Stop",
       "UserPromptSubmit"
     ],
     "bare_allow": "unverified",
+    "context_events": [
+      "PostToolUse",
+      "SessionStart",
+      "UserPromptSubmit"
+    ],
+    "context_source": "reason",
+    "default_wire_event": "PreToolUse",
+    "degrade_notes": {
+      "escalate": "Devin cannot prompt for confirmation, so this is a block",
+      "escalate_from_transform": "Devin cannot modify a tool call, so this is a block"
+    },
+    "echo": "payload",
     "gates": {
+      "PermissionRequest": {
+        "grammar": "G1",
+        "honours_escalate": false,
+        "honours_transform": false
+      },
       "PreToolUse": {
         "grammar": "G1",
         "honours_escalate": false,
@@ -126,12 +149,20 @@
         "honours_transform": false
       }
     },
+    "note_style": "suffix",
+    "reason_defaults": {
+      "transform": "input requires modification before it can run"
+    },
     "transform_grammar": "hook_specific_updated_input",
     "vocabulary": [
       "approve",
       "block"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "allow": "approve",
+      "block": "block"
+    }
   },
   "wire_events": {
     "pre_tool": "PreToolUse"

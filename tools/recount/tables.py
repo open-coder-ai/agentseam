@@ -32,11 +32,11 @@ _CLAIMS = {
         "event_key": ["hook_event_name"],
         "client_types": [None, "claude_code"],
         "reject_markers": ["turn_id", "project_path", "timestamp"],
-        "reject_probes": ["looks_like_claude_code"],
+        "reject_markers_unless_probe": {"looks_like_claude_code": ["prompt_id"]},
         "notes": (
-            "prompt_id is rejected only when looks_like_claude_code(raw) is also false "
-            "(claude_code.py:79-80); a real Claude Code payload may carry prompt_id and "
-            "must still be accepted (matrix-notes.json: fixed 2026-08-27)."
+            "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real "
+            "Claude Code payload may carry prompt_id and must still be accepted "
+            "(matrix-notes.json: fixed 2026-08-27)."
         ),
     },
     "gemini_cli": {
@@ -50,21 +50,23 @@ _CLAIMS = {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "accept_markers": ["turn_id"],
+        "accept_when_all": {
+            "SessionStart": ["session_id", "transcript_path", "cwd", "model", "permission_mode", "source"]
+        },
         "notes": (
-            "Also accepted at SessionStart when session_id, transcript_path, cwd, model, "
-            "permission_mode and source are all present (codex_cli.py:35-45); that compound "
-            "check is not expressed above."
+            "Codex sends no turn_id at SessionStart, so that one event is claimed by the "
+            "accept_when_all compound instead (confirmed live 2026-08-28)."
         ),
     },
     "devin": {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "accept_markers": ["prompt_id"],
+        "accept_names": ["PermissionRequest", "PostCompaction"],
         "reject_probes": ["looks_like_claude_code"],
         "notes": (
-            "PermissionRequest and PostCompaction (devin.py:37) are accepted unconditionally "
-            "regardless of markers -- names Claude Code never sends. prompt_id above is "
-            "required alongside looks_like_claude_code(raw) being false (devin.py:44-46)."
+            "accept_names are names Claude Code never sends, claimed before any marker check; "
+            "prompt_id is required alongside looks_like_claude_code(raw) being false."
         ),
     },
     "kimi_code": {
@@ -110,6 +112,61 @@ _CLAIMS = {
 }
 
 
+#: Renderer data for the config-driven hook_json vendors (dialect-families.md §3.1: word
+#: tables and degradation-note strings are config, verbatim from the adapters they replaced).
+#: Every note/word below is frozen in tests/fixtures/golden/<agent>.json and replayed by
+#: test_wire_output_matches_the_frozen_fixture on every run -- a wrong string fails there.
+_VERDICT_DIALECT = {
+    "claude_code": {
+        "words": {"deny": "deny", "escalate": "ask", "transform": "allow", "vouch": "allow", "block": "block"},
+        "degrade_notes": {
+            "escalate": "confirmation requested; this event cannot prompt, so it blocks",
+            "transform": "input rewrite requested; this event cannot modify input, so it blocks",
+        },
+        "reason_defaults": {"deny_gate": "blocked", "escalate_gate": "confirmation required"},
+        "note_style": "suffix",
+        "echo": "reverse_map",
+        "context_events": ["SessionStart", "UserPromptSubmit"],
+        "context_source": "context",
+    },
+    "codex_cli": {
+        "words": {"deny": "deny", "transform": "allow", "block": "block"},
+        "degrade_notes": {
+            "escalate": "Codex CLI cannot prompt for confirmation at this event",
+            "escalate_gate": "Codex CLI does not support ask; asking would fail open",
+            "transform": "Codex CLI cannot modify a tool call at this event",
+            "transform_missing_input": "Codex CLI cannot apply a rewrite with no updatedInput",
+        },
+        "reason_defaults": {"deny_gate": "blocked"},
+        "note_style": "because",
+        "echo": "reverse_map",
+    },
+    "kimi_code": {
+        "words": {"deny": "deny"},
+        "degrade_notes": {
+            "escalate": "Kimi Code cannot prompt for confirmation",
+            "escalate_from_transform": "Kimi Code cannot modify a tool call",
+            "transform": "Kimi Code cannot modify a tool call",
+        },
+        "note_style": "because",
+        "echo": "payload",
+    },
+    "devin": {
+        "words": {"allow": "approve", "block": "block"},
+        "degrade_notes": {
+            "escalate": "Devin cannot prompt for confirmation, so this is a block",
+            "escalate_from_transform": "Devin cannot modify a tool call, so this is a block",
+        },
+        "reason_defaults": {"transform": "input requires modification before it can run"},
+        "note_style": "suffix",
+        "echo": "payload",
+        "default_wire_event": "PreToolUse",
+        "context_events": ["PostToolUse", "SessionStart", "UserPromptSubmit"],
+        "context_source": "reason",
+    },
+}
+
+
 def family(agent):
     return _FAMILY[agent]
 
@@ -118,6 +175,11 @@ def claims(agent):
     if agent in _SHAPE_INFERRED:
         return {"mode": "shape_inferred"}
     return dict(_CLAIMS[agent])
+
+
+def verdict_dialect(agent):
+    """The words/notes/defaults block for a config-driven vendor, or {} for the rest."""
+    return dict(_VERDICT_DIALECT.get(agent, {}))
 
 
 _EVIDENCE_CLAIMS = ("family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry")

@@ -78,6 +78,19 @@ def test_schema_rejects_an_unrecognised_claims_mode():
     assert validate(SCHEMA, mutated) != []
 
 
+def test_schema_rejects_an_unknown_word_key():
+    """The engine looks words up by concept; a typo'd concept would silently never speak."""
+    mutated = copy.deepcopy(VENDOR_CONFIG["claude_code"])
+    mutated["verdicts"]["words"]["ask"] = "ask"
+    assert validate(SCHEMA, mutated) != []
+
+
+def test_schema_rejects_an_unknown_degrade_note_key():
+    mutated = copy.deepcopy(VENDOR_CONFIG["codex_cli"])
+    mutated["verdicts"]["degrade_notes"]["rewrite"] = "typo'd concept"
+    assert validate(SCHEMA, mutated) != []
+
+
 def test_schema_rejects_a_marker_claims_entry_missing_event_key():
     """The one `if`/`then` branch in the schema: mode=="marker" requires event_key."""
     mutated = copy.deepcopy(VENDOR_CONFIG["gemini_cli"])
@@ -162,8 +175,10 @@ def test_vocabulary_basis_is_unverified_only_for_tabnine():
 def test_reject_probes_stay_under_the_three_probe_budget():
     """[h]: "if D2 finds more than ~3 named probes are needed, [the design] should be
     revisited rather than the list grown." Recounted: exactly one (looks_like_claude_code),
-    used by two vendors -- comfortably inside the budget, so the design stands as written."""
+    used by three vendors -- reject_markers_unless_probe cites the same predicate, so its
+    keys count toward the same budget."""
     probes = {p for entry in VENDOR_CONFIG.values() for p in entry["claims"].get("reject_probes", [])}
+    probes |= {p for entry in VENDOR_CONFIG.values() for p in entry["claims"].get("reject_markers_unless_probe", {})}
     assert probes == {"looks_like_claude_code"}
 
 
