@@ -6,6 +6,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.0] - 2026-09-01
+
 ### Added
 - **The vendor config schema and all 12 entries** (`docs/design/dialect-families.md` D2):
   `src/agentseam/data/vendors/schema.json` and one `data/vendors/<agent>.json` per adapted

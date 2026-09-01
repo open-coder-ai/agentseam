@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentseam"
-version = "0.1.1"
+version = "0.2.0"
 description = "The primitives layer for every coding agent — one handler API over per-agent hooks, instruction files, plugin packaging, and config."
 readme = "README.md"
 requires-python = ">=3.9"

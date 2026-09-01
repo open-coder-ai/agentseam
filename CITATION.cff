@@ -8,6 +8,6 @@ type: software
 license: Apache-2.0
 repository-code: "https://github.com/open-coder-ai/agentseam"
 url: "https://github.com/open-coder-ai/agentseam"
-version: 0.1.1
+version: 0.2.0
 authors:
   - name: "Open Coder AI"
