@@ -1,0 +1,730 @@
+{
+  "agent": "claude_code",
+  "events": {
+    "file_changed": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "file_path": "AGENTS.md",
+        "hook_event_name": "FileChanged",
+        "permission_mode": "default",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "instructions_loaded": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "content": "Prefer pnpm. Tests live beside source.",
+        "cwd": "/repo",
+        "file_path": "CLAUDE.md",
+        "hook_event_name": "InstructionsLoaded",
+        "permission_mode": "default",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PostToolUse",
+        "permission_mode": "default",
+        "session_id": "example",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreCompact",
+        "permission_mode": "default",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl",
+        "trigger": "auto"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"ask\", \"permissionDecisionReason\": \"confirm\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"updatedInput\": {\"content\": \"safe\"}, \"permissionDecisionReason\": \"redacted\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"updatedInput\": null, \"permissionDecisionReason\": \"needs change\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"permissionDecisionReason\": \"trusted\"}}"
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "permission_mode": "default",
+        "session_id": "example",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Write",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "UserPromptSubmit",
+        "permission_mode": "default",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "permission_mode": "default",
+        "reason": "exit",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "permission_mode": "default",
+        "session_id": "example",
+        "source": "startup",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "Stop",
+        "permission_mode": "default",
+        "session_id": "example",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "subagent_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SubagentStart",
+        "permission_mode": "default",
+        "session_id": "example",
+        "subagent_type": "explore",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SubagentStop",
+        "permission_mode": "default",
+        "session_id": "example",
+        "subagent_type": "explore",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    },
+    "tool_failure": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "error": "1 test failed",
+        "hook_event_name": "PostToolUseFailure",
+        "permission_mode": "default",
+        "session_id": "example",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "1 test failed",
+        "transcript_path": "/repo/.claude/transcript.jsonl"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "file_changed",
+      "instructions_loaded",
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop",
+      "subagent_start",
+      "subagent_stop",
+      "tool_failure"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "FileChanged": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "InstructionsLoaded": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PostToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PostToolUseFailure": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreCompact": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SubagentStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SubagentStop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "FileChanged": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "InstructionsLoaded": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PostToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PostToolUseFailure": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreCompact": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionEnd": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SessionStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "Stop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SubagentStart": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "SubagentStop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "UserPromptSubmit": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}

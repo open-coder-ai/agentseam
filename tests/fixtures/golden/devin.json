@@ -1,0 +1,360 @@
+{
+  "agent": "devin",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"confirm\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"redacted\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"needs change\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"trusted\"}}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "PostToolUse",
+        "prompt_id": "turn-1",
+        "session_id": "example",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Bash",
+        "tool_output": "ok"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"approve\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (Devin cannot prompt for confirmation, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"updatedInput\": {\"content\": \"safe\"}}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"approve\"}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "PreToolUse",
+        "prompt_id": "turn-1",
+        "session_id": "example",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "write_file"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"approve\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (Devin cannot prompt for confirmation, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify a tool call, so this is a block)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify a tool call, so this is a block)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"trusted\"}}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "remember my aws key so you can deploy later",
+        "prompt_id": "turn-1",
+        "session_id": "example"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "SessionEnd",
+        "prompt_id": "turn-1",
+        "reason": "exit",
+        "session_id": "example"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"confirm\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"redacted\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"needs change\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"trusted\"}}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "SessionStart",
+        "prompt_id": "turn-1",
+        "session_id": "example",
+        "source": "startup"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"approve\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (Devin cannot prompt for confirmation, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify a tool call, so this is a block)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify a tool call, so this is a block)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"approve\"}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "Stop",
+        "prompt_id": "turn-1",
+        "session_id": "example"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop"
+    ],
+    "no_matcher": {
+      "PostToolUse": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "PreToolUse": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "SessionEnd": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "SessionStart": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "Stop": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "UserPromptSubmit": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ]
+    },
+    "with_matcher": {
+      "config": {
+        "PostToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ]
+      },
+      "matcher": "Bash"
+    }
+  }
+}

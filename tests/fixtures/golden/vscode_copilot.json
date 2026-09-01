@@ -1,0 +1,379 @@
+{
+  "agent": "vscode_copilot",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "PostToolUse",
+        "session_id": "example",
+        "timestamp": "2026-08-28T00:00:00.000Z",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "runInTerminal",
+        "tool_response": "ok",
+        "tool_use_id": "example"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"ask\", \"permissionDecisionReason\": \"confirm\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"updatedInput\": {\"content\": \"safe\"}, \"permissionDecisionReason\": \"redacted\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"updatedInput\": null, \"permissionDecisionReason\": \"needs change\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"permissionDecisionReason\": \"trusted\"}}"
+        }
+      },
+      "payload": {
+        "hook_event_name": "PreToolUse",
+        "session_id": "example",
+        "timestamp": "2026-08-28T00:00:00.000Z",
+        "tool_input": {
+          "command": "create",
+          "file_text": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "path": "/memories/team.md"
+        },
+        "tool_name": "memory",
+        "tool_use_id": "example"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example",
+        "timestamp": "2026-08-28T00:00:00.000Z"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "SessionStart",
+        "model": "claude-sonnet-4-6",
+        "session_id": "example",
+        "source": "new",
+        "timestamp": "2026-08-28T00:00:00.000Z"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"decision\": \"block\", \"reason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"Stop\", \"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "hook_event_name": "Stop",
+        "session_id": "example",
+        "stop_hook_active": false,
+        "timestamp": "2026-08-28T00:00:00.000Z"
+      }
+    },
+    "subagent_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "agent_id": "example",
+        "agent_type": "Plan",
+        "hook_event_name": "SubagentStart",
+        "session_id": "example",
+        "timestamp": "2026-08-28T00:00:00.000Z"
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SubagentStop\", \"decision\": \"block\", \"reason\": \"confirm (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SubagentStop\", \"decision\": \"block\", \"reason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SubagentStop\", \"decision\": \"block\", \"reason\": \"redacted (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"SubagentStop\", \"decision\": \"block\", \"reason\": \"needs change (confirmation requested; this event cannot prompt, so it blocks)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "agent_id": "example",
+        "agent_type": "Plan",
+        "hook_event_name": "SubagentStop",
+        "session_id": "example",
+        "stop_hook_active": false,
+        "timestamp": "2026-08-28T00:00:00.000Z"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "prompt_submit",
+      "session_start",
+      "stop",
+      "subagent_start",
+      "subagent_stop"
+    ],
+    "no_matcher": {
+      "hooks": {
+        "PostToolUse": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "PreToolUse": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "SessionStart": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "Stop": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "SubagentStart": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "SubagentStop": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "command": "python3 guard.py",
+            "type": "command",
+            "windows": "& python3 guard.py"
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "hooks": {
+          "PostToolUse": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "PreToolUse": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "SessionStart": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "Stop": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "SubagentStart": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "SubagentStop": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ],
+          "UserPromptSubmit": [
+            {
+              "command": "python3 guard.py",
+              "type": "command",
+              "windows": "& python3 guard.py"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}
