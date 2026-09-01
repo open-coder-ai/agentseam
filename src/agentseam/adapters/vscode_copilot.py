@@ -44,6 +44,10 @@ EVENT_MAP = {
 MEMORY_TOOLS = ("memory", "copilot_memory")
 MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
 
+#: Copilot's hooks reference ("Tool names for hook matching", read 2026-09-01): runtime
+#: names bash (Unix) / powershell (Windows), reported as Claude's Bash in PascalCase payloads.
+SHELL_TOOLS = ("bash", "powershell", "Bash")
+
 
 _CODEX_MARKERS = ("turn_id", "permission_mode")
 

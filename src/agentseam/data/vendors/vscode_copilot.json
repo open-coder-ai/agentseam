@@ -65,9 +65,9 @@
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
     "tools": {
-      "basis": "live-run-partial",
-      "date": "2026-08-28",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "basis": "vendor-docs",
+      "date": "2026-09-01",
+      "test": "tests/test_vendor_lookups.py::test_shell_tools_are_recorded_only_where_established"
     },
     "verdicts": {
       "basis": "live-run-partial",
@@ -133,6 +133,11 @@
     "memory": [
       "memory",
       "copilot_memory"
+    ],
+    "shell": [
+      "bash",
+      "powershell",
+      "Bash"
     ]
   },
   "verdicts": {

@@ -6,7 +6,30 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **The vendor-config data gaps found by executing chock's C2 wave against the 0.2.0
+  wheel** (chock#97). Data only, no wire change: every golden fixture is byte-identical.
+  - `tools.shell` for `vscode_copilot` and `codex_cli`, so `adapters.shell_tools()` now
+    answers for both. Copilot's is its hooks reference's own vocabulary ("Tool names for
+    hook matching", read 2026-09-01): runtime `bash`/`powershell`, with `Bash` as the
+    Claude spelling PascalCase payloads report. Codex's `Bash` was settled by the matrix
+    row's 2026-08-28 live capture ("exactly two tool names, Bash and apply_patch").
+    chock's live witness (2026-08-23, third-party install) corroborates but did not
+    decide the vocabulary: its matcher was an alternation, and an alternation firing does
+    not establish each token, so the `pwsh`/`sh`/`shell` tokens it also carried are not
+    recorded. Evidence records now name each claim's real basis where it differs from the
+    matrix row's (`tools/recount/sourced.py`, the citations beside the values).
+  - `repo_root_token`, an opt-in schema key (a config-line string) for the vendor's own
+    project-directory token inside a hook command, populated only where a primary source
+    documents one: `claude_code`'s `${CLAUDE_PROJECT_DIR}` (code.claude.com/docs/en/hooks,
+    read 2026-09-01). The field travels with its own evidence record, a pairing pinned by
+    test because the stdlib validator has no `dependentRequired`.
+  - The third gap is recorded as design feedback upstream, not as data: chock's witnessed
+    Copilot-native hooks file (camelCase `preToolUse`, a `{"version": 1}` envelope,
+    `bash`/`powershell`/`timeoutSec` entry keys) is a second, vendor-documented config
+    surface beside the VS Code shape this adapter emits and D1 froze (no envelope,
+    PascalCase, `command`/`windows`/`timeout`). `hook_entry` describes only the emitted
+    shape, so the native surface has no honest home in the schema without new constructs.
 
 ## [0.2.0] - 2026-09-01
 

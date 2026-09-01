@@ -68,7 +68,7 @@
     "tools": {
       "basis": "live-run-partial",
       "date": "2026-08-28",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "test": "tests/test_vendor_lookups.py::test_shell_tools_are_recorded_only_where_established"
     },
     "verdicts": {
       "basis": "live-run-partial",
@@ -115,7 +115,11 @@
     "wrapper": "hooks_map"
   },
   "needs_trust": false,
-  "tools": {},
+  "tools": {
+    "shell": [
+      "Bash"
+    ]
+  },
   "verdicts": {
     "answer_events": [
       "PreToolUse",
