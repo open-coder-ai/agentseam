@@ -1,0 +1,212 @@
+{
+  "agent": "antigravity",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{}"
+        }
+      },
+      "payload": {
+        "conversationId": "example",
+        "error": "",
+        "modelName": "gemini-3.6-flash-medium",
+        "stepIdx": 5,
+        "toolCall": {
+          "args": {
+            "CommandLine": "npm test"
+          },
+          "name": "run_command"
+        },
+        "workspacePaths": [
+          "/repo"
+        ]
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"ask\", \"reason\": \"confirm\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Antigravity cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Antigravity cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"allow\"}"
+        }
+      },
+      "payload": {
+        "conversationId": "example",
+        "modelName": "gemini-3.6-flash-medium",
+        "stepIdx": 3,
+        "toolCall": {
+          "args": {
+            "CodeContent": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+            "TargetFile": "AGENTS.md"
+          },
+          "name": "write_to_file"
+        },
+        "workspacePaths": [
+          "/repo"
+        ]
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"stop\"}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"confirm (Antigravity cannot prompt at Stop)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"redacted (Antigravity cannot modify a tool call)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"needs change (Antigravity cannot modify a tool call)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"stop\"}"
+        }
+      },
+      "payload": {
+        "conversationId": "example",
+        "error": "",
+        "executionNum": 1,
+        "fullyIdle": true,
+        "modelName": "gemini-3.6-flash-medium",
+        "terminationReason": "model_stop",
+        "workspacePaths": [
+          "/repo"
+        ]
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "stop"
+    ],
+    "no_matcher": {
+      "agentseam": {
+        "PostToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "with_matcher": {
+      "config": {
+        "agentseam": {
+          "PostToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "PreToolUse": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ],
+          "Stop": [
+            {
+              "hooks": [
+                {
+                  "command": "python3 guard.py",
+                  "type": "command"
+                }
+              ],
+              "matcher": "Bash"
+            }
+          ]
+        }
+      },
+      "matcher": "Bash"
+    }
+  }
+}
