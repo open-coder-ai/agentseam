@@ -98,10 +98,24 @@ def _field(raw, ti, chain):
     return value
 
 
+#: `fields` keys that steer the extraction rather than naming an Event field.
+_FIELD_META = ("tool_input", "content_only_for_write_tools")
+
+
+def _tool_input_raw(cfg, raw):
+    for key in cfg["fields"].get("tool_input", ("tool_input",)):
+        value = raw.get(key)
+        if value is not None:
+            return value
+    return None
+
+
 def hj_parse(cfg, raw):
     """Normalise one payload along the entry's ordered field-fallback chains."""
-    ti = tool_input_of(raw.get("tool_input"))
-    fields = {name: _field(raw, ti, chain) for name, chain in cfg["fields"].items()}
+    ti = tool_input_of(_tool_input_raw(cfg, raw))
+    fields = {name: _field(raw, ti, chain) for name, chain in cfg["fields"].items() if name not in _FIELD_META}
+    if cfg["fields"].get("content_only_for_write_tools") and fields.get("tool") not in cfg["tools"].get("write", ()):
+        fields["content"] = None
     if isinstance(fields.get("output"), (dict, list)):
         fields["output"] = _json.dumps(fields["output"])
     return Event(
@@ -147,7 +161,10 @@ def _note_for(v, decision, at_gate, missing_input):
     return None
 
 
-def _default_for(v, decision, at_gate):
+def _default_for(v, decision, at_gate, wire=None):
+    gate_defaults = v.get("gate_reason_defaults", {})
+    if wire in gate_defaults:
+        return gate_defaults[wire]
     defaults = v.get("reason_defaults", {})
     key = {DENY: "deny", ESCALATE: "escalate", TRANSFORM: "transform"}.get(decision.outcome, "deny")
     if at_gate and key + "_gate" in defaults:
@@ -155,9 +172,12 @@ def _default_for(v, decision, at_gate):
     return defaults.get(key, "blocked by policy")
 
 
-def _refusal_text(v, decision, at_gate):
+def _refusal_text(v, decision, at_gate, wire=None):
     note = _note_for(v, decision, at_gate, decision.updated_input is None)
-    default = _default_for(v, decision, at_gate)
+    default = _default_for(v, decision, at_gate, wire)
+    if note and "%s" in note:
+        # A template note fills (the reason or its default, the wire event name) itself.
+        return note % (decision.reason or default, wire)
     reason = decision.reason
     if v.get("note_style") == "suffix":
         reason = reason or default
@@ -174,12 +194,28 @@ def _g1(v, gate, decision, wire, name):
         value = _context_value(v, decision)
         if at_context_event and value:
             return _context_body(name, value)
+        if wire in v.get("allow_silent_events", ()):
+            return "", 0
         if "allow" in words:
-            return _json.dumps({"decision": words["allow"]}), 0
+            out = {"decision": words["allow"]}
+            if v.get("allow_context_key") and decision.outcome == ALLOW and value:
+                out[v["allow_context_key"]] = value
+            return _json.dumps(out), 0
         return "", 0
-    if decision.outcome == TRANSFORM and gate["honours_transform"] and decision.updated_input is not None:
-        return _json.dumps({"hookSpecificOutput": {"hookEventName": name, "updatedInput": decision.updated_input}}), 0
-    out = {"decision": words.get("block", "block"), "reason": _refusal_text(v, decision, False)}
+    if decision.outcome == TRANSFORM and gate["honours_transform"]:
+        if v.get("transform_grammar") == "hook_specific_tool_input":
+            return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
+        if decision.updated_input is not None:
+            if v.get("transform_grammar") == "top_level_updated_input":
+                out = {"decision": words.get("transform", "allow"), "updatedInput": decision.updated_input}
+                if decision.reason:
+                    out["reason"] = decision.reason
+                return _json.dumps(out), 0
+            return _json.dumps({"hookSpecificOutput": {"hookEventName": name, "updatedInput": decision.updated_input}}), 0
+    if decision.outcome == ESCALATE and gate["honours_escalate"] and "escalate" in words:
+        reason = decision.reason or _default_for(v, decision, True, wire)
+        return _json.dumps({"decision": words["escalate"], "reason": reason}), 0
+    out = {"decision": words.get("block", "block"), "reason": _refusal_text(v, decision, False, wire)}
     if at_context_event and v.get("context_source") == "context" and decision.context:
         out["hookSpecificOutput"] = {"hookEventName": name, "additionalContext": decision.context}
     return _json.dumps(out), 0
@@ -221,6 +257,8 @@ def hj_respond(cfg, decision, event):
     wire = _wire_name(cfg, event.raw or {})
     if wire is None:
         wire = v.get("default_wire_event")
+        if wire is None and v.get("missing_wire") == "reverse_map":
+            wire = hj_reverse(cfg).get(event.event)
     name = wire if v.get("echo") == "payload" else hj_reverse(cfg).get(event.event, "PreToolUse")
     gate = v["gates"].get(wire)
     if gate is None:

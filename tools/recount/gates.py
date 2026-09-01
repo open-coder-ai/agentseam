@@ -120,6 +120,7 @@ def _classify_outcomes(deny, ask, rewrite):
 _EXTRA_GATE_NAMES = {
     "cursor": ("beforeShellExecution", "beforeMCPExecution", "beforeReadFile", "beforeTabFileRead"),
     "devin": ("PermissionRequest",),
+    "junie": ("PermissionRequest",),
 }
 
 

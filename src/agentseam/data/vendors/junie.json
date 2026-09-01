@@ -102,13 +102,30 @@
   "needs_trust": false,
   "tools": {},
   "verdicts": {
+    "allow_context_key": "additionalContext",
+    "allow_silent_events": [
+      "Stop"
+    ],
     "answer_events": [
+      "PermissionRequest",
       "PreToolUse",
       "Stop",
       "UserPromptSubmit"
     ],
     "bare_allow": "required",
+    "context_source": "reason",
+    "degrade_notes": {
+      "transform_missing_input": "no replacement input was supplied"
+    },
+    "gate_reason_defaults": {
+      "Stop": "not finished"
+    },
     "gates": {
+      "PermissionRequest": {
+        "grammar": "G1",
+        "honours_escalate": true,
+        "honours_transform": true
+      },
       "PreToolUse": {
         "grammar": "G1",
         "honours_escalate": true,
@@ -125,13 +142,24 @@
         "honours_transform": false
       }
     },
+    "note_style": "suffix",
+    "reason_defaults": {
+      "escalate_gate": "confirmation required",
+      "transform": "input requires modification"
+    },
     "transform_grammar": "top_level_updated_input",
     "vocabulary": [
       "allow",
       "ask",
       "block"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "allow": "allow",
+      "block": "block",
+      "escalate": "ask",
+      "transform": "allow"
+    }
   },
   "wire_events": {
     "pre_tool": "PreToolUse"

@@ -101,6 +101,9 @@ def _generic_fields(mod):
     """The `fields` chains for the 9 adapters whose `parse()` is `ti.get(...) or ...` chains."""
     assigns, event_kwargs, edits_guarded = _analyze_parse(mod.parse)
     result = {}
+    ti_chain = _resolve_chain(assigns["ti"], assigns) if "ti" in assigns else []
+    if ti_chain and ti_chain != ["tool_input"]:
+        result["tool_input"] = ti_chain
     for name in FIELD_NAMES:
         node = event_kwargs.get(name)
         if node is None:
@@ -177,10 +180,20 @@ def _fields_antigravity(mod):
     }
 
 
+def _fields_gemini_cli(mod):
+    """Bespoke: content is read only for write tools (gemini_cli.py:64-66), a guard the
+    first-assignment walker cannot see past the initial `content = None`."""
+    fields = _generic_fields(mod)
+    fields["content"] = ["tool_input.content", "tool_input.new_string", "tool_input.new_str"]
+    fields["content_only_for_write_tools"] = True
+    return {"fields": fields}
+
+
 _OVERRIDE = {
     "vscode_copilot": _fields_vscode_copilot,
     "windsurf": _fields_windsurf,
     "antigravity": _fields_antigravity,
+    "gemini_cli": _fields_gemini_cli,
 }
 
 
@@ -189,7 +202,12 @@ def fields(agent, mod):
         # Config-driven adapter: the chains ARE its parse() (the engine executes them), so
         # there is no second source to derive from; behaviour is held by the golden fixtures
         # and the per-adapter suites.
-        out = {"fields": {name: list(chain) for name, chain in mod.CONFIG["fields"].items()}}
+        out = {
+            "fields": {
+                name: list(chain) if isinstance(chain, (list, tuple)) else chain
+                for name, chain in mod.CONFIG["fields"].items()
+            }
+        }
         if "fields_memory_write" in mod.CONFIG:
             out["fields_memory_write"] = {k: list(v) for k, v in mod.CONFIG["fields_memory_write"].items()}
         return out

@@ -164,6 +164,40 @@ _VERDICT_DIALECT = {
         "context_events": ["PostToolUse", "SessionStart", "UserPromptSubmit"],
         "context_source": "reason",
     },
+    "gemini_cli": {
+        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
+        "degrade_notes": {"escalate": "%s (confirmation required; %s cannot prompt from a hook)"},
+        "reason_defaults": {"escalate": "policy requires confirmation", "escalate_gate": "confirmation required"},
+    },
+    "junie": {
+        "words": {"allow": "allow", "block": "block", "escalate": "ask", "transform": "allow"},
+        "degrade_notes": {"transform_missing_input": "no replacement input was supplied"},
+        "reason_defaults": {"escalate_gate": "confirmation required", "transform": "input requires modification"},
+        "gate_reason_defaults": {"Stop": "not finished"},
+        "allow_silent_events": ["Stop"],
+        "allow_context_key": "additionalContext",
+        "context_source": "reason",
+        "note_style": "suffix",
+    },
+    "tabnine": {
+        "words": {"allow": "allow", "block": "deny"},
+        "degrade_notes": {
+            "escalate": "Tabnine cannot prompt for confirmation",
+            "escalate_from_transform": "Tabnine cannot modify a tool call",
+            "transform": "Tabnine cannot modify a tool call",
+        },
+        "note_style": "because",
+        "missing_wire": "reverse_map",
+    },
+    "grok": {
+        "words": {"block": "deny"},
+        "degrade_notes": {
+            "escalate": "Grok cannot prompt for confirmation",
+            "escalate_from_transform": "Grok cannot modify a tool call",
+            "transform": "Grok cannot modify a tool call",
+        },
+        "note_style": "because",
+    },
 }
 
 

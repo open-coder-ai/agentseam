@@ -94,6 +94,9 @@
     ],
     "tool": [
       "toolName"
+    ],
+    "tool_input": [
+      "toolInput"
     ]
   },
   "hook_entry": {
@@ -107,6 +110,11 @@
       "PreToolUse"
     ],
     "bare_allow": "silent",
+    "degrade_notes": {
+      "escalate": "Grok cannot prompt for confirmation",
+      "escalate_from_transform": "Grok cannot modify a tool call",
+      "transform": "Grok cannot modify a tool call"
+    },
     "gates": {
       "PreToolUse": {
         "grammar": "G1",
@@ -114,10 +122,14 @@
         "honours_transform": false
       }
     },
+    "note_style": "because",
     "vocabulary": [
       "deny"
     ],
-    "vocabulary_basis": "verified"
+    "vocabulary_basis": "verified",
+    "words": {
+      "block": "deny"
+    }
   },
   "wire_events": {
     "pre_compact": "PreCompact",
