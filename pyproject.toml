@@ -55,6 +55,12 @@ dev = ["pytest>=7"]
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+# The vendor tables live in data/*.json and are read at import time. Without this the
+# wheel ships without them and every import raises FileNotFoundError from a pip install
+# while working perfectly from a source checkout -- the failure chock#87 caught on itself.
+agentseam = ["data/*.json"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src", "tests"]

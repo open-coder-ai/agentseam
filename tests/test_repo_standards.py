@@ -120,3 +120,26 @@ def test_citation_version_tracks_the_package():
         declared,
         agentseam.__version__,
     )
+
+
+def test_every_data_table_is_declared_as_package_data():
+    """data/*.json is read at import time, so a wheel that omits one fails on first import.
+
+    Derived, not asserted: every file actually present in data/ must match a declared
+    package-data pattern, so adding a table without shipping it fails here instead of at
+    the first pip install. The narrowed-glob version of this bug shipped in chock#87.
+    """
+    import pytest
+
+    tomllib = pytest.importorskip("tomllib")
+    from fnmatch import fnmatch
+
+    cfg = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    patterns = cfg["tool"]["setuptools"]["package-data"]["agentseam"]
+    data_dir = ROOT / "src" / "agentseam" / "data"
+    missing = [
+        f.name
+        for f in sorted(data_dir.iterdir())
+        if f.is_file() and not any(fnmatch("data/" + f.name, p) for p in patterns)
+    ]
+    assert not missing, "in data/ but matched by no package-data pattern: %s" % missing
