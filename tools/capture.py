@@ -106,7 +106,7 @@ def cmd_install(args):
     path = _probe_path()
     with open(path, "w") as fh:
         fh.write(_probe_source())
-    os.chmod(path, 0o755)
+    os.chmod(path, 0o700)
 
     mod = adapters.get(args.agent)
     events = sorted(mod.REVERSE_EVENT_MAP)

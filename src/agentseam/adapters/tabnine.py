@@ -32,15 +32,7 @@ EVENT_MAP = {
     "AfterTool": POST_TOOL,
     "PreCompress": PRE_COMPACT,
 }
-REVERSE_EVENT_MAP = {
-    SESSION_START: "SessionStart",
-    SESSION_END: "SessionEnd",
-    PROMPT_SUBMIT: "BeforeAgent",
-    STOP: "AfterAgent",
-    PRE_TOOL: "BeforeTool",
-    POST_TOOL: "AfterTool",
-    PRE_COMPACT: "PreCompress",
-}
+REVERSE_EVENT_MAP = {v: k for k, v in EVENT_MAP.items()}
 
 BLOCKING_EVENTS = ("BeforeAgent", "AfterAgent", "BeforeModel", "AfterModel", "BeforeTool", "AfterTool")
 
