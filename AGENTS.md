@@ -28,10 +28,13 @@ pass (`rewrite`/`ask` are deprecated aliases of the same two).
 
 ## Adding an agent
 
-1. `src/agentseam/adapters/<agent>.py` — `AGENT`, `claims()`, `parse()`, `respond()`,
-   `hook_config()`, `CONFIG_PATH`
+1. `src/agentseam/data/vendors/<agent>.json` — a config entry in an existing family
+   (validated against `schema.json` beside it), plus its name in `_CONFIG_DRIVEN`
+   (`src/agentseam/adapters/__init__.py`). A new *dialect* — grammar or shape inference
+   no family speaks — additionally means a small family module (`docs/design/dialect-families.md` §3.1)
 2. a `MATRIX` row with a `verified` record naming the version, date, and method
-3. fixtures in `tests/test_adapters.py` using that vendor's REAL payload shapes
+3. fixtures in `tests/test_adapter_<agent>.py` using that vendor's REAL payload shapes,
+   and golden wire fixtures captured via `tools/capture_fixtures.py`
 
 No consumer changes. No core changes. If an agent needs a core change, the abstraction
 is wrong — fix the abstraction.

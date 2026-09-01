@@ -349,6 +349,22 @@ first, D3/D4 swap cleanly — they share only D1+D2.
   config/code line held without a new named probe: shape inference stays the three family
   modules' code, exactly as §3.3 drew it, and windsurf's two-key pre_tool fan-out folded as
   `hook_entry.also_wires` (wiring data) rather than an `entry_extra` entry field.
+- **[v]** D6's post-trim numbers, measured at its base (main `6838d69`, where the untrimmed
+  engine bundles had grown to claude_code 786 / codex_cli 772 / kimi_code 760 / devin 786 /
+  gemini_cli 786 / tabnine 760 / junie 760 / grok 760 / cursor 883 / windsurf 814 /
+  antigravity 796 — every bundle inlined the whole engine, the D4/D5 devices included):
+  claude_code 698, codex_cli 685, kimi_code 654, devin 669, gemini_cli 669, tabnine 652,
+  junie 652, grok 652, cursor 608, windsurf 581, antigravity 643; vscode_copilot 503,
+  byte-identical to the legacy splice its dedicated composition replaces. The trim is
+  function-level composition keyed on the entry: the family's bound entry points plus their
+  transitive dependencies, minus the grammar renderers no gate of the entry speaks, the TOML
+  emitter where `config_format` is not toml, and the probe/windows modules the entry does
+  not cite. The singletons give back most of D5's growth (cursor −31%, windsurf −29%,
+  antigravity −19%); F1/F2 members give back 11–15% but stay above their own wave-base
+  numbers (claude_code 698 vs 650 at D3's base) because the D4/D5 devices live *inside*
+  shared function bodies (`_g1`, `hj_parse`), where line-level trimming would mean
+  per-vendor engine variants — §3.1's line says no. The 12-agent subprocess replay and the
+  new golden-set equivalence test pass identically before and after the trim.
 - **[v]** (was [h]) The `reject_probes: ["looks_like_claude_code"]` device (named engine
   predicates referenced from config) is the narrowest crack in the code/config line;
   if D2 finds more than ~3 named probes are needed, that is evidence the line is drawn
