@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 
+from ._data import load
 from .permissions_data import ALLOW, ASK, CAPABILITY, DENY
 
 
@@ -133,32 +134,7 @@ RENDERERS = {
     "vscode_copilot": _render_vscode_copilot,
 }
 
-_CONTENT_REASON = {
-    "claude_code": (
-        "permissions.{allow,ask,deny} match a tool name, optionally narrowed by a "
-        "command-prefix/path-glob specifier -- none of the three reads file or text "
-        "content. A native content-pattern permission rule was requested and closed "
-        "'not planned' upstream (anthropics/claude-code#37509, read 2026-08-29); the real "
-        "mechanism is a consumer-authored hook (see agentseam.install/dispatch) that "
-        "inspects the payload and returns its own decision, which is a different "
-        "primitive from a permissions rule."
-    ),
-    "gemini_cli": (
-        "tools.allowed/tools.exclude/tools.confirmationRequired match by tool name; none "
-        "inspects the argument bytes, so there is no way to gate on content a tool reads "
-        "or writes."
-    ),
-    "codex_cli": (
-        "execpolicy's prefix_rule matches ordered command tokens; the sandbox+execpolicy "
-        "model has no content-scanning primitive at all, for shell commands or anything "
-        "else."
-    ),
-    "vscode_copilot": (
-        "the auto-approve map matches terminal command patterns and has no deny at all "
-        "(see the tool-rule DENY case above); there is no content-scanning primitive here "
-        "either."
-    ),
-}
+_CONTENT_REASON = {agent: row["note"] for agent, row in load("permissions-content-reasons.json").items()}
 
 
 def render_content_rules(agent, rules):

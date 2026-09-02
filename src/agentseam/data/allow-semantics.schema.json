@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/open-coder-ai/agentseam/blob/main/src/agentseam/data/allow-semantics.schema.json",
+  "title": "agentseam bare-ALLOW audit",
+  "description": [
+    "What a bare ALLOW means to each vendor. The rule: a bare ALLOW must land on whatever",
+    "the vendor would have done with no hook at all -- usually silence, but on some vendors",
+    "silence is a refusal or a hook error, and there the adapter must speak. Each row's",
+    "note is the evidence, carrying basis/date only where the source states one; inventing",
+    "either would be a claim the reader cannot check. `unverified` rows are deliberately",
+    "unresolved: silencing a vendor whose empty response blocks turns every allow into a",
+    "denial, speaking to one that reads the word as auto-approve disables the user's own",
+    "confirmation -- both directions are guesses, so the gap is recorded instead.",
+    "vouch_notes are the two evidence strings bundle() splices into a generated runtime's",
+    "degrade() docstring, verbatim so bundle bytes stay frozen."
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["semantics", "vouch_notes"],
+  "properties": {
+    "semantics": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["bare_allow", "note"],
+        "properties": {
+          "bare_allow": {"enum": ["silent", "inert", "required", "unverified"]},
+          "note": {"type": "string", "minLength": 1},
+          "basis": {"enum": ["live-run", "live-run-partial", "vendor-source", "vendor-docs", "third-party-install", "inherited"]},
+          "date": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$"},
+          "vouch_speaks": {
+            "type": "boolean",
+            "description": "cited evidence that this vendor reads an explicit approval word as a real bypass, so a VOUCH may speak it; not every silent row qualifies (codex_cli is silent by the same default, but its parser rejects the word)."
+          },
+          "warn_speaks": {
+            "type": "boolean",
+            "description": "cited evidence of a real warning channel distinct from a plain allow. No agent's has been established to that standard yet, and an absent flag is the honest default, not a placeholder."
+          }
+        }
+      }
+    },
+    "vouch_notes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["speaks", "degrades"],
+      "properties": {
+        "speaks": {"type": "string", "minLength": 1},
+        "degrades": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
