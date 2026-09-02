@@ -20,6 +20,13 @@ externalized_text: {non_python_text_and_vendor_facts: data_or_template_files_rea
                     templates: valid_in_their_own_language_and_linted_as_it,
                     covered_by: [package_data_derivation_test, frozen_binary_spec],
                     stays_in_code: [error_and_diagnostic_messages, behaviour]}
+static_analysis: {select: [E, F, W, I, C90, N, PLR, PLW, PLC, ERA, T20, ARG, RET, SIM, PIE, FBT, A, B, S, BLE, TRY, RUF],
+                   thresholds: {max_complexity: 10, max_args: 5, max_branches: 12, max_returns: 6, max_statements: 50},
+                   magic_values: constants_or_data_in_that_order_never_a_blanket_fix,
+                   literal_duplication: {tool: tools/literal_duplication.py, threshold: "20+ chars, 3+ repeats, outside data/templates/tests",
+                                         allowlist: tools/literal_duplication_allowlist.json, each_entry_needs_a_reason: true},
+                   scope: src/agentseam only (tests/tools/examples/docs are a follow-up wave, per-file-ignored with reasons in pyproject.toml),
+                   enforcement: ci_ruff_check_dot}
 commits: {signed_off: required}
 ```
 
