@@ -19,6 +19,7 @@ from ..contract import (
     TRANSFORM,
     degraded_from,
 )
+from ._hook_json import _ESCALATE_FROM_TRANSFORM
 from ._payload import hj_parse
 
 #: Wire names other vendors also spell this way; a payload naming one is claimed only on
@@ -120,7 +121,7 @@ def cursor_respond(cfg, decision, event):
         if gate["honours_escalate"]:
             payload = {"permission": words["escalate"]}
         else:
-            note = notes["escalate_from_transform"] if degraded_from(decision) == TRANSFORM else notes["escalate"]
+            note = notes[_ESCALATE_FROM_TRANSFORM] if degraded_from(decision) == TRANSFORM else notes["escalate"]
             payload = {"permission": words["block"]}
             reason = _because(reason, note % name)
     else:

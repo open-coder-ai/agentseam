@@ -134,6 +134,9 @@ def _refusal_reason(decision):
 
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
+#: The permission-object dialect's one reason field, named four times below.
+_PERMISSION_DECISION_REASON = "permissionDecisionReason"
+
 
 def respond(decision, event):
     """Three dialects, one per event group -- not one gate shape everywhere."""
@@ -163,18 +166,18 @@ def respond(decision, event):
     if decision.outcome == VOUCH:
         out["permissionDecision"] = "allow"
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
+            out[_PERMISSION_DECISION_REASON] = decision.reason
     elif decision.outcome == DENY:
         out["permissionDecision"] = "deny"
-        out["permissionDecisionReason"] = decision.reason or "blocked"
+        out[_PERMISSION_DECISION_REASON] = decision.reason or "blocked"
     elif decision.outcome == ASK:
         out["permissionDecision"] = "ask"
-        out["permissionDecisionReason"] = decision.reason or "confirmation required"
+        out[_PERMISSION_DECISION_REASON] = decision.reason or "confirmation required"
     elif decision.outcome == REWRITE:
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
+            out[_PERMISSION_DECISION_REASON] = decision.reason
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 

@@ -16,6 +16,12 @@ from ..contract import ALLOW, DENY, ESCALATE, TRANSFORM, UNKNOWN, VOUCH, WARN, d
 from ._payload import _wire_name
 
 
+#: `degrade_notes` keys named more than once below; kept as constants rather than repeated
+#: literals (they are also part of the vendor entry's own `degrade_notes` schema).
+_ESCALATE_FROM_TRANSFORM = "escalate_from_transform"
+_TRANSFORM_MISSING_INPUT = "transform_missing_input"
+
+
 def hj_reverse(cfg):
     """Canonical event -> wire name: the naive inverse, then the entry's pinned overrides."""
     reverse = {}
@@ -41,14 +47,14 @@ def _context_body(name, value):
 def _note_for(v, decision, at_gate, missing_input):
     notes = v.get("degrade_notes", {})
     if decision.outcome == ESCALATE:
-        if degraded_from(decision) == TRANSFORM and "escalate_from_transform" in notes:
-            return notes["escalate_from_transform"]
+        if degraded_from(decision) == TRANSFORM and _ESCALATE_FROM_TRANSFORM in notes:
+            return notes[_ESCALATE_FROM_TRANSFORM]
         if at_gate and "escalate_gate" in notes:
             return notes["escalate_gate"]
         return notes.get("escalate")
     if decision.outcome == TRANSFORM:
-        if missing_input and "transform_missing_input" in notes:
-            return notes["transform_missing_input"]
+        if missing_input and _TRANSFORM_MISSING_INPUT in notes:
+            return notes[_TRANSFORM_MISSING_INPUT]
         return notes.get("transform")
     return None
 
@@ -113,7 +119,7 @@ def _g1(v, gate, decision, wire, name):
         and "escalate" in words
         # An escalate the dispatcher degraded a transform into is a block where the entry
         # names that degradation (antigravity): prompting would offer the unmodified call.
-        and not (degraded_from(decision) == TRANSFORM and "escalate_from_transform" in v.get("degrade_notes", {}))
+        and not (degraded_from(decision) == TRANSFORM and _ESCALATE_FROM_TRANSFORM in v.get("degrade_notes", {}))
     ):
         reason = decision.reason or _default_for(v, decision, True, wire)
         return _json.dumps({"decision": words["escalate"], "reason": reason}), 0
@@ -121,6 +127,10 @@ def _g1(v, gate, decision, wire, name):
     if at_context_event and v.get("context_source") == "context" and decision.context:
         out["hookSpecificOutput"] = {"hookEventName": name, "additionalContext": decision.context}
     return _json.dumps(out), 0
+
+
+#: The G2 dialect's one reason field, named four times below.
+_PERMISSION_DECISION_REASON = "permissionDecisionReason"
 
 
 def _g2(v, gate, decision, name):
@@ -134,22 +144,22 @@ def _g2(v, gate, decision, name):
             return "", 0
         out["permissionDecision"] = words["vouch"]
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
+            out[_PERMISSION_DECISION_REASON] = decision.reason
     elif (
         decision.outcome == TRANSFORM
         and gate["honours_transform"]
-        and not (decision.updated_input is None and "transform_missing_input" in v.get("degrade_notes", {}))
+        and not (decision.updated_input is None and _TRANSFORM_MISSING_INPUT in v.get("degrade_notes", {}))
     ):
         out["permissionDecision"] = words.get("transform", "allow")
         out["updatedInput"] = decision.updated_input
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
+            out[_PERMISSION_DECISION_REASON] = decision.reason
     elif decision.outcome == ESCALATE and gate["honours_escalate"] and "escalate" in words:
         out["permissionDecision"] = words["escalate"]
-        out["permissionDecisionReason"] = decision.reason or _default_for(v, decision, True)
+        out[_PERMISSION_DECISION_REASON] = decision.reason or _default_for(v, decision, True)
     else:
         out["permissionDecision"] = words.get("deny", "deny")
-        out["permissionDecisionReason"] = _refusal_text(v, decision, True)
+        out[_PERMISSION_DECISION_REASON] = _refusal_text(v, decision, True)
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 

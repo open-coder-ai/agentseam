@@ -40,6 +40,9 @@ def _cmd_matrix(args):
     return 0
 
 
+_STALE_AFTER_DAYS = 90
+
+
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
     today = date.today()
@@ -59,7 +62,7 @@ def _cmd_doctor(args):
             age = (today - date(y, m, d)).days
         except (ValueError, KeyError):
             age = None
-        stale = " STALE" if age is not None and age > 90 else ""
+        stale = " STALE" if age is not None and age > _STALE_AFTER_DAYS else ""
         if stale:
             rc = 1
         print(
@@ -122,13 +125,17 @@ def _cmd_instructions(args):
     return 0
 
 
+_RULE_MIN_FIELDS = 2
+_RULE_MAX_FIELDS = 3
+
+
 def _parse_rule(spec):
     """`action:capability[:specifier]` -- e.g. `deny:shell:curl *`."""
-    parts = spec.split(":", 2)
-    if len(parts) < 2:
+    parts = spec.split(":", _RULE_MAX_FIELDS - 1)
+    if len(parts) < _RULE_MIN_FIELDS:
         raise argparse.ArgumentTypeError("rule must be action:capability[:specifier], got %r" % (spec,))
     action, capability = parts[0], parts[1]
-    specifier = parts[2] if len(parts) == 3 else None
+    specifier = parts[2] if len(parts) == _RULE_MAX_FIELDS else None
     try:
         return permissions_mod.Rule(action, capability, specifier)
     except ValueError as exc:
