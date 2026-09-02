@@ -137,7 +137,10 @@ DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
 def respond(decision, event):
     """Three dialects, one per event group -- not one gate shape everywhere."""
-    import json as _json
+    import json as _json  # noqa: PLC0415 (bundler.py keeps this vendored file's own function-local
+    # imports untouched -- only top-level imports get hoisted into a bundle; see
+    # test_function_local_imports_are_left_alone -- so hoisting this would only move it, not
+    # remove it, while touching every response line for no behavioral gain)
 
     if event.event in _TOP_LEVEL_BLOCK:
         if decision.outcome in (ALLOW, VOUCH):

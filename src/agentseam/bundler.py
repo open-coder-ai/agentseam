@@ -11,7 +11,7 @@ from .bundler_templates import render, section
 from .contract import EVENTS
 from .matrix import capability
 
-__all__ = ["bundle", "bundle_entry", "SUPPORTED_AGENTS"]
+__all__ = ["SUPPORTED_AGENTS", "bundle", "bundle_entry"]
 
 _HERE = os.path.dirname(__file__)
 _ADAPTERS_DIR = os.path.join(_HERE, "adapters")

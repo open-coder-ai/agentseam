@@ -134,7 +134,7 @@ def remove(targets=None, repo_root="."):
     removed = {}
     seen = set()
     for agent in sorted(targets) if targets else agents():
-        for rel in [SHARED_FILE] + paths(agent):
+        for rel in [SHARED_FILE, *paths(agent)]:
             if rel in seen:
                 continue
             seen.add(rel)

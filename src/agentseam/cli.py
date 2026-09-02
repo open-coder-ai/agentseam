@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
 import textwrap
+from datetime import date
 
 from . import __version__, adapters
 from . import install as install_mod
@@ -40,8 +42,6 @@ def _cmd_matrix(args):
 
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
-    from datetime import date
-
     today = date.today()
     rc = 0
     for name in sorted(MATRIX):
@@ -132,7 +132,7 @@ def _parse_rule(spec):
     try:
         return permissions_mod.Rule(action, capability, specifier)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError(str(exc))
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def _print_unrecorded(rows, label):
@@ -203,10 +203,8 @@ def main(argv=None):
     try:
         return _main(argv)
     except BrokenPipeError:
-        try:
+        with contextlib.suppress(OSError):
             os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        except OSError:
-            pass
         return 0
     except KeyboardInterrupt:
         return 130

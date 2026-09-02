@@ -23,7 +23,7 @@ from .install_config import (
 )
 from .install_identity import installed
 
-__all__ = ["BEGIN", "END", "ConfigUnreadable", "MARKER", "config_path", "install", "installed", "uninstall"]
+__all__ = ["BEGIN", "END", "MARKER", "ConfigUnreadable", "config_path", "install", "installed", "uninstall"]
 
 
 def config_path(agent, repo_root=".", owner="agentseam"):
