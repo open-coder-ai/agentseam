@@ -6,6 +6,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.2.1] - 2026-09-02
+
 ### Added
 - **The vendor-config data gaps found by executing chock's C2 wave against the 0.2.0
   wheel** (chock#97). Data only, no wire change: every golden fixture is byte-identical.
@@ -53,6 +57,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     template carries is supplied, none is orphaned, and no rendered bundle keeps one --
     and the package-data derivation test now walks `data/` recursively so the new
     template directory ships in the wheel.
+- **Adopted the Sonar/Checkstyle/FindBugs-class ruff rule families** (owner standard,
+  `plan/coding-standards.md` §3) across `src/`: complexity, naming, boolean-trap,
+  exception-hygiene, dead-code and CLI-print-discipline checks, fixed category by
+  category in bisectable commits, plus a new literal-duplication guard
+  (`tools/literal_duplication.py`). Pure refactor -- no behaviour change; golden fixture
+  replay, bundle equivalence and the 12-agent subprocess replay all pass unchanged.
+  `tests/`, `tools/`, `examples/` and the two `docs/` asset scripts are marked
+  `TODO(lint-adoption)` per-file-ignores, out of scope for this pass.
 
 ## [0.2.0] - 2026-09-01
 
