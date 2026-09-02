@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
 import sys
 import textwrap
+from datetime import date
 
 from . import __version__, adapters
 from . import install as install_mod
@@ -17,7 +19,7 @@ from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
 
-def _cmd_agents(args):
+def _cmd_agents(_args):
     for name in sorted(MATRIX):
         row = MATRIX[name]
         print("%-16s %-14s %s" % (name, row["tier"], row["config"] or "(no hook config)"))
@@ -38,10 +40,11 @@ def _cmd_matrix(args):
     return 0
 
 
+_STALE_AFTER_DAYS = 90
+
+
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
-    from datetime import date
-
     today = date.today()
     rc = 0
     for name in sorted(MATRIX):
@@ -59,7 +62,7 @@ def _cmd_doctor(args):
             age = (today - date(y, m, d)).days
         except (ValueError, KeyError):
             age = None
-        stale = " STALE" if age is not None and age > 90 else ""
+        stale = " STALE" if age is not None and age > _STALE_AFTER_DAYS else ""
         if stale:
             rc = 1
         print(
@@ -122,17 +125,21 @@ def _cmd_instructions(args):
     return 0
 
 
+_RULE_MIN_FIELDS = 2
+_RULE_MAX_FIELDS = 3
+
+
 def _parse_rule(spec):
     """`action:capability[:specifier]` -- e.g. `deny:shell:curl *`."""
-    parts = spec.split(":", 2)
-    if len(parts) < 2:
+    parts = spec.split(":", _RULE_MAX_FIELDS - 1)
+    if len(parts) < _RULE_MIN_FIELDS:
         raise argparse.ArgumentTypeError("rule must be action:capability[:specifier], got %r" % (spec,))
     action, capability = parts[0], parts[1]
-    specifier = parts[2] if len(parts) == 3 else None
+    specifier = parts[2] if len(parts) == _RULE_MAX_FIELDS else None
     try:
         return permissions_mod.Rule(action, capability, specifier)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError(str(exc))
+        raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
 def _print_unrecorded(rows, label):
@@ -179,7 +186,7 @@ def _cmd_permissions(args):
     return rc
 
 
-def _cmd_packaging(args):
+def _cmd_packaging(_args):
     """Show where each agent looks for skills, subagents and commands -- and what it shares."""
     for name in packaging_mod.agents():
         row = packaging_mod.layout(name)
@@ -203,10 +210,8 @@ def main(argv=None):
     try:
         return _main(argv)
     except BrokenPipeError:
-        try:
+        with contextlib.suppress(OSError):
             os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
-        except OSError:
-            pass
         return 0
     except KeyboardInterrupt:
         return 130

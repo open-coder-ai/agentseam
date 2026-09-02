@@ -134,45 +134,63 @@ def _refusal_reason(decision):
 
 DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 
+#: The permission-object dialect's one reason field, named four times below.
+_PERMISSION_DECISION_REASON = "permissionDecisionReason"
 
-def respond(decision, event):
-    """Three dialects, one per event group -- not one gate shape everywhere."""
-    import json as _json
 
-    if event.event in _TOP_LEVEL_BLOCK:
-        if decision.outcome in (ALLOW, VOUCH):
-            return "", 0
-        return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
+def _top_level_block_body(decision):
+    """The dict to serialize, or None where nothing blocks -- always exit 0."""
+    if decision.outcome in (ALLOW, VOUCH):
+        return None
+    return {"decision": "block", "reason": _refusal_reason(decision)}
 
-    if event.event in _NESTED_BLOCK:
-        if decision.outcome in (ALLOW, VOUCH):
-            return "", 0
-        out = {"hookEventName": _echoed_name(event), "decision": "block", "reason": _refusal_reason(decision)}
-        return _json.dumps({"hookSpecificOutput": out}), 0
 
-    if event.event != PRE_TOOL:
-        return "", 0
+def _nested_block_body(decision, event):
+    if decision.outcome in (ALLOW, VOUCH):
+        return None
+    out = {"hookEventName": _echoed_name(event), "decision": "block", "reason": _refusal_reason(decision)}
+    return {"hookSpecificOutput": out}
 
-    if decision.outcome == ALLOW:
-        return "", 0
 
+def _pre_tool_out(decision, event):
     out = {"hookEventName": _echoed_name(event)}
     if decision.outcome == VOUCH:
         out["permissionDecision"] = "allow"
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
+            out[_PERMISSION_DECISION_REASON] = decision.reason
     elif decision.outcome == DENY:
         out["permissionDecision"] = "deny"
-        out["permissionDecisionReason"] = decision.reason or "blocked"
+        out[_PERMISSION_DECISION_REASON] = decision.reason or "blocked"
     elif decision.outcome == ASK:
         out["permissionDecision"] = "ask"
-        out["permissionDecisionReason"] = decision.reason or "confirmation required"
+        out[_PERMISSION_DECISION_REASON] = decision.reason or "confirmation required"
     elif decision.outcome == REWRITE:
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
         if decision.reason:
-            out["permissionDecisionReason"] = decision.reason
-    return _json.dumps({"hookSpecificOutput": out}), 0
+            out[_PERMISSION_DECISION_REASON] = decision.reason
+    return out
+
+
+def respond(decision, event):
+    """Three dialects, one per event group -- not one gate shape everywhere."""
+    import json as _json  # noqa: PLC0415 (bundler.py keeps this vendored file's own function-local
+    # imports untouched -- only top-level imports get hoisted into a bundle; see
+    # test_function_local_imports_are_left_alone -- so hoisting this would only move it, not
+    # remove it, while touching every response line for no behavioral gain)
+
+    if event.event in _TOP_LEVEL_BLOCK:
+        body = _top_level_block_body(decision)
+        return ("", 0) if body is None else (_json.dumps(body), 0)
+
+    if event.event in _NESTED_BLOCK:
+        body = _nested_block_body(decision, event)
+        return ("", 0) if body is None else (_json.dumps(body), 0)
+
+    if event.event != PRE_TOOL or decision.outcome == ALLOW:
+        return "", 0
+
+    return _json.dumps({"hookSpecificOutput": _pre_tool_out(decision, event)}), 0
 
 
 REVERSE_EVENT_MAP = {
@@ -186,7 +204,9 @@ REVERSE_EVENT_MAP = {
 }
 
 
-def hook_config(canonical_events, command, matcher=None):
+def hook_config(canonical_events, command, matcher=None):  # noqa: ARG001 (every adapter's
+    # hook_config(..., matcher=) is called uniformly by install.py/install_identity.py;
+    # VS Code has no per-tool matcher to honour, but the parameter stays for interface parity)
     """The hooks file VS Code actually parses: an object keyed by event name."""
     hooks = {}
     for ev in canonical_events:

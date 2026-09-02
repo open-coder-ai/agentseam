@@ -30,8 +30,8 @@ ADAPTERS.update({agent: bind(load("vendors/%s.json" % agent)) for agent in _CONF
 def get(agent):
     try:
         return ADAPTERS[agent]
-    except KeyError:
-        raise KeyError("no adapter for agent %r (have: %s)" % (agent, ", ".join(sorted(ADAPTERS))))
+    except KeyError as exc:
+        raise KeyError("no adapter for agent %r (have: %s)" % (agent, ", ".join(sorted(ADAPTERS)))) from exc
 
 
 def detect(raw):

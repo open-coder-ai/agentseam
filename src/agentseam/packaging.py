@@ -20,36 +20,36 @@ from .packaging_data import (
 )
 
 __all__ = [
-    "Part",
+    "COMMAND",
+    "EXECUTABLE",
+    "HOOKS",
+    "MCP",
+    "PARTS",
+    "SHARED_SKILL_DIR",
+    "SKILL",
+    "SUBAGENT",
+    "UNRECORDED",
     "Bundle",
+    "Part",
     "Plan",
     "Unrepresentable",
     "agents",
-    "layout",
-    "supports",
-    "same_path_for",
     "also_reads",
+    "executable_ref",
+    "layout",
     "plan",
     "plugin_root",
-    "executable_ref",
-    "PARTS",
-    "SKILL",
-    "SUBAGENT",
-    "COMMAND",
-    "HOOKS",
-    "MCP",
-    "EXECUTABLE",
-    "SHARED_SKILL_DIR",
-    "UNRECORDED",
+    "same_path_for",
+    "supports",
 ]
 
 
 class Part:
     """One piece of a bundle: a kind, a name, and its body text."""
 
-    __slots__ = ("kind", "name", "body", "description", "executable")
+    __slots__ = ("body", "description", "executable", "kind", "name")
 
-    def __init__(self, kind, name, body, description=None, executable=False):
+    def __init__(self, kind, name, body, description=None, *, executable=False):
         if kind not in PARTS:
             raise ValueError("unknown part: %r" % (kind,))
         self.kind = kind
@@ -65,7 +65,7 @@ class Part:
 class Bundle:
     """A named, versioned set of parts."""
 
-    __slots__ = ("name", "version", "description", "parts")
+    __slots__ = ("description", "name", "parts", "version")
 
     def __init__(self, name, version="0.1.0", description=None, parts=()):
         self.name = name
@@ -96,7 +96,7 @@ class Unrepresentable:
 class Plan:
     """The files to write, relative to the bundle root, plus what did not fit."""
 
-    __slots__ = ("agent", "root", "files", "unrepresentable", "executables")
+    __slots__ = ("agent", "executables", "files", "root", "unrepresentable")
 
     def __init__(self, agent, root, files, unrepresentable=(), executables=frozenset()):
         self.agent = agent

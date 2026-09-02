@@ -62,7 +62,9 @@ def discover(repo_root="."):
     return found
 
 
-def plan(targets=None, repo_root="."):
+def plan(targets=None, repo_root="."):  # noqa: ARG001 (repo_root mirrors discover(repo_root)'s
+    # signature -- cli.py and callers pass args.repo to both uniformly -- though this plan is
+    # path-agnostic; it decides *which* files, write()/discover() decide *where*)
     """Decide the smallest set of writes that reaches every requested agent."""
     targets = sorted(targets) if targets else agents()
     unknown = [a for a in targets if a not in INSTRUCTION_FILES]
@@ -99,7 +101,7 @@ def render(existing, text, agent=None):
     return existing + sep + block + "\n"
 
 
-def write(text, targets=None, repo_root=".", dry_run=False):
+def write(text, targets=None, repo_root=".", *, dry_run=False):
     """Write `text` as a managed block into the fewest files that reach `targets`."""
     decided = plan(targets, repo_root)
     results = {}
@@ -134,7 +136,7 @@ def remove(targets=None, repo_root="."):
     removed = {}
     seen = set()
     for agent in sorted(targets) if targets else agents():
-        for rel in [SHARED_FILE] + paths(agent):
+        for rel in [SHARED_FILE, *paths(agent)]:
             if rel in seen:
                 continue
             seen.add(rel)

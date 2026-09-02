@@ -8,18 +8,18 @@ from .permissions_data import ACTIONS, CAPABILITIES, CAPABILITY, CONFIG_FILES, U
 from .permissions_render import RENDERERS, Unrepresentable, render_content_rules
 
 __all__ = [
-    "Rule",
+    "UNRECORDED",
     "ContentRule",
     "Plan",
+    "Rule",
     "Unrepresentable",
     "agents",
-    "config_files",
     "capability",
-    "expresses",
+    "config_files",
     "deny_is_authoritative",
-    "plan",
     "discover",
-    "UNRECORDED",
+    "expresses",
+    "plan",
 ]
 
 
@@ -49,10 +49,13 @@ class Rule:
         return "Rule(%r, %r, %r)" % (self.action, self.capability, self.specifier)
 
 
+_EMPTY_PATTERN = "a content rule needs a pattern; an empty one matches everything or nothing by accident"
+
+
 class ContentRule:
     """A deny on CONTENT matching a regex -- what bytes a file or a piece of text contain,"""
 
-    __slots__ = ("kind", "pattern", "message")
+    __slots__ = ("kind", "message", "pattern")
 
     FILE = "file"
     TEXT = "text"
@@ -62,7 +65,7 @@ class ContentRule:
         if kind not in self.KINDS:
             raise ValueError("unknown content-rule kind: %r (expected one of %s)" % (kind, self.KINDS))
         if not pattern:
-            raise ValueError("a content rule needs a pattern; an empty one matches everything or nothing by accident")
+            raise ValueError(_EMPTY_PATTERN)
         self.kind = kind
         self.pattern = pattern
         self.message = message
@@ -82,7 +85,7 @@ class ContentRule:
 class Plan:
     """What `plan()` produced: a native fragment, plus what did not survive."""
 
-    __slots__ = ("agent", "fragment", "path", "format", "unrepresentable")
+    __slots__ = ("agent", "format", "fragment", "path", "unrepresentable")
 
     def __init__(self, agent, fragment, path, fmt, unrepresentable=()):
         self.agent = agent

@@ -12,7 +12,7 @@ BEGIN = "# >>> agentseam >>>"
 END = "# <<< agentseam <<<"
 
 
-class ConfigUnreadable(Exception):
+class ConfigUnreadableError(Exception):
     """An existing config file could not be read or parsed, so it must not be overwritten."""
 
 
@@ -24,20 +24,22 @@ def load(path):
         with open(path, encoding="utf-8-sig") as fh:
             text = fh.read()
     except OSError as exc:
-        raise ConfigUnreadable("cannot read %s: %s" % (path, exc)) from exc
+        raise ConfigUnreadableError("cannot read %s: %s" % (path, exc)) from exc
     except UnicodeError as exc:
-        raise ConfigUnreadable("%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)) from exc
+        raise ConfigUnreadableError(
+            "%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)
+        ) from exc
     if not text.strip():
         return {}
     try:
         loaded = json.loads(text)
     except ValueError as exc:
-        raise ConfigUnreadable(
+        raise ConfigUnreadableError(
             "%s exists but is not valid JSON (%s); refusing to overwrite it. "
             "Fix or move the file, then re-run." % (path, exc)
         ) from exc
     if not isinstance(loaded, dict):
-        raise ConfigUnreadable("%s is valid JSON but not an object; refusing to overwrite it." % path)
+        raise ConfigUnreadableError("%s is valid JSON but not an object; refusing to overwrite it." % path)
     return loaded
 
 

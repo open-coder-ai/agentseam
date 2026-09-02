@@ -21,6 +21,26 @@ def _wire_name(cfg, raw):
     return None
 
 
+def _rejected_by_markers(c, raw):
+    for marker in c.get("reject_markers", ()):
+        if marker in raw:
+            return True
+    for probe, markers in c.get("reject_markers_unless_probe", {}).items():
+        if any(marker in raw for marker in markers) and not PROBES[probe](raw):
+            return True
+    return any(PROBES[probe](raw) for probe in c.get("reject_probes", ()))
+
+
+def _accepted_by_markers(c, raw, name):
+    accept = c.get("accept_markers", ())
+    if not accept or any(marker in raw for marker in accept):
+        return True
+    return any(
+        name == event_name and all(key in raw for key in required)
+        for event_name, required in c.get("accept_when_all", {}).items()
+    )
+
+
 def hj_claims(cfg, raw):
     """True when this payload matches the entry's marker discipline."""
     if not isinstance(raw, dict):
@@ -33,22 +53,9 @@ def hj_claims(cfg, raw):
         return False
     if "client_types" in c and raw.get("client_type") not in c["client_types"]:
         return False
-    for marker in c.get("reject_markers", ()):
-        if marker in raw:
-            return False
-    for probe, markers in c.get("reject_markers_unless_probe", {}).items():
-        if any(marker in raw for marker in markers) and not PROBES[probe](raw):
-            return False
-    for probe in c.get("reject_probes", ()):
-        if PROBES[probe](raw):
-            return False
-    accept = c.get("accept_markers", ())
-    if accept and not any(marker in raw for marker in accept):
-        for event_name, required in c.get("accept_when_all", {}).items():
-            if name == event_name and all(key in raw for key in required):
-                return True
+    if _rejected_by_markers(c, raw):
         return False
-    return True
+    return _accepted_by_markers(c, raw, name)
 
 
 def _segment(node, part):

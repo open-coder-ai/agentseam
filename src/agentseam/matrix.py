@@ -20,16 +20,6 @@ from .matrix_terms import (
 )
 
 __all__ = [
-    "MATRIX",
-    "capability",
-    "can_block",
-    "can_rewrite",
-    "can_transform",
-    "enforcement_level",
-    "agents",
-    "adapted_agents",
-    "basis",
-    "observed",
     "BASES",
     "BASIS_INHERITED",
     "BASIS_LIVE",
@@ -37,11 +27,21 @@ __all__ = [
     "FAIL_CLOSED",
     "FAIL_CONFIGURABLE",
     "FAIL_OPEN",
-    "TIER_FULL",
+    "MATRIX",
     "TIER_BLOCK",
-    "TIER_OBSERVE",
+    "TIER_FULL",
     "TIER_NONE",
+    "TIER_OBSERVE",
     "TIER_UNADAPTED",
+    "adapted_agents",
+    "agents",
+    "basis",
+    "can_block",
+    "can_rewrite",
+    "can_transform",
+    "capability",
+    "enforcement_level",
+    "observed",
 ]
 
 

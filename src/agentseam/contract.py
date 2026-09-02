@@ -41,17 +41,17 @@ class Event:
 
     __slots__ = (
         "agent",
-        "event",
-        "tool",
         "command",
-        "path",
         "content",
-        "output",
-        "prompt",
-        "session_id",
-        "tool_use_id",
         "cwd",
+        "event",
+        "output",
+        "path",
+        "prompt",
         "raw",
+        "session_id",
+        "tool",
+        "tool_use_id",
     )
 
     def __init__(
@@ -110,7 +110,7 @@ _LEGACY_SPELLING = {"ask": ESCALATE, "rewrite": TRANSFORM}
 class Decision:
     """What a handler wants to happen. Adapters translate this to vendor dialect."""
 
-    __slots__ = ("outcome", "reason", "updated_input", "evidence", "context")
+    __slots__ = ("context", "evidence", "outcome", "reason", "updated_input")
 
     #: Classmethods kept only so existing callers keep constructing; see .ask()/.rewrite().
     DEPRECATED_ALIASES = frozenset({"ask", "rewrite"})
@@ -180,7 +180,7 @@ def tool_input_of(raw):
     if isinstance(raw, str) and raw[:1] == "{":
         try:
             parsed = _json.loads(raw)
-        except Exception:
+        except _json.JSONDecodeError:
             return {}
         if isinstance(parsed, dict):
             return parsed

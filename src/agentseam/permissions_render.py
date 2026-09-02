@@ -11,7 +11,7 @@ from .permissions_data import ALLOW, ASK, CAPABILITY, DENY
 class Unrepresentable:
     """A rule this agent's config has no faithful way to state, and the reason."""
 
-    __slots__ = ("rule", "reason")
+    __slots__ = ("reason", "rule")
 
     def __init__(self, rule, reason):
         self.rule = rule

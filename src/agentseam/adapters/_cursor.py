@@ -19,6 +19,7 @@ from ..contract import (
     TRANSFORM,
     degraded_from,
 )
+from ._hook_json import _ESCALATE_FROM_TRANSFORM
 from ._payload import hj_parse
 
 #: Wire names other vendors also spell this way; a payload naming one is claimed only on
@@ -80,6 +81,38 @@ def _wire_of(cfg, event):
     return event.tool if event.tool in cfg["events"] else cfg["verdicts"].get("default_wire_event")
 
 
+def _flag_payload(v, decision, name):
+    """POST_TOOL/TOOL_FAILURE: a flag can only be raised as additional context, never blocked."""
+    if decision.outcome not in (DENY, ESCALATE):
+        return "", 0
+    note = v["flag_note"] % (name, decision.reason or v["flag_note_default"])
+    return _json.dumps({"additional_context": note}), 0
+
+
+def _prompt_submit_payload(decision):
+    payload = {"continue": decision.outcome not in (DENY, ESCALATE, TRANSFORM)}
+    if decision.reason:
+        payload["user_message"] = decision.reason
+    return _json.dumps(payload), 0
+
+
+def _gate_payload(words, notes, gate, decision, name):
+    """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
+    reason = decision.reason
+    if decision.outcome == TRANSFORM:
+        if gate["honours_transform"] and decision.updated_input is not None:
+            return {"permission": words["allow"], "updated_input": decision.updated_input}, reason
+        return {"permission": words["block"]}, _because(reason, notes["transform"])
+    if decision.outcome == DENY:
+        return {"permission": words["block"]}, reason
+    if decision.outcome == ESCALATE:
+        if gate["honours_escalate"]:
+            return {"permission": words["escalate"]}, reason
+        note = notes[_ESCALATE_FROM_TRANSFORM] if degraded_from(decision) == TRANSFORM else notes["escalate"]
+        return {"permission": words["block"]}, _because(reason, note % name)
+    return {"permission": words["allow"]}, reason
+
+
 def cursor_respond(cfg, decision, event):
     v = cfg["verdicts"]
     name = _wire_of(cfg, event)
@@ -87,46 +120,17 @@ def cursor_respond(cfg, decision, event):
 
     if canonical == FILE_CHANGED:
         return "", 0
-
     if canonical in (POST_TOOL, TOOL_FAILURE):
-        if decision.outcome in (DENY, ESCALATE):
-            note = v["flag_note"] % (name, decision.reason or v["flag_note_default"])
-            return _json.dumps({"additional_context": note}), 0
-        return "", 0
-
+        return _flag_payload(v, decision, name)
     if canonical == PROMPT_SUBMIT:
-        payload = {"continue": decision.outcome not in (DENY, ESCALATE, TRANSFORM)}
-        if decision.reason:
-            payload["user_message"] = decision.reason
-        return _json.dumps(payload), 0
+        return _prompt_submit_payload(decision)
 
     gate = v["gates"].get(name)
     if gate is None or canonical != PRE_TOOL:
         return "", 0
 
-    words = v["words"]
-    notes = v["degrade_notes"]
-    reason = decision.reason
-
-    if decision.outcome == TRANSFORM:
-        if gate["honours_transform"] and decision.updated_input is not None:
-            payload = {"permission": words["allow"], "updated_input": decision.updated_input}
-        else:
-            payload = {"permission": words["block"]}
-            reason = _because(reason, notes["transform"])
-    elif decision.outcome == DENY:
-        payload = {"permission": words["block"]}
-    elif decision.outcome == ESCALATE:
-        if gate["honours_escalate"]:
-            payload = {"permission": words["escalate"]}
-        else:
-            note = notes["escalate_from_transform"] if degraded_from(decision) == TRANSFORM else notes["escalate"]
-            payload = {"permission": words["block"]}
-            reason = _because(reason, note % name)
-    else:
-        payload = {"permission": words["allow"]}
-
-    if reason and payload["permission"] != words["allow"]:
+    payload, reason = _gate_payload(v["words"], v["degrade_notes"], gate, decision, name)
+    if reason and payload["permission"] != v["words"]["allow"]:
         payload["user_message"] = reason
         payload["agent_message"] = reason
     return _json.dumps(payload), 0

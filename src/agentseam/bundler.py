@@ -11,7 +11,7 @@ from .bundler_templates import render, section
 from .contract import EVENTS
 from .matrix import capability
 
-__all__ = ["bundle", "bundle_entry", "SUPPORTED_AGENTS"]
+__all__ = ["SUPPORTED_AGENTS", "bundle", "bundle_entry"]
 
 _HERE = os.path.dirname(__file__)
 _ADAPTERS_DIR = os.path.join(_HERE, "adapters")
@@ -90,9 +90,8 @@ def _render_imports(hoisted):
     return "\n".join(out)
 
 
-def _extract_with_deps(source, names, skip=()):
-    """The top-level defs/assignments named, plus whatever OTHER top-level names their"""
-    tree = ast.parse(source)
+def _owner_map(tree):
+    """Every top-level def/assignment, by the name(s) it binds, in source order."""
     owner = {}
     order = []
     for node in tree.body:
@@ -104,7 +103,11 @@ def _extract_with_deps(source, names, skip=()):
                 if isinstance(target, ast.Name):
                     owner[target.id] = node
                     order.append(target.id)
+    return owner, order
 
+
+def _transitive_deps(owner, names, skip):
+    """`names` plus every other top-level name their bodies reference, transitively."""
     needed, queue = set(), list(names)
     while queue:
         name = queue.pop()
@@ -114,6 +117,14 @@ def _extract_with_deps(source, names, skip=()):
         for sub in ast.walk(owner[name]):
             if isinstance(sub, ast.Name) and sub.id in owner and sub.id not in needed:
                 queue.append(sub.id)
+    return needed
+
+
+def _extract_with_deps(source, names, skip=()):
+    """The top-level defs/assignments named, plus whatever OTHER top-level names their"""
+    tree = ast.parse(source)
+    owner, order = _owner_map(tree)
+    needed = _transitive_deps(owner, names, skip)
 
     seen = set()
     segments = []

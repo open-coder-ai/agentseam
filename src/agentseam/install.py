@@ -9,7 +9,7 @@ from .install_config import (
     BEGIN,
     END,
     MARKER,
-    ConfigUnreadable,
+    ConfigUnreadableError,
     check_wireable,
     dump,
     fail_closed_kwarg,
@@ -23,7 +23,7 @@ from .install_config import (
 )
 from .install_identity import installed
 
-__all__ = ["BEGIN", "END", "ConfigUnreadable", "MARKER", "config_path", "install", "installed", "uninstall"]
+__all__ = ["BEGIN", "END", "MARKER", "ConfigUnreadableError", "config_path", "install", "installed", "uninstall"]
 
 
 def config_path(agent, repo_root=".", owner="agentseam"):

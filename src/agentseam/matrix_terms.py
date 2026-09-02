@@ -13,7 +13,7 @@ TIER_NONE = "none"
 TIER_UNADAPTED = "unadapted"
 
 
-def _cap(block=False, rewrite=False, fail=FAIL_OPEN):
+def _cap(*, block=False, rewrite=False, fail=FAIL_OPEN):
     # "transform" is the ACS name for the same capability "rewrite" already recorded;
     # both keys carry the same value for one minor version (plan §1.6, item 4).
     return {"block": block, "rewrite": rewrite, "transform": rewrite, "fail_mode": fail}

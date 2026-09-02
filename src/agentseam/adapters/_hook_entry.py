@@ -21,49 +21,48 @@ def _hook_dict(cfg, command):
     return entry
 
 
-def hook_entry_config(cfg, canonical_events, command, matcher=None, fail_closed=True):
-    """The vendor's hooks-config fragment wiring `command` for these canonical events.
+def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
+    rules = []
+    for ev in canonical_events:
+        name = reverse.get(ev)
+        if not name:
+            continue
+        rule = {"event": name, "command": command}
+        if matcher and hook_entry["matcher"]:
+            rule["matcher"] = matcher
+        rules.append(rule)
+    return rules
 
-    `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the
-    entry says otherwise; a False installs an observer, not a gate.
-    """
+
+def _cursor_wrapper(cfg, reverse, canonical_events, command, *, fail_closed):
+    gates = cfg["verdicts"]["answer_events"]
+    hooks = {}
+    for ev in canonical_events:
+        name = reverse.get(ev)
+        if not name:
+            continue
+        entry = {"command": command}
+        if fail_closed and name in gates:
+            entry["failClosed"] = True
+        hooks.setdefault(name, []).append(entry)
+    return {"version": 1, "hooks": hooks}
+
+
+def _flat_entries_wrapper(hook_entry, reverse, canonical_events, command):
+    hooks = {}
+    for ev in canonical_events:
+        name = reverse.get(ev)
+        if not name:
+            continue
+        hooks.setdefault(name, []).append({"command": command})
+        extra = hook_entry.get("also_wires", {}).get(ev)
+        if extra:
+            hooks.setdefault(extra, []).append({"command": command})
+    return {"hooks": hooks}
+
+
+def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
     hook_entry = cfg["hook_entry"]
-    reverse = hj_reverse(cfg)
-    wrapper = hook_entry["wrapper"]
-    if wrapper == "flat_list":
-        rules = []
-        for ev in canonical_events:
-            name = reverse.get(ev)
-            if not name:
-                continue
-            rule = {"event": name, "command": command}
-            if matcher and hook_entry["matcher"]:
-                rule["matcher"] = matcher
-            rules.append(rule)
-        return rules
-    if wrapper == "cursor":
-        gates = cfg["verdicts"]["answer_events"]
-        hooks = {}
-        for ev in canonical_events:
-            name = reverse.get(ev)
-            if not name:
-                continue
-            entry = {"command": command}
-            if fail_closed and name in gates:
-                entry["failClosed"] = True
-            hooks.setdefault(name, []).append(entry)
-        return {"version": 1, "hooks": hooks}
-    if wrapper == "flat_entries":
-        hooks = {}
-        for ev in canonical_events:
-            name = reverse.get(ev)
-            if not name:
-                continue
-            hooks.setdefault(name, []).append({"command": command})
-            extra = hook_entry.get("also_wires", {}).get(ev)
-            if extra:
-                hooks.setdefault(extra, []).append({"command": command})
-        return {"hooks": hooks}
     hooks = {}
     for ev in canonical_events:
         name = reverse.get(ev)
@@ -76,6 +75,24 @@ def hook_entry_config(cfg, canonical_events, command, matcher=None, fail_closed=
     if hook_entry.get("group"):
         return {hook_entry["group"]: hooks}
     return hooks if hook_entry.get("bare") else {"hooks": hooks}
+
+
+def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=True):
+    """The vendor's hooks-config fragment wiring `command` for these canonical events.
+
+    `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the
+    entry says otherwise; a False installs an observer, not a gate.
+    """
+    hook_entry = cfg["hook_entry"]
+    reverse = hj_reverse(cfg)
+    wrapper = hook_entry["wrapper"]
+    if wrapper == "flat_list":
+        return _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher)
+    if wrapper == "cursor":
+        return _cursor_wrapper(cfg, reverse, canonical_events, command, fail_closed=fail_closed)
+    if wrapper == "flat_entries":
+        return _flat_entries_wrapper(hook_entry, reverse, canonical_events, command)
+    return _default_wrapper(cfg, reverse, canonical_events, command, matcher)
 
 
 def _toml_value(value):

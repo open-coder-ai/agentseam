@@ -74,9 +74,21 @@ extend-exclude = ["*.md"]
 extend-include = ["*.py.tmpl"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I"]
+# The Sonar/Checkstyle/FindBugs bar (owner standard, plan/coding-standards.md §3), plus the
+# base E/F/W/I already enforced: magic values, naming/shadowing/boolean-trap hygiene,
+# FindBugs-style correctness and security, dead code, and CLI `print` discipline.
+select = ["E", "F", "W", "I", "C90", "N", "PLR", "PLW", "PLC", "ERA", "T20", "ARG", "RET", "SIM", "PIE", "FBT", "A", "B", "S", "BLE", "TRY", "RUF"]
 # Layout is governed by `ruff format`; long diagnostic strings are allowed.
 ignore = ["E501"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 5
+max-branches = 12
+max-returns = 6
+max-statements = 50
 
 [tool.ruff.format]
 # Template text is frozen -- a regenerated bundle must stay byte-identical -- so the
@@ -86,5 +98,33 @@ exclude = ["*.py.tmpl"]
 [tool.ruff.lint.per-file-ignores]
 # A template references names the bundler splices in from other sections (Decision, sys,
 # parse, ...) and its own __TOKEN__ placeholders; undefined-name analysis cannot see
-# across the splice.
-"src/agentseam/data/templates/*.py.tmpl" = ["F821"]
+# across the splice. The template is also frozen -- bundle-equivalence goldens require it
+# stay byte-identical -- so its `exit` param (shadows the builtin, and is a boolean default
+# positional arg mirroring dispatch.run()) and its catch-all parse guard are lint-exempt
+# rather than rewritten.
+"src/agentseam/data/templates/*.py.tmpl" = ["F821", "A002", "FBT002", "BLE001"]
+# The CLI is agentseam's one designated output surface (coding-standards.md §3): every
+# print() here is user-facing terminal output, not a debug leftover.
+"src/agentseam/cli.py" = ["T201"]
+# Event/Decision are plain value objects: every field beyond the first two is optional and
+# keyword-only. install()/installed() mirror the same optional-config-knobs shape. Splitting
+# either into a builder/options object would ripple through every adapter and CLI call site
+# for no behavioral gain -- FindBugs and pylint both special-case exactly this "DTO
+# constructor" / "config-knobs function" shape. install()/installed() take theirs positionally
+# (none are keyword-only), so newer ruff's PLR0917 (positional-argument count; not in this
+# wave's pinned ruff, live in CI's .github/requirements/lint.txt pin) flags them alongside
+# PLR0913 for the same shape -- same reasoning, same ignore.
+"src/agentseam/contract.py" = ["PLR0913"]
+"src/agentseam/install.py" = ["PLR0913", "PLR0917"]
+"src/agentseam/install_identity.py" = ["PLR0913", "PLR0917"]
+# TODO(lint-adoption): this wave's Sonar/Checkstyle/FindBugs baseline (coding-standards.md
+# §3) was measured and fixed for src/ only -- 100 findings at 2026-09-02, enumerated in
+# plan/spine-a/reports/w51.md. tests/, tools/, examples/ and docs/'s two asset scripts were
+# never measured against the new rule set and are out of scope for this wave; a follow-up
+# wave should measure and adopt them on their own, since test/tooling code has legitimately
+# different conventions (fixture subprocess calls, short import aliases, literal-heavy
+# assertions) that the src/ baseline above does not speak to.
+"tests/**" = ["C90", "N", "PLR", "PLW", "PLC", "ERA", "T20", "ARG", "RET", "SIM", "PIE", "FBT", "A", "B", "S", "BLE", "TRY", "RUF"]
+"tools/**" = ["C90", "N", "PLR", "PLW", "PLC", "ERA", "T20", "ARG", "RET", "SIM", "PIE", "FBT", "A", "B", "S", "BLE", "TRY", "RUF"]
+"examples/**" = ["C90", "N", "PLR", "PLW", "PLC", "ERA", "T20", "ARG", "RET", "SIM", "PIE", "FBT", "A", "B", "S", "BLE", "TRY", "RUF"]
+"docs/**" = ["C90", "N", "PLR", "PLW", "PLC", "ERA", "T20", "ARG", "RET", "SIM", "PIE", "FBT", "A", "B", "S", "BLE", "TRY", "RUF"]
