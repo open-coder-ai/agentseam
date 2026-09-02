@@ -101,7 +101,7 @@ def render(existing, text, agent=None):
     return existing + sep + block + "\n"
 
 
-def write(text, targets=None, repo_root=".", dry_run=False):
+def write(text, targets=None, repo_root=".", *, dry_run=False):
     """Write `text` as a managed block into the fewest files that reach `targets`."""
     decided = plan(targets, repo_root)
     results = {}

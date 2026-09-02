@@ -21,7 +21,7 @@ def _hook_dict(cfg, command):
     return entry
 
 
-def hook_entry_config(cfg, canonical_events, command, matcher=None, fail_closed=True):
+def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=True):
     """The vendor's hooks-config fragment wiring `command` for these canonical events.
 
     `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the

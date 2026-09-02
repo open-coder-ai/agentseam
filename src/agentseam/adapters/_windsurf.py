@@ -50,4 +50,4 @@ def windsurf_respond(cfg, decision, event):
     wire = windsurf_wire(event.raw) if event.raw else ""
     if wire not in v["gates"]:
         return v["flag_note"] % (wire, decision.reason or v["flag_note_default"]), 0
-    return _refusal_text(v, decision, False, wire), 2
+    return _refusal_text(v, decision, at_gate=False, wire=wire), 2

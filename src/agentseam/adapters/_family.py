@@ -64,8 +64,8 @@ class _CursorAdapter(ConfigAdapter):
     def respond(self, decision, event):
         return cursor_respond(self.CONFIG, decision, event)
 
-    def hook_config(self, canonical_events, command, matcher=None, fail_closed=True):
-        return hook_entry_config(self.CONFIG, canonical_events, command, matcher, fail_closed)
+    def hook_config(self, canonical_events, command, matcher=None, *, fail_closed=True):
+        return hook_entry_config(self.CONFIG, canonical_events, command, matcher, fail_closed=fail_closed)
 
 
 class _WindsurfAdapter(ConfigAdapter):

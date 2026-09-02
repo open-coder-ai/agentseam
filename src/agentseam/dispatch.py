@@ -64,7 +64,9 @@ def _read_payload(stream):
     return stream.read().lstrip("\ufeff")
 
 
-def run(handler, agent=None, stdin=None, stdout=None, exit=True):
+def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A002 (matches
+    # sys.exit's name on purpose; every caller and the bundled runtime.py.tmpl's main() already
+    # speak `exit=` as a keyword, so renaming it would be the breaking change, not keeping it)
     """Read one payload from stdin, dispatch, emit the vendor response, exit."""
     stream = stdin or sys.stdin
     out = stdout or sys.stdout

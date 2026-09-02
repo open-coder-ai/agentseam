@@ -49,7 +49,7 @@ class Part:
 
     __slots__ = ("body", "description", "executable", "kind", "name")
 
-    def __init__(self, kind, name, body, description=None, executable=False):
+    def __init__(self, kind, name, body, description=None, *, executable=False):
         if kind not in PARTS:
             raise ValueError("unknown part: %r" % (kind,))
         self.kind = kind

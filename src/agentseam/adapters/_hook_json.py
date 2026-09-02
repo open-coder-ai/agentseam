@@ -121,9 +121,9 @@ def _g1(v, gate, decision, wire, name):
         # names that degradation (antigravity): prompting would offer the unmodified call.
         and not (degraded_from(decision) == TRANSFORM and _ESCALATE_FROM_TRANSFORM in v.get("degrade_notes", {}))
     ):
-        reason = decision.reason or _default_for(v, decision, True, wire)
+        reason = decision.reason or _default_for(v, decision, at_gate=True, wire=wire)
         return _json.dumps({"decision": words["escalate"], "reason": reason}), 0
-    out = {"decision": words.get("block", "block"), "reason": _refusal_text(v, decision, False, wire)}
+    out = {"decision": words.get("block", "block"), "reason": _refusal_text(v, decision, at_gate=False, wire=wire)}
     if at_context_event and v.get("context_source") == "context" and decision.context:
         out["hookSpecificOutput"] = {"hookEventName": name, "additionalContext": decision.context}
     return _json.dumps(out), 0
@@ -156,10 +156,10 @@ def _g2(v, gate, decision, name):
             out[_PERMISSION_DECISION_REASON] = decision.reason
     elif decision.outcome == ESCALATE and gate["honours_escalate"] and "escalate" in words:
         out["permissionDecision"] = words["escalate"]
-        out[_PERMISSION_DECISION_REASON] = decision.reason or _default_for(v, decision, True)
+        out[_PERMISSION_DECISION_REASON] = decision.reason or _default_for(v, decision, at_gate=True)
     else:
         out["permissionDecision"] = words.get("deny", "deny")
-        out[_PERMISSION_DECISION_REASON] = _refusal_text(v, decision, True)
+        out[_PERMISSION_DECISION_REASON] = _refusal_text(v, decision, at_gate=True)
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
