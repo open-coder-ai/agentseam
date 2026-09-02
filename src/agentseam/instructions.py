@@ -62,7 +62,9 @@ def discover(repo_root="."):
     return found
 
 
-def plan(targets=None, repo_root="."):
+def plan(targets=None, repo_root="."):  # noqa: ARG001 (repo_root mirrors discover(repo_root)'s
+    # signature -- cli.py and callers pass args.repo to both uniformly -- though this plan is
+    # path-agnostic; it decides *which* files, write()/discover() decide *where*)
     """Decide the smallest set of writes that reaches every requested agent."""
     targets = sorted(targets) if targets else agents()
     unknown = [a for a in targets if a not in INSTRUCTION_FILES]

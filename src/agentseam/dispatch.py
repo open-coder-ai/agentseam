@@ -11,7 +11,7 @@ from .contract import TRANSFORM, UNKNOWN, VOUCH, WARN, Decision
 from .matrix import capability
 
 
-class UnsupportedDecision(Exception):
+class UnsupportedDecisionError(Exception):
     """Raised when a handler asks for something the agent cannot do at this event."""
 
 
@@ -70,7 +70,9 @@ def run(handler, agent=None, stdin=None, stdout=None, exit=True):
     out = stdout or sys.stdout
     try:
         raw = json.loads(_read_payload(stream))
-    except Exception:
+    except Exception:  # noqa: BLE001 (the outermost boundary before any handler runs: malformed
+        # or unreadable stdin is not the agent's fault to pay for, whatever shape the failure
+        # takes -- narrowing to JSONDecodeError would let a stdin read failure crash the host)
         if exit:
             sys.exit(0)
         return 0

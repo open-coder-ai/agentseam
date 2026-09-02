@@ -141,12 +141,12 @@ def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
     assert "hooks" in after, "the hook was not wired"
 
     cfg.write_text("{ this is not json ,,, }")
-    with pytest.raises(I.ConfigUnreadable):
+    with pytest.raises(I.ConfigUnreadableError):
         I.install("junie", ["pre_tool"], "guard.py")
     assert cfg.read_text() == "{ this is not json ,,, }", "a config we could not parse was overwritten"
 
     cfg.write_bytes(json.dumps({"keep": "me"}).encode("utf-16"))
-    with pytest.raises(I.ConfigUnreadable):
+    with pytest.raises(I.ConfigUnreadableError):
         I.install("junie", ["pre_tool"], "guard.py")
     assert cfg.read_bytes()[:2] == b"\xff\xfe", "a UTF-16 config was overwritten"
 
@@ -159,7 +159,7 @@ def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
     cfg.write_text("{ broken ,,, }")
 
     assert I.installed("junie") is False
-    with pytest.raises(I.ConfigUnreadable):
+    with pytest.raises(I.ConfigUnreadableError):
         I.uninstall("junie")
     assert cfg.read_text() == "{ broken ,,, }", "uninstall must not rewrite a file it cannot parse"
 

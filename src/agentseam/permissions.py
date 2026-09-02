@@ -49,6 +49,9 @@ class Rule:
         return "Rule(%r, %r, %r)" % (self.action, self.capability, self.specifier)
 
 
+_EMPTY_PATTERN = "a content rule needs a pattern; an empty one matches everything or nothing by accident"
+
+
 class ContentRule:
     """A deny on CONTENT matching a regex -- what bytes a file or a piece of text contain,"""
 
@@ -62,7 +65,7 @@ class ContentRule:
         if kind not in self.KINDS:
             raise ValueError("unknown content-rule kind: %r (expected one of %s)" % (kind, self.KINDS))
         if not pattern:
-            raise ValueError("a content rule needs a pattern; an empty one matches everything or nothing by accident")
+            raise ValueError(_EMPTY_PATTERN)
         self.kind = kind
         self.pattern = pattern
         self.message = message

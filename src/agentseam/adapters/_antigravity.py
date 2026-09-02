@@ -19,7 +19,7 @@ def antigravity_wire(raw):
     return None
 
 
-def antigravity_claims(cfg, raw):
+def antigravity_claims(_cfg, raw):
     """Structural: `conversationId` with `workspacePaths` is Antigravity's own envelope."""
     if not isinstance(raw, dict):
         return False

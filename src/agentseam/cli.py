@@ -19,7 +19,7 @@ from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
 
-def _cmd_agents(args):
+def _cmd_agents(_args):
     for name in sorted(MATRIX):
         row = MATRIX[name]
         print("%-16s %-14s %s" % (name, row["tier"], row["config"] or "(no hook config)"))
@@ -186,7 +186,7 @@ def _cmd_permissions(args):
     return rc
 
 
-def _cmd_packaging(args):
+def _cmd_packaging(_args):
     """Show where each agent looks for skills, subagents and commands -- and what it shares."""
     for name in packaging_mod.agents():
         row = packaging_mod.layout(name)

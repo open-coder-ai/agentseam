@@ -192,7 +192,9 @@ REVERSE_EVENT_MAP = {
 }
 
 
-def hook_config(canonical_events, command, matcher=None):
+def hook_config(canonical_events, command, matcher=None):  # noqa: ARG001 (every adapter's
+    # hook_config(..., matcher=) is called uniformly by install.py/install_identity.py;
+    # VS Code has no per-tool matcher to honour, but the parameter stays for interface parity)
     """The hooks file VS Code actually parses: an object keyed by event name."""
     hooks = {}
     for ev in canonical_events:

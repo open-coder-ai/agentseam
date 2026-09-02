@@ -9,7 +9,7 @@ from .install_config import (
     BEGIN,
     END,
     MARKER,
-    ConfigUnreadable,
+    ConfigUnreadableError,
     block_bounds,
     check_wireable,
     fail_closed_kwarg,
@@ -44,13 +44,16 @@ def _owned_items(obj, owner):
     return items
 
 
+_CONTENT_MODE_NEEDS_BOTH = "content-comparison mode needs both events and command"
+
+
 def installed(agent, repo_root=".", owner="agentseam", events=None, command=None, matcher=None, fail_closed=None):
     """True when our witness is present in this agent's config."""
     mod = adapters.get(agent)
     path = resolve(mod, repo_root, owner)
     content_mode = events is not None or command is not None
     if content_mode and (events is None or command is None):
-        raise ValueError("content-comparison mode needs both events and command")
+        raise ValueError(_CONTENT_MODE_NEEDS_BOTH)
     extra = {}
     if content_mode:
         check_wireable(mod, agent, events)
@@ -78,7 +81,7 @@ def installed(agent, repo_root=".", owner="agentseam", events=None, command=None
         return text[bounds[0] : bounds[1]] == expected
     try:
         loaded = load(path)
-    except ConfigUnreadable:
+    except ConfigUnreadableError:
         return False
     if not content_mode:
         return _owns_anything(loaded, owner)

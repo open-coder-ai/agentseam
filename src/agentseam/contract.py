@@ -180,7 +180,7 @@ def tool_input_of(raw):
     if isinstance(raw, str) and raw[:1] == "{":
         try:
             parsed = _json.loads(raw)
-        except Exception:
+        except _json.JSONDecodeError:
             return {}
         if isinstance(parsed, dict):
             return parsed
