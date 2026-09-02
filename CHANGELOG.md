@@ -31,6 +31,29 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     PascalCase, `command`/`windows`/`timeout`). `hook_entry` describes only the emitted
     shape, so the native surface has no honest home in the schema without new constructs.
 
+### Changed
+- **The stranded per-vendor evidence prose and the bundle templates are data now**
+  (owner standard 2026-09-02: externalize, don't hardcode). No behaviour or wire change:
+  every golden fixture is byte-identical and `bundle()` produces identical bytes for all
+  12 agents.
+  - The bare-ALLOW audit (`allow_semantics.py`), the packaging limits/also-reads/
+    unrecorded tables (`packaging_limits.py`), the per-vendor content-rule reasons
+    (`permissions_render.py`), and the bundler's two vouch-evidence strings moved into
+    `data/allow-semantics.json`, `data/packaging-limits.json` and
+    `data/permissions-content-reasons.json`, each note keeping its stated basis/date as
+    structured fields and each table validated against a schema file beside it
+    (`tests/test_data_tables.py`, same stdlib validator as the vendor entries). The
+    Python modules are loaders with unchanged public names.
+  - The bundle header, runtime and vendor-binding source moved to
+    `data/templates/*.py.tmpl` with `__TOKEN__` placeholders swapped by `str.replace`,
+    so each template is valid Python as-is and `ruff check` lints it (ruff
+    `extend-include`, with a documented `F821` per-file-ignore for spliced names; the
+    formatter excludes templates because their text is frozen into generated bundles).
+    `tests/test_bundler_templates.py` pins token coverage both ways -- every token a
+    template carries is supplied, none is orphaned, and no rendered bundle keeps one --
+    and the package-data derivation test now walks `data/` recursively so the new
+    template directory ships in the wheel.
+
 ## [0.2.0] - 2026-09-01
 
 ### Added

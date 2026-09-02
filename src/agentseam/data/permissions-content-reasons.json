@@ -1,0 +1,15 @@
+{
+  "claude_code": {
+    "date": "2026-08-29",
+    "note": "permissions.{allow,ask,deny} match a tool name, optionally narrowed by a command-prefix/path-glob specifier -- none of the three reads file or text content. A native content-pattern permission rule was requested and closed 'not planned' upstream (anthropics/claude-code#37509, read 2026-08-29); the real mechanism is a consumer-authored hook (see agentseam.install/dispatch) that inspects the payload and returns its own decision, which is a different primitive from a permissions rule."
+  },
+  "codex_cli": {
+    "note": "execpolicy's prefix_rule matches ordered command tokens; the sandbox+execpolicy model has no content-scanning primitive at all, for shell commands or anything else."
+  },
+  "gemini_cli": {
+    "note": "tools.allowed/tools.exclude/tools.confirmationRequired match by tool name; none inspects the argument bytes, so there is no way to gate on content a tool reads or writes."
+  },
+  "vscode_copilot": {
+    "note": "the auto-approve map matches terminal command patterns and has no deny at all (see the tool-rule DENY case above); there is no content-scanning primitive here either."
+  }
+}

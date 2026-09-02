@@ -154,8 +154,8 @@ def test_every_data_table_is_declared_as_package_data():
     patterns = cfg["tool"]["setuptools"]["package-data"]["agentseam"]
     data_dir = ROOT / "src" / "agentseam" / "data"
     missing = [
-        f.name
-        for f in sorted(data_dir.iterdir())
-        if f.is_file() and not any(fnmatch("data/" + f.name, p) for p in patterns)
+        f.relative_to(data_dir).as_posix()
+        for f in sorted(data_dir.rglob("*"))
+        if f.is_file() and not any(fnmatch("data/" + f.relative_to(data_dir).as_posix(), p) for p in patterns)
     ]
     assert not missing, "in data/ but matched by no package-data pattern: %s" % missing

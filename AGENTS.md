@@ -15,6 +15,11 @@ files: {max_lines: 300, remedy: split_by_activity}
 code_comments: {docstring: one_line, inline: nonobvious_only, why: [pr_body, docs/],
                 keep: [noqa, pragma, runtime_printed_docstrings, test_pinned_markers, generated, adopter_templates],
                 target: prose_to_code <=0.15, enforcement: advisory}
+externalized_text: {non_python_text_and_vendor_facts: data_or_template_files_read_by_code,
+                    placeholders: __TOKEN__ swapped_by_str.replace_never_format,
+                    templates: valid_in_their_own_language_and_linted_as_it,
+                    covered_by: [package_data_derivation_test, frozen_binary_spec],
+                    stays_in_code: [error_and_diagnostic_messages, behaviour]}
 commits: {signed_off: required}
 ```
 

@@ -6,8 +6,8 @@ import ast
 import os
 
 from . import __version__, adapters
-from .allow_semantics import VOUCH_SPEAKS, WARN_SPEAKS
-from .bundler_templates import HEADER, RUNTIME, section
+from .allow_semantics import VOUCH_NOTES, VOUCH_SPEAKS, WARN_SPEAKS
+from .bundler_templates import render, section
 from .contract import EVENTS
 from .matrix import capability
 
@@ -129,46 +129,20 @@ def _runtime_section(agent):
     transform_events = sorted(ev for ev in EVENTS if capability(agent, ev)["transform"])
     vouch_speaks = agent in VOUCH_SPEAKS
     warn_speaks = agent in WARN_SPEAKS
-    note = (
-        "claude_code and vscode_copilot are the only agents with real evidence that an "
-        'explicit approval word means "skip confirmation"; see agentseam.allow_semantics'
-        if vouch_speaks
-        else "no evidence establishes that an explicit approval word means anything beyond "
-        "a plain allow here, so vouch degrades to one; see agentseam.allow_semantics"
-    )
+    note = VOUCH_NOTES["speaks"] if vouch_speaks else VOUCH_NOTES["degrades"]
     return section(
         "runtime (agentseam dispatch, specialized to %s)" % agent,
-        RUNTIME.format(
-            agent=agent,
-            vouch_speaks=vouch_speaks,
-            vouch_speaks_note=note,
-            warn_speaks=warn_speaks,
-            transform_events=tuple(transform_events),
+        render(
+            "runtime.py.tmpl",
+            {
+                "__AGENT_REPR__": repr(agent),
+                "__TRANSFORM_EVENTS__": repr(tuple(transform_events)),
+                "__VOUCH_SPEAKS__": repr(vouch_speaks),
+                "__VOUCH_SPEAKS_NOTE__": note,
+                "__WARN_SPEAKS__": repr(warn_speaks),
+            },
         ),
     )
-
-
-_BINDING = """\
-AGENT = "{agent}"
-
-VENDOR = {vendor}
-
-
-def claims(raw):
-    return {prefix}_claims(VENDOR, raw)
-
-
-def parse(raw):
-    return {prefix}_parse(VENDOR, raw)
-
-
-def respond(decision, event):
-    return {prefix}_respond(VENDOR, decision, event)
-
-
-def hook_config(canonical_events, command, matcher=None):
-    return hook_entry_config(VENDOR, canonical_events, command, matcher)
-"""
 
 
 def _engine_modules(cfg):
@@ -218,11 +192,11 @@ def bundle_entry(cfg):
     body.append(
         section(
             "%s vendor config + engine binding" % agent,
-            _BINDING.format(agent=agent, vendor=repr(cfg), prefix=prefix),
+            render("binding.py.tmpl", {"__AGENT__": agent, "__PREFIX__": prefix, "__VENDOR__": repr(cfg)}),
         )
     )
 
-    sections = [HEADER.format(version=__version__, agent=agent)]
+    sections = [render("header.py.tmpl", {"__AGENT__": agent, "__VERSION__": __version__})]
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
     sections.extend(body)
     sections.append(_runtime_section(agent))
@@ -245,7 +219,7 @@ def _dialect_bundle(agent):
     )
     body.append(section("%s adapter" % agent, _strip_own_imports(_adapter_module_source(agent), hoisted)))
 
-    sections = [HEADER.format(version=__version__, agent=agent)]
+    sections = [render("header.py.tmpl", {"__AGENT__": agent, "__VERSION__": __version__})]
     sections.append("from __future__ import annotations\n\n%s\n" % _render_imports(hoisted))
     sections.extend(body)
     sections.append(_runtime_section(agent))

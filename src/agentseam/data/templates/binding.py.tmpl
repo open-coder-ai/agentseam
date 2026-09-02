@@ -1,0 +1,19 @@
+AGENT = "__AGENT__"
+
+VENDOR = __VENDOR__
+
+
+def claims(raw):
+    return __PREFIX___claims(VENDOR, raw)
+
+
+def parse(raw):
+    return __PREFIX___parse(VENDOR, raw)
+
+
+def respond(decision, event):
+    return __PREFIX___respond(VENDOR, decision, event)
+
+
+def hook_config(canonical_events, command, matcher=None):
+    return hook_entry_config(VENDOR, canonical_events, command, matcher)

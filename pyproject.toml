@@ -59,7 +59,7 @@ where = ["src"]
 # The vendor tables live in data/*.json and are read at import time. Without this the
 # wheel ships without them and every import raises FileNotFoundError from a pip install
 # while working perfectly from a source checkout -- the failure chock#87 caught on itself.
-agentseam = ["data/*.json", "data/vendors/*.json"]
+agentseam = ["data/*.json", "data/vendors/*.json", "data/templates/*.py.tmpl"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -69,8 +69,22 @@ pythonpath = ["src", "tests"]
 line-length = 120
 target-version = "py39"
 extend-exclude = ["*.md"]
+# Bundle templates are valid Python as-is (__TOKEN__ placeholders are identifiers), so
+# they are linted as Python rather than shipped as unreadable string literals.
+extend-include = ["*.py.tmpl"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
 # Layout is governed by `ruff format`; long diagnostic strings are allowed.
 ignore = ["E501"]
+
+[tool.ruff.format]
+# Template text is frozen -- a regenerated bundle must stay byte-identical -- so the
+# formatter must not rewrap it; `ruff check` still lints the templates as Python.
+exclude = ["*.py.tmpl"]
+
+[tool.ruff.lint.per-file-ignores]
+# A template references names the bundler splices in from other sections (Decision, sys,
+# parse, ...) and its own __TOKEN__ placeholders; undefined-name analysis cannot see
+# across the splice.
+"src/agentseam/data/templates/*.py.tmpl" = ["F821"]
