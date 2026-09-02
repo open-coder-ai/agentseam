@@ -3,7 +3,8 @@
 Split by activity (tests/test_repo_standards.py's 300-line budget): `mechanical.py` (module
 constants), `fields.py` (AST-read field-fallback chains), `gates.py` (golden-fixture-replayed
 verdict grammar), `hook_entry.py` (golden-fixture-replayed hook_config() shape), `tables.py`
-(the design's own stated judgment calls: family assignment, marker claims, evidence).
+(the design's own stated judgment calls: family assignment, marker claims, evidence),
+`sourced.py` (primary-sourced additions carrying their own evidence records).
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from .gates import verdicts as _verdicts
 from .hook_entry import hook_entry as _hook_entry
 from .mechanical import mechanical as _mechanical
 from .mechanical import wire_events as _wire_events
+from .sourced import apply as _sourced
 from .tables import claims as _claims
 from .tables import evidence as _evidence
 from .tables import family as _family
@@ -35,7 +37,7 @@ def recount(agent):
     entry["verdicts"] = _verdicts(agent, mod)
     entry["hook_entry"] = _hook_entry(agent)
     entry["evidence"] = _evidence(agent)
-    return entry
+    return _sourced(agent, entry)
 
 
 def build_all():

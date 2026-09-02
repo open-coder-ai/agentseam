@@ -24,6 +24,11 @@
     "config_path": {"type": "string", "minLength": 1},
     "config_format": {"enum": ["json", "toml"]},
     "needs_trust": {"type": "boolean"},
+    "repo_root_token": {
+      "type": "string",
+      "minLength": 1,
+      "description": "the vendor's own token for the repository/project root, usable inside a hook command line (claude_code's ${CLAUDE_PROJECT_DIR}). Opt-in: present only where a primary source documents one, and it must travel with an evidence.repo_root_token record (tests/test_vendor_config.py pins the pairing)."
+    },
 
     "events": {
       "type": "object",
@@ -249,7 +254,8 @@
         "tools": {"$ref": "#/$defs/evidenceRecord"},
         "verdicts": {"$ref": "#/$defs/evidenceRecord"},
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
-        "hook_entry": {"$ref": "#/$defs/evidenceRecord"}
+        "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
+        "repo_root_token": {"$ref": "#/$defs/evidenceRecord"}
       },
       "required": ["family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry"]
     }

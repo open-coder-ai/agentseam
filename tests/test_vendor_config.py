@@ -98,6 +98,13 @@ def test_schema_rejects_a_marker_claims_entry_missing_event_key():
     assert validate(SCHEMA, mutated) != []
 
 
+def test_schema_rejects_a_non_string_repo_root_token():
+    """The token is a config-line string (dialect-families.md §3); a list or map is a typo."""
+    mutated = copy.deepcopy(VENDOR_CONFIG["claude_code"])
+    mutated["repo_root_token"] = ["${CLAUDE_PROJECT_DIR}"]
+    assert validate(SCHEMA, mutated) != []
+
+
 def test_schema_still_accepts_a_benign_edit():
     """A guard nobody has watched pass a legitimate change only teaches people to route
     around it (worker-protocol.md). Reordering keys and lengthening free text change
@@ -154,6 +161,26 @@ def test_config_path_agrees_with_matrix(agent):
     matrix_config = MATRIX[agent]["config"]
     config_path = VENDOR_CONFIG[agent]["config_path"]
     assert config_path == matrix_config or fnmatch(config_path, matrix_config)
+
+
+# ---------------------------------------------------------------------------------------
+# repo_root_token (post-C2 data gap): opt-in, primary-sourced, and never without evidence.
+# ---------------------------------------------------------------------------------------
+
+
+def test_repo_root_token_is_recorded_only_where_primary_sourced():
+    """recount/sourced.py cites the vendor doc; absence means not established, not no token."""
+    carrying = {a for a in AGENTS if "repo_root_token" in VENDOR_CONFIG[a]}
+    assert carrying == {"claude_code"}
+    assert VENDOR_CONFIG["claude_code"]["repo_root_token"] == "${CLAUDE_PROJECT_DIR}"
+
+
+@pytest.mark.parametrize("agent", AGENTS)
+def test_repo_root_token_travels_with_its_own_evidence(agent):
+    """The schema cannot express the pairing (its validator has no dependentRequired), so
+    it is pinned here: the field and its evidence record appear together or not at all."""
+    entry = VENDOR_CONFIG[agent]
+    assert ("repo_root_token" in entry) == ("repo_root_token" in entry["evidence"])
 
 
 # ---------------------------------------------------------------------------------------

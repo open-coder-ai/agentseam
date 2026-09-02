@@ -69,6 +69,11 @@
       "date": "2026-08-28",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "repo_root_token": {
+      "basis": "vendor-docs",
+      "date": "2026-09-01",
+      "test": "tests/test_vendor_config.py::test_repo_root_token_is_recorded_only_where_primary_sourced"
+    },
     "tools": {
       "basis": "live-run",
       "date": "2026-08-28",
@@ -122,6 +127,7 @@
     "wrapper": "hooks_map"
   },
   "needs_trust": false,
+  "repo_root_token": "${CLAUDE_PROJECT_DIR}",
   "tools": {
     "shell": [
       "Bash"

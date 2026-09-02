@@ -52,10 +52,15 @@ def test_codex_plugin_root_the_trap_is_written_down():
 
 
 def test_shell_tools_are_recorded_only_where_established():
-    """A sibling guardrail hardcodes "Bash" for four vendors. Two of those are unverified."""
+    """A sibling guardrail hardcodes "Bash" for four vendors; two were unverified until the
+    post-C2 recount sourced them (recount/sourced.py holds the citations): Codex's live
+    capture settled Bash, and Copilot's hooks reference names runtime bash/powershell with
+    Bash as the Claude spelling PascalCase payloads report."""
     assert adapters.shell_tools("claude_code") == ("Bash",)
     assert adapters.shell_tools("gemini_cli") == ("run_shell_command",)
-    for agent in ("cursor", "vscode_copilot", "windsurf"):
+    assert adapters.shell_tools("codex_cli") == ("Bash",)
+    assert adapters.shell_tools("vscode_copilot") == ("bash", "powershell", "Bash")
+    for agent in ("cursor", "windsurf"):
         assert adapters.shell_tools(agent) == (), "%s: () means not established, not no shell" % agent
 
 
