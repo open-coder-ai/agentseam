@@ -138,30 +138,21 @@ DECISION_VOCABULARY = frozenset({"allow", "deny", "ask", "block"})
 _PERMISSION_DECISION_REASON = "permissionDecisionReason"
 
 
-def respond(decision, event):
-    """Three dialects, one per event group -- not one gate shape everywhere."""
-    import json as _json  # noqa: PLC0415 (bundler.py keeps this vendored file's own function-local
-    # imports untouched -- only top-level imports get hoisted into a bundle; see
-    # test_function_local_imports_are_left_alone -- so hoisting this would only move it, not
-    # remove it, while touching every response line for no behavioral gain)
+def _top_level_block_body(decision):
+    """The dict to serialize, or None where nothing blocks -- always exit 0."""
+    if decision.outcome in (ALLOW, VOUCH):
+        return None
+    return {"decision": "block", "reason": _refusal_reason(decision)}
 
-    if event.event in _TOP_LEVEL_BLOCK:
-        if decision.outcome in (ALLOW, VOUCH):
-            return "", 0
-        return _json.dumps({"decision": "block", "reason": _refusal_reason(decision)}), 0
 
-    if event.event in _NESTED_BLOCK:
-        if decision.outcome in (ALLOW, VOUCH):
-            return "", 0
-        out = {"hookEventName": _echoed_name(event), "decision": "block", "reason": _refusal_reason(decision)}
-        return _json.dumps({"hookSpecificOutput": out}), 0
+def _nested_block_body(decision, event):
+    if decision.outcome in (ALLOW, VOUCH):
+        return None
+    out = {"hookEventName": _echoed_name(event), "decision": "block", "reason": _refusal_reason(decision)}
+    return {"hookSpecificOutput": out}
 
-    if event.event != PRE_TOOL:
-        return "", 0
 
-    if decision.outcome == ALLOW:
-        return "", 0
-
+def _pre_tool_out(decision, event):
     out = {"hookEventName": _echoed_name(event)}
     if decision.outcome == VOUCH:
         out["permissionDecision"] = "allow"
@@ -178,7 +169,28 @@ def respond(decision, event):
         out["updatedInput"] = decision.updated_input
         if decision.reason:
             out[_PERMISSION_DECISION_REASON] = decision.reason
-    return _json.dumps({"hookSpecificOutput": out}), 0
+    return out
+
+
+def respond(decision, event):
+    """Three dialects, one per event group -- not one gate shape everywhere."""
+    import json as _json  # noqa: PLC0415 (bundler.py keeps this vendored file's own function-local
+    # imports untouched -- only top-level imports get hoisted into a bundle; see
+    # test_function_local_imports_are_left_alone -- so hoisting this would only move it, not
+    # remove it, while touching every response line for no behavioral gain)
+
+    if event.event in _TOP_LEVEL_BLOCK:
+        body = _top_level_block_body(decision)
+        return ("", 0) if body is None else (_json.dumps(body), 0)
+
+    if event.event in _NESTED_BLOCK:
+        body = _nested_block_body(decision, event)
+        return ("", 0) if body is None else (_json.dumps(body), 0)
+
+    if event.event != PRE_TOOL or decision.outcome == ALLOW:
+        return "", 0
+
+    return _json.dumps({"hookSpecificOutput": _pre_tool_out(decision, event)}), 0
 
 
 REVERSE_EVENT_MAP = {

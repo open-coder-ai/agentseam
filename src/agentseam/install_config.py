@@ -26,7 +26,9 @@ def load(path):
     except OSError as exc:
         raise ConfigUnreadableError("cannot read %s: %s" % (path, exc)) from exc
     except UnicodeError as exc:
-        raise ConfigUnreadableError("%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)) from exc
+        raise ConfigUnreadableError(
+            "%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)
+        ) from exc
     if not text.strip():
         return {}
     try:
