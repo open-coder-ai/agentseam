@@ -65,7 +65,10 @@ def _print_evidence():
             )
         )
     print("\nverdicts: fresh (compared, current) | unchecked (no comparison was made)")
-    print("          stale (older than %d days) | unmeasured (never touched a running agent)" % staleness_mod.STALE_AFTER_DAYS)
+    print(
+        "          stale (older than %d days) | unmeasured (never touched a running agent)"
+        % staleness_mod.STALE_AFTER_DAYS
+    )
     print("run tools/watch_versions.py to compare each row against its vendor's current release")
     return 0
 

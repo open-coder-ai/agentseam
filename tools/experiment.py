@@ -223,8 +223,9 @@ def main(argv=None):
     run = sub.add_parser("run", help="run trials against an agent")
     run.add_argument("--agent", required=True)
     run.add_argument("--trial", action="append", help="repeatable; default is all")
-    run.add_argument("--event", default=contract.PRE_TOOL, choices=EVENTS,
-                     help="which gate to wire the probe at (default: pre_tool)")
+    run.add_argument(
+        "--event", default=contract.PRE_TOOL, choices=EVENTS, help="which gate to wire the probe at (default: pre_tool)"
+    )
     run.add_argument("--driver", default="reference", help="'reference', or a shell template containing {prompt}")
     run.add_argument("--keep", action="store_true", help="leave the scratch workspace for inspection")
     run.add_argument("--json", action="store_true")

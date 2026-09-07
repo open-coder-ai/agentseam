@@ -35,7 +35,7 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
     cell = matrix.capability(results[0]["agent"], results[0].get("event", event))
     rows = []
     for r in results:
-        (field, measured), = r["measured"].items()
+        ((field, measured),) = r["measured"].items()
         key = _ASSERTED_KEY.get(field)
         claimed = cell.get(key) if key else None
         rows.append(
@@ -44,13 +44,7 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
                 "field": field,
                 "measured": measured,
                 "asserted": claimed,
-                "status": (
-                    "unrecorded"
-                    if key is None
-                    else "agrees"
-                    if claimed == measured
-                    else "DISAGREES"
-                ),
+                "status": ("unrecorded" if key is None else "agrees" if claimed == measured else "DISAGREES"),
             }
         )
     return rows
@@ -89,7 +83,9 @@ def render(results, *, agent, event, driver):
     disagreements = 0
     for r, d in zip(results, diff_against_matrix(results)):
         disagreements += d["status"] == "DISAGREES"
-        print("%-10s %-20s %-14s %-14s %s" % (r["trial"], d["field"], str(d["measured"]), str(d["asserted"]), d["status"]))
+        print(
+            "%-10s %-20s %-14s %-14s %s" % (r["trial"], d["field"], str(d["measured"]), str(d["asserted"]), d["status"])
+        )
     print()
     for r in results:
         print("  %-10s %s" % (r["trial"], r["reading"]))

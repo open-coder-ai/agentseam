@@ -120,14 +120,24 @@ def _payload(event, *, cwd, command, session_id, stop_hook_active=False):
 
 def _gate(config_path, event, payload, *, cwd, timeout):
     """Run every hook wired at `event`; stop at the first that does not allow."""
-    state = {"decision": ALLOW, "reason": "no hook wired", "updated": None,
-             "invoked": False, "exit": None, "timed_out": False}
+    state = {
+        "decision": ALLOW,
+        "reason": "no hook wired",
+        "updated": None,
+        "invoked": False,
+        "exit": None,
+        "timed_out": False,
+    }
     blob = json.dumps(payload).encode("utf-8")
     for hook_command in _hook_commands(config_path, event):
         state["invoked"] = True
         try:
             proc = subprocess.run(  # noqa: S602 - the command under test is ours, in a scratch dir
-                hook_command, shell=True, input=blob, capture_output=True, cwd=cwd,
+                hook_command,
+                shell=True,
+                input=blob,
+                capture_output=True,
+                cwd=cwd,
                 timeout=timeout if timeout is not None else CLAUDE_CODE_TIMEOUT_SECONDS,
             )
         except subprocess.TimeoutExpired:
@@ -154,25 +164,36 @@ def run_turn(config_path, *, command, cwd, session_id="reference-run", timeout=N
     """
     gates, runs, continuations = {}, 0, 0
     while True:
-        prompt = _gate(config_path, "UserPromptSubmit",
-                       _payload("UserPromptSubmit", cwd=cwd, command=command, session_id=session_id),
-                       cwd=cwd, timeout=timeout)
+        prompt = _gate(
+            config_path,
+            "UserPromptSubmit",
+            _payload("UserPromptSubmit", cwd=cwd, command=command, session_id=session_id),
+            cwd=cwd,
+            timeout=timeout,
+        )
         gates.setdefault("UserPromptSubmit", prompt)
         if prompt["decision"] != ALLOW:
             break
 
-        pre = _gate(config_path, "PreToolUse",
-                    _payload("PreToolUse", cwd=cwd, command=command, session_id=session_id),
-                    cwd=cwd, timeout=timeout)
+        pre = _gate(
+            config_path,
+            "PreToolUse",
+            _payload("PreToolUse", cwd=cwd, command=command, session_id=session_id),
+            cwd=cwd,
+            timeout=timeout,
+        )
         gates.setdefault("PreToolUse", pre)
         if pre["decision"] == ALLOW:
             subprocess.run(pre["updated"] or command, shell=True, cwd=cwd, capture_output=True)  # noqa: S602
             runs += 1
 
-        stop = _gate(config_path, "Stop",
-                     _payload("Stop", cwd=cwd, command=command, session_id=session_id,
-                              stop_hook_active=continuations > 0),
-                     cwd=cwd, timeout=timeout)
+        stop = _gate(
+            config_path,
+            "Stop",
+            _payload("Stop", cwd=cwd, command=command, session_id=session_id, stop_hook_active=continuations > 0),
+            cwd=cwd,
+            timeout=timeout,
+        )
         gates.setdefault("Stop", stop)
         if stop["decision"] == ALLOW or continuations >= max_continuations:
             break
@@ -188,16 +209,24 @@ def run_turn(config_path, *, command, cwd, session_id="reference-run", timeout=N
 
 def run_pre_tool(config_path, *, command, cwd, session_id="reference-run", timeout=None):
     """One PreToolUse gate in isolation, for experiments scoped to that event."""
-    state = _gate(config_path, "PreToolUse",
-                  _payload("PreToolUse", cwd=cwd, command=command, session_id=session_id),
-                  cwd=cwd, timeout=timeout)
+    state = _gate(
+        config_path,
+        "PreToolUse",
+        _payload("PreToolUse", cwd=cwd, command=command, session_id=session_id),
+        cwd=cwd,
+        timeout=timeout,
+    )
     ran = False
     if state["decision"] == ALLOW:
         subprocess.run(state["updated"] or command, shell=True, cwd=cwd, capture_output=True)  # noqa: S602
         ran = True
     return {
-        "decision": state["decision"], "reason": state["reason"], "hook_invoked": state["invoked"],
-        "hook_exit": state["exit"], "hook_timed_out": state["timed_out"], "action_ran": ran,
+        "decision": state["decision"],
+        "reason": state["reason"],
+        "hook_invoked": state["invoked"],
+        "hook_exit": state["exit"],
+        "hook_timed_out": state["timed_out"],
+        "action_ran": ran,
         "effective_command": (state["updated"] or command) if ran else None,
     }
 

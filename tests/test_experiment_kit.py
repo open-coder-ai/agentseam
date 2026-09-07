@@ -106,15 +106,13 @@ def test_keep_leaves_an_inspectable_workspace(tmp_path):
 
 def test_the_probe_answers_in_the_adapters_own_dialect():
     """Rendering runs through parse/respond, so a dialect bug surfaces here, not in prod."""
-    src = experiment_probe.render(
-        "deny", "/tmp/record", agent=AGENT, src_dir="/tmp/src", trigger_alt="echo x"
-    )
+    src = experiment_probe.render("deny", "/tmp/record", agent=AGENT, src_dir="/tmp/src", trigger_alt="echo x")
     assert "adapter.parse(payload)" in src
     assert "adapter.respond(decision, event)" in src
     # The silent trials must not reach the adapter at all -- that is what makes them silent.
     for trial in experiment_probe.SILENT_TRIALS:
         body = experiment_probe.render(trial, "/tmp/r", agent=AGENT, src_dir="/tmp/s", trigger_alt="x")
-        assert 'TRIAL = %r' % trial in body
+        assert "TRIAL = %r" % trial in body
 
 
 def test_harness_can_report_disagreement(results):
@@ -136,6 +134,7 @@ def test_fields_with_no_matrix_cell_are_flagged_unrecorded(results):
 
 def test_reference_agent_refuses_to_guess():
     """Undocumented is raised, not defaulted -- a guess here would launder into evidence."""
+
     class _Proc:
         returncode = 0
         stdout = json.dumps({"hookSpecificOutput": {"permissionDecision": "quarantine"}})

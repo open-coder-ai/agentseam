@@ -43,7 +43,7 @@ SILENT_TRIALS = ("crash", "silence", "timeout")
 #: stalled agent is still observed rather than killed alongside the probe.
 TIMEOUT_SLEEP_SECONDS = 90
 
-_TEMPLATE = '''#!/usr/bin/env python3
+_TEMPLATE = """#!/usr/bin/env python3
 # agentseam experiment probe -- trial: %(trial)s
 # INTERFERES ON PURPOSE. Scratch workspaces only. See tools/experiment_probe.py.
 import json, os, sys, time
@@ -101,7 +101,7 @@ decision = {
 text, code = adapter.respond(decision, event)
 sys.stdout.write(text)
 sys.exit(code)
-'''
+"""
 
 
 def render(trial, record_dir, *, agent, src_dir, trigger_alt):
