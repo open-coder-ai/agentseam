@@ -160,7 +160,9 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
                     trigger_alt=TRIGGER_ALT,
                 )
             )
-        os.chmod(probe_path, 0o755)  # noqa: S103 - scratch dir, removed at the end of this call
+        # Owner-only. The probe is always invoked as `<interpreter> <path>` (below), so it
+        # never needs an execute bit, and nothing else on the machine needs to read it.
+        os.chmod(probe_path, 0o600)
         probe_command = "%s %s" % (json.dumps(sys.executable), json.dumps(probe_path))
         config_path = _write_config(adapter, workspace, probe_command, event)
 
