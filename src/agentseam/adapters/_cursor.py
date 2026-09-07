@@ -19,7 +19,7 @@ from ..contract import (
     TRANSFORM,
     degraded_from,
 )
-from ._hook_json import _ESCALATE_FROM_TRANSFORM
+from ._hook_json import _ESCALATE_FROM_TRANSFORM, _TRANSFORM_MISSING_INPUT
 from ._payload import hj_parse
 
 #: Wire names other vendors also spell this way; a payload naming one is claimed only on
@@ -73,11 +73,16 @@ def _because(reason, note):
 
 
 def _wire_of(cfg, event):
-    """The wire name to answer at: the payload's own, `tool` where `parse` kept it there,
-    else the entry's default gate."""
+    """The wire name to answer at -- `cursor_wire` again, so respond and parse cannot diverge.
+
+    `tool` is read only for an Event carrying no payload, where `parse` left the inferred
+    name there; without a payload there is nothing to re-infer from.
+    """
     name = (event.raw or {}).get("hook_event_name")
     if name in cfg["events"]:
         return name
+    if event.raw:
+        return cursor_wire(event.raw)
     return event.tool if event.tool in cfg["events"] else cfg["verdicts"].get("default_wire_event")
 
 
@@ -89,28 +94,41 @@ def _flag_payload(v, decision, name):
     return _json.dumps({"additional_context": note}), 0
 
 
-def _prompt_submit_payload(decision):
-    payload = {"continue": decision.outcome not in (DENY, ESCALATE, TRANSFORM)}
-    if decision.reason:
-        payload["user_message"] = decision.reason
+def _prompt_submit_payload(v, gate, decision, name):
+    """`user_message` is end-user text, so it carries a refusal -- never an allow's own
+    rationale, which the permission gate has never surfaced either."""
+    blocking = decision.outcome in (DENY, ESCALATE, TRANSFORM)
+    payload = {"continue": not blocking}
+    reason = _refusal_reason(v, gate, decision, name) if blocking else None
+    if reason:
+        payload["user_message"] = reason
     return _json.dumps(payload), 0
 
 
-def _gate_payload(words, notes, gate, decision, name):
-    """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
-    reason = decision.reason
+def _refusal_reason(v, gate, decision, name):
+    """The handler's own reason, plus why the outcome changed shape on the way out."""
+    notes = v["degrade_notes"]
     if decision.outcome == TRANSFORM:
-        if gate["honours_transform"] and decision.updated_input is not None:
-            return {"permission": words["allow"], "updated_input": decision.updated_input}, reason
-        return {"permission": words["block"]}, _because(reason, notes["transform"])
-    if decision.outcome == DENY:
-        return {"permission": words["block"]}, reason
+        # A gate that DOES honour transform refused only for want of a replacement input;
+        # "this gate cannot express it" would be false at the one gate that can.
+        key = _TRANSFORM_MISSING_INPUT if gate["honours_transform"] else "transform"
+        return _because(decision.reason, notes[key])
     if decision.outcome == ESCALATE:
-        if gate["honours_escalate"]:
-            return {"permission": words["escalate"]}, reason
         note = notes[_ESCALATE_FROM_TRANSFORM] if degraded_from(decision) == TRANSFORM else notes["escalate"]
-        return {"permission": words["block"]}, _because(reason, note % name)
-    return {"permission": words["allow"]}, reason
+        return _because(decision.reason, note % name)
+    return decision.reason
+
+
+def _gate_payload(v, gate, decision, name):
+    """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
+    words = v["words"]
+    if decision.outcome == TRANSFORM and gate["honours_transform"] and decision.updated_input is not None:
+        return {"permission": words["allow"], "updated_input": decision.updated_input}, decision.reason
+    if decision.outcome == ESCALATE and gate["honours_escalate"]:
+        return {"permission": words["escalate"]}, decision.reason
+    if decision.outcome in (DENY, ESCALATE, TRANSFORM):
+        return {"permission": words["block"]}, _refusal_reason(v, gate, decision, name)
+    return {"permission": words["allow"]}, decision.reason
 
 
 def cursor_respond(cfg, decision, event):
@@ -122,14 +140,13 @@ def cursor_respond(cfg, decision, event):
         return "", 0
     if canonical in (POST_TOOL, TOOL_FAILURE):
         return _flag_payload(v, decision, name)
-    if canonical == PROMPT_SUBMIT:
-        return _prompt_submit_payload(decision)
-
     gate = v["gates"].get(name)
+    if canonical == PROMPT_SUBMIT and gate is not None:
+        return _prompt_submit_payload(v, gate, decision, name)
     if gate is None or canonical != PRE_TOOL:
         return "", 0
 
-    payload, reason = _gate_payload(v["words"], v["degrade_notes"], gate, decision, name)
+    payload, reason = _gate_payload(v, gate, decision, name)
     if reason and payload["permission"] != v["words"]["allow"]:
         payload["user_message"] = reason
         payload["agent_message"] = reason
