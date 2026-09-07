@@ -94,10 +94,14 @@ def _flag_payload(v, decision, name):
     return _json.dumps({"additional_context": note}), 0
 
 
-def _prompt_submit_payload(decision):
-    payload = {"continue": decision.outcome not in (DENY, ESCALATE, TRANSFORM)}
-    if decision.reason:
-        payload["user_message"] = decision.reason
+def _prompt_submit_payload(v, gate, decision, name):
+    """`user_message` is end-user text, so it carries a refusal -- never an allow's own
+    rationale, which the permission gate has never surfaced either."""
+    blocking = decision.outcome in (DENY, ESCALATE, TRANSFORM)
+    payload = {"continue": not blocking}
+    reason = _refusal_reason(v, gate, decision, name) if blocking else None
+    if reason:
+        payload["user_message"] = reason
     return _json.dumps(payload), 0
 
 
@@ -136,10 +140,9 @@ def cursor_respond(cfg, decision, event):
         return "", 0
     if canonical in (POST_TOOL, TOOL_FAILURE):
         return _flag_payload(v, decision, name)
-    if canonical == PROMPT_SUBMIT:
-        return _prompt_submit_payload(decision)
-
     gate = v["gates"].get(name)
+    if canonical == PROMPT_SUBMIT and gate is not None:
+        return _prompt_submit_payload(v, gate, decision, name)
     if gate is None or canonical != PRE_TOOL:
         return "", 0
 

@@ -40,6 +40,19 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **Cursor's prompt gate stops surfacing an allow's own rationale, and starts explaining a
+  refusal** (`adapters/_cursor.py`, `data/vendors/cursor.json`; vendor-truth review finding
+  `raw[2].findings[6]`). At `beforeSubmitPrompt`, `user_message` was attached whenever the
+  decision carried a reason, whatever the outcome -- so a handler annotating its allows for
+  its own audit trail (`Decision.allow("matched allowlist rule 7")`) put that text in
+  Cursor's UI on every submitted prompt. The permission-gate branch has always attached
+  messages only when not allowing; the prompt gate now does the same. It also runs the
+  refusal through the same degradation note the other gates use, so a prompt blocked
+  *because a rewrite could not be expressed there* says so instead of showing only the
+  handler's original reason. Four bytes of frozen wire output move, all at `prompt_submit`.
+  The shared `escalate_from_transform` note now says "cannot modify the input" rather than
+  "cannot modify a tool call", which is what a prompt gate is modifying; no permission-gate
+  scenario emitted that note, so nothing else moves.
 - **A rewrite with no replacement input is no longer blamed on Cursor's rewrite gate**
   (`adapters/_cursor.py`, `data/vendors/cursor.json`; vendor-truth review finding
   `raw[2].findings[4]`). `Decision.rewrite(None, ...)` at `preToolUse` was refused with

@@ -146,3 +146,17 @@ def test_a_rewrite_with_no_input_is_not_blamed_on_the_gate_that_can_rewrite():
     """preToolUse is the one gate that CAN express a rewrite; the handler supplied none."""
     text, _, _, _ = A.handle(CU_PRE_TOOL, lambda _e: Decision.rewrite(None, "needs change"))
     assert json.loads(text)["user_message"] == "needs change (no replacement input was supplied)"
+
+
+def test_an_allow_does_not_leak_its_own_rationale_to_the_prompt_gate():
+    """user_message is end-user text. The permission gate has always attached it only when"""
+    text, _, _, _ = A.handle(CU_SUBMIT, lambda _e: Decision.allow("matched allowlist rule 7"))
+    assert json.loads(text) == {"continue": True}
+
+
+def test_a_prompt_gate_refusal_says_why_the_outcome_changed_shape():
+    """Every other cursor gate explains a degraded rewrite; this one told only the handler's"""
+    text, _, _, _ = A.handle(CU_SUBMIT, lambda _e: Decision.rewrite({"prompt": "clean"}, "sanitized"))
+    payload = json.loads(text)
+    assert payload["continue"] is False
+    assert payload["user_message"] == "sanitized (beforeSubmitPrompt cannot modify the input, so this is a block)"

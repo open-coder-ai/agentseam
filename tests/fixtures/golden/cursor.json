@@ -177,7 +177,7 @@
         },
         "ask": {
           "exit": 0,
-          "stdout": "{\"continue\": false, \"user_message\": \"confirm\"}"
+          "stdout": "{\"continue\": false, \"user_message\": \"confirm (beforeSubmitPrompt cannot prompt for confirmation, so this is a block)\"}"
         },
         "deny": {
           "exit": 0,
@@ -185,15 +185,15 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"continue\": false, \"user_message\": \"redacted\"}"
+          "stdout": "{\"continue\": false, \"user_message\": \"redacted (beforeSubmitPrompt cannot modify the input, so this is a block)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"continue\": false, \"user_message\": \"needs change\"}"
+          "stdout": "{\"continue\": false, \"user_message\": \"needs change (beforeSubmitPrompt cannot modify the input, so this is a block)\"}"
         },
         "vouch": {
           "exit": 0,
-          "stdout": "{\"continue\": true, \"user_message\": \"trusted\"}"
+          "stdout": "{\"continue\": true}"
         }
       },
       "payload": {

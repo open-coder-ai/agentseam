@@ -202,7 +202,7 @@ _VERDICT_DIALECT = {
         "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
         "degrade_notes": {
             "escalate": "%s cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "%s cannot modify a tool call, so this is a block",
+            "escalate_from_transform": "%s cannot modify the input, so this is a block",
             "transform": "input requires modification, which this gate cannot express",
             "transform_missing_input": "no replacement input was supplied",
         },
