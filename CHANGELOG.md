@@ -40,6 +40,15 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **Devin's degraded-rewrite note no longer describes a tool call at events that have
+  none** (`data/vendors/devin.json`; vendor-truth review finding `raw[5].findings[8]`). A
+  rewrite the dispatcher degraded at `UserPromptSubmit` or `Stop` was refused with
+  "Devin cannot modify a tool call" -- pointing an operator debugging why prompt
+  sanitisation blocks instead of rewriting at tool plumbing that was never involved. The
+  note is now the engine's template form and names the vendor event it could not modify,
+  matching Cursor's per-gate phrasing. Four bytes of frozen wire output move
+  (`tests/fixtures/golden/devin.json`: rewrite and rewrite-without-input at prompt_submit
+  and stop); `PreToolUse` and `PermissionRequest` output is unchanged.
 - **A Kimi Code payload naming an event Kimi has not mapped yet now reaches the caller**
   (`adapters/_payload.py`, `data/vendors/kimi_code.json`; vendor-truth review finding
   `raw[8].findings[6]`). `claims()` required the event name to already be in `events`, so a

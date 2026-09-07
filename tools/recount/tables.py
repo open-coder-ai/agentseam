@@ -164,9 +164,9 @@ _VERDICT_DIALECT = {
         "words": {"allow": "approve", "block": "block"},
         "degrade_notes": {
             "escalate": "Devin cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "Devin cannot modify a tool call, so this is a block",
+            "escalate_from_transform": "%s (Devin cannot modify the input at %s, so this is a block)",
         },
-        "reason_defaults": {"transform": "input requires modification before it can run"},
+        "reason_defaults": {"transform": "input requires modification"},
         "note_style": "suffix",
         "echo": "payload",
         "default_wire_event": "PreToolUse",

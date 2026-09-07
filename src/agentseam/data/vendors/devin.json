@@ -127,7 +127,7 @@
     "default_wire_event": "PreToolUse",
     "degrade_notes": {
       "escalate": "Devin cannot prompt for confirmation, so this is a block",
-      "escalate_from_transform": "Devin cannot modify a tool call, so this is a block"
+      "escalate_from_transform": "%s (Devin cannot modify the input at %s, so this is a block)"
     },
     "echo": "payload",
     "gates": {
@@ -154,7 +154,7 @@
     },
     "note_style": "suffix",
     "reason_defaults": {
-      "transform": "input requires modification before it can run"
+      "transform": "input requires modification"
     },
     "transform_grammar": "hook_specific_updated_input",
     "vocabulary": [

@@ -104,3 +104,11 @@ def test_a_devin_permission_request_is_still_claimed_unconditionally():
     """The narrowing is one recorded client_type, not a retreat from accept_names."""
     payload = {"hook_event_name": "PermissionRequest", "tool_name": "Bash"}
     assert A.adapters.get("devin").claims(payload)
+
+
+def test_a_degraded_rewrite_names_the_event_it_could_not_modify():
+    """At prompt_submit and stop there is no tool call, so a note about one sends the"""
+    payload = {"hook_event_name": "UserPromptSubmit", "prompt_id": "p1", "prompt": "remember my key"}
+    text, _, _, _ = A.handle(payload, lambda _e: Decision.rewrite({"prompt": "clean"}, "sanitized"))
+    reason = json.loads(text)["reason"]
+    assert "tool call" not in reason and "at UserPromptSubmit" in reason
