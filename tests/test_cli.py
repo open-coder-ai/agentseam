@@ -53,17 +53,17 @@ def test_matrix_survives_a_closed_pipe():
     Whether the CLI is *still* writing at that moment depends on the pipe buffer, so this
     is a regression guard rather than a deterministic reproduction -- as it was before.
     """
+    # The pipe is made here rather than by Popen so the producer has no `stdout` attribute for
+    # communicate() to read later: on Windows that reads a closed file from a thread and leaks
+    # an unhandled-thread-exception warning into the run.
+    read_end, write_end = os.pipe()
     producer = subprocess.Popen(
-        [sys.executable, "-m", "agentseam.cli", "matrix"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        env=ENV,
+        [sys.executable, "-m", "agentseam.cli", "matrix"], stdout=write_end, stderr=subprocess.PIPE, env=ENV
     )
-    reader = subprocess.Popen(
-        [sys.executable, "-c", _HEAD_3], stdin=producer.stdout, stdout=subprocess.DEVNULL, env=ENV
-    )
-    # Only the reader may hold the read end, or the pipe never breaks when it exits.
-    producer.stdout.close()
+    reader = subprocess.Popen([sys.executable, "-c", _HEAD_3], stdin=read_end, stdout=subprocess.DEVNULL, env=ENV)
+    # Only the children may hold the pipe, or it never breaks when the reader exits.
+    os.close(read_end)
+    os.close(write_end)
     reader.wait(timeout=30)
     _, err = producer.communicate(timeout=30)
 
