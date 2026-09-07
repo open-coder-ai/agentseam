@@ -181,7 +181,16 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
         observed = _observe(workspace)
         invocations = _invocations(record_dir)
         if undocumented is not None:
-            field, value, reading = "documented", False, "protocol is silent: %s" % undocumented
+            # Named for the `unknown` trial's own field (unknown_verb_means) rather than
+            # the generic "documented", so the diff can compare it against a real agent's
+            # reading of that same field -- documentation-silence vs an observed answer is
+            # exactly the disagreement worth surfacing. Any other trial keeps the older,
+            # purely diagnostic "documented" reading; nothing else currently reaches here.
+            if trial == "unknown":
+                field, value = _MEANING["unknown"][0], "undocumented"
+            else:
+                field, value = "documented", False
+            reading = "protocol is silent: %s" % undocumented
         else:
             field, value, reading = _classify(trial, event, observed, bool(invocations))
         return {

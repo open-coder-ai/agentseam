@@ -116,7 +116,7 @@ def validate(report):
 
 
 def to_evidence(report):
-    """The matrix-evidence.json entry a validated report becomes.
+    """The matrix.json row-evidence entry a validated report becomes.
 
     Kept separate from validate() because merging is a maintainer's act: this returns what
     the row *would* say, for review, and writes nothing.
@@ -134,14 +134,21 @@ def to_evidence(report):
     return entry
 
 
+def _basis_rank(value):
+    """Position in BASES (matrix_terms's own strongest-first order); unknown ranks weakest."""
+    return BASES.index(value) if value in BASES else len(BASES)
+
+
 def diff_against(existing, report):
     """Which fields a submission would change on an existing row, for review.
 
-    Nothing is written. A submission that would *weaken* a row -- replacing a live-run with
-    documentation -- is surfaced explicitly, because that is the change most likely to be
-    an accident and least likely to be noticed in a diff.
+    Nothing is written. A submission that would *weaken* a row is surfaced explicitly,
+    because that is the change most likely to be an accident and least likely to be noticed
+    in a diff. That includes a weakening *within* the live bases: `live-run` ->
+    `live-run-partial` is a real downgrade -- fewer events actually witnessed -- even though
+    both are "live", and it must not read the same as no change at all.
     """
     proposed = to_evidence(report)
     changes = {k: (existing.get(k), v) for k, v in proposed.items() if existing.get(k) != v}
-    weakens = existing.get("basis") in LIVE_BASES and proposed["basis"] not in LIVE_BASES
+    weakens = _basis_rank(proposed["basis"]) > _basis_rank(existing.get("basis"))
     return {"changes": changes, "weakens_basis": weakens}

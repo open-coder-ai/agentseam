@@ -71,8 +71,9 @@ def test_transform_replaces_the_input(results):
 
 
 def test_unknown_verb_is_reported_as_undocumented(results):
-    """The reference refuses to invent behaviour; that refusal is the finding."""
-    assert results["unknown"]["measured"] == {"documented": False}
+    """The reference refuses to invent behaviour; that refusal is the finding. Named for the
+    trial's own field (task 6) so the diff can compare it against a real agent's reading."""
+    assert results["unknown"]["measured"] == {"unknown_verb_means": "undocumented"}
     assert "quarantine" in results["unknown"]["reading"]
 
 
@@ -126,10 +127,48 @@ def test_harness_can_report_disagreement(results):
     assert rows[0]["asserted"] is True
 
 
-def test_fields_with_no_matrix_cell_are_flagged_unrecorded(results):
-    """`silence_means` is behaviour agentseam relies on and the matrix does not record."""
-    rows = experiment_report.diff_against_matrix([results["silence"]])
+def test_fields_with_no_matrix_home_are_flagged_unrecorded(results):
+    """`baseline_ok` is a run-health check (task 3, 2026-09-07), never a matrix claim."""
+    rows = experiment_report.diff_against_matrix([results["allow"]])
     assert rows[0]["status"] == "unrecorded"
+
+
+def test_a_recognized_field_the_cell_does_not_carry_is_unasserted():
+    """`silence_means` is a real matrix field (task 3) -- absent from a cell, it is a claim
+    never made, not a disagreement. claude_code's `stop` cell has never measured it."""
+    r = experiment.run_trial(AGENT, "silence", event="stop")
+    rows = experiment_report.diff_against_matrix([r], event="stop")
+    assert rows[0]["field"] == "silence_means"
+    assert rows[0]["status"] == "unasserted"
+    assert rows[0]["asserted"] is None
+
+
+def test_the_three_new_fields_are_recognized_by_the_diff():
+    from agentseam import matrix_terms
+
+    for field in ("silence_means", "timeout_fail_mode", "unknown_verb_means"):
+        assert field in matrix_terms.CLAIM_FIELDS
+        assert experiment_report._cell_key(field) == field
+
+
+def test_claude_code_pre_tool_now_asserts_the_witnessed_fields(results):
+    """Task 4's merge: silence, an unrecognised verb and a stall all now have a cell."""
+    for trial, expected in (("silence", "allow"), ("unknown", "allow")):
+        rows = experiment_report.diff_against_matrix([results[trial]])
+        assert rows[0]["asserted"] == expected, trial
+    timeout = experiment.run_trial(AGENT, "timeout", timeout=1)
+    rows = experiment_report.diff_against_matrix([timeout])
+    assert rows[0]["asserted"] == "open"
+
+
+def test_the_reference_disagrees_with_the_witnessed_unknown_verb_reading():
+    """The one trial reference and reality most plausibly differ on (task 6): the reference
+    refuses to guess, the real agent was observed letting an unrecognised verb through."""
+    r = experiment.run_trial(AGENT, "unknown")
+    assert r["measured"] == {"unknown_verb_means": "undocumented"}
+    rows = experiment_report.diff_against_matrix([r])
+    assert rows[0]["status"] == "DISAGREES"
+    assert rows[0]["asserted"] == "allow"
 
 
 def test_reference_agent_refuses_to_guess():

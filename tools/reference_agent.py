@@ -11,14 +11,15 @@ Two things fall out of that:
    Every part of tools/experiment.py can be exercised in CI for free.
 2. **`vendor-docs` becomes a measurable position rather than a guess.** Run the harness
    against this and against the real agent; where they disagree, the documentation is
-   wrong -- and that delta is a class of finding matrix-evidence.json cannot record today.
+   wrong -- and per-claim evidence (matrix.json, W53) is what lets that delta be recorded
+   at all, one field at a time, rather than only as a row-wide narrative.
 
 **The two grammars matter more than anything else here.** `PreToolUse` (G2) honours
 `hookSpecificOutput.permissionDecision`. `Stop` and `UserPromptSubmit` (G1) *ignore* it and
 honour only `{"decision": "block"}`, `continue: false`, and exit 2. That is not from the
 hooks reference -- two reads of that page disagreed, and one claimed those events had no
 JSON decision control at all. It is from the live run recorded in this repository's own
-matrix-evidence entry for claude_code, which settled it by observation. Encoding it here
+matrix.json row-evidence entry for claude_code, which settled it by observation. Encoding it here
 means the reference reproduces a finding that cost someone a real session to establish.
 
 Where the protocol is genuinely silent this raises rather than guessing, because a guess

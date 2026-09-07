@@ -15,12 +15,18 @@ from datetime import date
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
-from agentseam import contract, evidence_report  # noqa: E402
+from agentseam import contract, evidence_report, matrix_terms  # noqa: E402
 
-#: Measured field -> the matrix key it corresponds to. Fields absent here are observations
-#: the matrix has no cell for yet (`silence_means`, `unknown_verb_means`) -- which is
-#: itself worth surfacing: they are behaviours agentseam relies on but does not record.
-_ASSERTED_KEY = {"block": "block", "fail_mode": "fail_mode", "transform": "transform"}
+#: Measured field -> the matrix cell key it corresponds to, derived from the cell's own
+#: vocabulary (matrix_terms.CLAIM_FIELDS) rather than a hand-maintained partial table --
+#: adding a claim field there is what makes it comparable here too, by construction. The
+#: one rename: the "transform" trial measures the same claim the cell spells "rewrite".
+_FIELD_ALIAS = {"transform": matrix_terms.CLAIM_REWRITE}
+
+
+def _cell_key(field):
+    field = _FIELD_ALIAS.get(field, field)
+    return field if field in matrix_terms.CLAIM_FIELDS else None
 
 
 def diff_against_matrix(results, event=contract.PRE_TOOL):
@@ -28,7 +34,11 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
 
     Agreement is not the interesting outcome -- it just means the row was right. A
     disagreement means either the matrix overclaims (a policy that silently fails) or
-    underclaims (a capability being left on the table).
+    underclaims (a capability being left on the table). A recognised field the cell simply
+    does not carry (`silence_means` on a row that has never measured it) is `unasserted`,
+    not a disagreement -- absence is not a claim (task 3, 2026-09-07). A field the matrix
+    has no home for at all (`baseline_ok`, a run-health check, not a vendor claim) is
+    `unrecorded`.
     """
     from agentseam import matrix
 
@@ -36,17 +46,15 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
     rows = []
     for r in results:
         ((field, measured),) = r["measured"].items()
-        key = _ASSERTED_KEY.get(field)
-        claimed = cell.get(key) if key else None
-        rows.append(
-            {
-                "trial": r["trial"],
-                "field": field,
-                "measured": measured,
-                "asserted": claimed,
-                "status": ("unrecorded" if key is None else "agrees" if claimed == measured else "DISAGREES"),
-            }
-        )
+        key = _cell_key(field)
+        if key is None:
+            status, claimed = "unrecorded", None
+        elif key not in cell:
+            status, claimed = "unasserted", None
+        else:
+            claimed = cell[key]
+            status = "agrees" if claimed == measured else "DISAGREES"
+        rows.append({"trial": r["trial"], "field": field, "measured": measured, "asserted": claimed, "status": status})
     return rows
 
 

@@ -99,6 +99,15 @@ def test_diff_flags_a_basis_downgrade():
     assert delta["weakens_basis"] is True
 
 
+def test_diff_flags_a_weakening_within_the_live_bases():
+    """live-run -> live-run-partial is a real downgrade even though both are 'live' --
+    exactly what a mechanical merge of a partial witnessed run would do (task 5, W53)."""
+    existing = EVIDENCE["claude_code"]
+    assert existing["basis"] == "live-run"
+    delta = er.diff_against(existing, _report(agent="claude_code"))
+    assert delta["weakens_basis"] is True
+
+
 def test_diff_does_not_flag_an_upgrade():
     existing = dict(EVIDENCE["cursor"], basis="vendor-docs")
     delta = er.diff_against(existing, _report(basis="live-run-partial"))
