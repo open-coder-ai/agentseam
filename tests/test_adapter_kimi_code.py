@@ -131,3 +131,13 @@ def test_kimi_blocks_but_fails_open_and_the_notes_say_not_to_rely_on_it():
     assert not A.can_rewrite("kimi_code", A.PRE_TOOL)
     assert A.enforcement_level("kimi_code", A.PRE_TOOL) == "best-effort"
     assert "not a sole security barrier" in A.MATRIX["kimi_code"]["notes"]
+
+
+def test_post_compact_is_not_bent_into_pre_compact():
+    """PostCompact fires AFTER compaction; a pre_compact policy exists to run BEFORE it."""
+    mod = A.adapters.get("kimi_code")
+    post = {"hook_event_name": "PostCompact", "client_type": "kimi_code_cli"}
+    assert mod.parse(post).event == A.UNKNOWN
+    assert mod.parse({"hook_event_name": "PreCompact", "client_type": "kimi_code_cli"}).event == A.PRE_COMPACT
+    assert mod.REVERSE_EVENT_MAP[A.PRE_COMPACT] == "PreCompact"
+    assert mod.claims(post), "unmapping must not blind a caller to the payload"

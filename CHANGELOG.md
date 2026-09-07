@@ -40,6 +40,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **`PostCompact` no longer masquerades as canonical `pre_compact` on Grok and Kimi Code**
+  (`data/vendors/grok.json`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[14].findings[12]`). Both entries mapped the vendor's
+  post-compaction event onto `pre_compact` alongside their real `PreCompact`, so a handler
+  written to snapshot context *before* compaction discards it also fired *after* it had
+  already happened, with no way to tell the two moments apart except by reading
+  `event.raw`. Devin's identical defect was closed this way in PR #43; the same
+  `"unknown"` treatment Kimi's four aliases got in PR #59 is used here, so `claims()`
+  still identifies the payload and only the relabelling stops. `REVERSE_EVENT_MAP` and
+  therefore what `install` writes are unchanged -- `wire_events` already pinned
+  `pre_compact` to `PreCompact` on both.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back

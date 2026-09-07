@@ -16,7 +16,7 @@
     "Interrupt": "unknown",
     "PermissionRequest": "unknown",
     "PermissionResult": "post_tool",
-    "PostCompact": "pre_compact",
+    "PostCompact": "unknown",
     "PostToolUse": "post_tool",
     "PostToolUseFailure": "tool_failure",
     "PreCompact": "pre_compact",
