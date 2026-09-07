@@ -6,7 +6,46 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+- **Per-claim evidence on the capability matrix, and grading capped by basis** (owner
+  decision 2026-09-01, org-plan plan/agentseam-project.md). Additive data shape:
+  - Every asserted matrix cell field (`block`, `rewrite`, `fail_mode`) now carries its own
+    `{basis, date, version?, test | method}` evidence record under `cell["evidence"]`,
+    seeded from its row's `verified` record the way `tools/recount/tables.py` already
+    seeds vendor claims (`src/agentseam/matrix_evidence.py`). `data/matrix-evidence.json`,
+    which duplicated `matrix.json`'s own `verified` byte-for-byte, is gone;
+    `matrix_evidence.EVIDENCE` is now derived from `matrix.json` directly. Public accessors
+    (`matrix.capability`, `matrix.enforcement_level`, `matrix_evidence.EVIDENCE`) keep
+    their signatures.
+  - `matrix.enforcement_level()` no longer returns a grade its basis cannot support: a
+    `vendor-docs` cell asserting fail-closed now grades `best-effort`, never `enforced`
+    (the failure that shipped as chock#89). The ceiling table lives in
+    `matrix_terms.GRADE_CEILING`. No (agent, event) pair's grade currently changes --
+    nothing in `matrix.json` today asserts a grade stronger than its basis allows -- so
+    this closes the gap defensively rather than correcting a live row.
+  - Three new optional cell fields for behaviours `tools/experiment.py` already measures
+    but the matrix had no home for: `silence_means`, `timeout_fail_mode`,
+    `unknown_verb_means`. Absence is not a claim; presence needs evidence like any other
+    field. `tools/experiment_report.py`'s asserted-field table is now derived from
+    `matrix_terms.CLAIM_FIELDS` instead of a hand-maintained partial list, so a measured
+    field can no longer read `unrecorded` by omission -- a recognised field the cell
+    simply does not carry now reads `unasserted`.
+  - `claude_code`'s `pre_tool` cell is the first to carry a witnessed run: real Claude
+    Code CLI 2.1.263 (Linux), run twice with identical results on 2026-09-07, confirmed
+    `block`/`fail_mode`/`rewrite` and added `silence_means: allow`,
+    `timeout_fail_mode: open`, `unknown_verb_means: allow`. The row's own basis and
+    version are unchanged (`live-run`, 2.1.247); only the `pre_tool` claims carry the
+    fresher per-claim record. `tools/watch_versions.py` now reads a per-claim version
+    where one exists, so `pre_tool` reads fresh while `prompt_submit` and `stop` -- not
+    re-run -- still show their original drift.
+
+### Fixed
+- `evidence_report.diff_against()` now flags a weakening *within* the live bases:
+  `live-run` -> `live-run-partial` used to pass silently, which is exactly what merging a
+  partial witnessed run by hand would otherwise do to a full one.
+- The reference driver's unknown-decision-verb trial now records `unknown_verb_means:
+  "undocumented"` instead of the generic `documented: False`, so the one trial where the
+  reference and a real agent most plausibly differ is now comparable in the diff.
 
 ## [0.2.1] - 2026-09-02
 
