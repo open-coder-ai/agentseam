@@ -59,6 +59,39 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     fresher per-claim record. `tools/watch_versions.py` now reads a per-claim version
     where one exists, so `pre_tool` reads fresh while `prompt_submit` and `stop` -- not
     re-run -- still show their original drift.
+- **A submitted evidence report records which canonical event it measured**
+  (`src/agentseam/evidence_report.py`, `tools/experiment_report.py`). `as_report()` reads
+  `event` off the trial results instead of leaving it implicit; `evidence_report.py`
+  accepts it as an optional field, validated against `contract.EVENTS` when present, and
+  carries it through `to_evidence()`/`diff_against()` so a `pre_tool` report cannot be
+  merged into a `stop` claim by accident. Existing reports with no `event` stay valid. The
+  `evidence-report.yml` issue template gains a matching optional field.
+- **An `escalate` trial** (`tools/experiment_probe.py`, `tools/experiment_escalate.py`,
+  `tools/experiment_driver.py`). The probe answers with `Decision.escalate()` rendered
+  through `adapter.respond()`, in the agent's own dialect -- Cursor's reply spells it
+  `ask`; an agent whose gate does not honour escalate gets its own degraded-block dialect.
+  The new measured field `escalate_means` (`matrix_terms.OPTIONAL_CLAIM_FIELDS`, same
+  "absence is not a claim" rule as the three fields above) can read `prompted` -- the run
+  ended waiting on an answer nobody gave -- as well as `allow` and `refusal-or-error`;
+  classification reads the sentinel plus the driver's own outcome (a real headless driver
+  that exits non-zero or times out with the sentinel untouched reads as `prompted`). The
+  reference driver raises `Undocumented` for `PreToolUse`'s `permissionDecision: "ask"`,
+  the same discipline as the unknown-verb trial: the value is documented, but what a
+  headless run does next with nobody there to answer is not.
+
+### Changed
+- **The grade cap honours `verified.observed`, not just a row's basis**
+  (`src/agentseam/matrix_evidence.py`). A `live-run-partial` row's `claim_basis()` used to
+  fall back to the row's own basis for any event the row claims, watched or not, letting an
+  event the row never observed back a grade as high as `enforced` -- the very thing
+  "partial" is supposed to prevent. `claim_basis()` now falls back to the row's new
+  optional `verified.fallback_basis` (defaulting to `vendor-docs`) whenever the resolved
+  basis is `live-run-partial` and the event is absent from `observed`. Set on the three
+  rows that need it, from each row's own method text: `codex_cli` and `vscode_copilot` say
+  source (`vendor-source`); `cursor` says vendor hooks documentation (`vendor-docs`). 11 of
+  91 claimed (agent, event) pairs change basis under the fix (every unobserved event on
+  these three rows); none changes *grade* -- none of those cells asserts a fail-closed
+  claim, so each was already at or below its new, lower ceiling. Full list in PR body.
 
 ### Fixed
 - **The stop gate's block observable is the hook re-firing, not a second action run**
