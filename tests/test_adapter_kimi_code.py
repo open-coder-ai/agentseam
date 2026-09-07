@@ -163,6 +163,8 @@ def test_accept_any_name_rests_on_client_type_never_being_absent():
     claims = A.adapters.get("kimi_code").CONFIG["claims"]
     assert claims["accept_any_name"] and None not in claims["client_types"]
     assert not A.adapters.get("kimi_code").claims({"hook_event_name": "TurnStarted"})
+
+
 #: A command a shell wrapper or an awkward path could carry: quote, newline, CR, tab, and a
 #: bare C0 control. The newline is the one that matters -- it ends the TOML line, so the rest
 #: lands as extra bare keys in a table the vendor documents as taking four fields only.

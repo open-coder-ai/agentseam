@@ -118,15 +118,21 @@ def validate(report):
             "watched cannot be checked for drift later." % report["basis"]
         )
 
-    if report.get("event") is not None and report["event"] not in EVENTS:
-        raise InvalidReportError("event %r is not one of: %s" % (report["event"], ", ".join(EVENTS)))
-    if report["driver"] == RECORDED_DRIVER:
-        _check_recorded_version(report)
+    _check_provenance(report)
 
     if not str(report["date"]).count("-") == 2:  # noqa: PLR2004
         raise InvalidReportError("date must be YYYY-MM-DD, got %r" % (report["date"],))
 
     return report
+
+
+def _check_provenance(report):
+    """The two optional provenance fields: a named gate must be canonical, and a recorded
+    driver's version may not outrun its recording (W55 and W57, reconciled at integration)."""
+    if report.get("event") is not None and report["event"] not in EVENTS:
+        raise InvalidReportError("event %r is not one of: %s" % (report["event"], ", ".join(EVENTS)))
+    if report["driver"] == RECORDED_DRIVER:
+        _check_recorded_version(report)
 
 
 def _check_recorded_version(report):

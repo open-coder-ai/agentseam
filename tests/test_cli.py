@@ -42,8 +42,10 @@ def test_matrix_evidence_shows_the_recorded_version_beside_the_rows():
     out = _run(["matrix", "--evidence"])
     assert out.returncode == 0
     line = next(row for row in out.stdout.splitlines() if row.startswith("claude_code "))
-    assert "2.1.247" in line  # the row's own verified.version
-    assert "2.1.263" in line  # the newest committed recording
+    from agentseam import matrix, recordings
+
+    assert matrix.MATRIX["claude_code"]["verified"]["version"] in line  # the row's own verified.version
+    assert recordings.latest_version("claude_code") in line  # the newest committed recording
 
 
 #: A portable `head -3`: read three lines, then exit and drop the read end of the pipe.
