@@ -91,6 +91,26 @@ Evidence carries the reporter's handle. Age and version drift are displayed rath
 hidden — see `agentseam matrix --evidence`. A row that says "verified against 3.17.8, 87
 days ago" is more useful than one that silently implies it is current.
 
+### When a drift issue names your agent
+
+A weekly check (`tools/watch_versions.py`) opens an issue titled `evidence: <agent>
+<version> — re-witness wanted` when an agent has shipped since its evidence was taken. That
+issue is a work order for whoever has the agent installed — the same two-minute loop above,
+`--record` added:
+
+```bash
+python3 tools/experiment.py run --agent <agent> --event <gate> \
+    --driver "<your headless CLI invocation>" \
+    --agent-version <version> --record --reporter @yourhandle
+```
+
+This freezes what you saw into `data/recordings/<agent>@<version>.json`, which
+`--driver recorded` then replays in CI instead of anyone re-running a real agent every
+time. Submit it the same two ways as any other evidence: a PR adding that file (plus the
+`data/matrix.json` per-claim `test` pointers it backs), or the **Evidence report** template
+with the recording pasted in. A run against `reference` or `recorded` never counts as the
+re-witness the issue is asking for — only a real agent does.
+
 ## Local checks
 
 ```bash

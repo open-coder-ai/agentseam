@@ -10,7 +10,7 @@ import sys
 import textwrap
 from datetime import date
 
-from . import __version__, adapters
+from . import __version__, adapters, recordings
 from . import install as install_mod
 from . import instructions as instructions_mod
 from . import packaging as packaging_mod
@@ -50,21 +50,23 @@ def _print_evidence():
     and the provenance of its cells are the same claim, and showing one without the other
     is what lets a documentation guess pass for a measurement.
     """
-    print("%-16s %-20s %-12s %-11s %s" % ("agent", "basis", "version", "verdict", "date"))
+    print("%-16s %-20s %-12s %-11s %-12s %s" % ("agent", "basis", "version", "verdict", "recorded", "date"))
     for name in sorted(MATRIX):
         verified = MATRIX[name]["verified"]
         state = staleness_mod.status(verified)
         print(
-            "%-16s %-20s %-12s %-11s %s"
+            "%-16s %-20s %-12s %-11s %-12s %s"
             % (
                 name,
                 verified.get("basis", "-"),
                 str(verified.get("version", "-"))[:12],
                 state["verdict"],
+                recordings.latest_version(name) or "-",
                 verified.get("date", "-"),
             )
         )
-    print("\nverdicts: fresh (compared, current) | unchecked (no comparison was made)")
+    print("\nrecorded: the newest data/recordings/<agent>@<version>.json, or '-' if never witnessed")
+    print("verdicts: fresh (compared, current) | unchecked (no comparison was made)")
     print(
         "          stale (older than %d days) | unmeasured (never touched a running agent)"
         % staleness_mod.STALE_AFTER_DAYS
