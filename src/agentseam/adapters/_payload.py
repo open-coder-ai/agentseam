@@ -43,7 +43,7 @@ def _accepted_by_markers(c, raw, name):
 
 def _disqualified(cfg, c, raw, name):
     """Every reason an entry declines a payload once its wire event name is known."""
-    if name not in cfg["events"]:
+    if name not in cfg["events"] and not (c.get("accept_any_name") and isinstance(name, str)):
         return True
     if "client_types" in c and raw.get("client_type") not in c["client_types"]:
         return True

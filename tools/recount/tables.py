@@ -76,6 +76,12 @@ _CLAIMS = {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "client_types": ["kimi_code_cli"],
+        "accept_any_name": True,
+        "notes": (
+            "client_type cannot be absent here, so a payload carrying it has positively "
+            "self-identified and is claimed whatever event name it names; parse() resolves an "
+            "unmapped name to UNKNOWN, which is how Kimi's vendor drift reaches a caller."
+        ),
     },
     "junie": {
         "mode": "marker",

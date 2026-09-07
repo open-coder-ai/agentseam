@@ -40,6 +40,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **A Kimi Code payload naming an event Kimi has not mapped yet now reaches the caller**
+  (`adapters/_payload.py`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[8].findings[6]`). `claims()` required the event name to already be in `events`, so a
+  payload that had positively self-identified as Kimi (`client_type: kimi_code_cli`) while
+  naming a new or unmapped vendor event was claimed by no adapter at all: `handle()`
+  returned `event=None` ("unrecognized payload") instead of the UNKNOWN `Event` the
+  contract documents as the whole point of that pathway ("New vendor events appear without
+  warning; being told is the only safe outcome"). Vendor drift on Kimi was therefore
+  invisible to a caller logging UNKNOWN events. A new opt-in `claims.accept_any_name` is
+  set on the one entry whose `client_types` cannot be null; a payload with no `client_type`
+  is still not claimed, and the decision itself is unchanged (an UNKNOWN event allows).
 - **A Kimi Code `PermissionRequest` is no longer claimed by Devin as well, leaving the
   payload unidentified** (`adapters/_payload.py`, `data/vendors/devin.json`; vendor-truth
   review finding `raw[8].findings[8]`). Devin's `accept_names` claimed `PermissionRequest`
