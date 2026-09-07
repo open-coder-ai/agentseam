@@ -397,7 +397,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-docs"
     },
     "events": {
       "pre_tool": {
@@ -1285,7 +1286,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-source"
     },
     "events": {
       "pre_tool": {
@@ -2023,7 +2025,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-source"
     },
     "events": {
       "pre_tool": {
