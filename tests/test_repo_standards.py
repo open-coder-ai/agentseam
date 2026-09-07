@@ -11,8 +11,15 @@ SRC = ROOT / "src" / "agentseam"
 MAX_LINES = 300
 
 
+#: Directories holding code this repository did not write. `site-packages` is the one that
+#: bites: `python3 -m venv .venv` in a clean checkout is the obvious first move for a new
+#: contributor, and without this the budget test fails on pytest's own sources -- a red
+#: suite that says nothing about the checkout.
+_NOT_OURS = frozenset({".git", "build", ".venv", "venv", "env", "site-packages", ".tox", "node_modules"})
+
+
 def _python_files():
-    return sorted(p for p in ROOT.rglob("*.py") if ".git" not in p.parts and "build" not in p.parts)
+    return sorted(p for p in ROOT.rglob("*.py") if not _NOT_OURS & set(p.parts))
 
 
 def test_no_file_exceeds_line_budget():
