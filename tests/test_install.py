@@ -157,10 +157,13 @@ def test_install_never_destroys_a_config_it_cannot_parse(isolated_home):
     assert cfg.read_bytes()[:2] == b"\xff\xfe", "a UTF-16 config was overwritten"
 
 
-def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
-    """installed() is a read-only question; a corrupt file means "not known to be there","""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".junie" / "config.json"
+def test_a_query_never_raises_on_an_unparseable_config(isolated_home):
+    """installed() is a read-only question; a corrupt file means "not known to be there",
+
+    Home is the fixture's for the reason the two tests above give: a local setenv("HOME")
+    is read by posixpath only, so the corrupt file was never on the path uninstall reads
+    and the "must raise" assertion had nothing to raise about."""
+    cfg = isolated_home / ".junie" / "config.json"
     cfg.parent.mkdir()
     cfg.write_text("{ broken ,,, }")
 
