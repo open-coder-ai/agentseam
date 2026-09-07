@@ -10,7 +10,7 @@ which cells would move.
     python3 tools/verify_report.py report.json --diff      # what the row would become
     cat report.json | python3 tools/verify_report.py -
 
-It writes nothing. Merging a report into matrix-evidence.json stays a human act with a
+It writes nothing. Merging a report into a row's evidence in matrix.json stays a human act with a
 name on it -- the provenance of a row includes who decided to believe it.
 """
 

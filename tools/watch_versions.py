@@ -32,7 +32,9 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 
 from agentseam import staleness  # noqa: E402
 from agentseam._data import load  # noqa: E402
-from agentseam.matrix_evidence import EVIDENCE  # noqa: E402
+from agentseam.matrix_data import MATRIX  # noqa: E402
+from agentseam.matrix_evidence import EVIDENCE, claim_record  # noqa: E402
+from agentseam.matrix_terms import CLAIM_FAIL_MODE  # noqa: E402
 
 SOURCES = load("vendor-releases.json")
 TIMEOUT_SECONDS = 20
@@ -67,15 +69,38 @@ def latest_version(source):
     return None, "unknown source kind: %r" % (kind,)
 
 
+def _event_versions(agent):
+    """(event, record) for every event this agent's row claims, reading the `fail_mode`
+    claim's own evidence where it names a version -- so a per-claim override (task 4) is
+    what drift compares against, and the row's record is the fallback everywhere else."""
+    row = MATRIX.get(agent) or {}
+    out = []
+    for event in row.get("events", {}):
+        record = claim_record(row, event, CLAIM_FAIL_MODE)
+        out.append((event, record if record.get("version") else EVIDENCE.get(agent, {})))
+    return out
+
+
 def check(agents=None, today=None):
-    """Every agent's evidence against its vendor's current release."""
+    """Every agent's evidence against its vendor's current release.
+
+    One row per agent, unless a per-claim record names a version the row's own does not --
+    then one row per event, so an event witnessed more recently than its row (task 4) reads
+    FRESH while the rest of that same row still reads its own, possibly older, drift.
+    """
     rows = []
     for agent in sorted(agents or EVIDENCE):
-        evidence = EVIDENCE.get(agent, {})
         current, error = latest_version(SOURCES.get(agent))
-        state = staleness.status(evidence, current_version=current, today=today)
-        state.update({"agent": agent, "source_error": error})
-        rows.append(state)
+        per_event = _event_versions(agent)
+        if len({record.get("version") for _, record in per_event}) <= 1:
+            state = staleness.status(EVIDENCE.get(agent, {}), current_version=current, today=today)
+            state.update({"agent": agent, "event": None, "source_error": error})
+            rows.append(state)
+            continue
+        for event, record in per_event:
+            state = staleness.status(record, current_version=current, today=today)
+            state.update({"agent": agent, "event": event, "source_error": error})
+            rows.append(state)
     return rows
 
 
@@ -84,13 +109,19 @@ def drifted(rows):
     return [r for r in rows if r["verdict"] == staleness.DRIFTED]
 
 
+def _label(r):
+    """`agent`, or `agent/event` for a row split out because one event's own evidence
+    names a different version than the rest of its row (task 4)."""
+    return r["agent"] if r["event"] is None else "%s/%s" % (r["agent"], r["event"])
+
+
 def issue_body(rows):
     """Markdown for the issue a scheduled run opens. Names the agent and what moved."""
     lines = ["The following rows describe an agent version that is no longer current.", ""]
     for r in drifted(rows):
         lines.append(
             "- **%s** — evidence taken against `%s` (%s days ago); `%s` is now published."
-            % (r["agent"], r["recorded_version"], r["age_days"], r["current_version"])
+            % (_label(r), r["recorded_version"], r["age_days"], r["current_version"])
         )
     lines += [
         "",
@@ -117,12 +148,12 @@ def main(argv=None):
     elif args.issue_body:
         print(issue_body(rows))
     else:
-        print("%-16s %-11s %-12s %-12s %-9s %s" % ("agent", "verdict", "recorded", "current", "age", "note"))
+        print("%-24s %-11s %-12s %-12s %-9s %s" % ("agent", "verdict", "recorded", "current", "age", "note"))
         for r in rows:
             print(
-                "%-16s %-11s %-12s %-12s %-9s %s"
+                "%-24s %-11s %-12s %-12s %-9s %s"
                 % (
-                    r["agent"],
+                    _label(r),
                     r["verdict"],
                     r["recorded_version"] or "-",
                     r["current_version"] or "-",
@@ -138,7 +169,7 @@ def main(argv=None):
             % (len(moved), len(unreachable), len(unusable))
         )
         if unusable:
-            print("  no drift can ever be computed for: %s" % ", ".join(r["agent"] for r in unusable))
+            print("  no drift can ever be computed for: %s" % ", ".join(_label(r) for r in unusable))
 
     return 1 if (args.fail_on_drift and drifted(rows)) else 0
 
