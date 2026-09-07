@@ -269,7 +269,7 @@ def main(argv=None):
             print("%-10s %s" % (name, what))
         return 0
 
-    args.driver = recorded_driver.resolve_driver(args.agent, args.driver)
+    args.driver = recorded_driver.resolve_driver(args.agent, args.driver, event=args.event, version=args.agent_version)
     if args.record:
         recorded_driver.check_record_args(parser, driver=args.driver, agent_version=args.agent_version)
 

@@ -174,3 +174,13 @@ def test_record_leaves_no_scratch_workspace_behind():
             shutil.rmtree(results[0]["workspace"], ignore_errors=True)
         if path and os.path.exists(path):
             os.remove(path)
+
+
+def test_the_default_driver_is_chosen_per_gate_not_per_agent():
+    """claude_code@2.1.263 recorded pre_tool only: that gate replays, the others fall back to
+    the reference instead of failing on a recording that never saw them."""
+    assert recorded_driver.resolve_driver("claude_code", None, event="pre_tool") == recorded_driver.DRIVER_NAME
+    assert recorded_driver.resolve_driver("claude_code", None, event="stop") == recorded_driver.REFERENCE_DRIVER
+    assert recorded_driver.resolve_driver("claude_code", None, event="prompt_submit") == recorded_driver.REFERENCE_DRIVER
+    assert recorded_driver.resolve_driver("tabnine", None, event="pre_tool") == recorded_driver.REFERENCE_DRIVER
+    assert recorded_driver.resolve_driver("claude_code", "reference", event="pre_tool") == recorded_driver.REFERENCE_DRIVER

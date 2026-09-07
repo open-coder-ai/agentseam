@@ -43,8 +43,13 @@ class NoRecording(Exception):
     """No recording covers the (agent, version, event, trial) asked for."""
 
 
-def has_recording(agent):
-    return recordings.latest_version(agent) is not None
+def has_recording(agent, event=None, version=None):
+    """Whether a recording exists for `agent` (at `version`, else the latest) and, when `event`
+    is given, whether it covers that gate. A recording of one gate says nothing about another."""
+    body = recordings.load_recording(agent, version)
+    if body is None:
+        return False
+    return event is None or event in (body.get("events") or {})
 
 
 def add_cli_args(run_parser):
@@ -53,19 +58,20 @@ def add_cli_args(run_parser):
         "--driver",
         default=None,
         help="'reference', 'recorded', or a shell template containing {prompt}; "
-        "default: 'recorded' if a recording exists for --agent, else 'reference'",
+        "default: 'recorded' if a recording covers --agent at --event, else 'reference'",
     )
     run_parser.add_argument(
         "--record", action="store_true", help="freeze this run into data/recordings/<agent>@<agent-version>.json"
     )
 
 
-def resolve_driver(agent, driver):
-    """`driver` if given, else 'recorded' when a recording exists for `agent`, else the
-    reference. Centralised here so tools/experiment.py's CLI stays a thin dispatcher."""
+def resolve_driver(agent, driver, event=None, version=None):
+    """`driver` if given, else 'recorded' when a recording covers `agent` at `event`, else the
+    reference. Per gate, not per agent: claude_code@2.1.263 recorded pre_tool only, and a run
+    at stop must fall back to the reference rather than fail on a recording that never saw it."""
     if driver is not None:
         return driver
-    return DRIVER_NAME if has_recording(agent) else REFERENCE_DRIVER
+    return DRIVER_NAME if has_recording(agent, event, version) else REFERENCE_DRIVER
 
 
 def check_record_args(parser, *, driver, agent_version):
