@@ -24,6 +24,7 @@ documentation guesses into twelve apparent measurements.
 from __future__ import annotations
 
 from .matrix_terms import BASES, BASIS_DOCS, BASIS_LIVE, BASIS_LIVE_PARTIAL
+from .staleness import parse_version
 
 #: Current report format. Bumped when a required field changes, so an old submission is
 #: rejected with "regenerate this" rather than silently half-read.
@@ -44,10 +45,16 @@ OPTIONAL = (
     "run_url",
     "notes",
     "tool_version",
+    "recorded_version",
 )
 
 #: The driver name the harness uses for its credential-free documentation simulator.
 REFERENCE_DRIVER = "reference"
+
+#: The driver name tools/recorded_driver.py replays through -- a frozen witness run, not a
+#: live one. Named here, not just in that tool, so this module's own honesty rule (below)
+#: does not have to import a dev-only tool to enforce it.
+RECORDED_DRIVER = "recorded"
 
 #: Bases that assert somebody watched a real agent do something.
 LIVE_BASES = (BASIS_LIVE, BASIS_LIVE_PARTIAL)
@@ -109,10 +116,28 @@ def validate(report):
             "watched cannot be checked for drift later." % report["basis"]
         )
 
+    if report["driver"] == RECORDED_DRIVER:
+        _check_recorded_version(report)
+
     if not str(report["date"]).count("-") == 2:  # noqa: PLR2004
         raise InvalidReportError("date must be YYYY-MM-DD, got %r" % (report["date"],))
 
     return report
+
+
+def _check_recorded_version(report):
+    """A replayed recording may only claim the version it actually replayed, or older."""
+    recorded_version = report.get("recorded_version")
+    if not recorded_version:
+        raise InvalidReportError(
+            "driver %r requires `recorded_version`: which frozen run this replayed." % RECORDED_DRIVER
+        )
+    claimed = report.get("version") or recorded_version
+    if parse_version(claimed) > parse_version(recorded_version):
+        raise InvalidReportError(
+            "version %r exceeds recorded_version %r: a replayed recording cannot claim "
+            "evidence for a build it never ran against." % (claimed, recorded_version)
+        )
 
 
 def to_evidence(report):

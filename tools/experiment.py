@@ -20,9 +20,10 @@ agent round again, and the hook fires a second time. The re-fire is what is coun
     python3 tools/experiment.py run --agent claude_code --event stop
     python3 tools/experiment.py run --agent claude_code --trial crash --keep
 
-The default driver is tools/reference_agent.py: the vendor's documentation, made
-executable. It needs no credentials, so the whole harness runs in CI for free, and a
-disagreement between it and the real agent is precisely a documentation bug.
+Absent --driver, this replays a recording (tools/recorded_driver.py) if one exists for the
+agent, else falls back to tools/reference_agent.py -- the vendor's documentation, made
+executable. Both need no credentials, so the whole harness runs in CI for free, and a
+disagreement between either and the real agent is a finding.
 
 SAFETY: this probe denies, crashes and stalls on purpose. Every trial runs in a fresh
 temporary directory that this module creates and removes, with a config written only
@@ -46,6 +47,7 @@ sys.path.insert(0, HERE)
 
 import experiment_probe  # noqa: E402
 import experiment_report  # noqa: E402
+import recorded_driver  # noqa: E402
 import reference_agent  # noqa: E402
 
 from agentseam import adapters, contract  # noqa: E402
@@ -155,10 +157,14 @@ def _classify(trial, event, observed, invocations):
     return field, (when_blocked if blocked else when_ran), reading
 
 
-def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep=False, timeout=None):
-    """One trial, start to finish, in a workspace created and destroyed here."""
+def run_trial(
+    agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep=False, timeout=None, agent_version=None
+):
+    """One trial: a real workspace, or (driver="recorded") a frozen recording replayed."""
     if event not in EVENTS:
         raise ValueError("cannot gate at %r (have: %s)" % (event, ", ".join(EVENTS)))
+    if driver == recorded_driver.DRIVER_NAME:
+        return recorded_driver.run_trial(agent, trial, event=event, version=agent_version)
     adapter = adapters.get(agent)
     workspace = tempfile.mkdtemp(prefix="agentseam-exp-%s-%s-" % (agent, trial))
     record_dir = os.path.join(workspace, ".record")
@@ -250,7 +256,7 @@ def main(argv=None):
     run.add_argument(
         "--event", default=contract.PRE_TOOL, choices=EVENTS, help="which gate to wire the probe at (default: pre_tool)"
     )
-    run.add_argument("--driver", default="reference", help="'reference', or a shell template containing {prompt}")
+    recorded_driver.add_cli_args(run)
     run.add_argument("--keep", action="store_true", help="leave the scratch workspace for inspection")
     run.add_argument("--json", action="store_true")
     run.add_argument("--report", action="store_true", help="emit a submittable evidence report")
@@ -263,8 +269,18 @@ def main(argv=None):
             print("%-10s %s" % (name, what))
         return 0
 
+    args.driver = recorded_driver.resolve_driver(args.agent, args.driver)
+    if args.record:
+        recorded_driver.check_record_args(parser, driver=args.driver, agent_version=args.agent_version)
+
     trials = args.trial or sorted(experiment_probe.BEHAVIOURS)
-    results = [run_trial(args.agent, t, event=args.event, driver=args.driver, keep=args.keep) for t in trials]
+    keep = args.keep or args.record
+    results = [
+        run_trial(args.agent, t, event=args.event, driver=args.driver, keep=keep, agent_version=args.agent_version)
+        for t in trials
+    ]
+    if args.record:
+        recorded_driver.finalize_record(args, results)
     if args.report:
         report = experiment_report.as_report(results, version=args.agent_version, reporter=args.reporter)
         print(json.dumps(report, indent=2))
