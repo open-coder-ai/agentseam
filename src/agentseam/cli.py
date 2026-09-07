@@ -15,6 +15,7 @@ from . import install as install_mod
 from . import instructions as instructions_mod
 from . import packaging as packaging_mod
 from . import permissions as permissions_mod
+from . import staleness as staleness_mod
 from .contract import EVENTS
 from .matrix import MATRIX, enforcement_level
 
@@ -30,6 +31,8 @@ def _cmd_matrix(args):
     if args.json:
         print(json.dumps(MATRIX, indent=2, sort_keys=True))
         return 0
+    if args.evidence:
+        return _print_evidence()
     events = [e for e in EVENTS if any(e in r["events"] for r in MATRIX.values())]
     width = max(len(e) for e in events)
     header = " " * (width + 2) + "  ".join("%-14s" % a for a in sorted(MATRIX))
@@ -40,7 +43,34 @@ def _cmd_matrix(args):
     return 0
 
 
-_STALE_AFTER_DAYS = 90
+def _print_evidence():
+    """How each row is known, and how old that knowledge is.
+
+    Deliberately part of `matrix` rather than hidden behind `doctor`: the capability table
+    and the provenance of its cells are the same claim, and showing one without the other
+    is what lets a documentation guess pass for a measurement.
+    """
+    print("%-16s %-20s %-12s %-11s %s" % ("agent", "basis", "version", "verdict", "date"))
+    for name in sorted(MATRIX):
+        verified = MATRIX[name]["verified"]
+        state = staleness_mod.status(verified)
+        print(
+            "%-16s %-20s %-12s %-11s %s"
+            % (
+                name,
+                verified.get("basis", "-"),
+                str(verified.get("version", "-"))[:12],
+                state["verdict"],
+                verified.get("date", "-"),
+            )
+        )
+    print("\nverdicts: fresh (compared, current) | unchecked (no comparison was made)")
+    print(
+        "          stale (older than %d days) | unmeasured (never touched a running agent)"
+        % staleness_mod.STALE_AFTER_DAYS
+    )
+    print("run tools/watch_versions.py to compare each row against its vendor's current release")
+    return 0
 
 
 def _cmd_doctor(args):
@@ -56,18 +86,15 @@ def _cmd_doctor(args):
             print("%-16s no hook adapter — instruction files only" % name)
             continue
         wired = install_mod.installed(name, args.repo)
-        verified = row["verified"]
-        try:
-            y, m, d = (int(x) for x in verified["date"].split("-"))
-            age = (today - date(y, m, d)).days
-        except (ValueError, KeyError):
-            age = None
-        stale = " STALE" if age is not None and age > _STALE_AFTER_DAYS else ""
-        if stale:
+        # No release feed is consulted here: `doctor` audits a machine and must work
+        # offline. tools/watch_versions.py is what supplies a current version, and the
+        # verdict vocabulary is shared so both surfaces read the same.
+        state = staleness_mod.status(row["verified"], today=today)
+        if state["verdict"] == staleness_mod.STALE:
             rc = 1
         print(
-            "%-16s wired=%-5s verified=%s (%s days ago)%s"
-            % (name, "yes" if wired else "no", verified["date"], age if age is not None else "?", stale)
+            "%-16s wired=%-5s verified=%s (%s)"
+            % (name, "yes" if wired else "no", row["verified"].get("date", "?"), staleness_mod.summarize(state))
         )
     return rc
 
@@ -226,6 +253,7 @@ def _main(argv=None):
 
     m = sub.add_parser("matrix", help="what each agent can enforce, per event")
     m.add_argument("--json", action="store_true")
+    m.add_argument("--evidence", action="store_true", help="how each row is known, and how old that is")
     m.set_defaults(fn=_cmd_matrix)
 
     d = sub.add_parser("doctor", help="what is wired here; flag stale capability claims")

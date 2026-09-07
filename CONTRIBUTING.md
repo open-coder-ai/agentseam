@@ -41,6 +41,56 @@ from a blog post are how a hook silently stops firing six months later.
 Adding an agent must not require touching `contract.py`, `dispatch.py`, or any consumer.
 If it does, the abstraction is wrong; say so in the PR and we fix the abstraction.
 
+## Contributing evidence (you do not need to write code)
+
+Twelve of sixteen matrix rows rest on vendor documentation rather than on anyone watching
+the agent run. If you have one of those agents installed, you can close that gap for
+everyone in about two minutes — and you are, by definition, better placed to than a
+maintainer who does not hold that licence.
+
+**Payload shapes** — what the agent actually sends:
+
+```bash
+python3 tools/capture.py detect
+python3 tools/capture.py install --agent <agent>
+# ...use the agent normally for a minute...
+python3 tools/capture.py report
+python3 tools/capture.py uninstall --agent <agent>
+```
+
+**Enforcement** — whether `deny` blocks, and what happens when a hook dies:
+
+```bash
+python3 tools/experiment.py run --agent <agent> --report \
+    --agent-version <version> --reporter @yourhandle > report.json
+```
+
+Open an issue with the **Evidence report** template and paste the result.
+
+A few things worth knowing before you run either:
+
+- **The capture probe always allows.** It records and gets out of the way, so it cannot
+  break a session. The experiment probe is the opposite — it denies, crashes and stalls
+  on purpose — so it only ever runs in a throwaway directory the harness creates and
+  removes. Never point it at a config you work in.
+- **Payloads are reduced to shape before anything touches disk.** Keys and types survive;
+  values become markers like `<str:41>`. `tests/test_capture_kit.py` asserts this by
+  running the real probe rather than by reading its source.
+- **A result that contradicts the matrix is the most valuable thing you can send.** We are
+  not collecting confirmations. If your run says an agent fails closed where we claim it
+  fails open, that is a row we are getting wrong in public.
+- **Nothing captured is worthless.** A hook that never fires is a finding: it means the
+  config path or format is wrong for your version, which is exactly what documentation
+  does not tell you. Report it with the agent's version.
+- **Reports say how they were obtained, and cannot overstate it.** A run against the
+  `reference` driver is the vendor's documentation made executable, not a measurement, and
+  the schema refuses to let it claim `live-run`. `python3 tools/verify_report.py
+  report.json` shows you what a maintainer will see.
+
+Evidence carries the reporter's handle. Age and version drift are displayed rather than
+hidden — see `agentseam matrix --evidence`. A row that says "verified against 3.17.8, 87
+days ago" is more useful than one that silently implies it is current.
+
 ## Local checks
 
 ```bash

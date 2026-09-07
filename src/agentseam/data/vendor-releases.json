@@ -1,0 +1,77 @@
+{
+  "_comment": [
+    "Where each agent publishes the version number its evidence should be compared against.",
+    "A null source is not an oversight -- it records that no machine-readable release feed",
+    "is known for that agent, so its row can only be re-verified by a human who has it.",
+    "Saying so is the point: an invented package name would silently track the wrong thing,",
+    "which is worse than admitting the gap. Add a source only after checking it resolves.",
+    "kind: npm | pypi | github_releases | null"
+  ],
+  "aider": {
+    "kind": "pypi",
+    "id": "aider-chat",
+    "note": "The pip-installable CLI; the project publishes every release here."
+  },
+  "antigravity": {
+    "kind": null,
+    "note": "IDE download, no public release feed found. Manual check."
+  },
+  "claude_code": {
+    "kind": "npm",
+    "id": "@anthropic-ai/claude-code",
+    "note": "The reference row. Drift here matters most: every other adapter was shaped against it."
+  },
+  "codex_cli": {
+    "kind": "npm",
+    "id": "@openai/codex"
+  },
+  "copilot": {
+    "kind": "github_releases",
+    "id": "microsoft/vscode-copilot-release",
+    "note": "Release notes repo for the extension; the extension itself is marketplace-only."
+  },
+  "cursor": {
+    "kind": null,
+    "note": "IDE download with no public feed. `cursor-agent` exists on npm but has NOT been shown to share the IDE's hook config path -- tracking it would evidence a different binary than this row describes."
+  },
+  "devin": {
+    "kind": null,
+    "note": "Hosted. There is no version to pin; the vendor can change behaviour under a row without any observable release."
+  },
+  "gemini_cli": {
+    "kind": "npm",
+    "id": "@google/gemini-cli"
+  },
+  "grok": {
+    "kind": null,
+    "note": "No confirmed release feed. Manual check."
+  },
+  "junie": {
+    "kind": null,
+    "note": "JetBrains plugin marketplace. Feed exists but is not yet wired here."
+  },
+  "kimi_code": {
+    "kind": null,
+    "note": "No confirmed release feed. Manual check."
+  },
+  "replit": {
+    "kind": null,
+    "note": "Hosted; see devin."
+  },
+  "tabnine": {
+    "kind": null,
+    "note": "Multi-IDE plugin, per-IDE versioning. Manual check."
+  },
+  "vscode_copilot": {
+    "kind": "github_releases",
+    "id": "microsoft/vscode-copilot-release"
+  },
+  "windsurf": {
+    "kind": null,
+    "note": "IDE download, no public release feed found. Manual check."
+  },
+  "zed": {
+    "kind": "github_releases",
+    "id": "zed-industries/zed"
+  }
+}
