@@ -1,0 +1,81 @@
+name: Evidence report
+description: Submit a capture or experiment report from an agent you have
+title: "evidence: <agent> <version>"
+labels: ["evidence"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Twelve of sixteen rows in the capability matrix rest on vendor documentation
+        rather than on anyone watching the agent run. If you have one of those agents
+        installed, a couple of minutes closes that gap for everyone.
+
+        ```bash
+        python3 tools/experiment.py run --agent cursor --report \
+            --agent-version 3.17.8 --reporter @yourhandle > report.json
+        ```
+
+        or, for payload shapes rather than enforcement:
+
+        ```bash
+        python3 tools/capture.py install --agent cursor
+        # ...use the agent normally for a minute...
+        python3 tools/capture.py report
+        ```
+
+        **Nothing sensitive leaves your machine.** The capture probe reduces payloads to
+        shape before anything touches disk -- keys and types are kept, values become
+        markers like `<str:41>`. Prompts, file contents, paths and session ids do not
+        survive that step, and `tests/test_capture_kit.py` asserts it by running the real
+        probe rather than reading its source.
+
+        Please skim your report before pasting. If it contains anything you did not
+        expect, that is a bug in the redactor and we would like to hear about it more
+        than we want the report.
+  - type: input
+    id: agent
+    attributes:
+      label: Agent
+      placeholder: cursor
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Agent version
+      description: Exactly as the agent reports it. Without this the row cannot be checked for drift later.
+      placeholder: 3.17.8
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: Windows 11 / macOS 15 / Ubuntu 24.04
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Report
+      description: The JSON from `--report`, or the output of `capture.py report`.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything surprising
+      description: >
+        Especially valuable: a hook that never fired, an event we do not map, or behaviour
+        that contradicts the matrix. A result that disagrees with what we claim is the most
+        useful thing you can send.
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before submitting
+      options:
+        - label: I ran this against an agent I have, and the version above is what it reported.
+          required: true
+        - label: I skimmed the report and it contains nothing I would not post publicly.
+          required: true

@@ -214,6 +214,36 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
     return rows
 
 
+def as_report(results, *, version=None, reporter=None, notes=None, today=None):
+    """A submittable evidence report from a set of trial results.
+
+    The basis is derived from the driver, never chosen by the caller: a run against the
+    reference is documentation and says so. evidence_report.validate() enforces the same
+    rule independently, so a hand-edited report cannot claim more than it earned.
+    """
+    from datetime import date
+
+    from agentseam import evidence_report
+
+    driver = results[0]["driver"]
+    measured = {}
+    for r in results:
+        measured.update(r["measured"])
+    report = {
+        "report_version": evidence_report.REPORT_VERSION,
+        "agent": results[0]["agent"],
+        "basis": "vendor-docs" if driver == evidence_report.REFERENCE_DRIVER else "live-run-partial",
+        "date": (today or date.today()).isoformat(),
+        "driver": "reference" if driver == evidence_report.REFERENCE_DRIVER else "real-agent",
+        "experiments": measured,
+        "platform": sys.platform,
+    }
+    for key, value in (("version", version), ("reporter", reporter), ("notes", notes)):
+        if value:
+            report[key] = value
+    return evidence_report.validate(report)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -224,6 +254,9 @@ def main(argv=None):
     run.add_argument("--driver", default="reference", help="'reference', or a shell template containing {prompt}")
     run.add_argument("--keep", action="store_true", help="leave the scratch workspace for inspection")
     run.add_argument("--json", action="store_true")
+    run.add_argument("--report", action="store_true", help="emit a submittable evidence report")
+    run.add_argument("--agent-version", help="the agent build these trials ran against")
+    run.add_argument("--reporter", help="how you want crediting, e.g. @handle")
     args = parser.parse_args(argv)
 
     if args.cmd == "list":
@@ -233,6 +266,9 @@ def main(argv=None):
 
     trials = args.trial or sorted(experiment_probe.BEHAVIOURS)
     results = [run_trial(args.agent, t, driver=args.driver, keep=args.keep) for t in trials]
+    if args.report:
+        print(json.dumps(as_report(results, version=args.agent_version, reporter=args.reporter), indent=2))
+        return 0
     if args.json:
         print(json.dumps(results, indent=2))
         return 0
