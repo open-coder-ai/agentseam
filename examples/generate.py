@@ -266,7 +266,7 @@ def main(argv=None):
         drift = []
         for name, body in sorted(files.items()):
             path = os.path.join(OUT, name)
-            current = open(path).read() if os.path.exists(path) else None
+            current = open(path, encoding="utf-8").read() if os.path.exists(path) else None
             if current != body:
                 drift.append(name)
                 sys.stderr.writelines(
@@ -288,7 +288,7 @@ def main(argv=None):
         return 0
     os.makedirs(OUT, exist_ok=True)
     for name, body in sorted(files.items()):
-        with open(os.path.join(OUT, name), "w") as fh:
+        with open(os.path.join(OUT, name), "w", encoding="utf-8", newline="\n") as fh:
             fh.write(body)
     print("wrote %d files to %s" % (len(files), OUT))
     return 0
