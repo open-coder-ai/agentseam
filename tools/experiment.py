@@ -7,12 +7,17 @@ README leads with and the matrix cannot currently evidence:
     does `deny` actually block, and what happens when the hook dies?
 
 Each trial is one scripted gate around one harmless command in a throwaway directory. The
-command writes a sentinel file; whether that file exists afterwards is the measurement.
-No dialect parsing, no log scraping, no ambiguity -- the action either happened or it did
-not.
+command appends to a sentinel file; how many times it did so is the measurement. No
+dialect parsing, no log scraping, no ambiguity.
+
+Counting rather than checking existence is what lets the same observable work at all three
+gates. A block at prompt_submit or pre_tool means the action never happened; a block at
+stop means the opposite shape -- the agent was refused permission to finish, went round
+again, and the action happened twice.
 
     python3 tools/experiment.py list
     python3 tools/experiment.py run --agent claude_code
+    python3 tools/experiment.py run --agent claude_code --event stop
     python3 tools/experiment.py run --agent claude_code --trial crash --keep
 
 The default driver is tools/reference_agent.py: the vendor's documentation, made
@@ -40,6 +45,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 sys.path.insert(0, HERE)
 
 import experiment_probe  # noqa: E402
+import experiment_report  # noqa: E402
 import reference_agent  # noqa: E402
 
 from agentseam import adapters, contract  # noqa: E402
@@ -47,8 +53,15 @@ from agentseam.matrix_terms import FAIL_CLOSED, FAIL_OPEN  # noqa: E402
 
 SENTINEL = "ACTION_RAN"
 SENTINEL_ALT = "ACTION_RAN_TRANSFORMED"
-TRIGGER = "echo ok > %s" % SENTINEL
-TRIGGER_ALT = "echo ok > %s" % SENTINEL_ALT
+# Appending, not overwriting: a blocked Stop gate makes the agent come back round and act
+# again, so "how many times" carries information "whether" cannot. It is the only
+# observable that works at all three gates without parsing anyone's dialect.
+TRIGGER = "echo ok >> %s" % SENTINEL
+TRIGGER_ALT = "echo ok >> %s" % SENTINEL_ALT
+
+#: Canonical events an experiment can gate at. Each blocks differently, and the difference
+#: is the measurement -- see _blocked().
+EVENTS = (contract.PROMPT_SUBMIT, contract.PRE_TOOL, contract.STOP)
 
 #: Trial -> (measured field, value when the action still ran, value when it did not).
 #: Reading a result is therefore a table lookup, not a judgement call.
@@ -62,21 +75,39 @@ _MEANING = {
 }
 
 
-def _write_config(adapter, workspace, probe_command):
+def _write_config(adapter, workspace, probe_command, event):
     """Wire the probe into a config *inside the scratch workspace* and return its path."""
     config_path = os.path.join(workspace, adapter.CONFIG_PATH)
     os.makedirs(os.path.dirname(config_path), exist_ok=True)
-    body = adapter.hook_config([contract.PRE_TOOL], probe_command)
+    body = adapter.hook_config([event], probe_command)
     with open(config_path, "w", encoding="utf-8") as fh:
         json.dump(body, fh, indent=2)
     return config_path
 
 
+def _count(workspace, name):
+    path = os.path.join(workspace, name)
+    if not os.path.exists(path):
+        return 0
+    with open(path, encoding="utf-8") as fh:
+        return len([line for line in fh if line.strip()])
+
+
 def _observe(workspace):
-    return {
-        "sentinel": os.path.exists(os.path.join(workspace, SENTINEL)),
-        "sentinel_alt": os.path.exists(os.path.join(workspace, SENTINEL_ALT)),
-    }
+    return {"runs": _count(workspace, SENTINEL), "alt_runs": _count(workspace, SENTINEL_ALT)}
+
+
+def _blocked(event, observed):
+    """Whether the gate stopped what it gates -- which is a different fact per event.
+
+    At prompt_submit and pre_tool a block means the action never happened. At stop it means
+    the opposite shape: the agent was refused permission to finish, so it went round again
+    and the action happened *more* than once.
+    """
+    runs = observed["runs"] + observed["alt_runs"]
+    if event == contract.STOP:
+        return runs > 1
+    return runs == 0
 
 
 def _invocations(record_dir):
@@ -87,26 +118,32 @@ def _invocations(record_dir):
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def _classify(trial, observed, invoked):
+def _classify(trial, event, observed, invoked):
     """What one trial measured, as a (field, value) pair plus a human reading."""
     if not invoked:
         return "hook_reached", False, "the hook never fired -- config path or format is wrong for this version"
-    ran = observed["sentinel"]
     if trial == "transform":
-        if observed["sentinel_alt"] and not ran:
+        if observed["alt_runs"] and not observed["runs"]:
             return "transform", True, "the rewritten input is what ran"
-        if ran and not observed["sentinel_alt"]:
+        if observed["runs"] and not observed["alt_runs"]:
             return "transform", False, "the original input ran; the rewrite was ignored"
         return "transform", None, "ambiguous: %s" % observed
+
+    blocked = _blocked(event, observed)
     field, when_ran, when_blocked = _MEANING[trial]
-    reading = "action ran" if ran else "action did not run"
-    if trial == "allow" and not ran:
-        reading = "BROKEN: a permissive answer blocked the action -- the dialect is wrong"
-    return field, (when_ran if ran else when_blocked), reading
+    if event == contract.STOP:
+        reading = "the agent was made to continue" if blocked else "the agent finished"
+    else:
+        reading = "action did not run" if blocked else "action ran"
+    if trial == "allow" and blocked:
+        reading = "BROKEN: a permissive answer was treated as a refusal -- the dialect is wrong"
+    return field, (when_blocked if blocked else when_ran), reading
 
 
-def run_trial(agent, trial, *, driver="reference", keep=False, timeout=None):
+def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep=False, timeout=None):
     """One trial, start to finish, in a workspace created and destroyed here."""
+    if event not in EVENTS:
+        raise ValueError("cannot gate at %r (have: %s)" % (event, ", ".join(EVENTS)))
     adapter = adapters.get(agent)
     workspace = tempfile.mkdtemp(prefix="agentseam-exp-%s-%s-" % (agent, trial))
     record_dir = os.path.join(workspace, ".record")
@@ -124,12 +161,13 @@ def run_trial(agent, trial, *, driver="reference", keep=False, timeout=None):
                 )
             )
         os.chmod(probe_path, 0o755)  # noqa: S103 - scratch dir, removed at the end of this call
-        config_path = _write_config(adapter, workspace, "%s %s" % (json.dumps(sys.executable), json.dumps(probe_path)))
+        probe_command = "%s %s" % (json.dumps(sys.executable), json.dumps(probe_path))
+        config_path = _write_config(adapter, workspace, probe_command, event)
 
         undocumented = None
         if driver == "reference":
             try:
-                outcome = reference_agent.run_pre_tool(config_path, command=TRIGGER, cwd=workspace, timeout=timeout)
+                outcome = reference_agent.run_turn(config_path, command=TRIGGER, cwd=workspace, timeout=timeout)
             except reference_agent.Undocumented as exc:
                 # The reference refuses to invent behaviour the protocol does not specify.
                 # That refusal IS the measurement: the vendor's documentation is silent
@@ -143,10 +181,11 @@ def run_trial(agent, trial, *, driver="reference", keep=False, timeout=None):
         if undocumented is not None:
             field, value, reading = "documented", False, "protocol is silent: %s" % undocumented
         else:
-            field, value, reading = _classify(trial, observed, bool(invocations))
+            field, value, reading = _classify(trial, event, observed, bool(invocations))
         return {
             "agent": agent,
             "trial": trial,
+            "event": event,
             "driver": driver,
             "measured": {field: value},
             "reading": reading,
@@ -175,75 +214,6 @@ def _drive_real(command, workspace):
     return {"returncode": proc.returncode, "stdout": proc.stdout[-2000:], "stderr": proc.stderr[-2000:]}
 
 
-#: Measured field -> the matrix key it corresponds to. Fields absent here are observations
-#: the matrix has no cell for yet (`silence_means`, `unknown_verb_means`) -- which is
-#: itself worth surfacing: they are behaviours agentseam relies on but does not record.
-_ASSERTED_KEY = {"block": "block", "fail_mode": "fail_mode", "transform": "transform"}
-
-
-def diff_against_matrix(results, event=contract.PRE_TOOL):
-    """Measured vs asserted, per field. The point of the whole exercise.
-
-    Agreement is not the interesting outcome -- it just means the row was right. A
-    disagreement means either the matrix overclaims (a policy that silently fails) or
-    underclaims (a capability being left on the table).
-    """
-    from agentseam import matrix
-
-    cell = matrix.capability(results[0]["agent"], event)
-    rows = []
-    for r in results:
-        (field, measured), = r["measured"].items()
-        key = _ASSERTED_KEY.get(field)
-        claimed = cell.get(key) if key else None
-        rows.append(
-            {
-                "trial": r["trial"],
-                "field": field,
-                "measured": measured,
-                "asserted": claimed,
-                "status": (
-                    "unrecorded"
-                    if key is None
-                    else "agrees"
-                    if claimed == measured
-                    else "DISAGREES"
-                ),
-            }
-        )
-    return rows
-
-
-def as_report(results, *, version=None, reporter=None, notes=None, today=None):
-    """A submittable evidence report from a set of trial results.
-
-    The basis is derived from the driver, never chosen by the caller: a run against the
-    reference is documentation and says so. evidence_report.validate() enforces the same
-    rule independently, so a hand-edited report cannot claim more than it earned.
-    """
-    from datetime import date
-
-    from agentseam import evidence_report
-
-    driver = results[0]["driver"]
-    measured = {}
-    for r in results:
-        measured.update(r["measured"])
-    report = {
-        "report_version": evidence_report.REPORT_VERSION,
-        "agent": results[0]["agent"],
-        "basis": "vendor-docs" if driver == evidence_report.REFERENCE_DRIVER else "live-run-partial",
-        "date": (today or date.today()).isoformat(),
-        "driver": "reference" if driver == evidence_report.REFERENCE_DRIVER else "real-agent",
-        "experiments": measured,
-        "platform": sys.platform,
-    }
-    for key, value in (("version", version), ("reporter", reporter), ("notes", notes)):
-        if value:
-            report[key] = value
-    return evidence_report.validate(report)
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -251,6 +221,8 @@ def main(argv=None):
     run = sub.add_parser("run", help="run trials against an agent")
     run.add_argument("--agent", required=True)
     run.add_argument("--trial", action="append", help="repeatable; default is all")
+    run.add_argument("--event", default=contract.PRE_TOOL, choices=EVENTS,
+                     help="which gate to wire the probe at (default: pre_tool)")
     run.add_argument("--driver", default="reference", help="'reference', or a shell template containing {prompt}")
     run.add_argument("--keep", action="store_true", help="leave the scratch workspace for inspection")
     run.add_argument("--json", action="store_true")
@@ -265,28 +237,15 @@ def main(argv=None):
         return 0
 
     trials = args.trial or sorted(experiment_probe.BEHAVIOURS)
-    results = [run_trial(args.agent, t, driver=args.driver, keep=args.keep) for t in trials]
+    results = [run_trial(args.agent, t, event=args.event, driver=args.driver, keep=args.keep) for t in trials]
     if args.report:
-        print(json.dumps(as_report(results, version=args.agent_version, reporter=args.reporter), indent=2))
+        report = experiment_report.as_report(results, version=args.agent_version, reporter=args.reporter)
+        print(json.dumps(report, indent=2))
         return 0
     if args.json:
         print(json.dumps(results, indent=2))
         return 0
-    print("agent: %s   driver: %s\n" % (args.agent, args.driver))
-    print("%-10s %-20s %-14s %-14s %s" % ("trial", "field", "measured", "asserted", "status"))
-    disagreements = 0
-    for r, d in zip(results, diff_against_matrix(results)):
-        disagreements += d["status"] == "DISAGREES"
-        print(
-            "%-10s %-20s %-14s %-14s %s"
-            % (r["trial"], d["field"], str(d["measured"]), str(d["asserted"]), d["status"])
-        )
-    print()
-    for r in results:
-        print("  %-10s %s" % (r["trial"], r["reading"]))
-    if disagreements:
-        print("\n%d disagreement(s): the matrix and this agent do not match." % disagreements)
-    return 0
+    return experiment_report.render(results, agent=args.agent, event=args.event, driver=args.driver)
 
 
 if __name__ == "__main__":

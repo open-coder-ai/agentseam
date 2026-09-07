@@ -26,6 +26,7 @@ sys.path.insert(0, TOOLS)
 
 import experiment  # noqa: E402
 import experiment_probe  # noqa: E402
+import experiment_report  # noqa: E402
 import reference_agent  # noqa: E402
 
 AGENT = "claude_code"
@@ -65,8 +66,8 @@ def test_deny_blocks_and_crash_falls_open(results):
 
 def test_transform_replaces_the_input(results):
     assert results["transform"]["measured"] == {"transform": True}
-    assert results["transform"]["observed"]["sentinel_alt"] is True
-    assert results["transform"]["observed"]["sentinel"] is False
+    assert results["transform"]["observed"]["alt_runs"] == 1
+    assert results["transform"]["observed"]["runs"] == 0
 
 
 def test_unknown_verb_is_reported_as_undocumented(results):
@@ -79,7 +80,7 @@ def test_timeout_trial_is_measurable_with_a_short_cap():
     """The real sleep outlasts any vendor timeout, so the cap is what makes this testable."""
     r = experiment.run_trial(AGENT, "timeout", timeout=1)
     assert r["measured"] == {"timeout_fail_mode": "open"}
-    assert r["outcome"]["hook_timed_out"] is True
+    assert r["outcome"]["gates"]["PreToolUse"]["timed_out"] is True
 
 
 def test_workspaces_are_removed(results):
@@ -118,18 +119,18 @@ def test_the_probe_answers_in_the_adapters_own_dialect():
 
 def test_harness_can_report_disagreement(results):
     """Falsifiability: a device that can only agree with the matrix is decoration."""
-    rows = experiment.diff_against_matrix([results["deny"]])
+    rows = experiment_report.diff_against_matrix([results["deny"]])
     assert rows[0]["status"] == "agrees"
 
     lying = dict(results["deny"], measured={"block": False})
-    rows = experiment.diff_against_matrix([lying])
+    rows = experiment_report.diff_against_matrix([lying])
     assert rows[0]["status"] == "DISAGREES"
     assert rows[0]["asserted"] is True
 
 
 def test_fields_with_no_matrix_cell_are_flagged_unrecorded(results):
     """`silence_means` is behaviour agentseam relies on and the matrix does not record."""
-    rows = experiment.diff_against_matrix([results["silence"]])
+    rows = experiment_report.diff_against_matrix([results["silence"]])
     assert rows[0]["status"] == "unrecorded"
 
 
@@ -141,4 +142,107 @@ def test_reference_agent_refuses_to_guess():
         stderr = ""
 
     with pytest.raises(reference_agent.Undocumented):
-        reference_agent._interpret_claude_code(_Proc())
+        reference_agent._interpret(_Proc(), "G2")
+
+
+# --- the two grammars -------------------------------------------------------------
+#
+# PreToolUse reads hookSpecificOutput.permissionDecision; Stop and UserPromptSubmit do
+# not. That was established by a live run recorded in this repository's own evidence for
+# claude_code, after the hooks reference proved ambiguous. These tests exist so the
+# finding cannot be lost again -- an adapter that emits the G2 shape at a G1 gate looks
+# exactly like one that is working.
+
+
+class _Reply:
+    def __init__(self, stdout="", returncode=0, stderr=""):
+        self.stdout, self.returncode, self.stderr = stdout, returncode, stderr
+
+
+_PERMISSION_DENY = json.dumps(
+    {"hookSpecificOutput": {"hookEventName": "Stop", "permissionDecision": "deny", "permissionDecisionReason": "no"}}
+)
+_G1_DENY = json.dumps({"decision": "block", "reason": "no"})
+
+
+def test_g1_gates_ignore_permission_decision():
+    """The silent-allow that makes a wrong dialect indistinguishable from a working one."""
+    decision, reason, _ = reference_agent._interpret(_Reply(_PERMISSION_DENY), "G1")
+    assert decision == reference_agent.ALLOW
+    assert "not read here" in reason
+
+
+def test_g2_gates_honour_permission_decision():
+    decision, _, _ = reference_agent._interpret(_Reply(_PERMISSION_DENY), "G2")
+    assert decision == reference_agent.DENY
+
+
+def test_g1_gates_honour_the_block_form():
+    for grammar in ("G1", "G2"):
+        decision, _, _ = reference_agent._interpret(_Reply(_G1_DENY), grammar)
+        assert decision == reference_agent.DENY, grammar
+
+
+def test_exit_two_blocks_under_either_grammar():
+    for grammar in ("G1", "G2"):
+        decision, _, _ = reference_agent._interpret(_Reply(returncode=2, stderr="nope"), grammar)
+        assert decision == reference_agent.DENY, grammar
+
+
+def test_the_adapter_speaks_the_right_dialect_at_every_gate():
+    """If this fails, agentseam is emitting a shape the gate does not read."""
+    from agentseam import adapters
+    from agentseam import contract as ct
+
+    adapter = adapters.get(AGENT)
+    for wire, extra in (
+        ("PreToolUse", {"tool_name": "Bash", "tool_input": {"command": "x"}}),
+        ("UserPromptSubmit", {"prompt": "x"}),
+        ("Stop", {"stop_hook_active": False}),
+    ):
+        raw = {"session_id": "s", "cwd": ".", "hook_event_name": wire}
+        raw.update(extra)
+        text, _ = adapter.respond(ct.Decision.deny("nope"), adapter.parse(raw))
+        decision, _, _ = reference_agent._interpret(_Reply(text), reference_agent.GRAMMARS[wire])
+        assert decision == reference_agent.DENY, "%s: deny was not honoured (emitted %s)" % (wire, text)
+
+
+# --- gating at each event ---------------------------------------------------------
+
+
+@pytest.mark.parametrize("event", experiment.EVENTS)
+def test_deny_is_measurable_at_every_gate(event):
+    r = experiment.run_trial(AGENT, "deny", event=event)
+    assert r["measured"] == {"block": True}, "%s: %s" % (event, r["reading"])
+    assert r["hook_invocations"] >= 1
+
+
+@pytest.mark.parametrize("event", experiment.EVENTS)
+def test_allow_never_blocks_at_any_gate(event):
+    r = experiment.run_trial(AGENT, "allow", event=event)
+    assert r["measured"] == {"baseline_ok": True}, "%s: %s" % (event, r["reading"])
+
+
+def test_blocking_stop_shows_up_as_continuation_not_absence():
+    """A Stop block has the opposite shape: the action happens MORE, not less."""
+    r = experiment.run_trial(AGENT, "deny", event="stop")
+    assert r["observed"]["runs"] > 1
+    assert "made to continue" in r["reading"]
+
+
+def test_blocking_the_prompt_gate_stops_the_tool_gate_being_reached():
+    """Gate order is part of what an experiment measures."""
+    r = experiment.run_trial(AGENT, "deny", event="prompt_submit", keep=True)
+    try:
+        assert r["observed"]["runs"] == 0
+        assert r["outcome"]["gates"]["UserPromptSubmit"]["decision"] == "deny"
+        assert "PreToolUse" not in r["outcome"]["gates"]
+    finally:
+        import shutil
+
+        shutil.rmtree(r["workspace"], ignore_errors=True)
+
+
+def test_an_unknown_event_is_refused_rather_than_silently_gating_nothing():
+    with pytest.raises(ValueError, match="cannot gate at"):
+        experiment.run_trial(AGENT, "deny", event="session_start")
