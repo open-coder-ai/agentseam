@@ -94,6 +94,48 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   claim, so each was already at or below its new, lower ceiling. Full list in PR body.
 
 ### Fixed
+- **Devin's degraded-rewrite note no longer describes a tool call at events that have
+  none** (`data/vendors/devin.json`; vendor-truth review finding `raw[5].findings[8]`). A
+  rewrite the dispatcher degraded at `UserPromptSubmit` or `Stop` was refused with
+  "Devin cannot modify a tool call" -- pointing an operator debugging why prompt
+  sanitisation blocks instead of rewriting at tool plumbing that was never involved. The
+  note is now the engine's template form and names the vendor event it could not modify,
+  matching Cursor's per-gate phrasing. Four bytes of frozen wire output move
+  (`tests/fixtures/golden/devin.json`: rewrite and rewrite-without-input at prompt_submit
+  and stop); `PreToolUse` and `PermissionRequest` output is unchanged.
+- **A Kimi Code payload naming an event Kimi has not mapped yet now reaches the caller**
+  (`adapters/_payload.py`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[8].findings[6]`). `claims()` required the event name to already be in `events`, so a
+  payload that had positively self-identified as Kimi (`client_type: kimi_code_cli`) while
+  naming a new or unmapped vendor event was claimed by no adapter at all: `handle()`
+  returned `event=None` ("unrecognized payload") instead of the UNKNOWN `Event` the
+  contract documents as the whole point of that pathway ("New vendor events appear without
+  warning; being told is the only safe outcome"). Vendor drift on Kimi was therefore
+  invisible to a caller logging UNKNOWN events. A new opt-in `claims.accept_any_name` is
+  set on the one entry whose `client_types` cannot be null; a payload with no `client_type`
+  is still not claimed, and the decision itself is unchanged (an UNKNOWN event allows).
+- **A Kimi Code `PermissionRequest` is no longer claimed by Devin as well, leaving the
+  payload unidentified** (`adapters/_payload.py`, `data/vendors/devin.json`; vendor-truth
+  review finding `raw[8].findings[8]`). Devin's `accept_names` claimed `PermissionRequest`
+  and `PostCompaction` before any marker check, on the ground that Claude Code never sends
+  those names -- but Kimi Code does send `PermissionRequest`, so a real Kimi payload was
+  claimed by two adapters, `detect()` returned `None`, and `handle()` allowed it with no
+  `Event` at all: not even the observation value survived. Reproduced by execution before
+  the fix. A new `claims.reject_client_types` key is checked ahead of `accept_names`, so
+  the CHANGELOG's own recorded rule -- a positive self-identification beats a shared event
+  name -- now holds for the one recorded collision. Devin's own `PermissionRequest`, which
+  carries no `client_type`, is claimed exactly as before.
+- **`PostCompact` no longer masquerades as canonical `pre_compact` on Grok and Kimi Code**
+  (`data/vendors/grok.json`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[14].findings[12]`). Both entries mapped the vendor's
+  post-compaction event onto `pre_compact` alongside their real `PreCompact`, so a handler
+  written to snapshot context *before* compaction discards it also fired *after* it had
+  already happened, with no way to tell the two moments apart except by reading
+  `event.raw`. Devin's identical defect was closed this way in PR #43; the same
+  `"unknown"` treatment Kimi's four aliases got in PR #59 is used here, so `claims()`
+  still identifies the payload and only the relabelling stops. `REVERSE_EVENT_MAP` and
+  therefore what `install` writes are unchanged -- `wire_events` already pinned
+  `pre_compact` to `PreCompact` on both.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back

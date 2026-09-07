@@ -74,3 +74,17 @@ def test_hook_config_uses_claude_codes_shape_in_groks_own_file():
 def test_project_hooks_are_recorded_as_needing_trust():
     """A written config is not a running one: Grok gates project hooks behind /hooks-trust."""
     assert A.adapters.get("grok").NEEDS_TRUST is True
+
+
+def test_post_compact_is_not_bent_into_pre_compact():
+    """PostCompact fires AFTER compaction; a pre_compact policy exists to run BEFORE it."""
+    mod = A.adapters.get("grok")
+    assert mod.parse({"hookEventName": "PostCompact", "sessionId": "s"}).event == A.UNKNOWN
+    assert mod.parse({"hookEventName": "PreCompact", "sessionId": "s"}).event == A.PRE_COMPACT
+    assert mod.REVERSE_EVENT_MAP[A.PRE_COMPACT] == "PreCompact"
+
+
+def test_a_post_compact_payload_is_still_claimed_so_the_moment_is_not_lost():
+    """Unmapping relabels the event; it must not blind a caller to the payload."""
+    mod = A.adapters.get("grok")
+    assert mod.claims({"hookEventName": "PostCompact", "sessionId": "s"})

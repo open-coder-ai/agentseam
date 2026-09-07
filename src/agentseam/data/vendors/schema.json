@@ -305,10 +305,18 @@
           "$ref": "#/$defs/stringList",
           "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PermissionRequest/PostCompaction)."
         },
+        "accept_any_name": {
+          "type": "boolean",
+          "description": "claim an event name absent from `events` once the payload has positively self-identified, so vendor drift reaches the caller as an UNKNOWN Event rather than as no adapter at all. Valid only where `client_types` cannot be null; pinned by tests/test_adapter_kimi_code.py."
+        },
         "accept_when_all": {
           "type": "object",
           "additionalProperties": {"$ref": "#/$defs/stringList"},
           "description": "vendor event name -> keys that must ALL be present for that event to be claimed when no accept_marker is (codex_cli's SessionStart compound check)."
+        },
+        "reject_client_types": {
+          "$ref": "#/$defs/stringList",
+          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name (devin's PermissionRequest, which kimi_code also sends)."
         },
         "reject_markers": {"$ref": "#/$defs/stringList"},
         "reject_markers_unless_probe": {

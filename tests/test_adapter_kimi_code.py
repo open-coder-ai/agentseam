@@ -131,3 +131,29 @@ def test_kimi_blocks_but_fails_open_and_the_notes_say_not_to_rely_on_it():
     assert not A.can_rewrite("kimi_code", A.PRE_TOOL)
     assert A.enforcement_level("kimi_code", A.PRE_TOOL) == "best-effort"
     assert "not a sole security barrier" in A.MATRIX["kimi_code"]["notes"]
+
+
+def test_post_compact_is_not_bent_into_pre_compact():
+    """PostCompact fires AFTER compaction; a pre_compact policy exists to run BEFORE it."""
+    mod = A.adapters.get("kimi_code")
+    post = {"hook_event_name": "PostCompact", "client_type": "kimi_code_cli"}
+    assert mod.parse(post).event == A.UNKNOWN
+    assert mod.parse({"hook_event_name": "PreCompact", "client_type": "kimi_code_cli"}).event == A.PRE_COMPACT
+    assert mod.REVERSE_EVENT_MAP[A.PRE_COMPACT] == "PreCompact"
+    assert mod.claims(post), "unmapping must not blind a caller to the payload"
+
+
+def test_an_unmapped_event_from_a_self_identified_payload_is_still_kimi():
+    """client_type is Kimi's whole detection, so a name it has not mapped yet is Kimi's too:"""
+    novel = {"client_type": "kimi_code_cli", "hook_event_name": "TurnStarted"}
+    mod = A.adapters.get("kimi_code")
+    assert mod.claims(novel) and mod.parse(novel).event == A.UNKNOWN
+    _, code, event, _ = A.handle(novel, lambda _e: Decision.deny("x"))
+    assert (event.agent, event.event, code) == ("kimi_code", A.UNKNOWN, 0)
+
+
+def test_accept_any_name_rests_on_client_type_never_being_absent():
+    """The opt-in is safe only because a payload without client_type is not claimed at all."""
+    claims = A.adapters.get("kimi_code").CONFIG["claims"]
+    assert claims["accept_any_name"] and None not in claims["client_types"]
+    assert not A.adapters.get("kimi_code").claims({"hook_event_name": "TurnStarted"})
