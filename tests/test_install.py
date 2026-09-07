@@ -118,13 +118,16 @@ def test_cursor_install_writes_the_generic_gate_with_fail_closed(tmp_path):
     assert I.uninstall("cursor", root) is True
 
 
-def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkeypatch):
-    """`~/...` means the user's home, not a directory literally named `~` in the repo."""
-    monkeypatch.setenv("HOME", str(tmp_path))
+def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, isolated_home):
+    """`~/...` means the user's home, not a directory literally named `~` in the repo.
+
+    Home comes from the `isolated_home` fixture, not a local `setenv("HOME")`: only
+    posixpath reads HOME, so setting it by hand pointed this assertion at a directory
+    Windows never expands to."""
     written = I.install("junie", ["pre_tool"], "guard.py", str(tmp_path))
 
     assert not (tmp_path / "~").exists(), "created a directory literally named ~"
-    assert Path(written) == tmp_path / ".junie" / "config.json"
+    assert Path(written) == isolated_home / ".junie" / "config.json"
     assert I.installed("junie", str(tmp_path))
 
 
