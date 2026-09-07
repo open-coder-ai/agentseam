@@ -115,11 +115,12 @@ def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_pat
     assert I.installed("kimi_code", str(tmp_path)) is False
 
 
-def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path, monkeypatch):
-    monkeypatch.setenv("HOME", str(tmp_path))
+def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path, isolated_home):
+    """Home is the fixture's, not a local setenv("HOME"): the file both installs actually
+    wrote lives under the home expanduser resolves, which on Windows is never HOME."""
     I.install("kimi_code", ["pre_tool"], "first.py", str(tmp_path))
     I.install("kimi_code", ["pre_tool"], "second.py", str(tmp_path))
-    text = (Path(tmp_path) / ".kimi-code" / "config.toml").read_text()
+    text = (isolated_home / ".kimi-code" / "config.toml").read_text()
     assert text.count(I.BEGIN) == 1
     assert "second.py" in text and "first.py" not in text
 
