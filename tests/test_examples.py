@@ -25,12 +25,18 @@ def generated():
     return build()
 
 
+def _committed(name):
+    """utf-8, not the platform default: these pages carry em dashes, and reading them under
+    cp1252 mangles every one -- which reported all twelve pages as stale on Windows."""
+    return open(os.path.join(OUT, name), encoding="utf-8").read()
+
+
 def test_committed_pages_match_what_the_library_produces(generated):
     """An example nobody regenerates is a claim nobody checks."""
     stale = [
         name
         for name, body in sorted(generated.items())
-        if (open(os.path.join(OUT, name)).read() if os.path.exists(os.path.join(OUT, name)) else None) != body
+        if (_committed(name) if os.path.exists(os.path.join(OUT, name)) else None) != body
     ]
     assert not stale, "stale examples, run `python3 examples/generate.py`: %s" % ", ".join(stale)
 

@@ -96,10 +96,13 @@ def test_a_command_with_quotes_survives_the_toml_round_trip():
     assert 'command = "sh -c \\"echo hi\\""' in toml
 
 
-def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_path, monkeypatch):
-    """config.toml is the user's whole CLI configuration, not a hooks file."""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    config = Path(tmp_path) / ".kimi-code" / "config.toml"
+def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_path, isolated_home):
+    """config.toml is the user's whole CLI configuration, not a hooks file.
+
+    Home comes from the `isolated_home` fixture: kimi_code's config is user-scoped, and a
+    local setenv("HOME") is read by posixpath only, so the seeded file sat where no install
+    would look and the "left untouched" assertion was reading an untouched file."""
+    config = isolated_home / ".kimi-code" / "config.toml"
     config.parent.mkdir(parents=True)
     original = '[model]\nname = "kimi-k2"\n\n[[hooks]]\nevent = "Stop"\ncommand = "mine.sh"\n'
     config.write_text(original)
@@ -114,11 +117,12 @@ def test_install_appends_a_block_and_leaves_the_users_settings_untouched(tmp_pat
     assert I.installed("kimi_code", str(tmp_path)) is False
 
 
-def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path, monkeypatch):
-    monkeypatch.setenv("HOME", str(tmp_path))
+def test_reinstalling_replaces_our_block_rather_than_stacking_them(tmp_path, isolated_home):
+    """Home is the fixture's, not a local setenv("HOME"): the file both installs actually
+    wrote lives under the home expanduser resolves, which on Windows is never HOME."""
     I.install("kimi_code", ["pre_tool"], "first.py", str(tmp_path))
     I.install("kimi_code", ["pre_tool"], "second.py", str(tmp_path))
-    text = (Path(tmp_path) / ".kimi-code" / "config.toml").read_text()
+    text = (isolated_home / ".kimi-code" / "config.toml").read_text()
     assert text.count(I.BEGIN) == 1
     assert "second.py" in text and "first.py" not in text
 

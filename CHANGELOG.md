@@ -182,6 +182,30 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   other C0 control and U+007F, and the rendered block is pinned by a round-trip through
   `tomllib`. No output moves for any command that was already control-character free, which
   is every committed example and fixture.
+- **Seven tests that could not pass on Windows, each resting on a POSIX assumption.** All
+  seven fail on a clean checkout; none was skipped or deleted.
+  - Five (`test_install.py` x3, `test_adapter_kimi_code.py` x2) set `HOME` by hand and then
+    asserted against a path derived from it. Only `posixpath.expanduser` reads `HOME`;
+    `ntpath` reads `USERPROFILE`, then `HOMEDRIVE` + `HOMEPATH`. `conftest.py`'s autouse
+    `isolated_home` fixture already sets all four and says so in its own docstring -- the
+    tests now take it as a parameter instead of re-deriving home from one variable.
+  - `test_examples.py` compared committed pages against freshly built ones with a bare
+    `open()`. The pages carry em dashes, so under cp1252 every one of the twelve read back
+    mangled and reported stale, with no way to make it pass: regenerating wrote the same
+    bytes it had just failed to read. Both readers now say `encoding="utf-8"` -- the
+    test's, and `examples/generate.py`'s `--check` path, which the pre-commit hook and the
+    `examples` CI job run and which had the identical latent bug. The writer says
+    `encoding="utf-8", newline="
+"`, so a regeneration on Windows is byte-identical to one
+    on the CI runner instead of rewriting all thirteen pages with CRLF.
+  - `test_git_hooks.py::test_hook_is_executable` read `st_mode & 0o111` from the working
+    tree. Windows has no POSIX execute bit, so that is 0 for every file -- including one git
+    records as `100755` and checks out executable elsewhere. It now asserts on the mode git
+    records, which is what travels with a clone and what decides whether the hook runs.
+  - Found while fixing those: `test_a_query_never_raises_on_an_undecodable_toml_config`
+    carried the same `HOME` assumption but *passed* on Windows, because `installed()`
+    returned `False` for a file that was not on the path it reads. It asserted its own
+    setup rather than the TOML branch it names. Same fix.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back
