@@ -40,6 +40,19 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **A control character in the installed command no longer makes Kimi Code's whole
+  `config.toml` unloadable** (`adapters/_hook_entry.py`; vendor-truth review finding
+  `raw[8].findings[4]`). `_toml_value` escaped only backslash and double quote, so a command
+  or matcher carrying a newline (a multi-line shell wrapper, an awkward path) ended the TOML
+  line and spilled the rest into the `[[hooks]]` table as extra bare keys -- against a vendor
+  rule this repository records itself: "four fields only; a fifth makes the whole file fail
+  to load". Reproduced by execution: the rendered block does not parse, and neither does a
+  user's own `[model]` section above it. The failure mode is total and silent -- every hook,
+  ours and the user's, stops firing on a vendor that fails open. `_toml_value` now emits the
+  full TOML basic-string escape set (`\b \t \n \f \r \" \\`) with `\uXXXX` for every
+  other C0 control and U+007F, and the rendered block is pinned by a round-trip through
+  `tomllib`. No output moves for any command that was already control-character free, which
+  is every committed example and fixture.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back

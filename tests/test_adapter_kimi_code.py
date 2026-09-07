@@ -4,6 +4,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from payloads import KM_NOTIFY, KM_POST, KM_SHELL, KM_WRITE  # noqa: E402
@@ -131,3 +133,28 @@ def test_kimi_blocks_but_fails_open_and_the_notes_say_not_to_rely_on_it():
     assert not A.can_rewrite("kimi_code", A.PRE_TOOL)
     assert A.enforcement_level("kimi_code", A.PRE_TOOL) == "best-effort"
     assert "not a sole security barrier" in A.MATRIX["kimi_code"]["notes"]
+
+
+#: A command a shell wrapper or an awkward path could carry: quote, newline, CR, tab, and a
+#: bare C0 control. The newline is the one that matters -- it ends the TOML line, so the rest
+#: lands as extra bare keys in a table the vendor documents as taking four fields only.
+_HOSTILE_COMMAND = 'py -c "x"\nevil = 1\ttab\rcr\x01ctl'
+
+
+def test_a_control_character_in_the_command_still_renders_one_key_per_line():
+    """Kimi rejects the WHOLE config.toml over one bad entry, so an unescaped newline does"""
+    mod = A.adapters.get("kimi_code")
+    rules = mod.hook_config([A.PRE_TOOL], _HOSTILE_COMMAND, matcher="Bash")
+    block = mod.render_config(rules).strip()
+    assert len(block.splitlines()) == 1 + len(rules[0]), block
+    assert not [ch for ch in block.replace("\n", "") if ch < " "], block
+
+
+@pytest.mark.skipif(sys.version_info < (3, 11), reason="tomllib arrived in 3.11")
+def test_the_rendered_block_parses_back_to_the_rules_it_was_given():
+    """The derivation: a real TOML parser must return exactly what hook_config produced."""
+    import tomllib
+
+    mod = A.adapters.get("kimi_code")
+    rules = mod.hook_config([A.PRE_TOOL, A.STOP], _HOSTILE_COMMAND, matcher="Bash|Edit")
+    assert tomllib.loads(mod.render_config(rules))["hooks"] == list(rules)
