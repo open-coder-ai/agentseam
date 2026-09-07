@@ -63,7 +63,9 @@ def as_report(results, *, version=None, reporter=None, notes=None, today=None):
 
     The basis is derived from the driver, never chosen by the caller: a run against the
     reference is documentation and says so. evidence_report.validate() enforces the same
-    rule independently, so a hand-edited report cannot claim more than it earned.
+    rule independently, so a hand-edited report cannot claim more than it earned. `event`
+    is likewise read off the trials rather than passed in, so a report says which gate it
+    measured and cannot be merged into a claim about a different one by accident.
     """
     driver = results[0]["driver"]
     measured = {}
@@ -77,6 +79,7 @@ def as_report(results, *, version=None, reporter=None, notes=None, today=None):
         "driver": "reference" if driver == evidence_report.REFERENCE_DRIVER else "real-agent",
         "experiments": measured,
         "platform": sys.platform,
+        "event": results[0]["event"],
     }
     for key, value in (("version", version), ("reporter", reporter), ("notes", notes)):
         if value:

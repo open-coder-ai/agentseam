@@ -54,6 +54,15 @@ body:
       placeholder: Windows 11 / macOS 15 / Ubuntu 24.04
     validations:
       required: true
+  - type: input
+    id: event
+    attributes:
+      label: Gate
+      description: >
+        Which canonical event this report measured (prompt_submit, pre_tool, stop, ...).
+        Matches `--report`'s own `event` field when you used `tools/experiment.py`; leave
+        blank for a `capture.py` payload-shape report, which is not scoped to one gate.
+      placeholder: pre_tool
   - type: textarea
     id: report
     attributes:

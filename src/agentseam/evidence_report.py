@@ -23,6 +23,7 @@ documentation guesses into twelve apparent measurements.
 
 from __future__ import annotations
 
+from .contract import EVENTS
 from .matrix_terms import BASES, BASIS_DOCS, BASIS_LIVE, BASIS_LIVE_PARTIAL
 
 #: Current report format. Bumped when a required field changes, so an old submission is
@@ -44,6 +45,7 @@ OPTIONAL = (
     "run_url",
     "notes",
     "tool_version",
+    "event",
 )
 
 #: The driver name the harness uses for its credential-free documentation simulator.
@@ -109,6 +111,9 @@ def validate(report):
             "watched cannot be checked for drift later." % report["basis"]
         )
 
+    if report.get("event") is not None and report["event"] not in EVENTS:
+        raise InvalidReportError("event %r is not one of: %s" % (report["event"], ", ".join(EVENTS)))
+
     if not str(report["date"]).count("-") == 2:  # noqa: PLR2004
         raise InvalidReportError("date must be YYYY-MM-DD, got %r" % (report["date"],))
 
@@ -128,7 +133,7 @@ def to_evidence(report):
         "version": report.get("version") or "unrecorded",
         "method": report.get("notes") or "submitted evidence report",
     }
-    for key in ("observed", "experiments", "reporter", "run_url"):
+    for key in ("observed", "experiments", "reporter", "run_url", "event"):
         if report.get(key):
             entry[key] = report[key]
     return entry
