@@ -19,7 +19,9 @@ which is a finding worth having rather than one to design away.
 Each trial writes one JSON line to `<record_dir>/invocations.jsonl` before it answers, so
 "the hook never fired" is distinguishable from "the hook fired and allowed" -- the
 difference between an agent with no enforcement point and one whose enforcement point
-said yes.
+said yes. At the Stop gate the line count is the measurement itself, because a refused
+agent goes round again and the hook fires again; the line carries the *value* of
+`stop_hook_active` so a re-fire is attributable to the block rather than merely counted.
 """
 
 from __future__ import annotations
@@ -68,6 +70,9 @@ try:
             "keys": sorted(payload) if isinstance(payload, dict) else None,
             "parsed": payload is not None,
             "bytes": len(raw),
+            # The value, not just the key: at Stop this is how the agent says "you
+            # already refused me once", which is what makes a re-fire attributable.
+            "stop_hook_active": payload.get("stop_hook_active") if isinstance(payload, dict) else None,
         }) + "\\n")
 except Exception:
     pass

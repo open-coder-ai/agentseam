@@ -10,10 +10,10 @@ Each trial is one scripted gate around one harmless command in a throwaway direc
 command appends to a sentinel file; how many times it did so is the measurement. No
 dialect parsing, no log scraping, no ambiguity.
 
-Counting rather than checking existence is what lets the same observable work at all three
-gates. A block at prompt_submit or pre_tool means the action never happened; a block at
-stop means the opposite shape -- the agent was refused permission to finish, went round
-again, and the action happened twice.
+The observable differs by gate, and that difference is the measurement. At prompt_submit
+and pre_tool a block means the action never happened, so the sentinel count is the answer.
+At stop the agent has already acted, so a refusal cannot un-run anything: it sends the
+agent round again, and the hook fires a second time. The re-fire is what is counted there.
 
     python3 tools/experiment.py list
     python3 tools/experiment.py run --agent claude_code
@@ -53,9 +53,10 @@ from agentseam.matrix_terms import FAIL_CLOSED, FAIL_OPEN  # noqa: E402
 
 SENTINEL = "ACTION_RAN"
 SENTINEL_ALT = "ACTION_RAN_TRANSFORMED"
-# Appending, not overwriting: a blocked Stop gate makes the agent come back round and act
-# again, so "how many times" carries information "whether" cannot. It is the only
-# observable that works at all three gates without parsing anyone's dialect.
+# Appending, not overwriting: where a driver does repeat its turn, "how many times" carries
+# information "whether" cannot, and neither needs anyone's dialect parsed. An agent refused
+# at Stop need not repeat work it has already done, so the count is a secondary signal
+# there -- see _blocked().
 TRIGGER = "echo ok >> %s" % SENTINEL
 TRIGGER_ALT = "echo ok >> %s" % SENTINEL_ALT
 
@@ -97,16 +98,22 @@ def _observe(workspace):
     return {"runs": _count(workspace, SENTINEL), "alt_runs": _count(workspace, SENTINEL_ALT)}
 
 
-def _blocked(event, observed):
+def _blocked(event, observed, invocations):
     """Whether the gate stopped what it gates -- which is a different fact per event.
 
-    At prompt_submit and pre_tool a block means the action never happened. At stop it means
-    the opposite shape: the agent was refused permission to finish, so it went round again
-    and the action happened *more* than once.
+    At prompt_submit and pre_tool a block means the action never happened. At stop it
+    cannot mean that: the agent has already acted, and a refusal to finish only sends it
+    round again. The observable there is the hook firing again.
+
+    Reading a second sentinel run instead only works for a driver that mechanically repeats
+    its whole turn. A real agent goes round, sees the work already done, and declines to
+    redo it: Claude Code 2.1.263 refused at Stop re-fired the hook nine times while the
+    sentinel stayed at one, and scored as unblocked. A repeat run stays a secondary signal,
+    because the reference driver does produce one.
     """
     runs = observed["runs"] + observed["alt_runs"]
     if event == contract.STOP:
-        return runs > 1
+        return invocations > 1 or runs > 1
     return runs == 0
 
 
@@ -118,18 +125,26 @@ def _invocations(record_dir):
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def _classify(trial, event, observed, invoked):
-    """What one trial measured, as a (field, value) pair plus a human reading."""
-    if not invoked:
+def _classify(trial, event, observed, invocations):
+    """What one trial measured, as a (field, value) pair plus a human reading.
+
+    `invocations` is a count, not a flag: at the stop gate how many times the hook fired is
+    itself the measurement (see _blocked), and zero still means it never fired at all.
+    """
+    if not invocations:
         return "hook_reached", False, "the hook never fired -- config path or format is wrong for this version"
     if trial == "transform":
         if observed["alt_runs"] and not observed["runs"]:
             return "transform", True, "the rewritten input is what ran"
         if observed["runs"] and not observed["alt_runs"]:
             return "transform", False, "the original input ran; the rewrite was ignored"
+        if not observed["runs"] and not observed["alt_runs"]:
+            # Not ambiguous: the rewrite was offered and nothing at all ran, which is a
+            # rewrite refused or degraded into a block. Only both-ran is undecidable.
+            return "transform", False, "nothing ran: the rewrite was refused or degraded to a block"
         return "transform", None, "ambiguous: %s" % observed
 
-    blocked = _blocked(event, observed)
+    blocked = _blocked(event, observed, invocations)
     field, when_ran, when_blocked = _MEANING[trial]
     if event == contract.STOP:
         reading = "the agent was made to continue" if blocked else "the agent finished"
@@ -192,7 +207,7 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
                 field, value = "documented", False
             reading = "protocol is silent: %s" % undocumented
         else:
-            field, value, reading = _classify(trial, event, observed, bool(invocations))
+            field, value, reading = _classify(trial, event, observed, len(invocations))
         return {
             "agent": agent,
             "trial": trial,
