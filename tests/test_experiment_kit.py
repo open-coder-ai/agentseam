@@ -135,10 +135,10 @@ def test_fields_with_no_matrix_home_are_flagged_unrecorded(results):
 
 
 def test_a_recognized_field_the_cell_does_not_carry_is_unasserted():
-    """`silence_means` is a real matrix field (task 3) -- absent from a cell, it is a claim
-    never made, not a disagreement. claude_code's `stop` cell has never measured it."""
+    """Absence is not a claim. Every gateable claude_code cell now carries `silence_means`,
+    so this reads it against `post_tool` -- a cell the kit cannot gate, and so never measures."""
     r = experiment.run_trial(AGENT, "silence", event="stop")
-    rows = experiment_report.diff_against_matrix([r], event="stop")
+    rows = experiment_report.diff_against_matrix([dict(r, event="post_tool")])
     assert rows[0]["field"] == "silence_means"
     assert rows[0]["status"] == "unasserted"
     assert rows[0]["asserted"] is None
