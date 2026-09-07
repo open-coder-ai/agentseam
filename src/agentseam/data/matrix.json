@@ -5,9 +5,9 @@
     "config": ".claude/settings.json",
     "verified": {
       "basis": "live-run",
-      "version": "2.1.247",
-      "date": "2026-08-28",
-      "method": "live headless run (2.1.245) for the payload shapes, plus a live response-contract experiment on Windows (2.1.247, 2026-08-28) for what each event actually READS: one candidate reply shape per trial, with the verdict taken from the agent's own behaviour rather than the hook's claim -- a marker file the trial prompt asked for at UserPromptSubmit, and the Stop hook re-firing with stop_hook_active at Stop. That run established {\"decision\": \"block\"} and exit 2 as honoured at both, and hookSpecificOutput.permissionDecision -- the shape this adapter had always emitted there -- as ignored at both. The official hooks reference could not settle it: two reads of the same page disagreed, and one said those events had no JSON decision control at all. pre_tool was checked in the same round and does honour permissionDecision, so the three blocking events this row claims are now each backed by an observation rather than by inference from the other two. Re-confirmed 2026-09-07 against real Claude Code CLI 2.1.263 (Linux): two identical runs of tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" at pre_tool agreed with block, fail_mode and rewrite here, and settled three behaviours this row had never measured -- silence, an unrecognised decision verb, and a stalled hook -- all three fail open.",
+      "version": "2.1.263",
+      "date": "2026-09-07",
+      "method": "live headless run (2.1.245) for the payload shapes, plus a live response-contract experiment on Windows (2.1.247, 2026-08-28) for what each event actually READS: one candidate reply shape per trial, with the verdict taken from the agent's own behaviour rather than the hook's claim -- a marker file the trial prompt asked for at UserPromptSubmit, and the Stop hook re-firing with stop_hook_active at Stop. That run established {\"decision\": \"block\"} and exit 2 as honoured at both, and hookSpecificOutput.permissionDecision -- the shape this adapter had always emitted there -- as ignored at both. The official hooks reference could not settle it: two reads of the same page disagreed, and one said those events had no JSON decision control at all. pre_tool was checked in the same round and does honour permissionDecision, so the three blocking events this row claims are now each backed by an observation rather than by inference from the other two. Re-confirmed 2026-09-07 against real Claude Code CLI 2.1.263 (Linux): two identical runs of tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" at pre_tool agreed with block, fail_mode and rewrite here, and settled three behaviours this row had never measured -- silence, an unrecognised decision verb, and a stalled hook -- all three fail open. The same driver at prompt_submit and stop on Windows (2.1.263, 2026-09-07) confirmed both cells' block, rewrite and fail_mode and settled the same three previously unmeasured behaviours there, and the headless Stop block is honoured: a top-level {\"decision\": \"block\"} at Stop refuses the agent permission to finish and sends it round again. Claude Code caps that continuation loop at eight re-fires -- nine Stop hook invocations in all, reproduced across two runs -- and then ends the turn regardless, so a Stop block re-prompts rather than halts.",
       "observed": [
         "pre_tool",
         "prompt_submit",
@@ -118,23 +118,44 @@
         "evidence": {
           "block": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
           },
           "rewrite": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
           },
           "fail_mode": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
+          },
+          "silence_means": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
+          },
+          "timeout_fail_mode": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
+          },
+          "unknown_verb_means": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event prompt_submit, run twice with identical results"
           }
-        }
+        },
+        "silence_means": "allow",
+        "timeout_fail_mode": "open",
+        "unknown_verb_means": "allow"
       },
       "session_start": {
         "block": false,
@@ -193,23 +214,44 @@
         "evidence": {
           "block": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
           },
           "rewrite": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
           },
           "fail_mode": {
             "basis": "live-run",
-            "date": "2026-08-28",
-            "version": "2.1.247",
-            "method": "row-level live-run: see this row's own verified.method for the full account."
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
+          },
+          "silence_means": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
+          },
+          "timeout_fail_mode": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
+          },
+          "unknown_verb_means": {
+            "basis": "live-run",
+            "date": "2026-09-07",
+            "version": "2.1.263",
+            "method": "real Claude Code CLI 2.1.263 (Windows) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\" --event stop, run twice with identical results"
           }
-        }
+        },
+        "silence_means": "allow",
+        "timeout_fail_mode": "open",
+        "unknown_verb_means": "allow"
       },
       "pre_compact": {
         "block": false,

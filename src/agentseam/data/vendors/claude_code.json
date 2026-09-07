@@ -41,32 +41,32 @@
   "evidence": {
     "claims": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
     },
     "config_path": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
     },
     "events": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
     },
     "family": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     },
     "fields": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_vendor_config.py::test_entries_match_recount"
     },
     "hook_entry": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
     "repo_root_token": {
@@ -76,12 +76,12 @@
     },
     "tools": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_vendor_config.py::test_entries_match_recount"
     },
     "verdicts": {
       "basis": "live-run",
-      "date": "2026-08-28",
+      "date": "2026-09-07",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     }
   },
