@@ -38,6 +38,14 @@ def test_matrix_renders():
     assert "claude_code" in out.stdout and "best-effort" in out.stdout
 
 
+def test_matrix_evidence_shows_the_recorded_version_beside_the_rows():
+    out = _run(["matrix", "--evidence"])
+    assert out.returncode == 0
+    line = next(row for row in out.stdout.splitlines() if row.startswith("claude_code "))
+    assert "2.1.247" in line  # the row's own verified.version
+    assert "2.1.263" in line  # the newest committed recording
+
+
 #: A portable `head -3`: read three lines, then exit and drop the read end of the pipe.
 #: Spawned rather than shelled out to because Windows has no `head`.
 _HEAD_3 = "import sys\nfor _ in range(3): sys.stdin.readline()\n"
