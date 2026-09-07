@@ -7,6 +7,27 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **`claude_code`'s `prompt_submit` and `stop` cells are now witnessed at 2.1.263**, the
+  way W53 did `pre_tool`. Both gates were re-run against the real CLI with the fixed
+  experiment kit (`--driver "claude -p {prompt} --permission-mode acceptEdits"`, twice per
+  gate, identical results) and every trial reads `agrees` or `unasserted`:
+  - `block`, `rewrite` and `fail_mode` on both cells carry per-claim records at
+    `live-run` / 2.1.263 / 2026-09-07, naming the driver.
+  - Both cells gain `silence_means: allow`, `timeout_fail_mode: open` and
+    `unknown_verb_means: allow`, each with its own record. All three blocking events this
+    row claims now assert the same six fields from the same witnessed round.
+  - With all three claimed events witnessed at one build, the row's own `verified.version`
+    moves to 2.1.263 and `verified.date` to 2026-09-07, and its narrative gains the two
+    facts the run established: the headless Stop block is honoured (a top-level
+    `{"decision": "block"}` refuses the agent permission to finish and sends it round
+    again), and Claude Code caps that continuation loop at eight re-fires -- nine Stop hook
+    invocations in all -- before ending the turn regardless.
+  - `tools/watch_versions.py --agent claude_code` now reads `fresh` for `pre_tool`,
+    `prompt_submit` and `stop`. The nine observation-only events keep their 2.1.247 records
+    and still read `drifted`: they were not re-run, and a row-level version bump is not
+    evidence for a cell nobody measured.
+  - `data/vendors/claude_code.json` and `examples/generated/claude_code.md` are regenerated
+    from the row, not hand-edited.
 - **Per-claim evidence on the capability matrix, and grading capped by basis** (owner
   decision 2026-09-01, org-plan plan/agentseam-project.md). Additive data shape:
   - Every asserted matrix cell field (`block`, `rewrite`, `fail_mode`) now carries its own
