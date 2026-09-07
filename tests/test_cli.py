@@ -1,11 +1,29 @@
 """CLI behaviour, including the unglamorous parts that make a tool usable."""
 
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ENV = {"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin:/usr/local/bin"}
+
+
+def home_env(path):
+    """Every variable `os.path.expanduser` might consult, pointed at `path`.
+
+    Setting only HOME is a POSIX-shaped assumption. `ntpath.expanduser` reads USERPROFILE,
+    then HOMEDRIVE+HOMEPATH, and never looks at HOME at all -- so on Windows, a test that
+    replaces the environment and sets only HOME leaves expanduser with nothing to expand.
+    It then returns "~" unchanged, and any agent whose config_path starts with "~" (kimi
+    code: `~/.kimi-code/config.toml`) gets a directory literally named `~` in the CWD.
+
+    The production expansion in install_config.resolve() is correct; it was the test's
+    environment that had no Windows home in it.
+    """
+    path = str(path)
+    drive, tail = os.path.splitdrive(path)
+    return {"HOME": path, "USERPROFILE": path, "HOMEDRIVE": drive, "HOMEPATH": tail or path}
 
 
 def _run(args, env=None, **kw):
@@ -20,13 +38,38 @@ def test_matrix_renders():
     assert "claude_code" in out.stdout and "best-effort" in out.stdout
 
 
+#: A portable `head -3`: read three lines, then exit and drop the read end of the pipe.
+#: Spawned rather than shelled out to because Windows has no `head`.
+_HEAD_3 = "import sys\nfor _ in range(3): sys.stdin.readline()\n"
+
+
 def test_matrix_survives_a_closed_pipe():
-    """`agentseam matrix | head -3` must exit cleanly, not traceback."""
-    proc = subprocess.run(
-        "%s -m agentseam.cli matrix | head -3" % sys.executable, shell=True, capture_output=True, text=True, env=ENV
+    """A reader that walks away mid-stream must not become a BrokenPipeError traceback.
+
+    Built as a real two-process pipeline rather than `| head -3` so it runs on Windows,
+    which has no `head` and no POSIX shell. The guarantee is unchanged: something reads
+    the first few lines and then closes the pipe while the CLI may still be writing.
+
+    Whether the CLI is *still* writing at that moment depends on the pipe buffer, so this
+    is a regression guard rather than a deterministic reproduction -- as it was before.
+    """
+    # The pipe is made here rather than by Popen so the producer has no `stdout` attribute for
+    # communicate() to read later: on Windows that reads a closed file from a thread and leaks
+    # an unhandled-thread-exception warning into the run.
+    read_end, write_end = os.pipe()
+    producer = subprocess.Popen(
+        [sys.executable, "-m", "agentseam.cli", "matrix"], stdout=write_end, stderr=subprocess.PIPE, env=ENV
     )
-    assert proc.returncode == 0
-    assert "BrokenPipeError" not in proc.stderr, proc.stderr
+    reader = subprocess.Popen([sys.executable, "-c", _HEAD_3], stdin=read_end, stdout=subprocess.DEVNULL, env=ENV)
+    # Only the children may hold the pipe, or it never breaks when the reader exits.
+    os.close(read_end)
+    os.close(write_end)
+    reader.wait(timeout=30)
+    _, err = producer.communicate(timeout=30)
+
+    stderr = err.decode("utf-8", "replace")
+    assert producer.returncode == 0, stderr
+    assert "BrokenPipeError" not in stderr, stderr
 
 
 def test_agents_and_json_matrix():
@@ -107,7 +150,8 @@ def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
             "--repo",
             str(tmp_path),
         ],
-        env={**ENV, "HOME": str(tmp_path)},
+        env={**ENV, **home_env(tmp_path)},
+        cwd=str(tmp_path),
     )
 
     assert out.returncode == 1, "a skipped agent must be visible to CI: %s" % out.stderr

@@ -25,9 +25,9 @@ def _python_files():
 def test_no_file_exceeds_line_budget():
     """300 lines. The remedy is splitting by activity, not raising the number."""
     violations = [
-        "%s (%d)" % (p.relative_to(ROOT), len(p.read_text().splitlines()))
+        "%s (%d)" % (p.relative_to(ROOT), len(p.read_text(encoding="utf-8").splitlines()))
         for p in _python_files()
-        if len(p.read_text().splitlines()) > MAX_LINES
+        if len(p.read_text(encoding="utf-8").splitlines()) > MAX_LINES
     ]
     assert not violations, "Files exceed the %d-line review budget (split by activity):\n%s" % (
         MAX_LINES,
@@ -42,7 +42,7 @@ def test_runtime_path_imports_only_stdlib():
         return
     offenders = []
     for path in sorted(SRC.rglob("*.py")):
-        tree = ast.parse(path.read_text())
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Import):
                 names = [a.name.split(".")[0] for a in node.names]
