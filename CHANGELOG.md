@@ -40,6 +40,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **A Kimi Code `PermissionRequest` is no longer claimed by Devin as well, leaving the
+  payload unidentified** (`adapters/_payload.py`, `data/vendors/devin.json`; vendor-truth
+  review finding `raw[8].findings[8]`). Devin's `accept_names` claimed `PermissionRequest`
+  and `PostCompaction` before any marker check, on the ground that Claude Code never sends
+  those names -- but Kimi Code does send `PermissionRequest`, so a real Kimi payload was
+  claimed by two adapters, `detect()` returned `None`, and `handle()` allowed it with no
+  `Event` at all: not even the observation value survived. Reproduced by execution before
+  the fix. A new `claims.reject_client_types` key is checked ahead of `accept_names`, so
+  the CHANGELOG's own recorded rule -- a positive self-identification beats a shared event
+  name -- now holds for the one recorded collision. Devin's own `PermissionRequest`, which
+  carries no `client_type`, is claimed exactly as before.
 - **`PostCompact` no longer masquerades as canonical `pre_compact` on Grok and Kimi Code**
   (`data/vendors/grok.json`, `data/vendors/kimi_code.json`; vendor-truth review finding
   `raw[14].findings[12]`). Both entries mapped the vendor's

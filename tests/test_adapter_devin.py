@@ -91,3 +91,16 @@ def test_post_compaction_is_not_bent_into_pre_compact():
     assert A.PRE_COMPACT not in mod.REVERSE_EVENT_MAP
     assert mod.parse({"hook_event_name": "PostCompaction", "prompt_id": "turn-1"}).event == A.UNKNOWN
     assert A.PRE_COMPACT not in A.MATRIX["devin"]["events"]
+
+
+def test_a_kimi_permission_request_is_left_to_kimi():
+    """PermissionRequest is claimed before any marker check because Claude Code never sends"""
+    payload = {"hook_event_name": "PermissionRequest", "client_type": "kimi_code_cli", "tool_name": "Bash"}
+    assert not A.adapters.get("devin").claims(payload)
+    assert A.adapters.detect(payload) == "kimi_code"
+
+
+def test_a_devin_permission_request_is_still_claimed_unconditionally():
+    """The narrowing is one recorded client_type, not a retreat from accept_names."""
+    payload = {"hook_event_name": "PermissionRequest", "tool_name": "Bash"}
+    assert A.adapters.get("devin").claims(payload)

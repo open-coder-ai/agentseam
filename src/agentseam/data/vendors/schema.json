@@ -310,6 +310,10 @@
           "additionalProperties": {"$ref": "#/$defs/stringList"},
           "description": "vendor event name -> keys that must ALL be present for that event to be claimed when no accept_marker is (codex_cli's SessionStart compound check)."
         },
+        "reject_client_types": {
+          "$ref": "#/$defs/stringList",
+          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name (devin's PermissionRequest, which kimi_code also sends)."
+        },
         "reject_markers": {"$ref": "#/$defs/stringList"},
         "reject_markers_unless_probe": {
           "type": "object",

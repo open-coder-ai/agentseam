@@ -41,21 +41,27 @@ def _accepted_by_markers(c, raw, name):
     )
 
 
+def _disqualified(cfg, c, raw, name):
+    """Every reason an entry declines a payload once its wire event name is known."""
+    if name not in cfg["events"]:
+        return True
+    if "client_types" in c and raw.get("client_type") not in c["client_types"]:
+        return True
+    return _rejected_by_markers(c, raw)
+
+
 def hj_claims(cfg, raw):
     """True when this payload matches the entry's marker discipline."""
     if not isinstance(raw, dict):
         return False
     c = cfg["claims"]
     name = _wire_name(cfg, raw)
+    # A positive self-identification beats a shared event name, accept_names included.
+    if raw.get("client_type") in c.get("reject_client_types", ()):
+        return False
     if name in c.get("accept_names", ()):
         return True
-    if name not in cfg["events"]:
-        return False
-    if "client_types" in c and raw.get("client_type") not in c["client_types"]:
-        return False
-    if _rejected_by_markers(c, raw):
-        return False
-    return _accepted_by_markers(c, raw, name)
+    return not _disqualified(cfg, c, raw, name) and _accepted_by_markers(c, raw, name)
 
 
 def _segment(node, part):
