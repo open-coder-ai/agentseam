@@ -1,0 +1,94 @@
+name: Evidence staleness
+
+# Re-verifying sixteen agents on a schedule is not affordable. Noticing that one of them
+# shipped a release is nearly free, and it is the same signal: evidence only needs
+# re-taking when the thing it describes has changed.
+#
+# Linux only, no agent installs, no licences, no credentials beyond the default token.
+on:
+  schedule:
+    # Weekly. Vendor release cadences are measured in days, so daily would mostly open
+    # the same issue twice; anything slower and a drifted row sits unflagged for a sprint.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+  pull_request:
+    # On PRs it runs read-only: a change to matrix-evidence.json should be able to show
+    # its effect on the table without waiting a week to find out.
+    paths:
+      - "src/agentseam/data/matrix-evidence.json"
+      - "src/agentseam/data/vendor-releases.json"
+      - "src/agentseam/staleness.py"
+      - "tools/watch_versions.py"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@e9d6f990972a57673cdb72ec29e19d42ba28880f # v6
+        with:
+          python-version: "3.13"
+
+      - name: Compare every row against its vendor's current release
+        id: watch
+        # Never fails the job: drift is a fact about the world, not a defect in this PR,
+        # and a red X on unrelated work teaches people to ignore this signal.
+        run: |
+          python3 tools/watch_versions.py --no-fail-on-drift | tee drift.txt
+          python3 tools/watch_versions.py --json --no-fail-on-drift > drift.json
+
+      - name: Summarise
+        run: |
+          {
+            echo '## Evidence staleness'
+            echo
+            echo '```'
+            cat drift.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: drift-report
+          path: |
+            drift.txt
+            drift.json
+
+  # Opening the issue is a separate job so the check above needs no write permission,
+  # and so a token problem here can never mask a drift result.
+  report:
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@e9d6f990972a57673cdb72ec29e19d42ba28880f # v6
+        with:
+          python-version: "3.13"
+
+      - name: Open an issue when a row's agent has moved
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if python3 tools/watch_versions.py --no-fail-on-drift --json \
+              | python3 -c 'import json,sys; sys.exit(0 if [r for r in json.load(sys.stdin) if r["verdict"]=="drifted"] else 1)'; then
+            python3 tools/watch_versions.py --issue-body --no-fail-on-drift > body.md
+            gh issue create \
+              --title "Evidence drift: an agent has shipped since its row was verified" \
+              --body-file body.md \
+              --label evidence
+          else
+            echo "no drift"
+          fi
