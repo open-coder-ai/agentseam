@@ -110,6 +110,7 @@ def test_the_probe_answers_in_the_adapters_own_dialect():
     src = experiment_probe.render("deny", "/tmp/record", agent=AGENT, src_dir="/tmp/src", trigger_alt="echo x")
     assert "adapter.parse(payload)" in src
     assert "adapter.respond(decision, event)" in src
+    assert '"stop_hook_active": payload.get("stop_hook_active")' in src
     # The silent trials must not reach the adapter at all -- that is what makes them silent.
     for trial in experiment_probe.SILENT_TRIALS:
         body = experiment_probe.render(trial, "/tmp/r", agent=AGENT, src_dir="/tmp/s", trigger_alt="x")
@@ -261,11 +262,23 @@ def test_allow_never_blocks_at_any_gate(event):
     assert r["measured"] == {"baseline_ok": True}, "%s: %s" % (event, r["reading"])
 
 
-def test_blocking_stop_shows_up_as_continuation_not_absence():
-    """A Stop block has the opposite shape: the action happens MORE, not less."""
+def test_a_stop_block_is_a_re_fire_not_a_second_action_run():
+    """A Stop block sends the agent round again, so the hook fires again. Whether the action
+    *also* runs again is the agent's choice: Claude Code 2.1.263, refused at Stop, re-fired
+    nine times and re-ran nothing. Reading that second run was the bug this replaces."""
     r = experiment.run_trial(AGENT, "deny", event="stop")
-    assert r["observed"]["runs"] > 1
+    assert r["hook_invocations"] > 1
     assert "made to continue" in r["reading"]
+    assert experiment._classify("deny", "stop", {"runs": 1, "alt_runs": 0}, 9)[1] is True
+    assert experiment._classify("deny", "stop", {"runs": 1, "alt_runs": 0}, 1)[1] is False
+
+
+def test_a_transform_that_ran_nothing_at_all_is_not_ambiguous():
+    """0/0 is a rewrite refused or degraded into a block. Only both-ran is undecidable."""
+    field, value, reading = experiment._classify("transform", "pre_tool", {"runs": 0, "alt_runs": 0}, 1)
+    assert (field, value) == ("transform", False)
+    assert "nothing ran" in reading
+    assert experiment._classify("transform", "pre_tool", {"runs": 1, "alt_runs": 1}, 1)[1] is None
 
 
 def test_blocking_the_prompt_gate_stops_the_tool_gate_being_reached():

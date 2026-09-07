@@ -159,9 +159,11 @@ def _gate(config_path, event, payload, *, cwd, timeout):
 def run_turn(config_path, *, command, cwd, session_id="reference-run", timeout=None, max_continuations=1):
     """One whole turn: prompt gate, tool gate, stop gate -- with the trigger in the middle.
 
-    A blocked Stop means the agent does *not* finish, so it comes back round and runs the
-    tool again. That second run is how a Stop-gate block becomes observable at all: the
-    trigger appends, so the harness reads "how many times did the action happen".
+    A blocked Stop means the agent does *not* finish, so it comes back round -- and this
+    driver re-runs the tool on that second pass. A real agent need not, and Claude Code does
+    not: it sees the work already done and declines to repeat it. What both have in common,
+    and what the harness therefore measures, is that the Stop hook fires again. The trigger
+    still appends, so a repeat run stays visible wherever a driver produces one.
     """
     gates, runs, continuations = {}, 0, 0
     while True:

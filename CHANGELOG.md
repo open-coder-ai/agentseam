@@ -40,6 +40,25 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **The stop gate's block observable is the hook re-firing, not a second action run**
+  (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
+  sentinel twice, on the theory that an agent refused permission to finish comes back
+  round and repeats its tool call. Only a driver that mechanically replays its whole turn
+  does that -- `tools/reference_agent.py` does, which is why the reference driver agreed
+  with the matrix and hid the bug. A real agent goes round, sees the work already done and
+  declines to redo it: Claude Code 2.1.263 refused at Stop re-fired the Stop hook nine
+  times while the sentinel stayed at one, and the harness scored `block: false` against a
+  matrix that correctly asserts `true`. `_blocked()` now reads the invocation count, with a
+  repeat run kept as a secondary signal, and `_classify()` takes that count rather than a
+  bool (the "hook never fired" branch is unchanged). No matrix or vendor data is touched:
+  the assertion was right and the instrument was wrong.
+- The experiment probe now records the *value* of `stop_hook_active` on each invocation
+  line, not just its presence among the payload keys, so a Stop re-fire is attributable to
+  the block that caused it rather than merely counted.
+- A `transform` trial where the hook fired and *nothing* ran now measures
+  `transform: false` ("the rewrite was refused or degraded to a block") instead of `null`.
+  `null` is now reserved for the one genuinely undecidable shape, where both the original
+  and the rewritten input ran.
 - `evidence_report.diff_against()` now flags a weakening *within* the live bases:
   `live-run` -> `live-run-partial` used to pass silently, which is exactly what merging a
   partial witnessed run by hand would otherwise do to a full one.
