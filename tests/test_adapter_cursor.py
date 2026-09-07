@@ -140,3 +140,9 @@ def test_respond_infers_the_unnamed_event_the_same_way_parse_does():
     mod = A.adapters.get("cursor")
     assert mod.parse(raw).event == A.FILE_CHANGED
     assert mod.respond(Decision.deny("no"), mod.parse(raw)) == ("", 0)
+
+
+def test_a_rewrite_with_no_input_is_not_blamed_on_the_gate_that_can_rewrite():
+    """preToolUse is the one gate that CAN express a rewrite; the handler supplied none."""
+    text, _, _, _ = A.handle(CU_PRE_TOOL, lambda _e: Decision.rewrite(None, "needs change"))
+    assert json.loads(text)["user_message"] == "needs change (no replacement input was supplied)"

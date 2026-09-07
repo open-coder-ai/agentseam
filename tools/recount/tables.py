@@ -204,6 +204,7 @@ _VERDICT_DIALECT = {
             "escalate": "%s cannot prompt for confirmation, so this is a block",
             "escalate_from_transform": "%s cannot modify a tool call, so this is a block",
             "transform": "input requires modification, which this gate cannot express",
+            "transform_missing_input": "no replacement input was supplied",
         },
         "flag_note": "observed after the fact (%s cannot prevent it): %s",
         "flag_note_default": "policy violation",

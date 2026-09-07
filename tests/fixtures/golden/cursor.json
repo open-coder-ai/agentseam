@@ -145,7 +145,7 @@
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"permission\": \"deny\", \"user_message\": \"needs change (input requires modification, which this gate cannot express)\", \"agent_message\": \"needs change (input requires modification, which this gate cannot express)\"}"
+          "stdout": "{\"permission\": \"deny\", \"user_message\": \"needs change (no replacement input was supplied)\", \"agent_message\": \"needs change (no replacement input was supplied)\"}"
         },
         "vouch": {
           "exit": 0,

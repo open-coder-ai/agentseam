@@ -19,7 +19,7 @@ from ..contract import (
     TRANSFORM,
     degraded_from,
 )
-from ._hook_json import _ESCALATE_FROM_TRANSFORM
+from ._hook_json import _ESCALATE_FROM_TRANSFORM, _TRANSFORM_MISSING_INPUT
 from ._payload import hj_parse
 
 #: Wire names other vendors also spell this way; a payload naming one is claimed only on
@@ -101,21 +101,30 @@ def _prompt_submit_payload(decision):
     return _json.dumps(payload), 0
 
 
-def _gate_payload(words, notes, gate, decision, name):
-    """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
-    reason = decision.reason
+def _refusal_reason(v, gate, decision, name):
+    """The handler's own reason, plus why the outcome changed shape on the way out."""
+    notes = v["degrade_notes"]
     if decision.outcome == TRANSFORM:
-        if gate["honours_transform"] and decision.updated_input is not None:
-            return {"permission": words["allow"], "updated_input": decision.updated_input}, reason
-        return {"permission": words["block"]}, _because(reason, notes["transform"])
-    if decision.outcome == DENY:
-        return {"permission": words["block"]}, reason
+        # A gate that DOES honour transform refused only for want of a replacement input;
+        # "this gate cannot express it" would be false at the one gate that can.
+        key = _TRANSFORM_MISSING_INPUT if gate["honours_transform"] else "transform"
+        return _because(decision.reason, notes[key])
     if decision.outcome == ESCALATE:
-        if gate["honours_escalate"]:
-            return {"permission": words["escalate"]}, reason
         note = notes[_ESCALATE_FROM_TRANSFORM] if degraded_from(decision) == TRANSFORM else notes["escalate"]
-        return {"permission": words["block"]}, _because(reason, note % name)
-    return {"permission": words["allow"]}, reason
+        return _because(decision.reason, note % name)
+    return decision.reason
+
+
+def _gate_payload(v, gate, decision, name):
+    """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
+    words = v["words"]
+    if decision.outcome == TRANSFORM and gate["honours_transform"] and decision.updated_input is not None:
+        return {"permission": words["allow"], "updated_input": decision.updated_input}, decision.reason
+    if decision.outcome == ESCALATE and gate["honours_escalate"]:
+        return {"permission": words["escalate"]}, decision.reason
+    if decision.outcome in (DENY, ESCALATE, TRANSFORM):
+        return {"permission": words["block"]}, _refusal_reason(v, gate, decision, name)
+    return {"permission": words["allow"]}, decision.reason
 
 
 def cursor_respond(cfg, decision, event):
@@ -134,7 +143,7 @@ def cursor_respond(cfg, decision, event):
     if gate is None or canonical != PRE_TOOL:
         return "", 0
 
-    payload, reason = _gate_payload(v["words"], v["degrade_notes"], gate, decision, name)
+    payload, reason = _gate_payload(v, gate, decision, name)
     if reason and payload["permission"] != v["words"]["allow"]:
         payload["user_message"] = reason
         payload["agent_message"] = reason

@@ -40,6 +40,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **A rewrite with no replacement input is no longer blamed on Cursor's rewrite gate**
+  (`adapters/_cursor.py`, `data/vendors/cursor.json`; vendor-truth review finding
+  `raw[2].findings[4]`). `Decision.rewrite(None, ...)` at `preToolUse` was refused with
+  "input requires modification, which this gate cannot express" -- untrue at the one Cursor
+  gate that *can* express a rewrite, and the adapter's headline capability. The handler
+  simply supplied no replacement. The engine already distinguishes the two cases
+  (`transform_missing_input`); `_cursor.py` now consults it, keeping the "cannot express"
+  wording for the gates where it is true. One byte of frozen wire output moves
+  (`rewrite-without-input` at `pre_tool`); the deny itself, which is the safe outcome, is
+  unchanged.
 - **Cursor answers an unnamed payload at the event `parse()` said it was** (`adapters/
   _cursor.py`; vendor-truth review finding `raw[2].findings[7]`). `parse()` infers
   `afterFileEdit` from an `edits[]` list, but `respond()` re-derived the event from
