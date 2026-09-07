@@ -7,6 +7,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+- **Recorded driver: freeze a witnessed run, replay it in CI** (owner decision 2026-09-07,
+  org-plan plan/agentseam-project.md "Evidence layer"). The witness cycle: freeze what a
+  real agent was seen to do, test against the freeze, re-witness only when the vendor
+  ships -- `tools/watch_versions.py` already detects the ship; nothing froze or replayed
+  until now.
+  - `src/agentseam/data/recordings/<agent>@<version>.json` (schema alongside it): one file
+    per witnessed (agent, version), holding the sentinel and hook-invocation counts each
+    trial produced against a real agent. Immutable once committed -- a newer version is a
+    new file. `src/agentseam/recordings.py` is the package-side reader (recordings are data
+    the installed package reads); `tools/recorded_driver.py` is the dev-only writer/replayer.
+  - `tools/experiment.py run --record` freezes a real-agent run into that file, refusing the
+    `reference` and `recorded` drivers with the same honesty rule `evidence_report.py`
+    already enforces on a submitted report.
+  - `--driver recorded` (the default once a recording exists for `--agent`) replays a
+    recording through the exact same `_classify` a live run would have used, with no
+    process launched -- the seven trials against `claude_code@2.1.263` reproduce the
+    witnessed table in under a second. `evidence_report.py` gains `recorded_version` and
+    rejects a recorded-driver report claiming a newer `version` than it replayed.
+    `claude_code`'s `pre_tool` per-claim evidence now points `test` at the recording
+    instead of repeating its prose six times, so the basis chain is claim -> recording ->
+    live run.
+  - `tools/watch_versions.py` compares a covered gate against its recording's version ahead
+    of the row's own, and now opens one drift issue per agent (was: one combined issue),
+    self-sufficient for a stranger with the agent installed -- the exact `--record` command,
+    what it produces, and both ways to submit it. `agentseam matrix --evidence` shows the
+    recorded version beside the row's.
 - **Per-claim evidence on the capability matrix, and grading capped by basis** (owner
   decision 2026-09-01, org-plan plan/agentseam-project.md). Additive data shape:
   - Every asserted matrix cell field (`block`, `rewrite`, `fail_mode`) now carries its own
