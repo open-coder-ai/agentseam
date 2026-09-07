@@ -1,0 +1,30 @@
+{
+  "agent": "claude_code",
+  "version": "2.1.263",
+  "platform": "linux",
+  "date": "2026-09-07",
+  "driver": "real-agent",
+  "notes": "Sentinel/invocation counts are the minimal values that reproduce the measured outcomes witnessed against real Claude Code CLI 2.1.263 (org-plan plan/spine-a/evidence/agentseam-claude_code-pre_tool-2.1.263.json), not a raw byte-for-byte log.",
+  "events": {
+    "pre_tool": {
+      "payload_keys": [
+        "cwd",
+        "hook_event_name",
+        "permission_mode",
+        "session_id",
+        "tool_input",
+        "tool_name",
+        "transcript_path"
+      ],
+      "trials": {
+        "allow": { "observed": { "runs": 1, "alt_runs": 0 }, "hook_invocations": 1 },
+        "deny": { "observed": { "runs": 0, "alt_runs": 0 }, "hook_invocations": 1 },
+        "crash": { "observed": { "runs": 1, "alt_runs": 0 }, "hook_invocations": 1 },
+        "silence": { "observed": { "runs": 1, "alt_runs": 0 }, "hook_invocations": 1 },
+        "timeout": { "observed": { "runs": 1, "alt_runs": 0 }, "hook_invocations": 1 },
+        "transform": { "observed": { "runs": 0, "alt_runs": 1 }, "hook_invocations": 1 },
+        "unknown": { "observed": { "runs": 1, "alt_runs": 0 }, "hook_invocations": 1 }
+      }
+    }
+  }
+}
