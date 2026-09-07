@@ -131,10 +131,13 @@ def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, isolat
     assert I.installed("junie", str(tmp_path))
 
 
-def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
-    """The data-loss bug: _load returned {} on any parse failure, so install merged its"""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".junie" / "config.json"
+def test_install_never_destroys_a_config_it_cannot_parse(isolated_home):
+    """The data-loss bug: _load returned {} on any parse failure, so install merged its
+
+    Home is the fixture's, not a local setenv("HOME"): ntpath.expanduser never reads HOME,
+    so the seeded config sat where no install would ever look and every assertion below
+    was measuring an untouched file rather than a preserved one."""
+    cfg = isolated_home / ".junie" / "config.json"
     cfg.parent.mkdir()
 
     cfg.write_bytes(b"\xef\xbb\xbf" + json.dumps({"theme": "dark", "customModel": "keep-me"}).encode())
