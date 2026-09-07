@@ -270,7 +270,7 @@ def evidence(agent):
     every claim carries `basis` (from matrix_terms.BASES), `date`, and -- since every claim
     group here is exercised by a real automated check -- the test that exercises it. `basis`
     and `date` are the SAME evidence the capability matrix already recorded for this vendor's
-    behaviour (matrix-evidence's own verified.basis/date): the config claims above describe
+    behaviour (matrix.json's own row-level verified.basis/date): the config claims above describe
     exactly that behaviour, so inventing a second, unrelated evidence trail for the same facts
     would not be more honest, only duplicated."""
     verified = MATRIX[agent]["verified"]
