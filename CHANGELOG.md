@@ -40,6 +40,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     re-run -- still show their original drift.
 
 ### Fixed
+- **Cursor answers an unnamed payload at the event `parse()` said it was** (`adapters/
+  _cursor.py`; vendor-truth review finding `raw[2].findings[7]`). `parse()` infers
+  `afterFileEdit` from an `edits[]` list, but `respond()` re-derived the event from
+  `event.tool` -- which `parse()` fills from `tool_name` when the payload carries one -- and
+  fell through to the entry's default `beforeShellExecution` gate. Reproduced: an unnamed
+  `edits` payload with a `tool_name` parsed as `file_changed` and was answered with
+  `{"permission": "deny"}`, a permission verdict at an event documented as reading no output
+  -- the fake-gate half of bug class 2, reporting an already-landed write as prevented.
+  `respond()` now calls the same `cursor_wire()` inference `parse()` uses, so the two cannot
+  diverge. No frozen wire output moves: every golden scenario names its event.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back

@@ -132,3 +132,11 @@ def test_every_gate_is_installed_fail_closed_including_the_prompt_one():
     assert cfg["hooks"]["beforeSubmitPrompt"][0]["failClosed"] is True
     assert cfg["hooks"]["preToolUse"][0]["failClosed"] is True
     assert "failClosed" not in cfg["hooks"]["postToolUse"][0]
+
+
+def test_respond_infers_the_unnamed_event_the_same_way_parse_does():
+    """An unnamed edits payload carrying tool_name parsed as file_changed and was answered"""
+    raw = {"conversation_id": "c1", "file_path": "/repo/a.py", "edits": [{"new_string": "s"}], "tool_name": "Edit"}
+    mod = A.adapters.get("cursor")
+    assert mod.parse(raw).event == A.FILE_CHANGED
+    assert mod.respond(Decision.deny("no"), mod.parse(raw)) == ("", 0)

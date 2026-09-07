@@ -73,11 +73,16 @@ def _because(reason, note):
 
 
 def _wire_of(cfg, event):
-    """The wire name to answer at: the payload's own, `tool` where `parse` kept it there,
-    else the entry's default gate."""
+    """The wire name to answer at -- `cursor_wire` again, so respond and parse cannot diverge.
+
+    `tool` is read only for an Event carrying no payload, where `parse` left the inferred
+    name there; without a payload there is nothing to re-infer from.
+    """
     name = (event.raw or {}).get("hook_event_name")
     if name in cfg["events"]:
         return name
+    if event.raw:
+        return cursor_wire(event.raw)
     return event.tool if event.tool in cfg["events"] else cfg["verdicts"].get("default_wire_event")
 
 
