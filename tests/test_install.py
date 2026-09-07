@@ -173,10 +173,13 @@ def test_a_query_never_raises_on_an_unparseable_config(isolated_home):
     assert cfg.read_text() == "{ broken ,,, }", "uninstall must not rewrite a file it cannot parse"
 
 
-def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatch):
-    """The TOML branch of installed() must uphold the same "never raises" contract as the"""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".kimi-code" / "config.toml"
+def test_a_query_never_raises_on_an_undecodable_toml_config(isolated_home):
+    """The TOML branch of installed() must uphold the same "never raises" contract as the
+
+    Home is the fixture's for the same reason as the three tests above. This one did not
+    fail on Windows, which is worse: installed() returned False because the undecodable
+    file was not on the path it reads, so the TOML branch under test never ran."""
+    cfg = isolated_home / ".kimi-code" / "config.toml"
     cfg.parent.mkdir()
     cfg.write_bytes('event = "x"'.encode("utf-16"))
 
