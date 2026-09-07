@@ -36,7 +36,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 
@@ -44,6 +43,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 sys.path.insert(0, HERE)
 
+import experiment_driver  # noqa: E402
+import experiment_escalate  # noqa: E402
 import experiment_probe  # noqa: E402
 import experiment_report  # noqa: E402
 import reference_agent  # noqa: E402
@@ -73,7 +74,15 @@ _MEANING = {
     "silence": ("silence_means", "allow", "refusal-or-error"),
     "timeout": ("timeout_fail_mode", FAIL_OPEN, FAIL_CLOSED),
     "unknown": ("unknown_verb_means", "allow", "refusal-or-error"),
+    # escalate is a three-value field (experiment_escalate.classify_escalate handles it
+    # directly in _classify below); kept here only so the table lists every trial.
+    "escalate": ("escalate_means", "allow", "refusal-or-error"),
 }
+
+#: Trials whose Undocumented reading is named for the trial's own measured field (task 6,
+#: W53) rather than the generic diagnostic "documented" -- so the diff can compare a real
+#: agent's answer against the one thing the reference refuses to guess.
+_UNDOCUMENTED_NAMES_ITS_FIELD = ("unknown", "escalate")
 
 
 def _write_config(adapter, workspace, probe_command, event):
@@ -125,11 +134,13 @@ def _invocations(record_dir):
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def _classify(trial, event, observed, invocations):
+def _classify(trial, event, observed, invocations, outcome=None):
     """What one trial measured, as a (field, value) pair plus a human reading.
 
     `invocations` is a count, not a flag: at the stop gate how many times the hook fired is
     itself the measurement (see _blocked), and zero still means it never fired at all.
+    `outcome` is the driver's own result, needed only by the escalate trial -- see
+    experiment_escalate.py.
     """
     if not invocations:
         return "hook_reached", False, "the hook never fired -- config path or format is wrong for this version"
@@ -145,6 +156,9 @@ def _classify(trial, event, observed, invocations):
         return "transform", None, "ambiguous: %s" % observed
 
     blocked = _blocked(event, observed, invocations)
+    if trial == "escalate":
+        return experiment_escalate.classify_escalate(blocked, outcome)
+
     field, when_ran, when_blocked = _MEANING[trial]
     if event == contract.STOP:
         reading = "the agent was made to continue" if blocked else "the agent finished"
@@ -191,23 +205,24 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
                 # here, so only a real run can settle it.
                 undocumented, outcome = str(exc), None
         else:
-            outcome = _drive_real(driver, workspace)
+            outcome = experiment_driver.drive_real(driver, workspace, trigger=TRIGGER)
 
         observed = _observe(workspace)
         invocations = _invocations(record_dir)
         if undocumented is not None:
-            # Named for the `unknown` trial's own field (unknown_verb_means) rather than
-            # the generic "documented", so the diff can compare it against a real agent's
-            # reading of that same field -- documentation-silence vs an observed answer is
-            # exactly the disagreement worth surfacing. Any other trial keeps the older,
-            # purely diagnostic "documented" reading; nothing else currently reaches here.
-            if trial == "unknown":
-                field, value = _MEANING["unknown"][0], "undocumented"
+            # Named for the trial's own measured field (unknown_verb_means, escalate_means)
+            # rather than the generic "documented", so the diff can compare it against a
+            # real agent's reading of that same field -- documentation-silence vs an
+            # observed answer is exactly the disagreement worth surfacing. Any other trial
+            # keeps the older, purely diagnostic "documented" reading; nothing else
+            # currently reaches here.
+            if trial in _UNDOCUMENTED_NAMES_ITS_FIELD:
+                field, value = _MEANING[trial][0], "undocumented"
             else:
                 field, value = "documented", False
             reading = "protocol is silent: %s" % undocumented
         else:
-            field, value, reading = _classify(trial, event, observed, len(invocations))
+            field, value, reading = _classify(trial, event, observed, len(invocations), outcome)
         return {
             "agent": agent,
             "trial": trial,
@@ -223,21 +238,6 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
     finally:
         if not keep:
             shutil.rmtree(workspace, ignore_errors=True)
-
-
-def _drive_real(command, workspace):
-    """Drive a real agent CLI in the scratch workspace.
-
-    `command` is a shell command template containing {prompt}. Kept deliberately thin:
-    every agent's headless invocation differs, and encoding those here would rot faster
-    than the matrix does.
-    """
-    prompt = "Run this exact shell command and nothing else: %s" % TRIGGER
-    filled = command.replace("{prompt}", json.dumps(prompt))
-    proc = subprocess.run(  # noqa: S602
-        filled, shell=True, cwd=workspace, capture_output=True, text=True, timeout=300
-    )
-    return {"returncode": proc.returncode, "stdout": proc.stdout[-2000:], "stderr": proc.stderr[-2000:]}
 
 
 def main(argv=None):

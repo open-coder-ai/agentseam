@@ -35,6 +35,7 @@ BEHAVIOURS = {
     "timeout": "Sleeps past the agent's hook timeout. Measures the fail mode under a stall.",
     "transform": "Rewrites the tool input. Measures whether the rewritten input is what runs.",
     "unknown": "Answers with a decision verb no vendor defines. Measures tolerance for the unrecognised.",
+    "escalate": "Defers to the host's own approval path. Measures what happens with nobody there to answer.",
 }
 
 #: Trials that answer nothing at all. Everything else goes through parse/respond.
@@ -102,6 +103,7 @@ decision = {
     "deny": lambda: contract.Decision.deny("agentseam experiment: deny trial"),
     "transform": lambda: contract.Decision.transform(
         {"command": TRIGGER_ALT}, "agentseam experiment: transform trial"),
+    "escalate": lambda: contract.Decision.escalate("agentseam experiment: escalate trial"),
 }[TRIAL]()
 text, code = adapter.respond(decision, event)
 sys.stdout.write(text)
