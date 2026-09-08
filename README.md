@@ -257,6 +257,36 @@ pip install agentseam
 Goose, Crush, OpenCode: adapters planned; the
 capability research is done and each is a config entry plus a matrix row.
 
+## Contributing
+
+The most valuable contribution needs no code. Most rows in the matrix above rest on vendor
+documentation rather than on anyone watching the agent run. If you have one of those agents
+installed, one command reports what your version actually does, and the result becomes a
+`verified` record with your handle on it:
+
+```bash
+python3 tools/experiment.py run --agent <agent> --report \
+    --agent-version <version> --reporter @yourhandle > report.json
+```
+
+Paste it into an [evidence report](https://github.com/open-coder-ai/agentseam/issues/new?template=evidence-report.yml).
+A result that contradicts the matrix is the one we most want: it is a row we are getting
+wrong in public. The walk-through, including the capture probe for payload shapes, is in
+[CONTRIBUTING.md](CONTRIBUTING.md#contributing-evidence-you-do-not-need-to-write-code).
+
+Other ways in:
+
+- **An adapter for an agent that is missing.** Goose, Crush and OpenCode are researched and
+  unbuilt; each is a config entry plus a matrix row. Start from the
+  [adapter request](https://github.com/open-coder-ai/agentseam/issues/new?template=adapter_request.md) template and
+  [CONTRIBUTING.md](CONTRIBUTING.md#adding-an-agent-adapter).
+- **A matrix correction.** A row that claims more than the agent does is the bug this project
+  exists to prevent; the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md)
+  template is for exactly that.
+- **Bugs and docs.** Issues and PRs welcome. `pytest -q` and `ruff check .` are the whole
+  local loop, the runtime path stays stdlib-only, and every commit is signed off
+  (`git commit -s`).
+
 ## Design
 
 - **stdlib only.** No dependencies, ever, in the adapter path — adapters must stay
@@ -270,5 +300,19 @@ capability research is done and each is a config entry plus a matrix row.
 
 [ARCHITECTURE.md](ARCHITECTURE.md) explains why those choices, what they cost, and the bug
 classes they exist to prevent.
+
+## Part of the open-coder-ai family
+
+Everything under [open-coder-ai](https://github.com/open-coder-ai) is built on one rule: a claim must match a
+mechanism. Where this repository sits among the others:
+
+| Repository | What it is |
+| :--- | :--- |
+| [chock](https://github.com/open-coder-ai/chock) | The framework: write a policy once, enforce it on git hooks, CI, and every agent |
+| [chock-catalog](https://github.com/open-coder-ai/chock-catalog) | The policies, each graded by what it actually enforces |
+| [context-report](https://github.com/open-coder-ai/context-report) | A signed report format for whether a plugin, hook, skill or `AGENTS.md` actually works |
+| [chock-threat-intel](https://github.com/open-coder-ai/chock-threat-intel) | A weekly, human-reviewed threat digest scored against the catalog |
+| [chock-claude-plugins](https://github.com/open-coder-ai/chock-claude-plugins) · [copilot](https://github.com/open-coder-ai/chock-copilot-plugins) · [cursor](https://github.com/open-coder-ai/chock-cursor-plugins) · [codex](https://github.com/open-coder-ai/chock-codex-plugins) | The catalog compiled into each client's native plugin format; generated only, rebuilt and diffed in CI |
+| [chock-quickstart](https://github.com/open-coder-ai/chock-quickstart) · [chock-example](https://github.com/open-coder-ai/chock-example) | Template repositories: exactly what `chock init` leaves behind, and a working adoption with one policy per layer |
 
 Apache-2.0.
