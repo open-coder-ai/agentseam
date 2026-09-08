@@ -34,6 +34,6 @@ Enter
 Sleep 2500ms
 
 # --- 2. wire it into every agent at once; end frame holds the real per-agent levels ---
-Type 'agentseam install all "python3 my_handler.py" --events pre_tool'
+Type 'agentseam install all "python3 my_handler.py" --events pre_tool --repo .'
 Enter
 Sleep 4000ms

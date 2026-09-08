@@ -102,9 +102,9 @@ to a silent pass-through.
 </details>
 
 Of the 12 agents that claim `pre_tool` at all, 4 — Claude Code, Codex CLI, Cursor, VS Code
-Copilot — rest on a live run against the real agent; the other 8 rest on vendor
-documentation alone. Run `agentseam matrix --evidence` before you trust any row you didn't
-witness yourself.
+Copilot — rest on a live run against the real agent; the other 8 rest on documentation or a
+third-party install, not on a live run. Run `agentseam matrix --evidence` before you trust
+any row you didn't witness yourself.
 
 ## What it is for
 
@@ -223,9 +223,10 @@ Other ways in:
 - **A matrix correction.** A row that claims more than the agent does is the bug this project
   exists to prevent; the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md)
   template is for exactly that.
-- **Bugs and docs.** Issues and PRs welcome. `pytest -q` and `ruff check .` are the whole
-  local loop, the runtime path stays stdlib-only, and every commit is signed off
-  (`git commit -s`).
+- **Bugs and docs.** Issues and PRs welcome — start with a
+  [good first issue](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+  if you want a bounded one. `pytest -q` and `ruff check .` are the whole local loop, the
+  runtime path stays stdlib-only, and every commit is signed off (`git commit -s`).
 
 Adding an adapter must never require touching `contract.py`, `dispatch.py`, or any consumer
 — if it does, the abstraction is wrong, and the PR should say so rather than route around it.
