@@ -40,18 +40,30 @@ CLAIM_FAIL_MODE = "fail_mode"
 CLAIM_SILENCE_MEANS = "silence_means"
 CLAIM_TIMEOUT_FAIL_MODE = "timeout_fail_mode"
 CLAIM_UNKNOWN_VERB_MEANS = "unknown_verb_means"
+CLAIM_ESCALATE_MEANS = "escalate_means"
 
 #: Always present on every cell the row claims; each needs its own evidence record.
 REQUIRED_CLAIM_FIELDS = (CLAIM_BLOCK, CLAIM_REWRITE, CLAIM_FAIL_MODE)
 #: Present only where measured (task 3, 2026-09-07): absence is not a claim, so these need
 #: evidence only on the cells that actually carry them.
-OPTIONAL_CLAIM_FIELDS = (CLAIM_SILENCE_MEANS, CLAIM_TIMEOUT_FAIL_MODE, CLAIM_UNKNOWN_VERB_MEANS)
+OPTIONAL_CLAIM_FIELDS = (
+    CLAIM_SILENCE_MEANS,
+    CLAIM_TIMEOUT_FAIL_MODE,
+    CLAIM_UNKNOWN_VERB_MEANS,
+    CLAIM_ESCALATE_MEANS,
+)
 CLAIM_FIELDS = REQUIRED_CLAIM_FIELDS + OPTIONAL_CLAIM_FIELDS
 
 #: The two-value vocabulary `silence_means` and `unknown_verb_means` answer in.
 MEANS_ALLOW = "allow"
 MEANS_REFUSAL_OR_ERROR = "refusal-or-error"
 MEANS_VALUES = (MEANS_ALLOW, MEANS_REFUSAL_OR_ERROR)
+
+#: `escalate_means` shares that vocabulary but adds a third state neither other field can
+#: express: the run ended waiting on an answer nobody gave, rather than reaching either
+#: `allow` or a definite refusal (tools/experiment_escalate.py classifies it).
+MEANS_PROMPTED = "prompted"
+ESCALATE_MEANS_VALUES = (MEANS_PROMPTED, MEANS_ALLOW, MEANS_REFUSAL_OR_ERROR)
 
 GRADE_ENFORCED = "enforced"
 GRADE_ENFORCEABLE = "enforceable"

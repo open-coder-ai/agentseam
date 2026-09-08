@@ -93,11 +93,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify a tool call, so this is a block)\"}"
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify the input at UserPromptSubmit, so this is a block)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify a tool call, so this is a block)\"}"
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify the input at UserPromptSubmit, so this is a block)\"}"
         },
         "vouch": {
           "exit": 0,
@@ -195,11 +195,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify a tool call, so this is a block)\"}"
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Devin cannot modify the input at Stop, so this is a block)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify a tool call, so this is a block)\"}"
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Devin cannot modify the input at Stop, so this is a block)\"}"
         },
         "vouch": {
           "exit": 0,

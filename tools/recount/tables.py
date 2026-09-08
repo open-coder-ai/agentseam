@@ -63,16 +63,25 @@ _CLAIMS = {
         "event_key": ["hook_event_name"],
         "accept_markers": ["prompt_id"],
         "accept_names": ["PermissionRequest", "PostCompaction"],
+        "reject_client_types": ["kimi_code_cli"],
         "reject_probes": ["looks_like_claude_code"],
         "notes": (
-            "accept_names are names Claude Code never sends, claimed before any marker check; "
-            "prompt_id is required alongside looks_like_claude_code(raw) being false."
+            "accept_names are names Claude Code never sends, claimed before any marker check "
+            "-- except against a client_type that names another vendor, since Kimi Code sends "
+            "PermissionRequest too; prompt_id is required alongside looks_like_claude_code(raw) "
+            "being false."
         ),
     },
     "kimi_code": {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "client_types": ["kimi_code_cli"],
+        "accept_any_name": True,
+        "notes": (
+            "client_type cannot be absent here, so a payload carrying it has positively "
+            "self-identified and is claimed whatever event name it names; parse() resolves an "
+            "unmapped name to UNKNOWN, which is how Kimi's vendor drift reaches a caller."
+        ),
     },
     "junie": {
         "mode": "marker",
@@ -155,9 +164,9 @@ _VERDICT_DIALECT = {
         "words": {"allow": "approve", "block": "block"},
         "degrade_notes": {
             "escalate": "Devin cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "Devin cannot modify a tool call, so this is a block",
+            "escalate_from_transform": "%s (Devin cannot modify the input at %s, so this is a block)",
         },
-        "reason_defaults": {"transform": "input requires modification before it can run"},
+        "reason_defaults": {"transform": "input requires modification"},
         "note_style": "suffix",
         "echo": "payload",
         "default_wire_event": "PreToolUse",
@@ -202,8 +211,9 @@ _VERDICT_DIALECT = {
         "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
         "degrade_notes": {
             "escalate": "%s cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "%s cannot modify a tool call, so this is a block",
+            "escalate_from_transform": "%s cannot modify the input, so this is a block",
             "transform": "input requires modification, which this gate cannot express",
+            "transform_missing_input": "no replacement input was supplied",
         },
         "flag_note": "observed after the fact (%s cannot prevent it): %s",
         "flag_note_default": "policy violation",

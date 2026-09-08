@@ -96,8 +96,13 @@ def _interpret(proc, grammar):
     specific = body.get("hookSpecificOutput") or {}
     updated = specific.get("updatedInput")
     decision = specific.get("permissionDecision")
-    if decision in (ALLOW, DENY, ASK):
+    if decision in (ALLOW, DENY):
         return decision, specific.get("permissionDecisionReason") or "", updated
+    if decision == ASK:
+        # "ask" is a documented value, but what a *headless* run does next with nobody
+        # there to answer it is not -- guessing here would launder that silence into
+        # evidence, exactly what this module exists to refuse. See tools/experiment_escalate.py.
+        raise Undocumented("permissionDecision=%r: the protocol does not say what a headless run does next" % (ASK,))
     if decision is not None:
         raise Undocumented("unrecognised permissionDecision: %r" % (decision,))
     if body.get("decision") == "block":

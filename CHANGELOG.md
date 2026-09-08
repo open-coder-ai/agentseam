@@ -28,6 +28,32 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     evidence for a cell nobody measured.
   - `data/vendors/claude_code.json` and `examples/generated/claude_code.md` are regenerated
     from the row, not hand-edited.
+- **Recorded driver: freeze a witnessed run, replay it in CI** (owner decision 2026-09-07,
+  org-plan plan/agentseam-project.md "Evidence layer"). The witness cycle: freeze what a
+  real agent was seen to do, test against the freeze, re-witness only when the vendor
+  ships -- `tools/watch_versions.py` already detects the ship; nothing froze or replayed
+  until now.
+  - `src/agentseam/data/recordings/<agent>@<version>.json` (schema alongside it): one file
+    per witnessed (agent, version), holding the sentinel and hook-invocation counts each
+    trial produced against a real agent. Immutable once committed -- a newer version is a
+    new file. `src/agentseam/recordings.py` is the package-side reader (recordings are data
+    the installed package reads); `tools/recorded_driver.py` is the dev-only writer/replayer.
+  - `tools/experiment.py run --record` freezes a real-agent run into that file, refusing the
+    `reference` and `recorded` drivers with the same honesty rule `evidence_report.py`
+    already enforces on a submitted report.
+  - `--driver recorded` (the default once a recording exists for `--agent`) replays a
+    recording through the exact same `_classify` a live run would have used, with no
+    process launched -- the seven trials against `claude_code@2.1.263` reproduce the
+    witnessed table in under a second. `evidence_report.py` gains `recorded_version` and
+    rejects a recorded-driver report claiming a newer `version` than it replayed.
+    `claude_code`'s `pre_tool` per-claim evidence now points `test` at the recording
+    instead of repeating its prose six times, so the basis chain is claim -> recording ->
+    live run.
+  - `tools/watch_versions.py` compares a covered gate against its recording's version ahead
+    of the row's own, and now opens one drift issue per agent (was: one combined issue),
+    self-sufficient for a stranger with the agent installed -- the exact `--record` command,
+    what it produces, and both ways to submit it. `agentseam matrix --evidence` shows the
+    recorded version beside the row's.
 - **Per-claim evidence on the capability matrix, and grading capped by basis** (owner
   decision 2026-09-01, org-plan plan/agentseam-project.md). Additive data shape:
   - Every asserted matrix cell field (`block`, `rewrite`, `fail_mode`) now carries its own
@@ -59,8 +85,153 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
     fresher per-claim record. `tools/watch_versions.py` now reads a per-claim version
     where one exists, so `pre_tool` reads fresh while `prompt_submit` and `stop` -- not
     re-run -- still show their original drift.
+- **A submitted evidence report records which canonical event it measured**
+  (`src/agentseam/evidence_report.py`, `tools/experiment_report.py`). `as_report()` reads
+  `event` off the trial results instead of leaving it implicit; `evidence_report.py`
+  accepts it as an optional field, validated against `contract.EVENTS` when present, and
+  carries it through `to_evidence()`/`diff_against()` so a `pre_tool` report cannot be
+  merged into a `stop` claim by accident. Existing reports with no `event` stay valid. The
+  `evidence-report.yml` issue template gains a matching optional field.
+- **An `escalate` trial** (`tools/experiment_probe.py`, `tools/experiment_escalate.py`,
+  `tools/experiment_driver.py`). The probe answers with `Decision.escalate()` rendered
+  through `adapter.respond()`, in the agent's own dialect -- Cursor's reply spells it
+  `ask`; an agent whose gate does not honour escalate gets its own degraded-block dialect.
+  The new measured field `escalate_means` (`matrix_terms.OPTIONAL_CLAIM_FIELDS`, same
+  "absence is not a claim" rule as the three fields above) can read `prompted` -- the run
+  ended waiting on an answer nobody gave -- as well as `allow` and `refusal-or-error`;
+  classification reads the sentinel plus the driver's own outcome (a real headless driver
+  that exits non-zero or times out with the sentinel untouched reads as `prompted`). The
+  reference driver raises `Undocumented` for `PreToolUse`'s `permissionDecision: "ask"`,
+  the same discipline as the unknown-verb trial: the value is documented, but what a
+  headless run does next with nobody there to answer is not.
+
+### Changed
+- **The grade cap honours `verified.observed`, not just a row's basis**
+  (`src/agentseam/matrix_evidence.py`). A `live-run-partial` row's `claim_basis()` used to
+  fall back to the row's own basis for any event the row claims, watched or not, letting an
+  event the row never observed back a grade as high as `enforced` -- the very thing
+  "partial" is supposed to prevent. `claim_basis()` now falls back to the row's new
+  optional `verified.fallback_basis` (defaulting to `vendor-docs`) whenever the resolved
+  basis is `live-run-partial` and the event is absent from `observed`. Set on the three
+  rows that need it, from each row's own method text: `codex_cli` and `vscode_copilot` say
+  source (`vendor-source`); `cursor` says vendor hooks documentation (`vendor-docs`). 11 of
+  91 claimed (agent, event) pairs change basis under the fix (every unobserved event on
+  these three rows); none changes *grade* -- none of those cells asserts a fail-closed
+  claim, so each was already at or below its new, lower ceiling. Full list in PR body.
 
 ### Fixed
+- **Devin's degraded-rewrite note no longer describes a tool call at events that have
+  none** (`data/vendors/devin.json`; vendor-truth review finding `raw[5].findings[8]`). A
+  rewrite the dispatcher degraded at `UserPromptSubmit` or `Stop` was refused with
+  "Devin cannot modify a tool call" -- pointing an operator debugging why prompt
+  sanitisation blocks instead of rewriting at tool plumbing that was never involved. The
+  note is now the engine's template form and names the vendor event it could not modify,
+  matching Cursor's per-gate phrasing. Four bytes of frozen wire output move
+  (`tests/fixtures/golden/devin.json`: rewrite and rewrite-without-input at prompt_submit
+  and stop); `PreToolUse` and `PermissionRequest` output is unchanged.
+- **A Kimi Code payload naming an event Kimi has not mapped yet now reaches the caller**
+  (`adapters/_payload.py`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[8].findings[6]`). `claims()` required the event name to already be in `events`, so a
+  payload that had positively self-identified as Kimi (`client_type: kimi_code_cli`) while
+  naming a new or unmapped vendor event was claimed by no adapter at all: `handle()`
+  returned `event=None` ("unrecognized payload") instead of the UNKNOWN `Event` the
+  contract documents as the whole point of that pathway ("New vendor events appear without
+  warning; being told is the only safe outcome"). Vendor drift on Kimi was therefore
+  invisible to a caller logging UNKNOWN events. A new opt-in `claims.accept_any_name` is
+  set on the one entry whose `client_types` cannot be null; a payload with no `client_type`
+  is still not claimed, and the decision itself is unchanged (an UNKNOWN event allows).
+- **A Kimi Code `PermissionRequest` is no longer claimed by Devin as well, leaving the
+  payload unidentified** (`adapters/_payload.py`, `data/vendors/devin.json`; vendor-truth
+  review finding `raw[8].findings[8]`). Devin's `accept_names` claimed `PermissionRequest`
+  and `PostCompaction` before any marker check, on the ground that Claude Code never sends
+  those names -- but Kimi Code does send `PermissionRequest`, so a real Kimi payload was
+  claimed by two adapters, `detect()` returned `None`, and `handle()` allowed it with no
+  `Event` at all: not even the observation value survived. Reproduced by execution before
+  the fix. A new `claims.reject_client_types` key is checked ahead of `accept_names`, so
+  the CHANGELOG's own recorded rule -- a positive self-identification beats a shared event
+  name -- now holds for the one recorded collision. Devin's own `PermissionRequest`, which
+  carries no `client_type`, is claimed exactly as before.
+- **`PostCompact` no longer masquerades as canonical `pre_compact` on Grok and Kimi Code**
+  (`data/vendors/grok.json`, `data/vendors/kimi_code.json`; vendor-truth review finding
+  `raw[14].findings[12]`). Both entries mapped the vendor's
+  post-compaction event onto `pre_compact` alongside their real `PreCompact`, so a handler
+  written to snapshot context *before* compaction discards it also fired *after* it had
+  already happened, with no way to tell the two moments apart except by reading
+  `event.raw`. Devin's identical defect was closed this way in PR #43; the same
+  `"unknown"` treatment Kimi's four aliases got in PR #59 is used here, so `claims()`
+  still identifies the payload and only the relabelling stops. `REVERSE_EVENT_MAP` and
+  therefore what `install` writes are unchanged -- `wire_events` already pinned
+  `pre_compact` to `PreCompact` on both.
+- **Cursor's prompt gate stops surfacing an allow's own rationale, and starts explaining a
+  refusal** (`adapters/_cursor.py`, `data/vendors/cursor.json`; vendor-truth review finding
+  `raw[2].findings[6]`). At `beforeSubmitPrompt`, `user_message` was attached whenever the
+  decision carried a reason, whatever the outcome -- so a handler annotating its allows for
+  its own audit trail (`Decision.allow("matched allowlist rule 7")`) put that text in
+  Cursor's UI on every submitted prompt. The permission-gate branch has always attached
+  messages only when not allowing; the prompt gate now does the same. It also runs the
+  refusal through the same degradation note the other gates use, so a prompt blocked
+  *because a rewrite could not be expressed there* says so instead of showing only the
+  handler's original reason. Four bytes of frozen wire output move, all at `prompt_submit`.
+  The shared `escalate_from_transform` note now says "cannot modify the input" rather than
+  "cannot modify a tool call", which is what a prompt gate is modifying; no permission-gate
+  scenario emitted that note, so nothing else moves.
+- **A rewrite with no replacement input is no longer blamed on Cursor's rewrite gate**
+  (`adapters/_cursor.py`, `data/vendors/cursor.json`; vendor-truth review finding
+  `raw[2].findings[4]`). `Decision.rewrite(None, ...)` at `preToolUse` was refused with
+  "input requires modification, which this gate cannot express" -- untrue at the one Cursor
+  gate that *can* express a rewrite, and the adapter's headline capability. The handler
+  simply supplied no replacement. The engine already distinguishes the two cases
+  (`transform_missing_input`); `_cursor.py` now consults it, keeping the "cannot express"
+  wording for the gates where it is true. One byte of frozen wire output moves
+  (`rewrite-without-input` at `pre_tool`); the deny itself, which is the safe outcome, is
+  unchanged.
+- **Cursor answers an unnamed payload at the event `parse()` said it was** (`adapters/
+  _cursor.py`; vendor-truth review finding `raw[2].findings[7]`). `parse()` infers
+  `afterFileEdit` from an `edits[]` list, but `respond()` re-derived the event from
+  `event.tool` -- which `parse()` fills from `tool_name` when the payload carries one -- and
+  fell through to the entry's default `beforeShellExecution` gate. Reproduced: an unnamed
+  `edits` payload with a `tool_name` parsed as `file_changed` and was answered with
+  `{"permission": "deny"}`, a permission verdict at an event documented as reading no output
+  -- the fake-gate half of bug class 2, reporting an already-landed write as prevented.
+  `respond()` now calls the same `cursor_wire()` inference `parse()` uses, so the two cannot
+  diverge. No frozen wire output moves: every golden scenario names its event.
+- **A control character in the installed command no longer makes Kimi Code's whole
+  `config.toml` unloadable** (`adapters/_hook_entry.py`; vendor-truth review finding
+  `raw[8].findings[4]`). `_toml_value` escaped only backslash and double quote, so a command
+  or matcher carrying a newline (a multi-line shell wrapper, an awkward path) ended the TOML
+  line and spilled the rest into the `[[hooks]]` table as extra bare keys -- against a vendor
+  rule this repository records itself: "four fields only; a fifth makes the whole file fail
+  to load". Reproduced by execution: the rendered block does not parse, and neither does a
+  user's own `[model]` section above it. The failure mode is total and silent -- every hook,
+  ours and the user's, stops firing on a vendor that fails open. `_toml_value` now emits the
+  full TOML basic-string escape set (`\b \t \n \f \r \" \\`) with `\uXXXX` for every
+  other C0 control and U+007F, and the rendered block is pinned by a round-trip through
+  `tomllib`. No output moves for any command that was already control-character free, which
+  is every committed example and fixture.
+- **Seven tests that could not pass on Windows, each resting on a POSIX assumption.** All
+  seven fail on a clean checkout; none was skipped or deleted.
+  - Five (`test_install.py` x3, `test_adapter_kimi_code.py` x2) set `HOME` by hand and then
+    asserted against a path derived from it. Only `posixpath.expanduser` reads `HOME`;
+    `ntpath` reads `USERPROFILE`, then `HOMEDRIVE` + `HOMEPATH`. `conftest.py`'s autouse
+    `isolated_home` fixture already sets all four and says so in its own docstring -- the
+    tests now take it as a parameter instead of re-deriving home from one variable.
+  - `test_examples.py` compared committed pages against freshly built ones with a bare
+    `open()`. The pages carry em dashes, so under cp1252 every one of the twelve read back
+    mangled and reported stale, with no way to make it pass: regenerating wrote the same
+    bytes it had just failed to read. Both readers now say `encoding="utf-8"` -- the
+    test's, and `examples/generate.py`'s `--check` path, which the pre-commit hook and the
+    `examples` CI job run and which had the identical latent bug. The writer says
+    `encoding="utf-8", newline="
+"`, so a regeneration on Windows is byte-identical to one
+    on the CI runner instead of rewriting all thirteen pages with CRLF.
+  - `test_git_hooks.py::test_hook_is_executable` read `st_mode & 0o111` from the working
+    tree. Windows has no POSIX execute bit, so that is 0 for every file -- including one git
+    records as `100755` and checks out executable elsewhere. It now asserts on the mode git
+    records, which is what travels with a clone and what decides whether the hook runs.
+  - Found while fixing those: `test_a_query_never_raises_on_an_undecodable_toml_config`
+    carried the same `HOME` assumption but *passed* on Windows, because `installed()`
+    returned `False` for a file that was not on the path it reads. It asserted its own
+    setup rather than the TOML branch it names. Same fix.
 - **The stop gate's block observable is the hook re-firing, not a second action run**
   (`tools/experiment.py`). `_blocked()` used to score a Stop-gate block by reading the
   sentinel twice, on the theory that an agent refused permission to finish comes back

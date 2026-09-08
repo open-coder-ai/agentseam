@@ -119,3 +119,22 @@ def test_diff_writes_nothing():
     before = dict(EVIDENCE["cursor"])
     er.diff_against(EVIDENCE["cursor"], _report())
     assert EVIDENCE["cursor"] == before
+
+
+def test_a_report_round_trips_with_its_event():
+    row = er.to_evidence(_report(event="pre_tool"))
+    assert row["event"] == "pre_tool"
+    delta = er.diff_against(EVIDENCE["cursor"], _report(event="pre_tool"))
+    assert delta["changes"]["event"] == (None, "pre_tool")
+
+
+def test_a_report_round_trips_without_an_event():
+    """Existing reports carry no `event`; absence must stay valid (task 1, W55)."""
+    assert er.validate(_report())
+    row = er.to_evidence(_report())
+    assert "event" not in row
+
+
+def test_a_bad_event_value_is_rejected_by_name():
+    with pytest.raises(er.InvalidReportError, match="event"):
+        er.validate(_report(event="mid_tool"))

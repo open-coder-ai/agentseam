@@ -40,9 +40,18 @@ def _commit(clone, message):
 
 
 def test_hook_is_executable():
-    """A hook without the bit set is skipped by git without a word."""
+    """A hook without the bit set is skipped by git without a word.
+
+    The mode is read from git's index, not from the filesystem. Windows has no POSIX
+    execute bit, so HOOK.stat() reports a plain 0o666 there for the very same file git
+    records -- and checks out on Linux and macOS -- as 100755. The recorded mode is what
+    travels with a clone, so it is the mode worth asserting on every platform."""
+    if not shutil.which("git"):  # pragma: no cover - git is present everywhere we run
+        pytest.skip("git unavailable")
     assert HOOK.exists()
-    assert HOOK.stat().st_mode & 0o111, "pre-commit hook is not executable"
+    recorded = _run(["git", "ls-files", "-s", "--", ".githooks/pre-commit"], ROOT).stdout.split()
+    assert recorded, "pre-commit hook is not tracked by git, so no clone will ever run it"
+    assert recorded[0] == "100755", "git records mode %s, not the executable 100755" % recorded[0]
 
 
 def test_changing_an_adapter_refreshes_the_pages_in_the_same_commit(clone):

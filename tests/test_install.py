@@ -118,20 +118,26 @@ def test_cursor_install_writes_the_generic_gate_with_fail_closed(tmp_path):
     assert I.uninstall("cursor", root) is True
 
 
-def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, monkeypatch):
-    """`~/...` means the user's home, not a directory literally named `~` in the repo."""
-    monkeypatch.setenv("HOME", str(tmp_path))
+def test_a_user_scoped_config_path_is_not_nested_under_the_repo(tmp_path, isolated_home):
+    """`~/...` means the user's home, not a directory literally named `~` in the repo.
+
+    Home comes from the `isolated_home` fixture, not a local `setenv("HOME")`: only
+    posixpath reads HOME, so setting it by hand pointed this assertion at a directory
+    Windows never expands to."""
     written = I.install("junie", ["pre_tool"], "guard.py", str(tmp_path))
 
     assert not (tmp_path / "~").exists(), "created a directory literally named ~"
-    assert Path(written) == tmp_path / ".junie" / "config.json"
+    assert Path(written) == isolated_home / ".junie" / "config.json"
     assert I.installed("junie", str(tmp_path))
 
 
-def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
-    """The data-loss bug: _load returned {} on any parse failure, so install merged its"""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".junie" / "config.json"
+def test_install_never_destroys_a_config_it_cannot_parse(isolated_home):
+    """The data-loss bug: _load returned {} on any parse failure, so install merged its
+
+    Home is the fixture's, not a local setenv("HOME"): ntpath.expanduser never reads HOME,
+    so the seeded config sat where no install would ever look and every assertion below
+    was measuring an untouched file rather than a preserved one."""
+    cfg = isolated_home / ".junie" / "config.json"
     cfg.parent.mkdir()
 
     cfg.write_bytes(b"\xef\xbb\xbf" + json.dumps({"theme": "dark", "customModel": "keep-me"}).encode())
@@ -151,10 +157,13 @@ def test_install_never_destroys_a_config_it_cannot_parse(tmp_path, monkeypatch):
     assert cfg.read_bytes()[:2] == b"\xff\xfe", "a UTF-16 config was overwritten"
 
 
-def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
-    """installed() is a read-only question; a corrupt file means "not known to be there","""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".junie" / "config.json"
+def test_a_query_never_raises_on_an_unparseable_config(isolated_home):
+    """installed() is a read-only question; a corrupt file means "not known to be there",
+
+    Home is the fixture's for the reason the two tests above give: a local setenv("HOME")
+    is read by posixpath only, so the corrupt file was never on the path uninstall reads
+    and the "must raise" assertion had nothing to raise about."""
+    cfg = isolated_home / ".junie" / "config.json"
     cfg.parent.mkdir()
     cfg.write_text("{ broken ,,, }")
 
@@ -164,10 +173,13 @@ def test_a_query_never_raises_on_an_unparseable_config(tmp_path, monkeypatch):
     assert cfg.read_text() == "{ broken ,,, }", "uninstall must not rewrite a file it cannot parse"
 
 
-def test_a_query_never_raises_on_an_undecodable_toml_config(tmp_path, monkeypatch):
-    """The TOML branch of installed() must uphold the same "never raises" contract as the"""
-    monkeypatch.setenv("HOME", str(tmp_path))
-    cfg = tmp_path / ".kimi-code" / "config.toml"
+def test_a_query_never_raises_on_an_undecodable_toml_config(isolated_home):
+    """The TOML branch of installed() must uphold the same "never raises" contract as the
+
+    Home is the fixture's for the same reason as the three tests above. This one did not
+    fail on Windows, which is worse: installed() returned False because the undecodable
+    file was not on the path it reads, so the TOML branch under test never ran."""
+    cfg = isolated_home / ".kimi-code" / "config.toml"
     cfg.parent.mkdir()
     cfg.write_bytes('event = "x"'.encode("utf-16"))
 

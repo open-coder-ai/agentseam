@@ -95,11 +95,21 @@ def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_clos
     return _default_wrapper(cfg, reverse, canonical_events, command, matcher)
 
 
+#: TOML basic-string escapes. Every other C0 control (and U+007F) takes the \\uXXXX form;
+#: a raw one is a parse error, and Kimi rejects the WHOLE config.toml over a bad entry.
+_TOML_ESCAPES = {"\\": "\\\\", '"': '\\"', "\b": "\\b", "\t": "\\t", "\n": "\\n", "\f": "\\f", "\r": "\\r"}
+
+
+def _toml_char(ch):
+    if ch in _TOML_ESCAPES:
+        return _TOML_ESCAPES[ch]
+    return "\\u%04X" % ord(ch) if ch < " " or ch == "\x7f" else ch
+
+
 def _toml_value(value):
     if isinstance(value, int) and not isinstance(value, bool):
         return str(value)
-    escaped = str(value).replace("\\", "\\\\").replace('"', '\\"')
-    return '"%s"' % escaped
+    return '"%s"' % "".join(_toml_char(ch) for ch in str(value))
 
 
 def render_config(rules):

@@ -11,7 +11,7 @@
   "display": "Grok CLI",
   "events": {
     "PermissionDenied": "tool_failure",
-    "PostCompact": "pre_compact",
+    "PostCompact": "unknown",
     "PostToolUse": "post_tool",
     "PostToolUseFailure": "tool_failure",
     "PreCompact": "pre_compact",

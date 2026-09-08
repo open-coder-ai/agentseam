@@ -7,7 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import agentseam as A  # noqa: E402
 from agentseam.matrix_evidence import validate_cell, validate_claim  # noqa: E402
-from agentseam.matrix_terms import BASIS_DOCS, BASIS_LIVE, FAIL_CLOSED  # noqa: E402
+from agentseam.matrix_terms import BASIS_DOCS, BASIS_LIVE, BASIS_LIVE_PARTIAL, FAIL_CLOSED  # noqa: E402
 
 
 def test_every_asserted_cell_field_carries_evidence():
@@ -67,3 +67,27 @@ def test_a_live_run_backs_whatever_grade_the_cell_computes():
         assert A.enforcement_level("_live_fixture", A.PRE_TOOL) == "enforced"
     finally:
         del A.MATRIX["_live_fixture"]
+
+
+def test_a_partial_live_run_only_backs_enforced_at_the_events_it_observed():
+    """Task 3, W55: `live-run-partial` capped every unwatched event to `enforced` too, since
+    a per-claim record seeded from the row (or one that simply falls back to it) carries the
+    row's own basis regardless of `observed`. A fail-closed `stop` cell this row never
+    watched must grade no higher than `best-effort` (the default fallback, `vendor-docs`,
+    since this fixture sets no `fallback_basis` of its own)."""
+    record = {"basis": BASIS_LIVE_PARTIAL, "date": "2026-09-01", "method": "fixture"}
+    cell = {
+        "block": True,
+        "rewrite": False,
+        "fail_mode": FAIL_CLOSED,
+        "evidence": dict.fromkeys(("block", "rewrite", "fail_mode"), record),
+    }
+    A.MATRIX["_observed_fixture"] = {
+        "verified": dict(record, observed=["pre_tool"]),
+        "events": {"pre_tool": cell, "stop": cell},
+    }
+    try:
+        assert A.enforcement_level("_observed_fixture", A.PRE_TOOL) == "enforced"
+        assert A.enforcement_level("_observed_fixture", A.STOP) == "best-effort"
+    finally:
+        del A.MATRIX["_observed_fixture"]

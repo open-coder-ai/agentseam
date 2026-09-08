@@ -24,37 +24,37 @@
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           },
           "rewrite": {
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           },
           "fail_mode": {
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           },
           "silence_means": {
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           },
           "timeout_fail_mode": {
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           },
           "unknown_verb_means": {
             "basis": "live-run",
             "date": "2026-09-07",
             "version": "2.1.263",
-            "method": "real Claude Code CLI 2.1.263 (Linux) via tools/experiment.py --driver \"claude -p {prompt} --permission-mode acceptEdits\", run twice with identical results"
+            "test": "data/recordings/claude_code@2.1.263.json"
           }
         },
         "silence_means": "allow",
@@ -397,7 +397,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-docs"
     },
     "events": {
       "pre_tool": {
@@ -1285,7 +1286,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-source"
     },
     "events": {
       "pre_tool": {
@@ -2023,7 +2025,8 @@
         "prompt_submit",
         "session_start",
         "stop"
-      ]
+      ],
+      "fallback_basis": "vendor-source"
     },
     "events": {
       "pre_tool": {

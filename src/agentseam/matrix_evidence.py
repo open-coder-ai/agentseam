@@ -9,7 +9,14 @@ rather than loaded from a second copy.
 from __future__ import annotations
 
 from ._data import load
-from .matrix_terms import BASES, CLAIM_FIELDS, OPTIONAL_CLAIM_FIELDS, REQUIRED_CLAIM_FIELDS
+from .matrix_terms import (
+    BASES,
+    BASIS_DOCS,
+    BASIS_LIVE_PARTIAL,
+    CLAIM_FIELDS,
+    OPTIONAL_CLAIM_FIELDS,
+    REQUIRED_CLAIM_FIELDS,
+)
 
 _RAW = load("matrix.json")
 
@@ -39,8 +46,21 @@ def claim_record(row, event, field):
 
 
 def claim_basis(row, event, field):
-    """The basis backing one (event, field) claim -- what `enforcement_level` caps a grade by."""
-    return claim_record(row, event, field).get("basis")
+    """The basis backing one (event, field) claim -- what `enforcement_level` caps a grade by.
+
+    A row basis of `live-run-partial` only backs the events its own `verified.observed`
+    actually names -- that is the whole point of the "partial" word. An event the row
+    claims but never watched falls back to `verified.fallback_basis` (what the rest of the
+    row rests on: source, documentation, ...), defaulting to `vendor-docs` when the row
+    does not say. Without this, a claim seeded mechanically from the row (or one that
+    simply inherits the row for lack of its own record) would let an unobserved event grade
+    as high as `enforced`, which is exactly the class of bug `cap_grade` exists to close.
+    """
+    basis = claim_record(row, event, field).get("basis")
+    verified = row.get("verified") or {}
+    if basis == BASIS_LIVE_PARTIAL and event not in verified.get("observed", ()):
+        return verified.get("fallback_basis", BASIS_DOCS)
+    return basis
 
 
 def validate_claim(record):

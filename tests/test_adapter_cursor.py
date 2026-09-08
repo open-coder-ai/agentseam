@@ -132,3 +132,31 @@ def test_every_gate_is_installed_fail_closed_including_the_prompt_one():
     assert cfg["hooks"]["beforeSubmitPrompt"][0]["failClosed"] is True
     assert cfg["hooks"]["preToolUse"][0]["failClosed"] is True
     assert "failClosed" not in cfg["hooks"]["postToolUse"][0]
+
+
+def test_respond_infers_the_unnamed_event_the_same_way_parse_does():
+    """An unnamed edits payload carrying tool_name parsed as file_changed and was answered"""
+    raw = {"conversation_id": "c1", "file_path": "/repo/a.py", "edits": [{"new_string": "s"}], "tool_name": "Edit"}
+    mod = A.adapters.get("cursor")
+    assert mod.parse(raw).event == A.FILE_CHANGED
+    assert mod.respond(Decision.deny("no"), mod.parse(raw)) == ("", 0)
+
+
+def test_a_rewrite_with_no_input_is_not_blamed_on_the_gate_that_can_rewrite():
+    """preToolUse is the one gate that CAN express a rewrite; the handler supplied none."""
+    text, _, _, _ = A.handle(CU_PRE_TOOL, lambda _e: Decision.rewrite(None, "needs change"))
+    assert json.loads(text)["user_message"] == "needs change (no replacement input was supplied)"
+
+
+def test_an_allow_does_not_leak_its_own_rationale_to_the_prompt_gate():
+    """user_message is end-user text. The permission gate has always attached it only when"""
+    text, _, _, _ = A.handle(CU_SUBMIT, lambda _e: Decision.allow("matched allowlist rule 7"))
+    assert json.loads(text) == {"continue": True}
+
+
+def test_a_prompt_gate_refusal_says_why_the_outcome_changed_shape():
+    """Every other cursor gate explains a degraded rewrite; this one told only the handler's"""
+    text, _, _, _ = A.handle(CU_SUBMIT, lambda _e: Decision.rewrite({"prompt": "clean"}, "sanitized"))
+    payload = json.loads(text)
+    assert payload["continue"] is False
+    assert payload["user_message"] == "sanitized (beforeSubmitPrompt cannot modify the input, so this is a block)"

@@ -20,9 +20,10 @@ agent round again, and the hook fires a second time. The re-fire is what is coun
     python3 tools/experiment.py run --agent claude_code --event stop
     python3 tools/experiment.py run --agent claude_code --trial crash --keep
 
-The default driver is tools/reference_agent.py: the vendor's documentation, made
-executable. It needs no credentials, so the whole harness runs in CI for free, and a
-disagreement between it and the real agent is precisely a documentation bug.
+Absent --driver, this replays a recording (tools/recorded_driver.py) if one exists for the
+agent, else falls back to tools/reference_agent.py -- the vendor's documentation, made
+executable. Both need no credentials, so the whole harness runs in CI for free, and a
+disagreement between either and the real agent is a finding.
 
 SAFETY: this probe denies, crashes and stalls on purpose. Every trial runs in a fresh
 temporary directory that this module creates and removes, with a config written only
@@ -36,7 +37,6 @@ import argparse
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 
@@ -44,8 +44,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "src"))
 sys.path.insert(0, HERE)
 
+import experiment_driver  # noqa: E402
+import experiment_escalate  # noqa: E402
 import experiment_probe  # noqa: E402
 import experiment_report  # noqa: E402
+import recorded_driver  # noqa: E402
 import reference_agent  # noqa: E402
 
 from agentseam import adapters, contract  # noqa: E402
@@ -73,7 +76,15 @@ _MEANING = {
     "silence": ("silence_means", "allow", "refusal-or-error"),
     "timeout": ("timeout_fail_mode", FAIL_OPEN, FAIL_CLOSED),
     "unknown": ("unknown_verb_means", "allow", "refusal-or-error"),
+    # escalate is a three-value field (experiment_escalate.classify_escalate handles it
+    # directly in _classify below); kept here only so the table lists every trial.
+    "escalate": ("escalate_means", "allow", "refusal-or-error"),
 }
+
+#: Trials whose Undocumented reading is named for the trial's own measured field (task 6,
+#: W53) rather than the generic diagnostic "documented" -- so the diff can compare a real
+#: agent's answer against the one thing the reference refuses to guess.
+_UNDOCUMENTED_NAMES_ITS_FIELD = ("unknown", "escalate")
 
 
 def _write_config(adapter, workspace, probe_command, event):
@@ -125,11 +136,13 @@ def _invocations(record_dir):
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def _classify(trial, event, observed, invocations):
+def _classify(trial, event, observed, invocations, outcome=None):
     """What one trial measured, as a (field, value) pair plus a human reading.
 
     `invocations` is a count, not a flag: at the stop gate how many times the hook fired is
     itself the measurement (see _blocked), and zero still means it never fired at all.
+    `outcome` is the driver's own result, needed only by the escalate trial -- see
+    experiment_escalate.py.
     """
     if not invocations:
         return "hook_reached", False, "the hook never fired -- config path or format is wrong for this version"
@@ -145,6 +158,9 @@ def _classify(trial, event, observed, invocations):
         return "transform", None, "ambiguous: %s" % observed
 
     blocked = _blocked(event, observed, invocations)
+    if trial == "escalate":
+        return experiment_escalate.classify_escalate(blocked, outcome)
+
     field, when_ran, when_blocked = _MEANING[trial]
     if event == contract.STOP:
         reading = "the agent was made to continue" if blocked else "the agent finished"
@@ -155,10 +171,14 @@ def _classify(trial, event, observed, invocations):
     return field, (when_blocked if blocked else when_ran), reading
 
 
-def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep=False, timeout=None):
-    """One trial, start to finish, in a workspace created and destroyed here."""
+def run_trial(
+    agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep=False, timeout=None, agent_version=None
+):
+    """One trial: a real workspace, or (driver="recorded") a frozen recording replayed."""
     if event not in EVENTS:
         raise ValueError("cannot gate at %r (have: %s)" % (event, ", ".join(EVENTS)))
+    if driver == recorded_driver.DRIVER_NAME:
+        return recorded_driver.run_trial(agent, trial, event=event, version=agent_version)
     adapter = adapters.get(agent)
     workspace = tempfile.mkdtemp(prefix="agentseam-exp-%s-%s-" % (agent, trial))
     record_dir = os.path.join(workspace, ".record")
@@ -191,23 +211,24 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
                 # here, so only a real run can settle it.
                 undocumented, outcome = str(exc), None
         else:
-            outcome = _drive_real(driver, workspace)
+            outcome = experiment_driver.drive_real(driver, workspace, trigger=TRIGGER)
 
         observed = _observe(workspace)
         invocations = _invocations(record_dir)
         if undocumented is not None:
-            # Named for the `unknown` trial's own field (unknown_verb_means) rather than
-            # the generic "documented", so the diff can compare it against a real agent's
-            # reading of that same field -- documentation-silence vs an observed answer is
-            # exactly the disagreement worth surfacing. Any other trial keeps the older,
-            # purely diagnostic "documented" reading; nothing else currently reaches here.
-            if trial == "unknown":
-                field, value = _MEANING["unknown"][0], "undocumented"
+            # Named for the trial's own measured field (unknown_verb_means, escalate_means)
+            # rather than the generic "documented", so the diff can compare it against a
+            # real agent's reading of that same field -- documentation-silence vs an
+            # observed answer is exactly the disagreement worth surfacing. Any other trial
+            # keeps the older, purely diagnostic "documented" reading; nothing else
+            # currently reaches here.
+            if trial in _UNDOCUMENTED_NAMES_ITS_FIELD:
+                field, value = _MEANING[trial][0], "undocumented"
             else:
                 field, value = "documented", False
             reading = "protocol is silent: %s" % undocumented
         else:
-            field, value, reading = _classify(trial, event, observed, len(invocations))
+            field, value, reading = _classify(trial, event, observed, len(invocations), outcome)
         return {
             "agent": agent,
             "trial": trial,
@@ -225,21 +246,6 @@ def run_trial(agent, trial, *, event=contract.PRE_TOOL, driver="reference", keep
             shutil.rmtree(workspace, ignore_errors=True)
 
 
-def _drive_real(command, workspace):
-    """Drive a real agent CLI in the scratch workspace.
-
-    `command` is a shell command template containing {prompt}. Kept deliberately thin:
-    every agent's headless invocation differs, and encoding those here would rot faster
-    than the matrix does.
-    """
-    prompt = "Run this exact shell command and nothing else: %s" % TRIGGER
-    filled = command.replace("{prompt}", json.dumps(prompt))
-    proc = subprocess.run(  # noqa: S602
-        filled, shell=True, cwd=workspace, capture_output=True, text=True, timeout=300
-    )
-    return {"returncode": proc.returncode, "stdout": proc.stdout[-2000:], "stderr": proc.stderr[-2000:]}
-
-
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -250,7 +256,7 @@ def main(argv=None):
     run.add_argument(
         "--event", default=contract.PRE_TOOL, choices=EVENTS, help="which gate to wire the probe at (default: pre_tool)"
     )
-    run.add_argument("--driver", default="reference", help="'reference', or a shell template containing {prompt}")
+    recorded_driver.add_cli_args(run)
     run.add_argument("--keep", action="store_true", help="leave the scratch workspace for inspection")
     run.add_argument("--json", action="store_true")
     run.add_argument("--report", action="store_true", help="emit a submittable evidence report")
@@ -263,8 +269,18 @@ def main(argv=None):
             print("%-10s %s" % (name, what))
         return 0
 
+    args.driver = recorded_driver.resolve_driver(args.agent, args.driver, event=args.event, version=args.agent_version)
+    if args.record:
+        recorded_driver.check_record_args(parser, driver=args.driver, agent_version=args.agent_version)
+
     trials = args.trial or sorted(experiment_probe.BEHAVIOURS)
-    results = [run_trial(args.agent, t, event=args.event, driver=args.driver, keep=args.keep) for t in trials]
+    keep = args.keep or args.record
+    results = [
+        run_trial(args.agent, t, event=args.event, driver=args.driver, keep=keep, agent_version=args.agent_version)
+        for t in trials
+    ]
+    if args.record:
+        recorded_driver.finalize_record(args, results)
     if args.report:
         report = experiment_report.as_report(results, version=args.agent_version, reporter=args.reporter)
         print(json.dumps(report, indent=2))
