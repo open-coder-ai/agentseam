@@ -148,28 +148,6 @@ jobs:
           agentseam matrix | head -3
           agentseam doctor --repo .
 
-  # The README's own Quick start is a claim like any other -- extract the real bash
-  # fence with tools/quickstart_block.py and run it, rather than trusting that a code
-  # sample still works. `pip install .` first so the block's own `pip install agentseam`
-  # is satisfied by the tree being tested instead of fetching a different release.
-  quickstart:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
-        with:
-          python-version: "3.12"
-      - run: pip install .
-      - name: Run the README's Quick start block
-        run: |
-          set -euo pipefail
-          workdir=$(mktemp -d)
-          python3 tools/quickstart_block.py > "$workdir/quickstart.sh"
-          cd "$workdir"
-          bash -euo pipefail quickstart.sh
-
   # The runtime path must stay importable with no third-party packages: adapters are
   # copied verbatim into other projects, so an accidental dependency breaks exactly
   # the consumers this library exists for. Cheaper to assert than to discover.

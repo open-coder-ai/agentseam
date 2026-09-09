@@ -1,0 +1,93 @@
+# Renders docs/assets/demo.tape -> demo.gif with VHS.
+#
+# Two triggers:
+#   - workflow_dispatch: manual, authoring-time render. Uploads the `demo-gif` artifact
+#     for review; never commits. Linux rendering is canonical -- the tape is authored
+#     against a Unix shell, and VHS is at its flakiest on Windows.
+#   - push touching docs/assets/demo.tape, on any branch but main: renders and commits
+#     the regenerated GIF straight back onto that branch, so a tape edit carries its GIF
+#     into its own pull request. `main` is protected with no bypass, so this trigger
+#     excludes it -- a push there would just fail.
+name: Demo GIF
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - docs/assets/demo.tape
+    branches-ignore:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.12"
+
+      # The tape drives the real CLI; install the tree being rendered.
+      - name: Install agentseam
+        run: pip install .
+
+      - name: Render tape
+        uses: charmbracelet/vhs-action@f6d7db07a432fcd3b06772628d36a57f96d95dcf  # v2
+        with:
+          path: docs/assets/demo.tape
+
+      - name: Upload GIF
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
+        with:
+          name: demo-gif
+          path: docs/assets/demo.gif
+          if-no-files-found: error
+
+  render-and-commit:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install agentseam
+        run: pip install .
+
+      # The tape's hidden setup runs from /work/demo with HOME=/work/user, so the
+      # frames show a fixed, neutral path instead of a runner-specific scratch dir.
+      # vhs-action is a Node action that runs directly on the runner (not in a
+      # container), so /work must exist on the runner's own filesystem before VHS
+      # types into a shell -- and must be owned by the user running this job, since
+      # "/" itself is root-owned and a plain mkdir there would fail.
+      - name: Create /work scratch directory
+        run: |
+          sudo mkdir -p /work/demo /work/user
+          sudo chown -R "$(id -u):$(id -g)" /work
+
+      - name: Render tape
+        uses: charmbracelet/vhs-action@f6d7db07a432fcd3b06772628d36a57f96d95dcf  # v2
+        with:
+          path: docs/assets/demo.tape
+
+      - name: Commit regenerated GIF
+        uses: stefanzweifel/git-auto-commit-action@4a55954c782fc1ea30b9056cd3e7a2b40ca8887d  # v7.2.0
+        with:
+          commit_message: "docs: regenerate demo.gif"
+          commit_options: "--signoff"
+          file_pattern: docs/assets/demo.gif
