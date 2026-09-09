@@ -17,6 +17,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   job) instead of trusted on faith. Bundles, Design and the per-vendor example-page
   generator sections moved to `docs/` verbatim.
 
+### CI
+- **`render-demo` renamed to `demo-gif`, gaining a push trigger that commits the GIF.**
+  `workflow_dispatch` still renders `docs/assets/demo.tape` and uploads the `demo-gif`
+  artifact for manual review; a new trigger on pushes touching the tape (any branch but
+  the protected `main`) renders and commits the regenerated `docs/assets/demo.gif`
+  straight back onto that branch via `stefanzweifel/git-auto-commit-action` (pinned by
+  commit SHA), so a tape edit carries its GIF into its own pull request. The `quickstart`
+  job moved out of `ci.yml` into its own `quickstart.yml`; it renders `docs/quickstart.sh`
+  from the same `tools/quickstart_block.py` extraction the README test already used and
+  fails on drift, giving contributors a runnable script without a second place to edit it.
+
 ### Added
 - **`claude_code`'s `prompt_submit` and `stop` cells are now witnessed at 2.1.263**, the
   way W53 did `pre_tool`. Both gates were re-run against the real CLI with the fixed
