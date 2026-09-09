@@ -20,9 +20,11 @@ Set Theme "Catppuccin Mocha"
 Set TypingSpeed 40ms
 Set Padding 24
 
-# --- hidden setup: throwaway repo, throwaway HOME (junie/kimi_code write under $HOME) ---
+# --- hidden setup: a fixed, neutral repo path and HOME. junie and kimi_code write under
+# $HOME and `install` prints the resolved absolute path, so a mktemp path would appear in
+# the frames; /work/demo and /work/user are real directories that carry no container detail. ---
 Hide
-Type "cd $(mktemp -d) && git init -q && export HOME=$(mktemp -d) && clear"
+Type "rm -rf /work/demo /work/user && mkdir -p /work/demo /work/user && cd /work/demo && git init -q && export HOME=/work/user && clear"
 Enter
 Type "echo ZnJvbSBhZ2VudHNlYW0gaW1wb3J0IHJ1biwgRGVjaXNpb24KCmRlZiBoYW5kbGVyKGV2ZW50KToKICAgIGlmIGV2ZW50LmV2ZW50ID09ICJwcmVfdG9vbCIgYW5kICJBS0lBIiBpbiAoZXZlbnQuY29udGVudCBvciAiIik6CiAgICAgICAgcmV0dXJuIERlY2lzaW9uLmRlbnkoIm5vIEFXUyBrZXlzIGluIG1lbW9yeSBmaWxlcyIpCiAgICByZXR1cm4gRGVjaXNpb24uYWxsb3coKQoKcnVuKGhhbmRsZXIpCg== | base64 -d > my_handler.py && clear"
 Enter
