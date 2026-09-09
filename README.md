@@ -52,6 +52,13 @@ Replit, Zed). Nothing here is emulated: `install` writes real per-agent config f
 
 ## What each agent can actually do
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-dark.svg">
+  <img alt="Capability matrix: 16 coding agents by 12 lifecycle events, graded from src/agentseam/matrix.py. Of 192 cells: 2 are enforceable, 33 best-effort, 56 detect, and 101 none. Zero cells anywhere are graded enforced -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-light.svg" width="760">
+</picture>
+
+*192 cells generated from `src/agentseam/matrix.py`: 101 none, 56 detect, 33 best-effort, 2 enforceable, 0 enforced.*
+
 | Level | Meaning |
 |---|---|
 | enforced | the agent blocks, and fails closed if the hook dies — no agent is graded here at `pre_tool` today |
@@ -238,6 +245,11 @@ More: [Bundles](docs/bundles.md) · [Design](docs/design.md) ·
 [per-vendor examples](docs/vendor-examples.md) · [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Part of open-coder-ai
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/family-dark.svg">
+  <img alt="Layered diagram of the open-coder-ai family: agentseam is the foundation across the bottom, chock sits on it, chock-catalog feeds chock and generates four plugin repositories, chock-threat-intel feeds the catalog, and context-report runs as a verification arm beside all of them." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/family-light.svg" width="800">
+</picture>
 
 | | |
 |---|---|
