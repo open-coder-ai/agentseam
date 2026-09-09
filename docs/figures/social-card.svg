@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="t d">
+  <title id="t">agentseam</title>
+  <desc id="d">agentseam: one handler API over every coding agent's hooks, instruction files, plugin packaging and config. 0 of 192 capability-matrix cells are graded enforced.</desc>
+  <rect width="1280" height="640" fill="#fcfcfb"/>
+  <text x="72" y="296" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="72" font-weight="700" fill="#0b0b0b" text-anchor="start">agentseam</text>
+  <text x="74" y="344" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="24" font-weight="400" fill="#52514e" text-anchor="start">one handler API over every coding agent's hooks — graded, not assumed</text>
+  <rect x="74" y="436" width="30" height="30" rx="3" fill="#d8d7d2"/>
+  <text x="89" y="457" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="15" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
+  <text x="118" y="460" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#0b0b0b" text-anchor="start">0 of 192 capability-matrix cells graded enforced</text>
+  <text x="74" y="500" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="400" fill="#52514e" text-anchor="start">16 agents × 12 events, verified from src/agentseam/matrix.py — not one cell claims more than its evidence.</text>
+  <rect x="0" y="632" width="1280" height="8" rx="0" fill="#2a78d6"/>
+</svg>

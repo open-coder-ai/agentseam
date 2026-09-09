@@ -203,3 +203,24 @@ jobs:
         env:
           PYTHONNOUSERSITE: "1"
         run: python tests/check_stdlib_only.py
+
+  # docs/figures/make_*.py render the README's figures FROM src/agentseam/matrix.py -- an
+  # agent or event added to the matrix, or a grade that shifts, changes a committed SVG.
+  # Regenerating and diffing here is the only thing that catches a figure nobody re-ran.
+  # No cairosvg install: the generators are stdlib-only plus docs/figures/palette.py, and
+  # social-card.png (which does use cairosvg, guarded by an ImportError fallback in
+  # make_social.py) is not reproduced here on purpose -- it depends on the renderer's
+  # installed fonts, so only the SVG it was rendered from is asserted against the package.
+  figures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.12"
+      - name: Regenerate figures
+        run: cd docs/figures && for g in make_*.py; do python "$g"; done
+      - name: Fail on drift
+        run: git diff --exit-code -- docs/figures
