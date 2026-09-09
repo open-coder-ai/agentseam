@@ -47,8 +47,17 @@ H = GRID_Y0 + GRID_H + LEGEND_H
 #: cross-checked below against every event that actually appears in the matrix, so an event
 #: added to the package and forgotten here breaks the build instead of silently going missing.
 EVENTS = [
-    "pre_tool", "post_tool", "stop", "tool_failure", "prompt_submit", "session_start",
-    "session_end", "pre_compact", "subagent_start", "subagent_stop", "instructions_loaded",
+    "pre_tool",
+    "post_tool",
+    "stop",
+    "tool_failure",
+    "prompt_submit",
+    "session_start",
+    "session_end",
+    "pre_compact",
+    "subagent_start",
+    "subagent_stop",
+    "instructions_loaded",
     "file_changed",
 ]
 _actual_events = {e for row in matrix.MATRIX.values() for e in row["events"]}
@@ -111,15 +120,16 @@ def render(t, name, grades, counts):
         "agentseam can honestly claim at that surface. Of %d cells: %s. No agent is graded "
         "enforced at any event -- eleven agents reach only best-effort at pre_tool, Cursor "
         "alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook "
-        "surface at pre_tool at all."
-        % (total, "; ".join("%d %s" % (counts[g], LABEL[g]) for g in present))
+        "surface at pre_tool at all." % (total, "; ".join("%d %s" % (counts[g], LABEL[g]) for g in present))
     )
     svg = p.open_svg(W, H, t, "agentseam capability matrix", desc)
     svg += p.text(MARGIN_L, 20, "What each agent can honestly do, by event", t["text"], 15, p.SANS, "600")
     svg += p.text(
-        MARGIN_L, 36,
+        MARGIN_L,
+        36,
         "16 agents × 12 events, graded from src/agentseam/matrix.py -- not one cell says “enforced”",
-        t["secondary"], 10.5,
+        t["secondary"],
+        10.5,
     )
 
     # Column headers: event names rotated upright-reading (bottom-to-top), anchored at the
@@ -137,7 +147,14 @@ def render(t, name, grades, counts):
     for r, agent in enumerate(AGENTS):
         y = GRID_Y0 + r * CELL_H
         svg += p.text(
-            GRID_X0 - 10, y + CELL_H / 2 + 3.5, agent, t["text"], 10.5, p.MONO, "400", anchor="end",
+            GRID_X0 - 10,
+            y + CELL_H / 2 + 3.5,
+            agent,
+            t["text"],
+            10.5,
+            p.MONO,
+            "400",
+            anchor="end",
         )
 
     # Cells: fill carries the grade, the glyph repeats it in text so colour is never load-bearing.
@@ -150,8 +167,14 @@ def render(t, name, grades, counts):
             svg += p.box(x + p.GAP / 2, y + p.GAP / 2, CELL_W - p.GAP, CELL_H - p.GAP, fill, rx=2)
             glyph_colour = t["surface"] if grade != GRADE_NONE else t["secondary"]
             svg += p.text(
-                x + CELL_W / 2, y + CELL_H / 2 + 3.5, GLYPH[grade], glyph_colour, 8.5, p.MONO,
-                "600", anchor="middle",
+                x + CELL_W / 2,
+                y + CELL_H / 2 + 3.5,
+                GLYPH[grade],
+                glyph_colour,
+                8.5,
+                p.MONO,
+                "600",
+                anchor="middle",
             )
 
     # Legend: every level that actually occurs, spelled out, swatch + glyph + word + count.
@@ -165,14 +188,18 @@ def render(t, name, grades, counts):
         lx += 34 + 11 * len(label) + 14
 
     svg += p.text(
-        MARGIN_L, legend_y + 26,
+        MARGIN_L,
+        legend_y + 26,
         "“enforced” never appears above: no agent in this matrix blocks and fails closed at any event.",
-        t["secondary"], 10,
+        t["secondary"],
+        10,
     )
     svg += p.text(
-        MARGIN_L, legend_y + 44,
+        MARGIN_L,
+        legend_y + 44,
         "– marks no hook surface at all, not a weak grade -- it is drawn in grey, never on the ramp.",
-        t["secondary"], 10,
+        t["secondary"],
+        10,
     )
 
     return svg + p.close_svg()

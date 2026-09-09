@@ -93,7 +93,11 @@ max-statements = 50
 [tool.ruff.format]
 # Template text is frozen -- a regenerated bundle must stay byte-identical -- so the
 # formatter must not rewrap it; `ruff check` still lints the templates as Python.
-exclude = ["*.py.tmpl"]
+# docs/figures/palette.py and make_family.py are the open-coder-ai launch programme's
+# shared figure tooling: every one of the four sibling repositories carries them
+# byte-identical (verified with sha256sum at copy time), so none of them may reformat its
+# copy. `ruff check` still lints them like any other source file -- both already pass it.
+exclude = ["*.py.tmpl", "docs/figures/palette.py", "docs/figures/make_family.py"]
 
 [tool.ruff.lint.per-file-ignores]
 # A template references names the bundler splices in from other sections (Decision, sys,

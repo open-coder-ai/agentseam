@@ -17,7 +17,6 @@ figures can never quote different counts for the same run.
 """
 
 import pathlib
-import sys
 
 import palette as p
 from make_matrix import cell_grades  # also puts this repo's src first on sys.path
@@ -35,16 +34,17 @@ def build():
 
     desc = (
         "agentseam: one handler API over every coding agent's hooks, instruction files, "
-        "plugin packaging and config. %d of %d capability-matrix cells are graded enforced."
-        % (enforced, total)
+        "plugin packaging and config. %d of %d capability-matrix cells are graded enforced." % (enforced, total)
     )
     svg = p.open_svg(W, H, t, "agentseam", desc)
 
     svg += p.text(72, 296, "agentseam", t["text"], 72, p.MONO, "700")
     svg += p.text(
-        74, 344,
+        74,
+        344,
         "one handler API over every coding agent's hooks — graded, not assumed",
-        t["secondary"], 24,
+        t["secondary"],
+        24,
     )
 
     # The headline number, in the card's one true fact: how many cells are graded enforced.
@@ -53,13 +53,20 @@ def build():
     svg += p.box(74, 436, 30, 30, t["neutral"], rx=3)
     svg += p.text(74 + 15, 436 + 21, "–", t["secondary"], 15, p.MONO, "600", anchor="middle")
     svg += p.text(
-        118, 460, "%d of %d capability-matrix cells graded enforced" % (enforced, total),
-        t["text"], 26, p.SANS, "600",
+        118,
+        460,
+        "%d of %d capability-matrix cells graded enforced" % (enforced, total),
+        t["text"],
+        26,
+        p.SANS,
+        "600",
     )
     svg += p.text(
-        74, 500,
+        74,
+        500,
         "16 agents × 12 events, verified from src/agentseam/matrix.py — not one cell claims more than its evidence.",
-        t["secondary"], 15,
+        t["secondary"],
+        15,
     )
     svg += p.box(0, H - 8, W, 8, t["enforcement"][1], rx=0)
 
