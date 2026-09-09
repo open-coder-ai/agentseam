@@ -9,6 +9,11 @@ top do not have to. Most contributions are one of three shapes:
 2. **A matrix correction** — a vendor changed behaviour, or a row is wrong.
 3. **A new primitive or event** — rarer; changes the contract, so it needs discussion first.
 
+New here? The [seeded good-first-issue
+list](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+collects small, scoped starting points — a narrow adapter gap, a missing evidence report —
+sized for a first pull request.
+
 ## The rule that overrides preference
 
 **Never claim an enforcement a vendor cannot deliver.** `matrix.enforcement_level()`
@@ -40,6 +45,32 @@ from a blog post are how a hook silently stops firing six months later.
 
 Adding an agent must not require touching `contract.py`, `dispatch.py`, or any consumer.
 If it does, the abstraction is wrong; say so in the PR and we fix the abstraction.
+
+## The ladder
+
+Contributions here get larger in one direction, and you can stop at any rung:
+
+1. **An evidence report** — run a probe, paste what actually happened. No code, and it is the
+   most useful thing a newcomer can do, because a claim nobody re-ran is just a claim.
+2. **An eval case** — a input that should be caught, or should not be, with the expected
+   verdict. This is how a guard stops regressing.
+3. **A policy** — a rule plus the mechanism that enforces it, honestly labelled as enforced or
+   advisory.
+4. **An adapter** — support for one more agent, matched to what that agent's hooks can really do.
+5. **Review** — reading someone else's evidence and saying whether it holds.
+
+**Becoming a maintainer:** three merged pull requests earns triage rights — labelling, closing
+duplicates, and asking for the evidence a report is missing. Nobody is asked to commit to more
+than they want to.
+
+This repo's own CI is the filter for low-effort or machine-generated pull requests, not a human
+gatekeeper: the `dco` job rejects any commit missing a DCO sign-off, and `no-private-data` scans
+every commit message and PR body for exactly the kind of thing a careless tool leaves behind. A
+PR that cannot say what it checked will not pass, whoever or whatever wrote it.
+
+Rung one is the section immediately below. Running the capture probe for one agent you already
+have installed and pasting the report is the single best on-ramp into this project — *Contributing
+evidence* covers what the probes can and cannot see and where to send what you find.
 
 ## Contributing evidence (you do not need to write code)
 
