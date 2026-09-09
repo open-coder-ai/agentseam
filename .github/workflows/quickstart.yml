@@ -1,0 +1,52 @@
+# The README's own Quick start is a claim like any other -- extract the real bash
+# fence with tools/quickstart_block.py and run it, rather than trusting that a code
+# sample still works. The extractor stays the single source of truth (the README
+# stays the thing a contributor edits); this workflow also renders that source into
+# docs/quickstart.sh and fails if the committed copy has drifted, so there is a
+# runnable script for anyone who wants one without a second place to edit it.
+name: Quick start
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quickstart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.12"
+
+      # `pip install .` first so the block's own `pip install agentseam` is
+      # satisfied by the tree being tested instead of fetching a different release.
+      - name: Install agentseam
+        run: pip install .
+
+      - name: Check docs/quickstart.sh matches the README
+        run: |
+          {
+            printf '#!/usr/bin/env bash\n'
+            printf 'set -euo pipefail\n'
+            printf '# Generated from README.md'"'"'s "Quick start" block by tools/quickstart_block.py.\n'
+            printf '# Do not edit by hand -- edit the README and regenerate.\n\n'
+            python3 tools/quickstart_block.py
+          } > /tmp/quickstart.sh
+          diff -u docs/quickstart.sh /tmp/quickstart.sh
+
+      - name: Run the README's Quick start block
+        run: |
+          workdir=$(mktemp -d)
+          cp docs/quickstart.sh "$workdir/quickstart.sh"
+          cd "$workdir"
+          bash -euo pipefail quickstart.sh
