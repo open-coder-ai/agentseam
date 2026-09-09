@@ -6,6 +6,17 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Docs
+- **README rewritten to lead with the hero demo GIF and the honest capability matrix**,
+  ahead of the pitch copy. Adds a hero GIF (`docs/assets/demo.tape`, rendered by the new
+  manual `render-demo` workflow) showing the real `agentseam install all` output; a
+  Supported agents table now covers all 16 agents with a `Verified` column (basis and
+  date from `agentseam matrix --evidence`); and a one-sentence count of how many
+  `pre_tool` claims are live-run witnessed versus doc-derived (4 of 12). The Quick start
+  block is now run for real in CI (`tools/quickstart_block.py` + the new `quickstart`
+  job) instead of trusted on faith. Bundles, Design and the per-vendor example-page
+  generator sections moved to `docs/` verbatim.
+
 ### Added
 - **`claude_code`'s `prompt_submit` and `stop` cells are now witnessed at 2.1.263**, the
   way W53 did `pre_tool`. Both gates were re-run against the real CLI with the fixed

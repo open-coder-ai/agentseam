@@ -1,29 +1,34 @@
-<img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg"
-     alt="agentseam: the primitives layer for every coding agent -- one handler API over per-agent hooks, instruction files, plugin packaging and config. The mark is a seam: five unevenly spaced vendor lines converging through stitches into five evenly spaced parallel lines."
-     width="104" align="right">
-
-# agentseam
+<div align="center">
+  <img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg" alt="agentseam mark: five uneven vendor lines converging through a seam into five even lines" width="104">
+  <h1>agentseam</h1>
+  <p><b>One handler API over every coding agent's hooks, instruction files, plugins and config — with a matrix of what each agent can actually enforce.</b></p>
 
 [![CI](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml/badge.svg)](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![PyPI](https://img.shields.io/pypi/v/agentseam)](https://pypi.org/project/agentseam/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-coder-ai/agentseam/badge)](https://scorecard.dev/viewer/?uri=github.com/open-coder-ai/agentseam)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+</div>
 
+<p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/demo.gif" width="760" alt="Terminal recording: agentseam install all wires one handler into every coding agent's own hook config in a single command. The output grades each agent honestly -- best-effort for eleven of them, the stronger enforceable gate for Cursor -- and says nothing at all for aider, Copilot CLI, Replit and Zed, which have no hook surface to wire."></p>
 
-**The primitives layer for every coding agent — one handler API over per-agent hooks,
-instruction files, plugin packaging, and config.**
+Every coding agent invented its own hook system: different event names, payload shapes,
+ways to say "no", config files. So every guardrail, cost tracker or audit log gets written
+once per agent — or targets one agent and stops there. agentseam is the layer underneath:
+one normalized event, one `Decision`, and an explicit, verified map of what each agent can
+do with it. When an agent cannot enforce something, agentseam says so instead of installing
+a hook that silently does nothing. Every outcome a handler can return — `allow`, `deny`,
+`escalate` (alias `ask`), `transform` (alias `rewrite`), `warn`, `vouch` — degrades honestly
+on an agent that cannot express it, never silently. Agents are not equally capable, and
+pretending otherwise is how a "policy" silently fails; the capability matrix below is data,
+not marketing.
 
-Write one handler. Run it on every coding agent. Every agent — Claude Code, Cursor, VS Code
-Copilot, Codex, Gemini CLI, Windsurf — invented its own hook system: different event names,
-different payload shapes, different ways to say "no", different config files. So every tool
-built on top gets written once per agent, or targets one agent and stops there.
+## Quick start
 
-agentseam is the layer underneath: one normalized event, one decision type, and an explicit
-map of what each agent can *actually* do.
-
-```python
+```bash
+mkdir demo && cd demo && git init -q
+cat > my_handler.py << 'EOF'
 from agentseam import run, Decision
 
 def handler(event):
@@ -32,50 +37,74 @@ def handler(event):
     return Decision.allow()
 
 run(handler)
+EOF
+pip install agentseam
+agentseam install all "python3 my_handler.py" --events pre_tool --repo .
 ```
 
-```bash
-agentseam install all "python3 my_handler.py" --events pre_tool
-```
+That one handler now runs in Claude Code, Cursor, VS Code Copilot, Codex, Gemini CLI,
+Windsurf and six more — and the install output tells you which agents get *best-effort*
+blocking, which get the stronger *enforceable* gate (Cursor, today), and which do not
+appear in the output at all because they have no hook surface to wire (aider, Copilot CLI,
+Replit, Zed). Nothing here is emulated: `install` writes real per-agent config files into
+`--repo`, the same files Claude Code, Cursor and the rest read on their next run, and
+`uninstall` removes only the entries agentseam itself wrote.
 
-That handler now runs on Claude Code, Cursor, and VS Code Copilot — each getting its native
-protocol, each wired into its own config file.
+## What each agent can actually do
 
-## It tells you the truth about what it can enforce
+| Level | Meaning |
+|---|---|
+| enforced | the agent blocks, and fails closed if the hook dies — no agent is graded here at `pre_tool` today |
+| best-effort | it blocks, but fails *open* (a crashed hook allows) |
+| detect | observable after the fact only; prevention is not available |
+| enforceable | it blocks and *can* be told to fail closed, but doesn't by default |
+| none | no hook surface at all |
 
-Agents are not equally capable, and pretending otherwise is how a "policy" silently fails.
-The capability matrix is data, not marketing:
+A row is only claimed when a `verified: {basis, version, date}` record backs it. No row
+asserts a capability nobody has verified — run `agentseam doctor` to see what is wired on
+this machine and flag rows that haven't been re-verified in 90 days. Grading never exceeds
+evidence: a `vendor-docs` row cannot back `enforced`, however its cell reads, because
+`enforcement_level()` caps every grade by what its own basis can actually support.
 
-```
-$ agentseam matrix        # trimmed to five of fifteen columns
-                     aider           claude_code     cursor          vscode_copilot  zed
-prompt_submit        none            enforced        enforceable     detect          none
-pre_tool             none            enforced        enforceable     enforced        none
-post_tool            none            detect          detect          detect          none
-```
+## Supported agents
 
-- **enforced** — the agent blocks, and fails closed if your hook dies
-- **best-effort** — it blocks, but fails *open* (Cursor's default: a crashed hook allows)
-- **detect** — you see it after the fact; prevention is not available (Cursor file edits
-  fire `afterFileEdit`, after the write already landed)
-- **enforceable** — it blocks and *can* be told to fail closed, but doesn't by default
-  (Cursor's `failClosed: true`). "best-effort" would understate a surface you can make
-  airtight; "enforced" would claim a default that isn't there. agentseam's installer asks
-  for fail-closed on every gate it writes
-- **none** — no hook surface at all (Zed, Aider). Said out loud rather than papered over.
+`unadapted` is a fourth, deliberately separate state from `none`: agentseam has no hook
+adapter for that agent yet — a claim about *us*, not about the agent, since it still
+receives instruction files and simply cannot have its tool calls gated here. A
+`Decision.transform(...)` on an agent that cannot transform degrades to `escalate`, never
+to a silent pass-through.
 
-A row is only claimed when a `verified: {version, date, method}` record backs it — the
-version and date something was checked, and how (live run, vendor source, vendor docs).
-No row asserts a capability nobody has verified.
+| Agent | What it enforces | Config file | Verified |
+|---|---|---|---|
+| Claude Code | block + rewrite | `.claude/settings.json` | live-run · 2026-09-07 |
+| VS Code Copilot | block + rewrite | `.github/hooks/*.json` | live-run-partial · 2026-08-28 |
+| Cursor | block + rewrite (all tools, fail-open by default) | `.cursor/hooks.json` | live-run-partial · 2026-08-27 |
+| Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` | vendor-source · 2026-08-28 |
+| OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` | live-run-partial · 2026-08-28 |
+| Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
 
-`unadapted` is a fourth, deliberately separate state: agentseam has no hook adapter for
-that agent yet. It is a claim about *us*, not about the agent — those agents still receive
-instruction files, they just cannot have their tool calls gated here. Collapsing the two
-would either slander an agent that does expose hooks or overstate our own coverage.
+<details>
+<summary>10 more agents</summary>
 
-A `Decision.transform(...)` on an agent that cannot transform degrades to `escalate`, never
-to a silent pass-through. `agentseam doctor` reports what is wired on this machine and flags
-capability rows that have not been re-verified in 90 days.
+| Agent | What it enforces | Config file | Verified |
+|---|---|---|---|
+| Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` | vendor-docs · 2026-08-26 |
+| Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/agentseam.json` | vendor-docs · 2026-08-26 |
+| Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-08-26 |
+| Kimi Code CLI | block on 3 of its 20 events (fail-open) | `~/.kimi-code/config.toml` | vendor-docs · 2026-08-26 |
+| Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` | vendor-docs · 2026-08-26 |
+| Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
+| Zed | no hook surface at all — instruction files only | — | vendor-docs · 2026-08-26 |
+| Aider | no hook surface at all — instruction files only | — | vendor-docs · 2026-08-26 |
+| Replit | no hook surface found in its docs — instruction files only | — | vendor-docs · 2026-08-26 |
+| Copilot CLI marketplace bundle | packaging identity only — dispatches through the VS Code Copilot adapter, not a hook surface of its own | — | vendor-docs · 2026-08-29 |
+
+</details>
+
+Of the 12 agents that claim `pre_tool` at all, 4 — Claude Code, Codex CLI, Cursor, VS Code
+Copilot — rest on a live run against the real agent; the other 8 rest on documentation or a
+third-party install, not on a live run. Run `agentseam matrix --evidence` before you trust
+any row you didn't witness yourself.
 
 ## What it is for
 
@@ -90,7 +119,7 @@ Not just guardrails. Anything that wants to watch or shape an agent's life:
 | **Process gates** | TDD enforcement, "tests before push" |
 | **Context injection** | inject memory/instructions at session start |
 
-## One set of instructions, every agent
+## Instructions and permissions across agents
 
 Multi-agent repos hand-maintain a drawer of near-identical files — CLAUDE.md, AGENTS.md,
 `.cursor/rules/*`, `.github/copilot-instructions.md`, GEMINI.md, `.windsurfrules`,
@@ -110,15 +139,14 @@ covered by AGENTS.md: codex_cli, copilot, cursor, gemini_cli, kimi_code, vscode_
 
 16 agents reached with 9 files written, because 8 of them read `AGENTS.md` natively and a
 second copy would only drift. Content is written as a marker-delimited block, so anything a
-human wrote in those files is preserved untouched — and `instructions --list` shows what
-a repo is already telling its agents.
+human wrote in those files is preserved untouched, and `instructions --list` shows what a
+repo is already telling its agents without writing anything.
 
-## One policy, four incompatible permission languages
-
-Every agent has a settings file with an allow/deny model, and no two of them are the same
-kind of object. Claude Code evaluates an ordered rule list. Gemini CLI keeps tool-name
-allowlists. Codex runs a Starlark program over command prefixes. VS Code holds a map of
-auto-approve patterns. They do **not** have the same expressive power.
+Permissions are the same story with sharper edges: every agent has a settings file with an
+allow/deny model, and no two of them are the same kind of object. Claude Code evaluates an
+ordered rule list. Gemini CLI keeps tool-name allowlists. Codex runs a Starlark program over
+command prefixes. VS Code holds a map of auto-approve patterns. They do **not** have the
+same expressive power.
 
 ```bash
 agentseam permissions --rule 'deny:shell:curl *' --rule 'allow:shell:npm test'
@@ -134,82 +162,20 @@ agentseam permissions --rule 'deny:shell:curl *' --rule 'allow:shell:npm test'
 # pattern false withholds auto-approval but still lets a human approve the command
 ```
 
-That second block is the point. VS Code's auto-approve map takes `false` for a pattern,
-which reads like a denylist and is not one — the command still runs once a human clicks
-through. (The `github.copilot.chat.agent.terminal.denyList` key it replaced never blocked
-either.) Rendering a "deny" there would hand you a guardrail that stops nothing, so
-agentseam hands back the rule unrendered with the reason instead, and the command exits
-non-zero. Put it in CI and you find out that your policy doesn't survive the trip to an
-agent *before* you rely on it.
-
-The same honesty applies to the gaps we have in ourselves. Every agent the matrix knows
-appears here — either with a recorded model, or named with the reason there isn't one, and
-a test enforces that the two sets add up to the matrix exactly. A silently absent agent
-would read as "nothing to say here" when the truth is "nobody looked".
+VS Code has no deny — the tool refuses rather than pretends. Rendering a "deny" there would
+hand back a guardrail that stops nothing, so agentseam returns the rule unrendered with the
+reason instead, and the command exits non-zero. Put it in CI and you find out that your
+policy doesn't survive the trip to an agent *before* you rely on it.
 
 The reasons distinguish two things that are easy to blur: an agent whose permission system
-*provably exists* but whose schema we haven't read (Antigravity, Devin, Grok, Kimi Code all
-prove it through their own hook events) versus one where nothing is established at all. And
-a missing hook surface is never recorded as a missing permission model — Aider and Zed
-expose no hooks, which says nothing about what their config files can restrict.
-
-## Bundles: mostly the same directory, twice
-
-A Claude Code plugin and a Gemini CLI extension turn out to be nearly the same thing
-underneath two different manifests:
-
-| part | Claude Code plugin | Gemini CLI extension | |
-|---|---|---|---|
-| skill | `skills/<name>/SKILL.md` | `skills/<name>/SKILL.md` | identical |
-| subagent | `agents/<name>.md` | `agents/<name>.md` | identical |
-| hooks | `hooks/hooks.json` | `hooks/hooks.json` | identical |
-| command | `commands/<name>.md` | `commands/<name>.toml` | same folder, different format |
-| manifest | `.claude-plugin/plugin.json` | `gemini-extension.json` | different |
-
-So one directory serves both, and the real work is the second manifest and writing the
-commands twice. VS Code has no bundle format at all — parts are found by location, so
-committing the file *is* the install — and it reads several of Claude Code's own folders
-natively: `.claude/skills`, `.claude/agents`, `.claude/rules`, and hooks straight out of
-`.claude/settings.json`.
-
-```bash
-agentseam packaging
-```
-
-...prints each layout, the templates shared by more than one agent, and which folders an
-agent reads that belong to somebody else. That last line matters in both directions: a
-repo shipping `.claude/skills` is already shipping skills to VS Code, intended or not.
-
-`plan(agent, bundle)` renders a bundle into the exact files an agent expects, and — as
-with permissions — hands back what the format cannot hold, with a reason specific to that
-agent. Gemini can't take a `.mcp.json`, but not because it lacks MCP: it declares servers
-in the manifest instead, and saying "no MCP support" would be as wrong as saying nothing.
-
-## See it per vendor before you install anything
-
-[`examples/generated/`](examples/generated/) has a page for every agent agentseam can hook,
-each showing the **same situation** — an agent about to write a secret into a file it will
-read back later — in that vendor's own dialect: the config `install` writes, the normalized
-event a handler sees, and what `allow` / `deny` / `escalate` / `transform` / `warn` / `vouch`
-each turn into on the way back (aliases: `ask` for `escalate`, `rewrite` for `transform`),
-including the ones that get reduced because the agent cannot express them.
-
-There is a section for **every hook each agent supports**, in lifecycle order. Every block
-is generated by running the library, and CI fails if the pages drift from what it actually
-produces — an example nobody regenerates is a claim nobody checks.
-
-What the pages cannot do is verify the vendors. Each row records what its claims rest on —
-`live-run`, `live-run-partial`, `vendor-source`, `vendor-docs`, `third-party-install`,
-`inherited` — and most are vendor documentation, which is a claim about what a vendor *says*
-rather than an observation of what their build does. Claude Code's row rests on a full live
-run; Codex CLI, Cursor, and VS Code Copilot each rest on a partial one, with the observed
-events listed on the row. Vendors change hook surfaces without notice, so **verify against
-your own installation before relying on any of it**, and open an issue if a page is wrong.
-
-```bash
-python3 examples/generate.py           # rewrite the pages
-python3 examples/generate.py --check   # what CI runs
-```
+*provably exists* but whose schema nobody has read yet (Antigravity, Devin, Grok and Kimi
+Code each prove it through their own hook events) versus one where nothing is established at
+all. A missing hook surface is never recorded as a missing permission model either — Aider
+and Zed expose no hooks, which says nothing about what their config files can restrict.
+Every agent the matrix knows appears in `agentseam permissions` output, either with a
+recorded model or named with the reason there isn't one, and a test enforces that the two
+sets add up to the matrix exactly — a silently absent agent would read as "nothing to say
+here" when the truth is "nobody looked".
 
 ## Verify a claim against your own agent
 
@@ -226,36 +192,10 @@ python3 tools/capture.py uninstall --agent cursor
 ```
 
 The probe always allows, so it cannot interfere with real work, and payloads are reduced to
-shape before anything touches disk — keys and types survive, values do not. See
-[tools/VERIFY.md](tools/VERIFY.md).
-
-## Install
-
-```bash
-pip install agentseam
-```
-
-## Supported agents
-
-| Agent | Tier | Config |
-|---|---|---|
-| Claude Code | block + rewrite | `.claude/settings.json` |
-| VS Code Copilot | block + rewrite | `.github/hooks/*.json` |
-| Cursor | block + rewrite (all tools, fail-open by default) | `.cursor/hooks.json` |
-| Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` |
-| OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` |
-| Windsurf | block via exit code only; **no file-write event** | `.windsurf/hooks.json` |
-| Zed, Aider | no hook surface at all | — |
-| Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` |
-| Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/*.json` |
-| Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` |
-| Kimi Code CLI | block on 3 of its 20 events (fail-open) | `config.toml` |
-| Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` |
-| Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` |
-| Replit | no hook surface found in its docs — instruction files work | — |
-
-Goose, Crush, OpenCode: adapters planned; the
-capability research is done and each is a config entry plus a matrix row.
+shape before anything touches disk — keys and types survive, values do not. A different
+probe, `tools/experiment.py`, does the opposite on purpose: it denies, crashes and stalls,
+so it only ever runs in a throwaway directory a harness creates and removes — never point it
+at a config you work in. See [tools/VERIFY.md](tools/VERIFY.md).
 
 ## Contributing
 
@@ -283,36 +223,30 @@ Other ways in:
 - **A matrix correction.** A row that claims more than the agent does is the bug this project
   exists to prevent; the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md)
   template is for exactly that.
-- **Bugs and docs.** Issues and PRs welcome. `pytest -q` and `ruff check .` are the whole
-  local loop, the runtime path stays stdlib-only, and every commit is signed off
-  (`git commit -s`).
+- **Bugs and docs.** Issues and PRs welcome — start with a
+  [good first issue](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+  if you want a bounded one. `pytest -q` and `ruff check .` are the whole local loop, the
+  runtime path stays stdlib-only, and every commit is signed off (`git commit -s`).
 
-## Design
+Adding an adapter must never require touching `contract.py`, `dispatch.py`, or any consumer
+— if it does, the abstraction is wrong, and the PR should say so rather than route around it.
+Evidence carries the reporter's handle, and a weekly check opens an issue naming any agent
+that has shipped since its evidence was taken (`evidence: <agent> <version> — re-witness
+wanted`) — that issue is a work order for whoever has the agent installed.
 
-- **stdlib only.** No dependencies, ever, in the adapter path — adapters must stay
-  copy-portable into other projects that vendor single files.
-- **Adapters own all vendor knowledge.** Adding an agent in an existing family is a
-  config entry plus a matrix row; no consumer changes.
-- **Ownership-marked wiring.** Install is idempotent and uninstall is surgical: your own
-  hooks in the same config are never touched.
-- **The matrix carries provenance.** Every row records the version and date it was
-  verified, and how.
+More: [Bundles](docs/bundles.md) · [Design](docs/design.md) ·
+[per-vendor examples](docs/vendor-examples.md) · [ARCHITECTURE.md](ARCHITECTURE.md).
 
-[ARCHITECTURE.md](ARCHITECTURE.md) explains why those choices, what they cost, and the bug
-classes they exist to prevent.
+## Part of open-coder-ai
 
-## Part of the open-coder-ai family
-
-Everything under [open-coder-ai](https://github.com/open-coder-ai) is built on one rule: a claim must match a
-mechanism. Where this repository sits among the others:
-
-| Repository | What it is |
-| :--- | :--- |
-| [chock](https://github.com/open-coder-ai/chock) | The framework: write a policy once, enforce it on git hooks, CI, and every agent |
-| [chock-catalog](https://github.com/open-coder-ai/chock-catalog) | The policies, each graded by what it actually enforces |
-| [context-report](https://github.com/open-coder-ai/context-report) | A signed report format for whether a plugin, hook, skill or `AGENTS.md` actually works |
-| [chock-threat-intel](https://github.com/open-coder-ai/chock-threat-intel) | A weekly, human-reviewed threat digest scored against the catalog |
-| [chock-claude-plugins](https://github.com/open-coder-ai/chock-claude-plugins) · [copilot](https://github.com/open-coder-ai/chock-copilot-plugins) · [cursor](https://github.com/open-coder-ai/chock-cursor-plugins) · [codex](https://github.com/open-coder-ai/chock-codex-plugins) | The catalog compiled into each client's native plugin format; generated only, rebuilt and diffed in CI |
-| [chock-quickstart](https://github.com/open-coder-ai/chock-quickstart) · [chock-example](https://github.com/open-coder-ai/chock-example) | Template repositories: exactly what `chock init` leaves behind, and a working adoption with one policy per layer |
+| | |
+|---|---|
+| [agentseam](https://github.com/open-coder-ai/agentseam) | the primitives — one handler API and a verified capability matrix across 16 agents |
+| [chock](https://github.com/open-coder-ai/chock) | the compiler — one policy into git hooks, CI gates and native pre-tool hooks |
+| [chock-catalog](https://github.com/open-coder-ai/chock-catalog) | the policies — 39, each labelled enforced or advisory, with replayed evals |
+| [context-report](https://github.com/open-coder-ai/context-report) | the evidence — a signed report of whether an agent artifact actually works |
+| [chock-threat-intel](https://github.com/open-coder-ai/chock-threat-intel) | the threat ledger the catalog's policies answer to |
+| chock-{claude,cursor,copilot,codex}-plugins | the catalog, packaged for each agent's plugin format (generated) |
+| chock-quickstart · chock-example | template repos: what `chock init` leaves behind, and a full adoption |
 
 Apache-2.0.
