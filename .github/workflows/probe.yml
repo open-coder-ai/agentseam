@@ -1,0 +1,63 @@
+name: Probe (recorded)
+
+# Replays every committed witness recording through the real probe classifier and fails the
+# job if any trial disagrees with what src/agentseam/data/matrix.json claims. No agent CLI,
+# no network, no credentials -- the recorded driver only -- so this is the one probe check
+# every push and PR can run for free (armed initiative, wave 1, T4).
+#
+# This does not re-witness anything -- that needs a real, installed agent (see
+# docs/coverage-gaps.md and tools/watch_versions.py, which notices when a re-witness is due).
+# It answers a narrower question: does the matrix still agree with what was already
+# witnessed, on this change, right now? A `DISAGREES` row means a change made a recorded
+# claim untrue, and this job fails loudly rather than silently passing (contract invariant 4:
+# silence is a measurement, not a pass -- see tools/probe_ci.py's own summary line).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "src/agentseam/probe/**"
+      - "src/agentseam/data/recordings/*.json"
+      - "src/agentseam/data/matrix.json"
+      - "src/agentseam/matrix.py"
+      - "src/agentseam/matrix_data.py"
+      - "src/agentseam/matrix_evidence.py"
+      - "src/agentseam/matrix_terms.py"
+      - "src/agentseam/evidence_report.py"
+      - "src/agentseam/recordings.py"
+      - "tools/probe_ci.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@e9d6f990972a57673cdb72ec29e19d42ba28880f # v6
+        with:
+          python-version: "3.13"
+
+      - name: Replay every recording against the matrix
+        # pipefail so a disagreement's nonzero exit fails the step even through `tee` --
+        # the whole point of this job (see the module docstring for why exit 0 is unsafe).
+        run: |
+          set -o pipefail
+          python3 tools/probe_ci.py | tee probe.txt
+
+      - name: Summarise
+        if: always()
+        run: |
+          {
+            echo '## Probe (recorded driver)'
+            echo
+            echo '```'
+            cat probe.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
