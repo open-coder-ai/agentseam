@@ -32,6 +32,12 @@ def versions(agent):
     return sorted((m.group(2) for m in found if m and m.group(1) == agent), key=parse_version)
 
 
+def agents():
+    """Every agent with at least one committed recording, sorted."""
+    found = (_FILENAME_RE.match(name) for name in _recording_files())
+    return sorted({m.group(1) for m in found if m})
+
+
 def latest_version(agent):
     """The newest recorded version for `agent`, or None if it has never been witnessed."""
     found = versions(agent)
@@ -54,4 +60,4 @@ def load_recording(agent, version=None):
     return load(relative)
 
 
-__all__ = ["RECORDINGS_DIR", "latest_version", "load_recording", "path_for", "versions"]
+__all__ = ["RECORDINGS_DIR", "agents", "latest_version", "load_recording", "path_for", "versions"]
