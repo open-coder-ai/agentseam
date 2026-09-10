@@ -120,4 +120,6 @@ def render(results, *, agent, event, driver):
         print("  %-10s %s" % (r["trial"], r["reading"]))
     if disagreements:
         print("\n%d disagreement(s): the matrix and this agent do not match." % disagreements)
-    return 0
+    # Non-zero on disagreement, or the verb reports a mismatch and still tells its caller it
+    # succeeded -- the exact shape this probe exists to catch in other people's tooling.
+    return 1 if disagreements else 0

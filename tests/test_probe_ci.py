@@ -9,11 +9,14 @@ from __future__ import annotations
 
 import os
 import sys
+from unittest import mock
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 
 import probe_ci  # noqa: E402
+
+from agentseam.probe import experiment_report  # noqa: E402
 
 
 def test_the_committed_recording_agrees_with_the_matrix():
@@ -50,3 +53,22 @@ def test_main_reports_zero_recordings_honestly(monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "0 trial(s) checked" in out
     assert "measurement of nothing, not a pass" in out
+
+
+def test_the_human_table_exits_non_zero_when_it_prints_a_disagreement(capsys):
+    """A verb that prints DISAGREES and returns 0 is the defect this probe exists to catch."""
+    results = [{"trial": "deny", "field": "block", "measured": True, "reading": "blocked"}]
+    diff = [{"field": "block", "measured": True, "asserted": False, "status": "DISAGREES"}]
+    with mock.patch.object(experiment_report, "diff_against_matrix", return_value=diff):
+        rc = experiment_report.render(results, agent="claude_code", event="pre_tool", driver="recorded")
+    assert rc == 1
+    assert "DISAGREES" in capsys.readouterr().out
+
+
+def test_the_human_table_exits_zero_when_everything_agrees():
+    """The other half of the pair: agreement must stay a success, or the gate cries wolf."""
+    results = [{"trial": "deny", "field": "block", "measured": True, "reading": "blocked"}]
+    diff = [{"field": "block", "measured": True, "asserted": True, "status": "agrees"}]
+    with mock.patch.object(experiment_report, "diff_against_matrix", return_value=diff):
+        rc = experiment_report.render(results, agent="claude_code", event="pre_tool", driver="recorded")
+    assert rc == 0
