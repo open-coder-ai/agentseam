@@ -1,1 +1,3 @@
-{}
+{
+  "permissionDecisionReason": "Claude Code's own PreToolUse wire key (hookSpecificOutput.permissionDecisionReason). Two adapters (_hook_json.py, vscode_copilot.py) each emit it as a private, independently-named constant on purpose -- adapters are vendored as single files (AGENTS.md) and must not import each other. src/agentseam/probe/reference_agent.py reads the same literal back for an unrelated reason: it is the protocol made executable, deliberately independent of agentseam's own adapter code, so it cannot import _hook_json's constant either without testing our encoding against itself instead of the wire shape."
+}

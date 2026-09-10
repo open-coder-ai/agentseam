@@ -94,3 +94,8 @@ def test_recordings_reader_finds_the_seeded_claude_code_version():
 def test_recordings_reader_returns_none_for_an_agent_never_witnessed():
     assert recordings.latest_version("no-such-agent") is None
     assert recordings.load_recording("no-such-agent") is None
+
+
+def test_agents_lists_every_committed_agent():
+    assert "claude_code" in recordings.agents()
+    assert recordings.agents() == sorted(recordings.agents())

@@ -10,13 +10,13 @@ import sys
 import textwrap
 from datetime import date
 
-from . import __version__, adapters, recordings
+from . import __version__, adapters, probe, recordings
 from . import install as install_mod
 from . import instructions as instructions_mod
 from . import packaging as packaging_mod
 from . import permissions as permissions_mod
 from . import staleness as staleness_mod
-from .contract import EVENTS
+from .contract import EVENTS, PRE_TOOL
 from .matrix import MATRIX, enforcement_level
 
 
@@ -261,6 +261,7 @@ def _main(argv=None):
     d = sub.add_parser("doctor", help="what is wired here; flag stale capability claims")
     d.add_argument("--repo", default=".")
     d.set_defaults(fn=_cmd_doctor)
+    probe.cli.add_subparser(sub, default_event=PRE_TOOL)  # armed: probe/cli.py owns its own wiring (review budget)
 
     i = sub.add_parser("install", help="wire a handler command into an agent's config")
     i.add_argument("agent", help="agent name, or 'all'")

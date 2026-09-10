@@ -96,6 +96,9 @@ python3 tools/experiment.py run --agent <agent> --report \
     --agent-version <version> --reporter @yourhandle > report.json
 ```
 
+(`agentseam probe run` from a `pip install` — same code, promoted so it ships in the wheel;
+`agentseam probe list` shows every trial.)
+
 Open an issue with the **Evidence report** template and paste the result.
 
 A few things worth knowing before you run either:
@@ -117,6 +120,12 @@ A few things worth knowing before you run either:
   `reference` driver is the vendor's documentation made executable, not a measurement, and
   the schema refuses to let it claim `live-run`. `python3 tools/verify_report.py
   report.json` shows you what a maintainer will see.
+- **"witnessed", "tested" and "recorded" are not interchangeable.** *Witnessed* is a real
+  vendor client, watched, right now (`driver: real-agent`). *Tested* is an automated check
+  that exercised the code without one (`driver: reference`) — real and useful, never the
+  same claim. *Recorded* is a witnessed run frozen to a file and replayed deterministically
+  (`driver: recorded`) — the data is witnessed, the replay is not a new witness. See
+  [docs/coverage-gaps.md](docs/coverage-gaps.md) for the gates nobody has witnessed yet.
 
 Evidence carries the reporter's handle. Age and version drift are displayed rather than
 hidden — see `agentseam matrix --evidence`. A row that says "verified against 3.17.8, 87

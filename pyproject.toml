@@ -117,6 +117,21 @@ exclude = ["*.py.tmpl"]
 "src/agentseam/contract.py" = ["PLR0913"]
 "src/agentseam/install.py" = ["PLR0913", "PLR0917"]
 "src/agentseam/install_identity.py" = ["PLR0913", "PLR0917"]
+# The probe (promoted from tools/, T1 wave 1) prints the same human table and CLI output
+# `agentseam probe` (cli.py) is a thin wrapper over -- cli.py's own T201 exemption above
+# applies equally to the functions that actually do the printing (probe/cli.py is `agentseam
+# probe`'s own dispatch; experiment_cli.py is tools/experiment.py's own). `run_trial`,
+# `record` and `run_turn` are the harness's own config-knobs functions (same shape as
+# contract.py above: one or two positional args, the rest optional and keyword-only).
+# `NoRecording` and `Undocumented` are pre-existing, widely-tested public names
+# (tools/experiment_kit tests import and `pytest.raises` on them by name); renaming for
+# N818's Error suffix churns every caller of a promoted module for no behavioural gain.
+"src/agentseam/probe/cli.py" = ["T201"]
+"src/agentseam/probe/experiment.py" = ["PLR0913"]
+"src/agentseam/probe/experiment_cli.py" = ["T201"]
+"src/agentseam/probe/experiment_report.py" = ["T201"]
+"src/agentseam/probe/recorded_driver.py" = ["T201", "PLR0913", "N818"]
+"src/agentseam/probe/reference_agent.py" = ["PLR0913", "N818"]
 # TODO(lint-adoption): this wave's Sonar/Checkstyle/FindBugs baseline (coding-standards.md
 # §3) was measured and fixed for src/ only -- 100 findings at 2026-09-02, enumerated in
 # plan/spine-a/reports/w51.md. tests/, tools/, examples/ and docs/'s two asset scripts were
