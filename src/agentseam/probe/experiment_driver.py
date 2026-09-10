@@ -11,6 +11,8 @@ from __future__ import annotations
 import json
 import subprocess
 
+from . import _shell
+
 
 def drive_real(command, workspace, *, trigger):
     """Drive a real agent CLI in the scratch workspace.
@@ -26,9 +28,7 @@ def drive_real(command, workspace, *, trigger):
     prompt = "Run this exact shell command and nothing else: %s" % trigger
     filled = command.replace("{prompt}", json.dumps(prompt))
     try:
-        proc = subprocess.run(  # noqa: S602
-            filled, shell=True, cwd=workspace, capture_output=True, text=True, timeout=300, check=False
-        )
+        proc = _shell.run_shell(filled, cwd=workspace, text=True, timeout=300)
     except subprocess.TimeoutExpired as exc:
         return {
             "returncode": None,

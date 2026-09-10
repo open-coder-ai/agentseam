@@ -33,6 +33,8 @@ import os
 import subprocess
 import sys
 
+from . import _shell
+
 CLAUDE_CODE_TIMEOUT_SECONDS = 60
 
 ALLOW, DENY, ASK = "allow", "deny", "ask"
@@ -145,14 +147,11 @@ def _gate(config_path, event, payload, *, cwd, timeout):
     for hook_command in _hook_commands(config_path, event):
         state["invoked"] = True
         try:
-            proc = subprocess.run(  # noqa: S602 - the command under test is ours, in a scratch dir
+            proc = _shell.run_shell(
                 hook_command,
-                shell=True,
                 input=blob,
-                capture_output=True,
                 cwd=cwd,
                 timeout=timeout if timeout is not None else CLAUDE_CODE_TIMEOUT_SECONDS,
-                check=False,
             )
         except subprocess.TimeoutExpired:
             state.update({"timed_out": True, "reason": "hook timed out, non-blocking", "exit": None})
@@ -200,7 +199,7 @@ def run_turn(config_path, *, command, cwd, session_id="reference-run", timeout=N
         )
         gates.setdefault("PreToolUse", pre)
         if pre["decision"] == ALLOW:
-            subprocess.run(pre["updated"] or command, shell=True, cwd=cwd, capture_output=True, check=False)  # noqa: S602
+            _shell.run_shell(pre["updated"] or command, cwd=cwd)
             runs += 1
 
         stop = _gate(
@@ -234,7 +233,7 @@ def run_pre_tool(config_path, *, command, cwd, session_id="reference-run", timeo
     )
     ran = False
     if state["decision"] == ALLOW:
-        subprocess.run(state["updated"] or command, shell=True, cwd=cwd, capture_output=True, check=False)  # noqa: S602
+        _shell.run_shell(state["updated"] or command, cwd=cwd)
         ran = True
     return {
         "decision": state["decision"],
