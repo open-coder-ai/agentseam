@@ -200,9 +200,20 @@ python3 tools/capture.py uninstall --agent cursor
 
 The probe always allows, so it cannot interfere with real work, and payloads are reduced to
 shape before anything touches disk — keys and types survive, values do not. A different
-probe, `tools/experiment.py`, does the opposite on purpose: it denies, crashes and stalls,
-so it only ever runs in a throwaway directory a harness creates and removes — never point it
-at a config you work in. See [tools/VERIFY.md](tools/VERIFY.md).
+probe, `agentseam probe` (`tools/experiment.py` from a checkout — same code, promoted so it
+ships in the wheel), does the opposite on purpose: it denies, crashes and stalls, so it only
+ever runs in a throwaway directory a harness creates and removes — never point it at a
+config you work in. See [tools/VERIFY.md](tools/VERIFY.md).
+
+A report's own `driver` and `basis` fields say how it was obtained, from a closed
+vocabulary: **witnessed** means a real vendor client, watched, right now (`driver:
+real-agent`, `basis: live-run` or `live-run-partial`); **tested** means an automated check
+exercised the code path with no vendor client at all (`driver: reference`, `basis:
+vendor-docs`) — real, useful, and never the same claim; **recorded** means a witnessed run
+frozen to a file and replayed deterministically (`driver: recorded`) — the data is
+witnessed, the replay is not a new witness. `evidence_report.validate()` refuses a report
+that claims more than its driver earned. See [docs/coverage-gaps.md](docs/coverage-gaps.md)
+for the three gates nobody has witnessed yet.
 
 ## Contributing
 
