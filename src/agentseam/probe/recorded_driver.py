@@ -25,7 +25,7 @@ import shutil
 import sys
 from datetime import date
 
-from .. import recordings
+from .. import harness, recordings
 from ..evidence_report import RECORDED_DRIVER, REFERENCE_DRIVER
 
 #: The driver name tools/experiment.py dispatches on.
@@ -34,6 +34,11 @@ DRIVER_NAME = RECORDED_DRIVER
 #: Drivers `--record` refuses: neither ever ran a real agent, so neither can produce live
 #: evidence -- the same rule evidence_report.py enforces for a submitted report.
 NON_LIVE_DRIVERS = (REFERENCE_DRIVER, DRIVER_NAME)
+
+#: Asks for the invocation `agentseam.harness` records for this agent, instead of a template the
+#: operator types. Opt-in by name rather than a new default: the resolution order below is what
+#: decides whether a run is evidence, and it should not change because a registry gained a row.
+HARNESS_DRIVER = "harness"
 
 
 class NoRecording(Exception):
@@ -54,8 +59,9 @@ def add_cli_args(run_parser):
     run_parser.add_argument(
         "--driver",
         default=None,
-        help="'reference', 'recorded', or a shell template containing {prompt}; "
-        "default: 'recorded' if a recording covers --agent at --event, else 'reference'",
+        help="'reference', 'recorded', 'harness' (the invocation agentseam.harness records "
+        "for --agent), or a shell template containing {prompt}; default: 'recorded' if a "
+        "recording covers --agent at --event, else 'reference'",
     )
     run_parser.add_argument(
         "--record", action="store_true", help="freeze this run into data/recordings/<agent>@<agent-version>.json"
@@ -66,6 +72,12 @@ def resolve_driver(agent, driver, event=None, version=None):
     """`driver` if given, else 'recorded' when a recording covers `agent` at `event`, else the
     reference. Per gate, not per agent: claude_code@2.1.263 recorded pre_tool only, and a run
     at stop must fall back to the reference rather than fail on a recording that never saw it."""
+    if driver == HARNESS_DRIVER:
+        # Expanded here, not carried as a token: everything downstream -- check_record_args,
+        # the rendered table, the report's `driver` field -- then sees a real command line and
+        # treats the run as live, which it is. A token would have had to be special-cased in
+        # each of those places to avoid being mistaken for a non-live driver.
+        return harness.driver_command(agent)
     if driver is not None:
         return driver
     return DRIVER_NAME if has_recording(agent, event, version) else REFERENCE_DRIVER

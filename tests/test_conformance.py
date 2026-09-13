@@ -129,3 +129,21 @@ def test_the_word_drift_is_not_reused_for_this_concept():
     source = pathlib.Path(conformance.__file__).read_text(encoding="utf-8")
     body = source.split('"""', 2)[2]
     assert "drift" not in body
+
+
+def test_one_vendor_alone_is_not_agreement():
+    """Regression: a single vendor always "agrees" with itself.
+
+    Found by wiring conformance over the recordings, where exactly one agent is witnessed --
+    reporting AGREED there would have claimed a cross-vendor check that never ran. Same defect
+    family as unanimity among incapable vendors, one row further out.
+    """
+    result = conformance.classify({"claude_code": "blocked"}, PRE_TOOL)
+    assert result["call"] == conformance.UNDECIDABLE
+    assert "cannot differ" in result["reason"]
+
+
+def test_one_capable_vendor_beside_an_excused_one_is_still_a_real_finding():
+    """The count that matters is vendors asked, not vendors capable."""
+    result = conformance.classify({"claude_code": "blocked", "copilot": "allowed"}, PRE_TOOL)
+    assert result["call"] == conformance.VENDOR_LIMIT

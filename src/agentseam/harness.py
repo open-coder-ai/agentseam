@@ -23,6 +23,10 @@ counts as a pass, stays with the consumer.
 
 from __future__ import annotations
 
+import os as _os
+import shlex as _shlex
+import subprocess as _subprocess
+
 from ._data import load
 
 _DATA = load("harness.json")
@@ -38,6 +42,10 @@ VOID_MARKERS = tuple(_DATA["void_markers"])
 #: Text that betrays the operator's own standing instructions reaching the agent, which
 #: makes a run a measurement of the instructions rather than of the policy.
 INSTRUCTION_MARKERS = tuple(_DATA["instruction_markers"])
+
+#: The token the probe's driver template carries where the prompt goes. Named by the probe,
+#: not by us -- experiment_driver.drive_real() substitutes a JSON-quoted string for it.
+DRIVER_PROMPT_SLOT = "{prompt}"
 
 PROMPT_PLACEHOLDER = "__PROMPT__"
 MODEL_PLACEHOLDER = "__MODEL__"
@@ -128,3 +136,32 @@ def isolation(agent):
 def creates_files_as(agent):
     """Recorded prose on file ownership of what the agent creates, or None."""
     return row(agent).get("creates_files_as")
+
+
+def driver_command(agent, *, model=None, hooked=False):
+    """The recorded invocation as a probe driver template, with `{prompt}` where the prompt goes.
+
+    This is what removes the hand-typed driver string from a witness run: the registry already
+    knows how to reach the vendor, so the operator names the agent and nothing else.
+
+    Quoted for the platform actually running it. `shlex.quote` is POSIX-only, and these runs
+    happen on a Windows machine as often as not -- a POSIX-quoted argument there is not a
+    slightly-wrong command line, it is a different one. The prompt slot is left unquoted on
+    purpose: `drive_real` substitutes an already-quoted JSON string for it.
+    """
+    slot = "\x00agentseam-prompt\x00"
+    parts = argv(agent, slot, model=model, hooked=hooked)
+    rendered = [DRIVER_PROMPT_SLOT if part == slot else _quote_one(part) for part in parts]
+    if any(slot in part for part in rendered):
+        raise NoHarnessError(
+            "%r builds its prompt inside a larger argument, which this template cannot "
+            "express; drive it with an explicit --driver string." % agent
+        )
+    return " ".join(rendered)
+
+
+def _quote_one(part):
+    """Shell-quote one argument the way the running platform's shell reads it."""
+    if _os.name == "nt":
+        return _subprocess.list2cmdline([part])
+    return _shlex.quote(part)

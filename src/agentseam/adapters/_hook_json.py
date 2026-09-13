@@ -22,7 +22,19 @@ _TRANSFORM_MISSING_INPUT = "transform_missing_input"
 
 
 def hj_reverse(cfg):
-    """Canonical event -> wire name: the naive inverse, then the entry's pinned overrides."""
+    """Canonical event -> wire name: the naive inverse, then the entry's pinned overrides.
+
+    One wire name per canonical event, which is a real limit and not an oversight (R3, gap 4).
+    Cursor is where it bites: `pre_tool` pins to `preToolUse`, and Cursor honours `ask` only at
+    `beforeShellExecution` / `beforeMCPExecution`. So installing at `pre_tool` forecloses `ask`
+    before dispatch is ever reached -- the runtime degrade to `deny` is honest about it, but the
+    install already chose. Deny-style policies, which is all that ships today, are unaffected.
+
+    The day an ask-style Cursor policy exists, this map has to select by decision dialect
+    (deny -> `preToolUse`, ask -> `beforeShellExecution`) and become one-to-many. Recorded here
+    rather than built, so the resolution is not re-litigated from scratch; the three facts it
+    rests on are pinned in tests/test_cursor_ask_dialect.py.
+    """
     reverse = {}
     for name, canonical in cfg["events"].items():
         if canonical != UNKNOWN:

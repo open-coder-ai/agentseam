@@ -132,6 +132,7 @@ exclude = ["*.py.tmpl"]
 "src/agentseam/probe/experiment.py" = ["PLR0913"]
 "src/agentseam/probe/experiment_cli.py" = ["T201"]
 "src/agentseam/probe/experiment_report.py" = ["T201"]
+"src/agentseam/probe/conformance_report.py" = ["T201"]
 "src/agentseam/probe/recorded_driver.py" = ["T201", "PLR0913", "N818"]
 "src/agentseam/probe/reference_agent.py" = ["PLR0913", "N818"]
 # TODO(lint-adoption): this wave's Sonar/Checkstyle/FindBugs baseline (coding-standards.md
