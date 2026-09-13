@@ -104,8 +104,10 @@ exclude = ["*.py.tmpl"]
 # rather than rewritten.
 "src/agentseam/data/templates/*.py.tmpl" = ["F821", "A002", "FBT002", "BLE001"]
 # The CLI is agentseam's one designated output surface (coding-standards.md §3): every
-# print() here is user-facing terminal output, not a debug leftover.
+# print() here is user-facing terminal output, not a debug leftover. cli_report.py is the
+# same surface, split out of cli.py by activity (read-only verbs vs. the ones that write).
 "src/agentseam/cli.py" = ["T201"]
+"src/agentseam/cli_report.py" = ["T201"]
 # Event/Decision are plain value objects: every field beyond the first two is optional and
 # keyword-only. install()/installed() mirror the same optional-config-knobs shape. Splitting
 # either into a builder/options object would ripple through every adapter and CLI call site

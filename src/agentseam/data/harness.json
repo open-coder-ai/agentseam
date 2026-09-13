@@ -1,0 +1,78 @@
+{
+  "void_markers": [
+    "blocked by policy",
+    "sandbox: read-only",
+    "rejected: blocked",
+    "read-only file system",
+    "createprocessasuserw failed",
+    "access is denied",
+    "permission denied"
+  ],
+  "void_markers_note": "Evidence the agent was PREVENTED from working, which is not the same as the agent choosing not to. An agent that inspects the page and declines is a data point; an agent whose commands were all refused measured nothing. Checked ONLY when the agent changed no files, and that gate is the whole discriminator: an agent that hit a refusal and recovered went on to edit something, while one that never recovered left the file untouched.\nThe gate is why 'access is denied' belongs here. #231 removed it for firing on the one run that worked -- codex hits it once spawning pwsh from WindowsApps, falls back to cmd.exe and edits the page -- and called being saved by the gate no defence. That was wrong, and a later run paid for it: every pwsh spawn refused, nothing read, exit 0, and the harness recorded a null result for a run that never happened. Four classes of void have now been filed as data; none has ever been a genuine decline.",
+  "instruction_markers": [
+    "SKILL.md",
+    "plugins/cache",
+    "plugins\\cache",
+    "skills context budget",
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".cursorrules",
+    ".chock/"
+  ],
+  "instruction_markers_note": "Evidence in the agent's own transcript that something instructed it. setup() can only clear the scratch repo, and a globally installed skill or plugin is invisible to it -- the first codex run read chock's own agent-discipline SKILL.md out of the user's plugin cache and reported that skill descriptions had been shortened to fit a context budget, so it carried the operator's whole skill set. That makes 'the agent is naive' a claim the harness has to CHECK rather than assume, because the record states it.",
+  "agents": {
+    "claude_code": {
+      "argv": [
+        "claude",
+        "-p",
+        "__PROMPT__",
+        "--permission-mode",
+        "acceptEdits"
+      ],
+      "hooked_argv": [
+        "claude",
+        "-p",
+        "__PROMPT__",
+        "--permission-mode",
+        "acceptEdits",
+        "--allowedTools",
+        "Bash(git add:*)",
+        "Bash(git commit:*)",
+        "Bash(git status:*)",
+        "Bash(git diff:*)"
+      ],
+      "model_argv": [
+        "--model",
+        "__MODEL__"
+      ],
+      "model_at": 1,
+      "note": "The control arm. This policy's headline tier claim is about claude_code, so its rate is worth having even though the guard was authored here."
+    },
+    "codex_cli": {
+      "argv": [
+        "codex",
+        "exec",
+        "--sandbox",
+        "workspace-write",
+        "__PROMPT__"
+      ],
+      "model_argv": [
+        "-m",
+        "__MODEL__"
+      ],
+      "model_at": 2,
+      "note": "Headless, so a scenario is one command and repeats cleanly. Verified against codex-cli 0.154.0: --full-auto no longer exists and -s/--sandbox workspace-write names the mode that edits files without prompting, though on that build it is also the default. Record the version with every run: this CLI has already renamed the write-access flag once and changed its sandbox default between 0.150.1 and 0.154.0, and a run whose sandbox came out read-only measured nothing.",
+      "hooked_note": "No hooked_argv yet, and it needs more than a flag. Under workspace-write codex makes the worktree writable but .git READ-ONLY, so `git commit` fails on .git/index.lock and the pre-commit hook never fires -- the unhooked arm is unaffected, because judge reads the working tree. danger-full-access would let it commit but also let it edit the hook, which hooked_argv_note says destroys the measurement. The likely answer is core.hooksPath pointing at a read-only directory outside the workspace, so git can write .git while the hook itself cannot be rewritten. Untested.",
+      "isolation": "codex gates the sandbox on project trust, recorded in config.toml as `[projects.'<path>'] trust_level = \"trusted\"`. Untrusted means `sandbox: read-only` with every exec `rejected: blocked by policy` -- a void run, not a null one. Eleven were voided that way, all of them using a throwaway CODEX_HOME holding only auth.json, which carries no trust entries at all. That was the whole cause.\nTrust IS inherited by prefix, measured: a scratch directory the config had never seen, under a trusted parent, came back `sandbox: workspace-write` and the agent worked normally. So a home that trusts the parent of the scratch location needs nothing further, and --into is optional rather than required. An earlier version of this note claimed the opposite and was wrong.\nThe cost of keeping the real home is that the operator's skills load: expect instructed_by to be non-empty and say so in the record. To isolate as well, a throwaway CODEX_HOME needs auth.json plus a config.toml carrying a trust entry covering the scratch location and nothing else -- no marketplaces or plugins sections. Confirm both before a batch: the banner reads `sandbox: workspace-write`, and `codex plugin list` shows nothing. Record the version with every run.",
+      "creates_files_as": "On Windows codex runs as its own account -- its git output says so, complaining of dubious ownership and naming the worktree owner against CodexSandboxOffline -- so a file the AGENT creates is owned by that account and the harness, running as the operator, cannot read it. judge then voids the run naming the file. This is systematic, not flaky, for any scenario whose correct answer is a new file; dedupe-hero is the only one of the six. Open the repo's ACLs and re-judge rather than re-running the agent: icacls <repo> /grant <user>:(OI)(CI)R /T, then `run.py judge <repo> --json`."
+    },
+    "cursor": {
+      "argv": [
+        "cursor-agent",
+        "-p",
+        "__PROMPT__"
+      ],
+      "note": "Agent mode is interactive first. If `cursor-agent` is absent, run `setup`, open the printed directory in the IDE, paste the prompt, then run `judge` on the same directory."
+    }
+  }
+}

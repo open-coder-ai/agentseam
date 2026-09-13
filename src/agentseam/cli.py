@@ -8,14 +8,13 @@ import json
 import os
 import sys
 import textwrap
-from datetime import date
 
-from . import __version__, adapters, probe, recordings
+from . import __version__, adapters, probe
 from . import install as install_mod
 from . import instructions as instructions_mod
 from . import packaging as packaging_mod
 from . import permissions as permissions_mod
-from . import staleness as staleness_mod
+from .cli_report import _cmd_doctor, _cmd_matrix, cmd_tier_table
 from .contract import EVENTS, PRE_TOOL
 from .matrix import MATRIX, enforcement_level
 
@@ -25,80 +24,6 @@ def _cmd_agents(_args):
         row = MATRIX[name]
         print("%-16s %-14s %s" % (name, row["tier"], row["config"] or "(no hook config)"))
     return 0
-
-
-def _cmd_matrix(args):
-    if args.json:
-        print(json.dumps(MATRIX, indent=2, sort_keys=True))
-        return 0
-    if args.evidence:
-        return _print_evidence()
-    events = [e for e in EVENTS if any(e in r["events"] for r in MATRIX.values())]
-    width = max(len(e) for e in events)
-    header = " " * (width + 2) + "  ".join("%-14s" % a for a in sorted(MATRIX))
-    print(header)
-    for ev in events:
-        cells = "  ".join("%-14s" % enforcement_level(a, ev) for a in sorted(MATRIX))
-        print("%-*s  %s" % (width, ev, cells))
-    return 0
-
-
-def _print_evidence():
-    """How each row is known, and how old that knowledge is.
-
-    Deliberately part of `matrix` rather than hidden behind `doctor`: the capability table
-    and the provenance of its cells are the same claim, and showing one without the other
-    is what lets a documentation guess pass for a measurement.
-    """
-    print("%-16s %-20s %-12s %-11s %-12s %s" % ("agent", "basis", "version", "verdict", "recorded", "date"))
-    for name in sorted(MATRIX):
-        verified = MATRIX[name]["verified"]
-        state = staleness_mod.status(verified)
-        print(
-            "%-16s %-20s %-12s %-11s %-12s %s"
-            % (
-                name,
-                verified.get("basis", "-"),
-                str(verified.get("version", "-"))[:12],
-                state["verdict"],
-                recordings.latest_version(name) or "-",
-                verified.get("date", "-"),
-            )
-        )
-    print("\nrecorded: the newest data/recordings/<agent>@<version>.json, or '-' if never witnessed")
-    print("verdicts: fresh (compared, current) | unchecked (no comparison was made)")
-    print(
-        "          stale (older than %d days) | unmeasured (never touched a running agent)"
-        % staleness_mod.STALE_AFTER_DAYS
-    )
-    print("run tools/watch_versions.py to compare each row against its vendor's current release")
-    return 0
-
-
-def _cmd_doctor(args):
-    """Report what is actually wired here, and how stale each capability claim is."""
-    today = date.today()
-    rc = 0
-    for name in sorted(MATRIX):
-        row = MATRIX[name]
-        if row["tier"] == "none":
-            print("%-16s no hook surface — %s" % (name, row["notes"].split(".")[0]))
-            continue
-        if row["tier"] == "unadapted":
-            print("%-16s no hook adapter — instruction files only" % name)
-            continue
-        wired = install_mod.installed(name, args.repo)
-        # No release feed is consulted here: `doctor` audits a machine and must work
-        # offline. tools/watch_versions.py is what supplies a current version, and the
-        # verdict vocabulary is shared so both surfaces read the same.
-        state = staleness_mod.status(row["verified"], today=today)
-        if state["verdict"] == staleness_mod.STALE:
-            rc = 1
-        print(
-            "%-16s wired=%-5s verified=%s (%s)"
-            % (name, "yes" if wired else "no", row["verified"].get("date", "?"), staleness_mod.summarize(state))
-        )
-    return rc
 
 
 def _cmd_install(args):
@@ -257,6 +182,10 @@ def _main(argv=None):
     m.add_argument("--json", action="store_true")
     m.add_argument("--evidence", action="store_true", help="how each row is known, and how old that is")
     m.set_defaults(fn=_cmd_matrix)
+
+    t = sub.add_parser("tier-table", help="the enforcement table, derived from the matrix")
+    t.add_argument("--event", default=PRE_TOOL, help="gate to report on (default: %s)" % PRE_TOOL)
+    t.set_defaults(fn=cmd_tier_table)
 
     d = sub.add_parser("doctor", help="what is wired here; flag stale capability claims")
     d.add_argument("--repo", default=".")
