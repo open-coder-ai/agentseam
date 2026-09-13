@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 
-from . import experiment, experiment_probe, experiment_report, recorded_driver
+from . import conformance_report, experiment, experiment_probe, experiment_report, recorded_driver
 
 
 def cmd_list(_args):
@@ -48,6 +48,11 @@ def cmd_run(args):
     return experiment_report.render(results, agent=args.agent, event=args.event, driver=driver)
 
 
+def cmd_conformance(args):
+    """`agentseam probe conformance`: compare the recorded agents, gate on seam gaps."""
+    return conformance_report.render(args.event)
+
+
 def add_subparser(sub, *, default_event):
     """Wire `probe list`/`probe run` onto `sub` -- agentseam.cli's own top-level subparsers."""
     pr = sub.add_parser("probe", help="measure what an agent's hooks actually enforce, against a driver")
@@ -70,3 +75,7 @@ def add_subparser(sub, *, default_event):
     run.add_argument("--agent-version", help="the agent build these trials ran against")
     run.add_argument("--reporter", help="how you want crediting, e.g. @handle")
     run.set_defaults(fn=cmd_run, _parser=run)
+
+    conf = psub.add_parser("conformance", help="compare the recorded agents; exit non-zero on a seam gap")
+    conf.add_argument("--event", default=None, choices=experiment.EVENTS, help="one gate (default: all recorded)")
+    conf.set_defaults(fn=cmd_conformance)

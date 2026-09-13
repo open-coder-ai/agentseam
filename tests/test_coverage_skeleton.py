@@ -50,3 +50,18 @@ def test_the_skeleton_shape_validates_once_actually_filled_in(gap):
     filled.update(basis="live-run-partial", date="2026-09-15", version="2.1.270")
     filled["experiments"] = {"escalate_means": "prompted"} if gap["trial"] == "escalate" else {"block": True}
     assert evidence_report.validate(filled)
+
+
+@pytest.mark.parametrize("gap", SKELETON["gaps"], ids=lambda g: g["gate"])
+def test_the_driver_is_one_the_registry_can_actually_supply(gap):
+    """No hand-typed driver string left: the invocation comes from agentseam.harness.
+
+    Asserted against the registry rather than the literal, so removing claude_code's harness row
+    breaks this instead of leaving three copy-paste commands that resolve to nothing.
+    """
+    from agentseam.probe import recorded_driver
+
+    assert "--driver %s" % recorded_driver.HARNESS_DRIVER in gap["command"]
+    resolved = recorded_driver.resolve_driver("claude_code", recorded_driver.HARNESS_DRIVER, event=gap["gate"])
+    assert resolved not in recorded_driver.NON_LIVE_DRIVERS
+    assert "{prompt}" in resolved

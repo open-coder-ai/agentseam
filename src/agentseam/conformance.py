@@ -52,6 +52,9 @@ NEEDS_NOTHING = None
 #: Raised as a message constant so the text is not a literal inside the raise (TRY003).
 _NOTHING_TO_COMPARE = "no verdicts to compare: a policy that ran nowhere has no conformance"
 
+#: Below this, there is no cross-vendor question to answer.
+_MIN_VENDORS = 2
+
 
 class UnrecordedVendorError(LookupError):
     """A vendor in the comparison has no matrix row, so its divergence cannot be judged."""
@@ -84,6 +87,21 @@ def classify(verdicts, event, *, needs=NEEDS_BLOCK):
     if not verdicts:
         raise ValueError(_NOTHING_TO_COMPARE)
     groups = _groups(verdicts)
+
+    # One vendor is not a comparison. It will always "agree", and reporting that as AGREED
+    # claims a cross-vendor check that never happened -- the same mistake as reading unanimity
+    # among incapable vendors as agreement, one row further out. Note this is about the number
+    # of vendors ASKED, not how many can enforce: one capable vendor beside one excused one is
+    # a real vendor-limit finding and still classifies as one.
+    if len(verdicts) < _MIN_VENDORS:
+        return _result(
+            UNDECIDABLE,
+            groups,
+            event,
+            (),
+            reason="only %s was asked: conformance is a comparison, and one vendor cannot differ "
+            "from anything" % next(iter(verdicts)),
+        )
 
     try:
         excused = tuple(sorted(a for a in verdicts if not capable(a, event, needs=needs)))
