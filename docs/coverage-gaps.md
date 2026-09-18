@@ -1,12 +1,16 @@
 # Coverage gaps only a real agent can close
 
 The probe (`agentseam probe`, promoted from `tools/experiment.py` in wave 1 of the `armed`
-initiative) covers 8 trials × 3 gateable events × 16 agents. The witnessed evidence covers a
-narrow slice of that: `claude_code@2.1.263`, `pre_tool` only, and every trial except
-`escalate` (the one `PreToolUse` reading no vendor doc settles). This closes the *tooling*
-gap, not the *evidence* gap -- **a cloud session holds no vendor credentials and cannot
-produce a witnessed row.** These three gaps are yours to close, on a machine with Claude
-Code installed and authenticated.
+initiative) covers 8 trials × 3 gateable events × 16 agents. Witnessed evidence now covers
+`claude_code@2.1.275` at **all three gates and all eight trials**, including `escalate` (the
+one `PreToolUse` reading no vendor doc settles) -- see
+`data/recordings/claude_code@2.1.275.json`. The three gaps this file was written for are
+closed for `claude_code`; every other agent's are open, and the procedure below is how you
+close one.
+
+Closing them needs a machine where the vendor's own client is installed and authenticated.
+That is usually not a cloud session, but the constraint is the credential, not the cloud: a
+container with a working client can witness.
 
 ## What "witnessed", "tested" and "recorded" mean
 
@@ -14,7 +18,7 @@ A reader must be able to tell these apart without opening the source:
 
 | Word | What it means | How you get one |
 | :--- | :--- | :--- |
-| **witnessed** | Somebody watched the real vendor client do this, on this machine, right now. | `--driver "<your headless CLI, containing {prompt}>"` |
+| **witnessed** | Somebody watched the real vendor client do this, on this machine, right now. | `--driver harness`, or your own headless CLI with a bare `{prompt}` |
 | **tested** | An automated check exercised the code path -- the dialect, the classifier, the schema -- without a real vendor client. Real, useful, **not** a vendor observation. | `--driver reference` (the protocol made executable) or the `pytest` suite itself |
 | **recorded** | A previously *witnessed* run, frozen to a file and replayed deterministically. The data is witnessed; the replay is not a new witness. | `--driver recorded` (the default once a recording exists) |
 
@@ -25,35 +29,41 @@ A reader must be able to tell these apart without opening the source:
 `reference` driver that claims a live basis -- that is the one invariant this whole
 initiative exists to enforce (contract invariant 1).
 
-## The three gaps
+## Where the gaps are now
 
-1. **`escalate` at `pre_tool`.** The recording covers seven of eight trials at this gate.
-2. **Every trial at `prompt_submit`.** No agent has ever been witnessed at this gate.
-3. **Every trial at `stop`.** No agent has ever been witnessed at this gate, including the
-   sentinel re-fire asymmetry that gate's own docs describe
-   (`src/agentseam/probe/experiment.py`'s `_blocked()`).
+`claude_code` is witnessed at all three gates at `2.1.275`. What remains open:
+
+1. **Every other agent, at every gate.** Fifteen of the sixteen have never been witnessed.
+2. **`claude_code` on a platform other than `linux`.** A recording carries its `platform`.
+3. **Each new `claude_code` build.** `tools/watch_versions.py` is what notices a ship; a
+   recording is only evidence for the version it names.
 
 ## Close one gap
 
-Pick a row from [`docs/witness-skeleton.json`](witness-skeleton.json) and run its command,
-replacing the placeholder driver with your own headless invocation:
+**Prefer `--driver harness`.** For any agent `agentseam.harness` knows, it supplies that
+vendor's own headless invocation, already correct, and there is nothing to quote:
 
 ```bash
-agentseam probe run --agent claude_code --event pre_tool --trial escalate \
-    --driver "<your headless claude_code invocation, containing {prompt}>" \
+agentseam probe run --agent claude_code --event pre_tool \
+    --driver harness \
     --agent-version <version> --record --report --reporter @yourhandle \
-    > escalate-pre_tool-report.json
-
-agentseam probe run --agent claude_code --event prompt_submit \
-    --driver "<your headless claude_code invocation, containing {prompt}>" \
-    --agent-version <version> --record --report --reporter @yourhandle \
-    > prompt_submit-report.json
-
-agentseam probe run --agent claude_code --event stop \
-    --driver "<your headless claude_code invocation, containing {prompt}>" \
-    --agent-version <version> --record --report --reporter @yourhandle \
-    > stop-report.json
+    > pre_tool-report.json
 ```
+
+Repeat with `--event prompt_submit` and `--event stop`. For an agent the registry does not
+know, write the template yourself -- and **leave `{prompt}` bare**:
+
+```bash
+    --driver 'my-agent -p {prompt} --whatever-flag'     # correct
+    --driver 'my-agent -p "{prompt}"'                   # refused, see below
+```
+
+The substitution supplies the quotes itself. Quoting the slot as well ends the quote early,
+which hands the trigger's own `>>` to the shell as a redirect: the driver's chat output is
+appended to the sentinel file, the run counts those lines as the action having run, and a
+trial the agent actually *refused* is recorded as `allow`. That is a false witnessed row
+produced by following this file, so `drive_real` now refuses a quoted slot outright rather
+than letting the run proceed.
 
 `--record` appends to (never replaces) `data/recordings/claude_code@<version>.json`, so
 running all three builds one recording covering every gate. `--report` prints the

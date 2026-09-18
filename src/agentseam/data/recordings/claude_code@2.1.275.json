@@ -1,0 +1,227 @@
+{
+  "agent": "claude_code",
+  "date": "2026-09-18",
+  "driver": "real-agent",
+  "events": {
+    "pre_tool": {
+      "payload_keys": [
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_id",
+        "tool_input",
+        "tool_name",
+        "tool_use_id",
+        "transcript_path"
+      ],
+      "trials": {
+        "allow": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "crash": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "deny": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 0
+          }
+        },
+        "escalate": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 0
+          }
+        },
+        "silence": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "timeout": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "transform": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 1,
+            "runs": 0
+          }
+        },
+        "unknown": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        }
+      }
+    },
+    "prompt_submit": {
+      "payload_keys": [
+        "cwd",
+        "hook_event_name",
+        "permission_mode",
+        "prompt",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_id",
+        "transcript_path"
+      ],
+      "trials": {
+        "allow": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "crash": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "deny": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 0
+          }
+        },
+        "escalate": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 0
+          }
+        },
+        "silence": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "timeout": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "transform": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 0
+          }
+        },
+        "unknown": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        }
+      }
+    },
+    "stop": {
+      "payload_keys": [
+        "background_tasks",
+        "cwd",
+        "effort",
+        "hook_event_name",
+        "last_assistant_message",
+        "permission_mode",
+        "prompt_id",
+        "scratchpad_dir",
+        "session_crons",
+        "session_id",
+        "stop_hook_active",
+        "transcript_path"
+      ],
+      "trials": {
+        "allow": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "crash": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "deny": {
+          "hook_invocations": 9,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "escalate": {
+          "hook_invocations": 9,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "silence": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "timeout": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "transform": {
+          "hook_invocations": 9,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        },
+        "unknown": {
+          "hook_invocations": 1,
+          "observed": {
+            "alt_runs": 0,
+            "runs": 1
+          }
+        }
+      }
+    }
+  },
+  "platform": "linux",
+  "reporter": "@jothimani-rajendran",
+  "version": "2.1.275"
+}

@@ -42,7 +42,10 @@ def test_main_fails_loudly_when_a_trial_disagrees(monkeypatch, capsys):
     assert probe_ci.main() == 1
     out = capsys.readouterr().out
     assert "DISAGREES" in out
-    assert "1 disagreement(s)" in out
+    # The count tracks how many recorded gates the lie is injected into, which grows with the
+    # evidence; that it is reported and non-zero is the part that makes this a gate.
+    assert "0 disagreement(s)" not in out
+    assert "disagreement(s)" in out
 
 
 def test_main_reports_zero_recordings_honestly(monkeypatch, capsys):

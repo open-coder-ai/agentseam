@@ -44,8 +44,13 @@ class TestDriverFromTheRegistry:
         resolved = recorded_driver.resolve_driver("claude_code", recorded_driver.HARNESS_DRIVER, event="stop")
         assert resolved not in recorded_driver.NON_LIVE_DRIVERS
 
-    def test_the_default_resolution_order_is_unchanged_by_the_new_token(self):
-        """Opt-in by name: whether a run counts as evidence must not shift under anyone."""
+    def test_the_default_resolution_order_is_unchanged_by_the_new_token(self, monkeypatch):
+        """Opt-in by name: whether a run counts as evidence must not shift under anyone.
+
+        The recorded/reference split is stubbed, because which gates are recorded is evidence
+        that grows; the order itself is what must not move.
+        """
+        monkeypatch.setattr(recorded_driver, "has_recording", lambda agent, event, version=None: event == PRE_TOOL)
         assert recorded_driver.resolve_driver("claude_code", None, event=PRE_TOOL) == recorded_driver.DRIVER_NAME
         assert recorded_driver.resolve_driver("claude_code", None, event="stop") == "reference"
         assert recorded_driver.resolve_driver("claude_code", "my-cli {prompt}", event="stop") == "my-cli {prompt}"
@@ -67,8 +72,12 @@ class TestConformanceOverRecordings:
 
     def test_only_gates_that_were_actually_recorded_are_compared(self):
         """A recording of one gate says nothing about another."""
-        assert conformance_report.events_recorded() == [PRE_TOOL]
-        assert conformance_report.compare("stop") == []
+        recorded = conformance_report.events_recorded()
+        assert PRE_TOOL in recorded
+        # Whatever the corpus covers, a gate outside it compares to nothing at all.
+        assert conformance_report.compare("no-such-gate") == []
+        for event in recorded:
+            assert conformance_report.compare(event)
 
     def test_a_second_agent_agreeing_produces_agreement(self, monkeypatch):
         """The mechanism has to work when a second recording lands, not just say undecidable."""
