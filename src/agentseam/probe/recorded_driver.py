@@ -70,8 +70,9 @@ def add_cli_args(run_parser):
 
 def resolve_driver(agent, driver, event=None, version=None):
     """`driver` if given, else 'recorded' when a recording covers `agent` at `event`, else the
-    reference. Per gate, not per agent: claude_code@2.1.263 recorded pre_tool only, and a run
-    at stop must fall back to the reference rather than fail on a recording that never saw it."""
+    reference. Per gate, not per agent: a recording covering one gate says nothing about
+    another, and a run at an unrecorded gate must fall back to the reference rather than
+    fail on a recording that never saw it."""
     if driver == HARNESS_DRIVER:
         # Expanded here, not carried as a token: everything downstream -- check_record_args,
         # the rendered table, the report's `driver` field -- then sees a real command line and

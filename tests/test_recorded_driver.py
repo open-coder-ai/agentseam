@@ -176,9 +176,20 @@ def test_record_leaves_no_scratch_workspace_behind():
             os.remove(path)
 
 
-def test_the_default_driver_is_chosen_per_gate_not_per_agent():
-    """claude_code@2.1.263 recorded pre_tool only: that gate replays, the others fall back to
-    the reference instead of failing on a recording that never saw them."""
+def test_the_default_driver_is_chosen_per_gate_not_per_agent(monkeypatch):
+    """A gate the recording covers replays; a gate it never saw falls back to the reference.
+
+    Stubbed rather than read off the committed corpus: which gates are recorded is evidence
+    that changes as contributors witness more, and this is a fact about resolution, not
+    about today's recordings.
+    """
+    # `recorded_driver` here is tools/'s re-export shim; resolve_driver resolves the name in
+    # the module that defines it, so the stub has to land there.
+    from agentseam.probe import recorded_driver as impl
+
+    monkeypatch.setattr(
+        impl, "has_recording", lambda agent, event, version=None: agent == "claude_code" and event == "pre_tool"
+    )
     assert recorded_driver.resolve_driver("claude_code", None, event="pre_tool") == recorded_driver.DRIVER_NAME
     assert recorded_driver.resolve_driver("claude_code", None, event="stop") == recorded_driver.REFERENCE_DRIVER
     assert (

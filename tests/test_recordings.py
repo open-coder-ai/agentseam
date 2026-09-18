@@ -86,9 +86,13 @@ def test_benign_edits_still_pass():
 
 
 def test_recordings_reader_finds_the_seeded_claude_code_version():
-    assert "2.1.263" in recordings.versions("claude_code")
-    assert recordings.latest_version("claude_code") == "2.1.263"
+    """The seed stays readable as more versions land, and `latest` tracks the newest of them."""
+    versions = recordings.versions("claude_code")
+    assert "2.1.263" in versions
     assert os.path.exists(recordings.path_for("claude_code", "2.1.263"))
+    latest = recordings.latest_version("claude_code")
+    assert latest in versions
+    assert sorted(versions, key=lambda v: [int(n) for n in v.split(".")])[-1] == latest
 
 
 def test_recordings_reader_returns_none_for_an_agent_never_witnessed():
