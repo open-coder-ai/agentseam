@@ -50,9 +50,7 @@ class TestDriverFromTheRegistry:
         The recorded/reference split is stubbed, because which gates are recorded is evidence
         that grows; the order itself is what must not move.
         """
-        monkeypatch.setattr(
-            recorded_driver, "has_recording", lambda agent, event, version=None: event == PRE_TOOL
-        )
+        monkeypatch.setattr(recorded_driver, "has_recording", lambda agent, event, version=None: event == PRE_TOOL)
         assert recorded_driver.resolve_driver("claude_code", None, event=PRE_TOOL) == recorded_driver.DRIVER_NAME
         assert recorded_driver.resolve_driver("claude_code", None, event="stop") == "reference"
         assert recorded_driver.resolve_driver("claude_code", "my-cli {prompt}", event="stop") == "my-cli {prompt}"
