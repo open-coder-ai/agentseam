@@ -7,6 +7,20 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **A handler that raises now refuses in the vendor's own dialect instead of failing open**
+  (`dispatch.py`, `data/templates/runtime.py.tmpl`). An exception out of the handler escaped
+  `run()` -- and the bundled `main()` -- as a traceback and exit 1, which every host reads as
+  a non-blocking hook error and carries on from: the `crash` trial in `data/recordings/`
+  watched Claude Code run the tool. `handle()` now answers it with `Decision.deny`, rendered
+  through the adapter like any other deny (the witnessed block path), naming only the
+  exception's class because its message may quote the payload the policy was inspecting; the
+  traceback goes to stderr for the operator, and an in-process caller reads it off
+  `decision.evidence`. A handler returning the wrong type is refused the same way. A fault past
+  the handler -- in the adapter or dispatcher, on a payload it did decode -- exits 2 with
+  nothing on stdout: the blocking-error code on every host that has one. An un-filled-in
+  bundle stub therefore refuses every gated action with `NotImplementedError` in the reason
+  rather than crashing past it. `ARCHITECTURE.md` section 7 records the rule beside its
+  fail-open counterpart.
 - **`parse()` and `detect()` are total over any JSON document, not just objects**
   (`adapters/_payload.py`, `_cursor.py`, `_windsurf.py`, `_antigravity.py`,
   `vscode_copilot.py`, `contract.py`). A valid JSON list, string, number or null on stdin

@@ -189,7 +189,7 @@ def bundle_entry(cfg):
     """
     agent = cfg["agent"]
     prefix = cfg["family"] if cfg["family"] in _SINGLETON_MODULES else "hj"
-    hoisted = {("json", None), ("sys", None)}
+    hoisted = {("json", None), ("sys", None), ("traceback", None)}
 
     body = []
     body.append(
@@ -216,7 +216,7 @@ def bundle_entry(cfg):
 
 def _dialect_bundle(agent):
     """Contract + the dialect module itself: the composition for the one module vendor."""
-    hoisted = {("json", None), ("sys", None)}
+    hoisted = {("json", None), ("sys", None), ("traceback", None)}
 
     body = []
     body.append(

@@ -19,6 +19,11 @@ from scenarios import SCENARIOS  # noqa: E402
 from agentseam import bundler, dispatch  # noqa: E402
 from agentseam.contract import Decision  # noqa: E402
 
+
+def _raise(_event):
+    raise RuntimeError("policy bug")
+
+
 _HANDLERS = {
     "allow": ("def handle(event):\n    return None\n", lambda event: None),
     "deny": (
@@ -32,6 +37,11 @@ _HANDLERS = {
     "vouch": (
         'def handle(event):\n    return Decision.vouch("trusted")\n',
         lambda event: Decision.vouch("trusted"),
+    ),
+    # A handler defect must land on the same wire output as the library's own refusal.
+    "raise": (
+        'def handle(event):\n    raise RuntimeError("policy bug")\n',
+        _raise,
     ),
 }
 
@@ -118,9 +128,25 @@ def test_malformed_stdin_allows_silently_in_the_bundle_too(tmp_path):
 
 
 def test_the_unmodified_handler_stub_fails_loudly_rather_than_allowing_everything(tmp_path):
-    """An un-filled-in bundle must not quietly behave like an always-allow guard -- that is"""
+    """An un-filled-in bundle must not quietly behave like an always-allow guard -- that is
+
+    the one way it could do harm. It used to die with exit 1, which is loud on a terminal and
+    a non-blocking error to the host: the tool ran anyway. Now it refuses in the vendor's own
+    dialect, names NotImplementedError in the reason, and still prints the traceback."""
     src = bundler.bundle("claude_code")
     raw = SCENARIOS["claude_code"]["pre_tool"]
-    _text, code, stderr = _run_bundle(src, raw, tmp_path, "unfilled")
-    assert code != 0
+    text, code, stderr = _run_bundle(src, raw, tmp_path, "unfilled")
     assert "NotImplementedError" in stderr
+    verdict = json.loads(text)["hookSpecificOutput"]
+    assert (code, verdict["permissionDecision"]) == (0, "deny")
+    assert "NotImplementedError" in verdict["permissionDecisionReason"]
+    assert "fill in your policy" not in text, "the exception's message must not reach the host"
+
+
+def test_a_raising_handler_prints_its_traceback_to_stderr_in_the_bundle_too(tmp_path):
+    handler_source, _handler_fn = _HANDLERS["raise"]
+    bundled = _inject_handler(bundler.bundle("cursor"), handler_source)
+    text, code, stderr = _run_bundle(bundled, SCENARIOS["cursor"]["pre_tool"], tmp_path, "raising")
+    assert "RuntimeError: policy bug" in stderr
+    assert (code, json.loads(text)["permission"]) == (0, "deny")
+    assert "policy bug" not in text
