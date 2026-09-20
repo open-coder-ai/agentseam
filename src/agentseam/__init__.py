@@ -1,6 +1,6 @@
 """agentseam — the primitives layer for every coding agent."""
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 from . import adapters, bundler, instructions, packaging, permissions
 from .contract import (
