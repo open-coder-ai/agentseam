@@ -44,12 +44,30 @@ def load(path):
 
 
 def dump(path, data):
+    _write_text(path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def _read_text(path):
+    """The file as text, decoded as the UTF-8 both config formats are specified in -- never
+    as the platform locale, which on Windows is a code page that cannot hold it."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            return fh.read()
+    except UnicodeError as exc:
+        raise ConfigUnreadableError(
+            "%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)
+        ) from exc
+
+
+def _write_text(path, text):
+    """Encode first, then open: a text that cannot be encoded must fail with the file intact,
+    not after "w" has already truncated it to nothing."""
+    data = text.encode("utf-8")
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    with open(path, "w") as fh:
-        json.dump(data, fh, indent=2, sort_keys=True)
-        fh.write("\n")
+    with open(path, "wb") as fh:
+        fh.write(data)
 
 
 def mark(obj, owner):
@@ -107,34 +125,32 @@ def block_bounds(text, owner):
     return start, stop + len(end)
 
 
+def _newline_of(text):
+    return "\r\n" if "\r\n" in text else "\n"
+
+
 def write_block(path, body, owner):
-    """Replace our block, or append one. Everything outside it is left byte-for-byte."""
-    text = ""
-    if os.path.exists(path):
-        with open(path) as fh:
-            text = fh.read()
-    block = "%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)
+    """Replace our block, or append one. Everything outside it is left byte-for-byte, and the
+    block takes the file's own line endings so a Windows-authored file stays one kind."""
+    text = _read_text(path) if os.path.exists(path) else ""
+    nl = _newline_of(text)
+    block = ("%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)).replace("\n", nl)
     bounds = block_bounds(text, owner)
     if bounds:
         text = text[: bounds[0]] + block + text[bounds[1] :]
     else:
-        text = (text.rstrip("\n") + "\n\n" if text.strip() else "") + block + "\n"
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "w") as fh:
-        fh.write(text)
+        text = (text.rstrip("\r\n") + nl + nl if text.strip() else "") + block + nl
+    _write_text(path, text)
 
 
 def remove_block(path, owner):
-    with open(path) as fh:
-        text = fh.read()
+    text = _read_text(path)
     bounds = block_bounds(text, owner)
     if not bounds:
         return False
-    cleaned = (text[: bounds[0]].rstrip("\n") + "\n" + text[bounds[1] :].lstrip("\n")).strip("\n")
-    with open(path, "w") as fh:
-        fh.write(cleaned + "\n" if cleaned else "")
+    nl = _newline_of(text)
+    cleaned = (text[: bounds[0]].rstrip("\r\n") + nl + text[bounds[1] :].lstrip("\r\n")).strip("\r\n")
+    _write_text(path, cleaned + nl if cleaned else "")
     return True
 
 

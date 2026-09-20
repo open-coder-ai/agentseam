@@ -7,6 +7,20 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **Kimi Code's `config.toml` is read and written as UTF-8, and is never truncated by a
+  failed write** (`install_config.py`). `write_block()` and `remove_block()` opened the file
+  with no encoding, i.e. the platform locale. Under a Windows code page, or any non-UTF-8
+  locale, a user's config holding one non-ASCII byte made `install` and `uninstall` raise
+  `UnicodeDecodeError`; a command holding one character the code page lacks (a `✓`, a CJK
+  path) raised `UnicodeEncodeError` *after* `open(path, "w")` had truncated the file, leaving
+  the user's whole config zero bytes long. Both reproduced by execution under `LC_ALL=C`
+  with UTF-8 mode off. Reads now decode UTF-8 (a file that is not UTF-8 raises
+  `ConfigUnreadableError` untouched, the guarantee the JSON path already gave); writes encode
+  the whole text first and only then open the file, so an unencodable command fails with the
+  config intact. Line endings outside our block are preserved byte-for-byte as the docstring
+  always claimed (text mode rewrote every one to the platform's), and the block takes the
+  file's own ending so a CRLF config stays one kind and `uninstall` is an exact inverse.
+  `dump()` says `encoding="utf-8"` too; its output was already ASCII.
 - **An owner name that is a prefix of another's no longer owns that owner's TOML block**
   (`install_config.py`). `block_bounds()` found the `# >>> agentseam >>> <owner>` markers by
   bare substring, so owner `chock` matched inside `chock-java-security`'s begin *and* end
