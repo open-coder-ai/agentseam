@@ -230,3 +230,48 @@ def test_the_witness_asks_about_ownership_not_about_a_substring(tmp_path):
     install_mod.install("cursor", ["pre_tool"], "g", repo_root=str(other), owner="agentseam-capture")
     assert install_mod.installed("cursor", repo_root=str(other), owner="agentseam-capture")
     assert not install_mod.installed("cursor", repo_root=str(other)), "a prefix of the owner is not the owner"
+
+
+def test_an_owner_that_prefixes_another_owner_does_not_own_its_block(isolated_home):
+    """`chock` is a prefix of `chock-java-security`, and both are consumers of this library.
+
+    block_bounds() used a bare substring find, so the shorter owner's begin AND end markers
+    matched inside the longer owner's: installed(owner="chock") said yes to a block it never
+    wrote, install(owner="chock") replaced the other owner's block with its own -- closed by
+    the other owner's end marker -- and uninstall(owner="chock") deleted it."""
+    cfg = isolated_home / ".kimi-code" / "config.toml"
+    I.install("kimi_code", ["pre_tool"], "guard-java", owner="chock-java-security")
+    assert not I.installed("kimi_code", owner="chock"), "a prefix of the owner is not the owner"
+
+    I.install("kimi_code", ["pre_tool"], "guard-chock", owner="chock")
+    text = cfg.read_text(encoding="utf-8")
+    assert "guard-java" in text and "guard-chock" in text, text
+    assert text.count(I.BEGIN) == 2 and text.count(I.END) == 2, text
+    for owner, command in (("chock-java-security", "guard-java"), ("chock", "guard-chock")):
+        assert I.installed("kimi_code", owner=owner, events=["pre_tool"], command=command), owner
+
+    assert I.uninstall("kimi_code", owner="chock") is True
+    after = cfg.read_text(encoding="utf-8")
+    assert "guard-java" in after and "guard-chock" not in after, after
+    assert I.installed("kimi_code", owner="chock-java-security")
+    assert not I.installed("kimi_code", owner="chock")
+
+
+def test_a_marker_quoted_inside_a_comment_is_not_a_block(isolated_home):
+    """The same substring find matched our markers anywhere on a line, a comment included."""
+    cfg = isolated_home / ".kimi-code" / "config.toml"
+    cfg.parent.mkdir()
+    comment = "# agentseam wraps its hooks in '%s agentseam' ... '%s agentseam'\n" % (I.BEGIN, I.END)
+    own = comment + '[model]\nname = "kimi"\n'
+    cfg.write_text(own, encoding="utf-8")
+
+    assert not I.installed("kimi_code")
+    assert I.uninstall("kimi_code") is False
+    assert cfg.read_text(encoding="utf-8") == own, "a query rewrote the file"
+
+    I.install("kimi_code", ["pre_tool"], "guard.py")
+    text = cfg.read_text(encoding="utf-8")
+    assert text.startswith(own), "the user's own text was cut at the quoted marker"
+    assert I.installed("kimi_code", events=["pre_tool"], command="guard.py")
+    assert I.uninstall("kimi_code") is True
+    assert cfg.read_text(encoding="utf-8") == own

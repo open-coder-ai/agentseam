@@ -85,10 +85,24 @@ def merge(base, addition):
     return base
 
 
+def _find_line(text, line, start=0):
+    """Offset of `line` occupying a whole line of `text`, or -1. A marker that is only a
+    prefix of a longer one (owner `chock` inside `chock-java-security`'s), or quoted inside a
+    comment, is somebody else's."""
+    pos = text.find(line, start)
+    while pos != -1:
+        stop = pos + len(line)
+        if (pos == 0 or text[pos - 1] == "\n") and (stop == len(text) or text[stop] in "\r\n"):
+            return pos
+        pos = text.find(line, pos + 1)
+    return -1
+
+
 def block_bounds(text, owner):
     begin, end = "%s %s" % (BEGIN, owner), "%s %s" % (END, owner)
-    start, stop = text.find(begin), text.find(end)
-    if start == -1 or stop == -1 or stop < start:
+    start = _find_line(text, begin)
+    stop = _find_line(text, end, start) if start != -1 else -1
+    if stop == -1:
         return None
     return start, stop + len(end)
 

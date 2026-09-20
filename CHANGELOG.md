@@ -7,6 +7,14 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **An owner name that is a prefix of another's no longer owns that owner's TOML block**
+  (`install_config.py`). `block_bounds()` found the `# >>> agentseam >>> <owner>` markers by
+  bare substring, so owner `chock` matched inside `chock-java-security`'s begin *and* end
+  markers -- both real consumers of this library. `installed(owner="chock")` answered yes to
+  a block it never wrote; `install(owner="chock")` replaced the other owner's block with its
+  own, closed by the other owner's end marker; `uninstall(owner="chock")` deleted it.
+  Reproduced by execution against Kimi Code's `config.toml`. A marker now has to occupy a
+  whole line, which also stops one quoted inside a comment from being taken for a block.
 - **A handler that raises now refuses in the vendor's own dialect instead of failing open**
   (`dispatch.py`, `data/templates/runtime.py.tmpl`). An exception out of the handler escaped
   `run()` -- and the bundled `main()` -- as a traceback and exit 1, which every host reads as
