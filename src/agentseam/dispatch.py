@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import traceback
 
 from . import adapters
 from .allow_semantics import VOUCH_SPEAKS, WARN_SPEAKS
@@ -15,12 +16,31 @@ class UnsupportedDecisionError(Exception):
     """Raised when a handler asks for something the agent cannot do at this event."""
 
 
+#: Evidence keys on the refusal a failed handler earns. Never emitted on the wire: `run()`
+#: prints the traceback to stderr, and an in-process caller reads it off the decision.
+HANDLER_ERROR = "handler_error"
+HANDLER_TRACEBACK = "handler_traceback"
+
+#: Exit code when the dispatcher itself fails on a payload it did decode -- the blocking-error
+#: code on every host that has one, with nothing on stdout for the host to misread as a verdict.
+DISPATCH_FAILURE_EXIT = 2
+
+
 def _coerce(result):
     if result is None:
         return Decision.allow()
     if isinstance(result, Decision):
         return result
     raise TypeError("handler must return a Decision or None, got %r" % (type(result),))
+
+
+def _refusal(exc):
+    """A door that cannot decide refuses. Only the failure's class reaches the host: its
+    message may quote the very payload content the policy was inspecting."""
+    return Decision.deny(
+        "policy handler failed (%s); refusing rather than allowing what it could not judge" % type(exc).__name__,
+        evidence={HANDLER_ERROR: "%s: %s" % (type(exc).__name__, exc), HANDLER_TRACEBACK: traceback.format_exc()},
+    )
 
 
 def degrade(decision, event, agent=None):
@@ -51,9 +71,31 @@ def handle(raw, handler, agent=None):
     event = mod.parse(raw)
     if event.event == UNKNOWN:
         return "", 0, event, Decision.allow("unmapped vendor event")
-    decision = degrade(_coerce(handler(event)), event, name)
+    try:
+        decision = _coerce(handler(event))
+    except Exception as exc:  # noqa: BLE001 (whatever the handler's defect, the outcome is the same:
+        # this event is refused in the vendor's own dialect. Letting it escape exits the hook
+        # process with 1 and a traceback, which every host reads as a non-blocking error --
+        # the crash trial in data/recordings witnessed Claude Code run the tool regardless)
+        decision = _refusal(exc)
+    decision = degrade(decision, event, name)
     text, code = mod.respond(decision, event)
     return text, code, event, decision
+
+
+def _report(text):
+    """Best effort, never raising: a diagnostic must not pre-empt the refusal it accompanies.
+
+    A hook's stderr is whatever the host gave it -- closed (then `sys.stderr` is None and a
+    bare traceback print would land on stdout, inside the verdict), a console code page that
+    cannot hold the payload text quoted in the exception, a pipe nobody reads.
+    """
+    try:
+        sys.stderr.write(text)
+        sys.stderr.flush()
+    except Exception:  # noqa: BLE001 (every failure here means the same thing: nowhere to say
+        # it -- and the verdict on stdout is the message that matters)
+        return
 
 
 def _read_payload(stream):
@@ -78,7 +120,16 @@ def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A0
         if exit:
             sys.exit(0)
         return 0
-    text, code, _event, _decision = handle(raw, handler, agent)
+    try:
+        text, code, _event, decision = handle(raw, handler, agent)
+    except Exception:  # noqa: BLE001 (past the handler, which handle() already answers for: an
+        # adapter or dispatcher fault on a payload it did decode. There is no Event to answer
+        # in dialect, so the one refusal left is the host's blocking exit code)
+        _report(traceback.format_exc())
+        text, code = "", DISPATCH_FAILURE_EXIT
+    else:
+        evidence = decision.evidence if isinstance(decision.evidence, dict) else {}
+        _report(evidence.get(HANDLER_TRACEBACK) or "")
     if text:
         _emit(out, text)
     if exit:

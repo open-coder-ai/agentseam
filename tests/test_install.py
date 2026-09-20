@@ -1,6 +1,7 @@
 """Wiring must be idempotent, surgical, and never clobber a user's own hooks."""
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -230,3 +231,16 @@ def test_the_witness_asks_about_ownership_not_about_a_substring(tmp_path):
     install_mod.install("cursor", ["pre_tool"], "g", repo_root=str(other), owner="agentseam-capture")
     assert install_mod.installed("cursor", repo_root=str(other), owner="agentseam-capture")
     assert not install_mod.installed("cursor", repo_root=str(other)), "a prefix of the owner is not the owner"
+
+
+@pytest.mark.skipif(os.name == "nt", reason="a directory cannot be named with * on Windows")
+def test_a_star_in_the_repo_root_is_a_directory_name_not_the_owner_slot(tmp_path):
+    """resolve() substituted the owner for every `*` in the joined path, the repo root's included,
+    so a checkout under `wild*card/` was wired at `wildagentseamcard/` -- a directory the agent
+    never reads -- and `installed()` reported it wired there."""
+    root = tmp_path / "wild*card"
+    root.mkdir()
+    written = Path(I.install("claude_code", ["pre_tool"], "guard.py", str(root)))
+    assert written == root / ".claude" / "settings.json", written
+    assert written.exists()
+    assert I.installed("claude_code", str(root)) and I.uninstall("claude_code", str(root)) is True

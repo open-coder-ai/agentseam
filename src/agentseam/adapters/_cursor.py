@@ -20,7 +20,7 @@ from ..contract import (
     degraded_from,
 )
 from ._hook_json import _ESCALATE_FROM_TRANSFORM, _TRANSFORM_MISSING_INPUT
-from ._payload import hj_parse
+from ._payload import hj_parse, wire_name_of
 
 #: Wire names other vendors also spell this way; a payload naming one is claimed only on
 #: Cursor's own base-schema envelope markers.
@@ -40,8 +40,8 @@ _MARKERS = ("conversation_id", "generation_id", "cursor_version", "workspace_roo
 
 def cursor_wire(raw):
     """The wire event name, inferred from shape when the payload names none."""
-    name = raw.get("hook_event_name")
-    if name is None:
+    name = wire_name_of(raw, "hook_event_name")
+    if name is None and isinstance(raw, dict):
         return "afterFileEdit" if isinstance(raw.get("edits"), list) else "beforeShellExecution"
     return name
 
@@ -50,7 +50,7 @@ def cursor_claims(cfg, raw):
     """True when this payload looks like Cursor's shape."""
     if not isinstance(raw, dict):
         return False
-    name = raw.get("hook_event_name")
+    name = wire_name_of(raw, "hook_event_name")
     if name in cfg["events"]:
         if name in _AMBIGUOUS_NAMES:
             return any(k in raw for k in _MARKERS)
@@ -78,7 +78,7 @@ def _wire_of(cfg, event):
     `tool` is read only for an Event carrying no payload, where `parse` left the inferred
     name there; without a payload there is nothing to re-infer from.
     """
-    name = (event.raw or {}).get("hook_event_name")
+    name = wire_name_of(event.raw, "hook_event_name")
     if name in cfg["events"]:
         return name
     if event.raw:

@@ -58,11 +58,22 @@ _CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
 _VSCODE_ENVELOPE = "timestamp"
 
 
+def _name(raw):
+    """The payload's own event name as text; None when it names none, UNKNOWN when the
+    value is not text (a list or object cannot be looked up, and would raise if tried)."""
+    if not isinstance(raw, dict):
+        return None
+    name = raw.get("hook_event_name") or raw.get("hookEventName")
+    if name is None or isinstance(name, str):
+        return name
+    return UNKNOWN
+
+
 def claims(raw):
     """True for a payload from either product."""
     if not isinstance(raw, dict):
         return False
-    name = raw.get("hook_event_name") or raw.get("hookEventName")
+    name = _name(raw)
     if name in EVENT_MAP and _VSCODE_ENVELOPE in raw and "turn_id" not in raw:
         return True
     if any(k in raw for k in _CODEX_MARKERS + _CURSOR_MARKERS):
@@ -74,6 +85,8 @@ def claims(raw):
 
 
 def parse(raw):
+    if not isinstance(raw, dict):
+        return Event(AGENT, UNKNOWN, raw=raw)
     ti = raw.get("tool_input")
     ti = tool_input_of(ti)
     tool = raw.get("tool_name") or raw.get("toolName")
@@ -87,7 +100,7 @@ def parse(raw):
     else:
         path = ti.get("filePath") or ti.get("file_path") or ti.get("path")
         content = ti.get("content") or ti.get("newText") or ti.get("new_str")
-    name = raw.get("hook_event_name") or raw.get("hookEventName") or "preToolUse"
+    name = _name(raw) or "preToolUse"
     return Event(
         AGENT,
         EVENT_MAP.get(name, UNKNOWN),
@@ -118,8 +131,7 @@ _NESTED_BLOCK = (STOP, SUBAGENT_STOP)
 
 def _echoed_name(event):
     """This event's own vendor spelling, out of the payload; VS Code's name if there is none."""
-    raw = event.raw or {}
-    return raw.get("hook_event_name") or raw.get("hookEventName") or REVERSE_EVENT_MAP.get(event.event, "PreToolUse")
+    return _name(event.raw) or REVERSE_EVENT_MAP.get(event.event, "PreToolUse")
 
 
 def _refusal_reason(decision):

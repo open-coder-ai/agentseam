@@ -260,6 +260,16 @@ malformed one allows silently; an unmapped event allows silently. A dispatcher t
 closed on payloads it did not know would break every agent it does not know — including the
 ones released after this version shipped.
 
+**Fail-closed everywhere inside it.** A handler that raises is not an edge of our knowledge:
+the payload was recognized, the event was mapped, and a door that cannot decide refuses. The
+dispatcher (and the bundled runtime, which inlines the same rule) answers a handler exception
+with a `deny` in the vendor's own dialect — the witnessed block path, not an improvised one —
+naming only the exception's class, and prints the traceback to stderr for the operator. It
+used to let the exception escape, exiting 1 with a traceback, which every host reads as a
+non-blocking error and carries on from; the `crash` trial in `data/recordings/` watched Claude
+Code run the tool. A fault past the handler, in the adapter or dispatcher itself, exits 2 with
+nothing on stdout: the blocking-error code on every host that has one.
+
 ---
 
 ## 8. Where to start reading

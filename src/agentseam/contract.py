@@ -180,7 +180,9 @@ def tool_input_of(raw):
     if isinstance(raw, str) and raw[:1] == "{":
         try:
             parsed = _json.loads(raw)
-        except _json.JSONDecodeError:
+        except (ValueError, RecursionError):
+            # JSONDecodeError is a ValueError; a string nested past the interpreter's
+            # limit raises RecursionError instead, and neither is an input to crash on.
             return {}
         if isinstance(parsed, dict):
             return parsed

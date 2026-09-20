@@ -44,12 +44,30 @@ def load(path):
 
 
 def dump(path, data):
+    _write_text(path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def _read_text(path):
+    """The file as text, decoded as the UTF-8 both config formats are specified in -- never
+    as the platform locale, which on Windows is a code page that cannot hold it."""
+    try:
+        with open(path, encoding="utf-8-sig", newline="") as fh:
+            return fh.read()
+    except UnicodeError as exc:
+        raise ConfigUnreadableError(
+            "%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)
+        ) from exc
+
+
+def _write_text(path, text):
+    """Encode first, then open: a text that cannot be encoded must fail with the file intact,
+    not after "w" has already truncated it to nothing."""
+    data = text.encode("utf-8")
     parent = os.path.dirname(path)
     if parent:
         os.makedirs(parent, exist_ok=True)
-    with open(path, "w") as fh:
-        json.dump(data, fh, indent=2, sort_keys=True)
-        fh.write("\n")
+    with open(path, "wb") as fh:
+        fh.write(data)
 
 
 def mark(obj, owner):
@@ -85,50 +103,62 @@ def merge(base, addition):
     return base
 
 
+def _find_line(text, line, start=0):
+    """Offset of `line` occupying a whole line of `text`, or -1. A marker that is only a
+    prefix of a longer one (owner `chock` inside `chock-java-security`'s), or quoted inside a
+    comment, is somebody else's."""
+    pos = text.find(line, start)
+    while pos != -1:
+        stop = pos + len(line)
+        if (pos == 0 or text[pos - 1] == "\n") and (stop == len(text) or text[stop] in "\r\n"):
+            return pos
+        pos = text.find(line, pos + 1)
+    return -1
+
+
 def block_bounds(text, owner):
     begin, end = "%s %s" % (BEGIN, owner), "%s %s" % (END, owner)
-    start, stop = text.find(begin), text.find(end)
-    if start == -1 or stop == -1 or stop < start:
+    start = _find_line(text, begin)
+    stop = _find_line(text, end, start) if start != -1 else -1
+    if stop == -1:
         return None
     return start, stop + len(end)
 
 
+def _newline_of(text):
+    return "\r\n" if "\r\n" in text else "\n"
+
+
 def write_block(path, body, owner):
-    """Replace our block, or append one. Everything outside it is left byte-for-byte."""
-    text = ""
-    if os.path.exists(path):
-        with open(path) as fh:
-            text = fh.read()
-    block = "%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)
+    """Replace our block, or append one. Everything outside it is left byte-for-byte, and the
+    block takes the file's own line endings so a Windows-authored file stays one kind."""
+    text = _read_text(path) if os.path.exists(path) else ""
+    nl = _newline_of(text)
+    block = ("%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)).replace("\n", nl)
     bounds = block_bounds(text, owner)
     if bounds:
         text = text[: bounds[0]] + block + text[bounds[1] :]
     else:
-        text = (text.rstrip("\n") + "\n\n" if text.strip() else "") + block + "\n"
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "w") as fh:
-        fh.write(text)
+        text = (text.rstrip("\r\n") + nl + nl if text.strip() else "") + block + nl
+    _write_text(path, text)
 
 
 def remove_block(path, owner):
-    with open(path) as fh:
-        text = fh.read()
+    text = _read_text(path)
     bounds = block_bounds(text, owner)
     if not bounds:
         return False
-    cleaned = (text[: bounds[0]].rstrip("\n") + "\n" + text[bounds[1] :].lstrip("\n")).strip("\n")
-    with open(path, "w") as fh:
-        fh.write(cleaned + "\n" if cleaned else "")
+    nl = _newline_of(text)
+    cleaned = (text[: bounds[0]].rstrip("\r\n") + nl + text[bounds[1] :].lstrip("\r\n")).strip("\r\n")
+    _write_text(path, cleaned + nl if cleaned else "")
     return True
 
 
 def resolve(mod, repo_root, owner):
-    """Where this agent's config lives."""
-    config = mod.CONFIG_PATH
-    path = os.path.expanduser(config) if config.startswith("~") else os.path.join(repo_root, config)
-    return path.replace("*", owner) if "*" in path else path
+    """Where this agent's config lives. A `*` in the adapter's own CONFIG_PATH is the owner's
+    slot; one in `repo_root` or the user's home is just a character in a directory name."""
+    config = mod.CONFIG_PATH.replace("*", owner)
+    return os.path.expanduser(config) if config.startswith("~") else os.path.join(repo_root, config)
 
 
 def fail_closed_kwarg(mod, fail_closed):

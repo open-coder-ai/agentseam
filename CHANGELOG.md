@@ -6,6 +6,74 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **A Gemini command's `commands/*.toml` survives control characters, and a multi-line body
+  no longer gains a trailing newline** (`packaging.py`). `_toml_string` escaped backslash and
+  quote only, so a body or description carrying a lone carriage return, a form feed, any
+  other C0 control or DEL rendered TOML the extension could not load -- the sibling of the
+  0.3.0 hook-entry fix, in the other TOML this package writes. It now applies the same escape
+  set (`\uXXXX` for the rest; a tab stays raw, a line feed only in the triple-quoted form, a
+  carriage return always escaped so a reader's CRLF normalisation cannot change the body).
+  Separately, the triple-quoted form put a newline before its closing delimiter, which a TOML
+  reader keeps as part of the value: every multi-line prompt came back with an extra `\n`.
+  Pinned by a `tomllib` round-trip of each hostile body.
+- **A `*` in `repo_root` is a directory name, not the owner slot** (`install_config.py`).
+  `resolve()` substituted the owner for every `*` in the *joined* path, so a checkout under
+  `wild*card/` was wired at `wildagentseamcard/.claude/settings.json` -- a directory the agent
+  never reads -- and `installed()` then reported it wired. No shipped `CONFIG_PATH` carries a
+  `*`, so the substitution only ever reached paths the caller supplied. It now applies to the
+  adapter's own `CONFIG_PATH` alone.
+- **Kimi Code's `config.toml` is read and written as UTF-8, and is never truncated by a
+  failed write** (`install_config.py`). `write_block()` and `remove_block()` opened the file
+  with no encoding, i.e. the platform locale. Under a Windows code page, or any non-UTF-8
+  locale, a user's config holding one non-ASCII byte made `install` and `uninstall` raise
+  `UnicodeDecodeError`; a command holding one character the code page lacks (a `✓`, a CJK
+  path) raised `UnicodeEncodeError` *after* `open(path, "w")` had truncated the file, leaving
+  the user's whole config zero bytes long. Both reproduced by execution under `LC_ALL=C`
+  with UTF-8 mode off. Reads now decode UTF-8 (a file that is not UTF-8 raises
+  `ConfigUnreadableError` untouched, the guarantee the JSON path already gave); writes encode
+  the whole text first and only then open the file, so an unencodable command fails with the
+  config intact. Line endings outside our block are preserved byte-for-byte as the docstring
+  always claimed (text mode rewrote every one to the platform's), and the block takes the
+  file's own ending so a CRLF config stays one kind and `uninstall` is an exact inverse.
+  `dump()` says `encoding="utf-8"` too; its output was already ASCII.
+- **An owner name that is a prefix of another's no longer owns that owner's TOML block**
+  (`install_config.py`). `block_bounds()` found the `# >>> agentseam >>> <owner>` markers by
+  bare substring, so owner `chock` matched inside `chock-java-security`'s begin *and* end
+  markers -- both real consumers of this library. `installed(owner="chock")` answered yes to
+  a block it never wrote; `install(owner="chock")` replaced the other owner's block with its
+  own, closed by the other owner's end marker; `uninstall(owner="chock")` deleted it.
+  Reproduced by execution against Kimi Code's `config.toml`. A marker now has to occupy a
+  whole line, which also stops one quoted inside a comment from being taken for a block.
+- **A handler that raises now refuses in the vendor's own dialect instead of failing open**
+  (`dispatch.py`, `data/templates/runtime.py.tmpl`). An exception out of the handler escaped
+  `run()` -- and the bundled `main()` -- as a traceback and exit 1, which every host reads as
+  a non-blocking hook error and carries on from: the `crash` trial in `data/recordings/`
+  watched Claude Code run the tool. `handle()` now answers it with `Decision.deny`, rendered
+  through the adapter like any other deny (the witnessed block path), naming only the
+  exception's class because its message may quote the payload the policy was inspecting; the
+  traceback goes to stderr for the operator, and an in-process caller reads it off
+  `decision.evidence`. A handler returning the wrong type is refused the same way. A fault past
+  the handler -- in the adapter or dispatcher, on a payload it did decode -- exits 2 with
+  nothing on stdout: the blocking-error code on every host that has one. An un-filled-in
+  bundle stub therefore refuses every gated action with `NotImplementedError` in the reason
+  rather than crashing past it. `ARCHITECTURE.md` section 7 records the rule beside its
+  fail-open counterpart. The traceback is written best-effort: with fd 2 closed at startup
+  `sys.stderr` is None and the traceback module's default print lands on *stdout*, inside the
+  verdict the host parses, and a console code page may not hold the payload text an exception
+  quotes -- neither may pre-empt the refusal, so a diagnostic that cannot be written is dropped.
+- **`parse()` and `detect()` are total over any JSON document, not just objects**
+  (`adapters/_payload.py`, `_cursor.py`, `_windsurf.py`, `_antigravity.py`,
+  `vscode_copilot.py`, `contract.py`). A valid JSON list, string, number or null on stdin
+  crashed `run(handler, agent=...)` and every generated bundle with an AttributeError
+  (exit 1: a non-blocking error to the host, so an allow with a traceback attached); an event
+  key holding a list or object raised `TypeError: unhashable type` out of `detect()` itself.
+  A payload that is not an object now parses to UNKNOWN on every adapter and is allowed
+  silently, the documented outcome at the edge of our knowledge; a name that is not text maps
+  to UNKNOWN the same way. Two siblings closed by the same probe: windsurf indexed a
+  non-object `tool_info`, and `tool_input_of()` let a JSON string nested past the recursion
+  limit raise `RecursionError` past its `JSONDecodeError` guard. No wire output moves.
+
 ## [0.3.0] - 2026-09-20
 
 ### Docs

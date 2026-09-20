@@ -148,10 +148,32 @@ def also_reads(agent, part=None):
     return list(rows.get(part, ()))
 
 
+#: TOML basic-string escapes; every other C0 control and U+007F takes the \\uXXXX form -- the
+#: rule adapters/_hook_entry.py applies to the hook entries it renders. A tab may stay raw in
+#: both string forms and a line feed in the triple-quoted one; a carriage return is always
+#: escaped, because a reader may normalise a raw CRLF and the body would not round-trip.
+_TOML_ESCAPES = {"\\": "\\\\", "\b": "\\b", "\f": "\\f", "\r": "\\r"}
+
+
+def _toml_char(ch, multiline):
+    if ch in _TOML_ESCAPES:
+        return _TOML_ESCAPES[ch]
+    if ch == "\t" or (multiline and ch == "\n"):
+        return ch
+    return "\\u%04X" % ord(ch) if ch < " " or ch == "\x7f" else ch
+
+
 def _toml_string(text):
-    """A TOML basic string. Multi-line bodies use the triple-quoted form."""
-    escaped = text.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
-    return '"""\n%s\n"""' % escaped if "\n" in text else '"%s"' % escaped.replace('"', '\\"')
+    """A TOML basic string. Multi-line bodies use the triple-quoted form.
+
+    Only the newline after the opening delimiter is trimmed by a TOML reader; one before the
+    closing delimiter is part of the value, so the body runs straight into it.
+    """
+    multiline = "\n" in text
+    escaped = "".join(_toml_char(ch, multiline) for ch in text)
+    if multiline:
+        return '"""\n%s"""' % escaped.replace('"""', '\\"\\"\\"')
+    return '"%s"' % escaped.replace('"', '\\"')
 
 
 def _render_command(agent, part):

@@ -12,6 +12,8 @@ from ._payload import hj_parse
 
 def antigravity_wire(raw):
     """Name the event from shape; ties go to PreToolUse so the gate stays a gate."""
+    if not isinstance(raw, dict):
+        return None
     if "terminationReason" in raw or "fullyIdle" in raw:
         return "Stop"
     if isinstance(raw.get("toolCall"), dict):
