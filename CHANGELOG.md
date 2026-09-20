@@ -7,6 +7,12 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **A `*` in `repo_root` is a directory name, not the owner slot** (`install_config.py`).
+  `resolve()` substituted the owner for every `*` in the *joined* path, so a checkout under
+  `wild*card/` was wired at `wildagentseamcard/.claude/settings.json` -- a directory the agent
+  never reads -- and `installed()` then reported it wired. No shipped `CONFIG_PATH` carries a
+  `*`, so the substitution only ever reached paths the caller supplied. It now applies to the
+  adapter's own `CONFIG_PATH` alone.
 - **Kimi Code's `config.toml` is read and written as UTF-8, and is never truncated by a
   failed write** (`install_config.py`). `write_block()` and `remove_block()` opened the file
   with no encoding, i.e. the platform locale. Under a Windows code page, or any non-UTF-8
