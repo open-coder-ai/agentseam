@@ -58,7 +58,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   nothing on stdout: the blocking-error code on every host that has one. An un-filled-in
   bundle stub therefore refuses every gated action with `NotImplementedError` in the reason
   rather than crashing past it. `ARCHITECTURE.md` section 7 records the rule beside its
-  fail-open counterpart.
+  fail-open counterpart. The traceback is written best-effort: with fd 2 closed at startup
+  `sys.stderr` is None and the traceback module's default print lands on *stdout*, inside the
+  verdict the host parses, and a console code page may not hold the payload text an exception
+  quotes -- neither may pre-empt the refusal, so a diagnostic that cannot be written is dropped.
 - **`parse()` and `detect()` are total over any JSON document, not just objects**
   (`adapters/_payload.py`, `_cursor.py`, `_windsurf.py`, `_antigravity.py`,
   `vscode_copilot.py`, `contract.py`). A valid JSON list, string, number or null on stdin

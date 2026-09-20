@@ -69,6 +69,19 @@ def _emit(out, text):
         out.flush()
 
 
+def _report(text):
+    # Best effort, never raising: a diagnostic must not pre-empt the refusal it accompanies.
+    # A hook's stderr is whatever the host gave it -- closed (then sys.stderr is None, and
+    # the traceback module's default print would land on STDOUT, inside the verdict), a
+    # console code page that cannot hold the payload text quoted in the exception, a pipe
+    # nobody reads.
+    try:
+        sys.stderr.write(text)
+        sys.stderr.flush()
+    except Exception:
+        return
+
+
 def _decide(raw):
     """(stdout_text, exit_code) for one decoded payload: agentseam.dispatch.handle(), inlined."""
     event = parse(raw)
@@ -85,7 +98,7 @@ def _decide(raw):
         # failure is printed for the operator and the gate answers deny in __AGENT_REPR__'s
         # own dialect. Only the failure's class is named to the host: its message may quote
         # the very payload content the policy was inspecting.
-        traceback.print_exc()
+        _report(traceback.format_exc())
         decision = Decision.deny(
             "policy handler failed (%s); refusing rather than allowing what it could not judge"
             % sys.exc_info()[0].__name__
@@ -110,7 +123,7 @@ def main(stdin=None, stdout=None, exit=True):
         # Past the handler, which _decide() already answers for: a fault in this file on a
         # payload it did decode. With no Event to answer in dialect, the one refusal left is
         # the host's blocking exit code, and nothing on stdout to be misread as a verdict.
-        traceback.print_exc()
+        _report(traceback.format_exc())
         text, code = "", 2
     if text:
         _emit(out, text)

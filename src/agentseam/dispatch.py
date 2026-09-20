@@ -83,6 +83,21 @@ def handle(raw, handler, agent=None):
     return text, code, event, decision
 
 
+def _report(text):
+    """Best effort, never raising: a diagnostic must not pre-empt the refusal it accompanies.
+
+    A hook's stderr is whatever the host gave it -- closed (then `sys.stderr` is None and a
+    bare traceback print would land on stdout, inside the verdict), a console code page that
+    cannot hold the payload text quoted in the exception, a pipe nobody reads.
+    """
+    try:
+        sys.stderr.write(text)
+        sys.stderr.flush()
+    except Exception:  # noqa: BLE001 (every failure here means the same thing: nowhere to say
+        # it -- and the verdict on stdout is the message that matters)
+        return
+
+
 def _read_payload(stream):
     """Read BYTES and decode UTF-8 ourselves rather than trusting the platform locale."""
     buffer = getattr(stream, "buffer", None)
@@ -110,12 +125,11 @@ def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A0
     except Exception:  # noqa: BLE001 (past the handler, which handle() already answers for: an
         # adapter or dispatcher fault on a payload it did decode. There is no Event to answer
         # in dialect, so the one refusal left is the host's blocking exit code)
-        traceback.print_exc()
+        _report(traceback.format_exc())
         text, code = "", DISPATCH_FAILURE_EXIT
     else:
-        failure = decision.evidence.get(HANDLER_TRACEBACK)
-        if failure:
-            sys.stderr.write(failure)
+        evidence = decision.evidence if isinstance(decision.evidence, dict) else {}
+        _report(evidence.get(HANDLER_TRACEBACK) or "")
     if text:
         _emit(out, text)
     if exit:

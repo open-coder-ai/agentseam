@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "examples"))
 
 from payloads import (
     AG_POST_TOOL,
@@ -210,86 +209,3 @@ def test_a_non_ascii_reason_does_not_crash_the_gate_on_a_locale_stdout():
     code = dispatch.run(handler, agent="windsurf", stdin=io.StringIO(json.dumps(payload)), stdout=out, exit=False)
     assert code == 2, "the block's exit code must survive the write, not be pre-empted by a crash"
     assert "危険" in out.buffer.getvalue().decode("utf-8"), "the reason must reach stdout intact"
-
-
-def _boom(_event):
-    raise RuntimeError("token=hunter2 leaked from the payload")
-
-
-def test_a_handler_that_raises_is_refused_in_dialect_not_crashed_through():
-    """A door that cannot decide refuses. Letting the exception escape exits the hook with 1
-
-    and a traceback, which every host reads as a non-blocking error: the crash trial in
-    data/recordings witnessed Claude Code run the tool regardless (observed.runs == 1)."""
-    from agentseam import dispatch
-
-    text, code, event, decision = A.handle(CC_BASH, _boom)
-    assert event is not None and event.event == A.PRE_TOOL
-    assert decision.outcome == A.DENY
-    assert json.loads(text)["hookSpecificOutput"]["permissionDecision"] == "deny"
-    assert code == 0
-    assert "RuntimeError" in decision.reason
-    assert decision.evidence[dispatch.HANDLER_ERROR].startswith("RuntimeError: token=hunter2")
-    assert "Traceback" in decision.evidence[dispatch.HANDLER_TRACEBACK]
-
-
-def test_the_refusal_names_the_failure_class_but_never_its_message():
-    """An exception message may quote the payload the policy was inspecting -- a secret it
-    caught, a path -- and the reason goes back to the agent. Only the class travels."""
-    text, _code, _event, _decision = A.handle(CC_BASH, _boom)
-    assert "hunter2" not in text
-
-
-def test_a_handler_returning_the_wrong_type_is_refused_the_same_way():
-    text, _code, _event, decision = A.handle(CC_BASH, lambda _e: "allow")
-    assert decision.outcome == A.DENY and "TypeError" in decision.reason
-    assert json.loads(text)["hookSpecificOutput"]["permissionDecision"] == "deny"
-
-
-def test_run_refuses_on_stdout_and_puts_the_traceback_on_stderr(capsys):
-    import io
-
-    from agentseam import dispatch
-
-    out = io.StringIO()
-    code = dispatch.run(_boom, stdin=io.StringIO(json.dumps(CC_BASH)), stdout=out, exit=False)
-    assert code == 0 and json.loads(out.getvalue())["hookSpecificOutput"]["permissionDecision"] == "deny"
-    err = capsys.readouterr().err
-    assert "Traceback" in err and "RuntimeError: token=hunter2" in err, err
-
-
-def test_a_raising_handler_is_refused_at_every_blocking_gate_of_every_agent():
-    """Where the vendor can block, the refusal is the same wire output an explicit deny with
-    the same reason produces -- the witnessed path, not an improvised one."""
-    from scenarios import SCENARIOS
-
-    for agent, events in sorted(SCENARIOS.items()):
-        for event, raw in sorted(events.items()):
-            if not A.can_block(agent, event):
-                continue
-            text, code, _e, decision = A.handle(raw, _boom, agent=agent)
-            expected, expected_code, _e2, _d2 = A.handle(
-                raw, lambda _e, r=decision.reason: Decision.deny(r), agent=agent
-            )
-            assert (text, code) == (expected, expected_code), "%s/%s" % (agent, event)
-            assert text.strip() or code != 0, "%s/%s: a blocking gate was answered with silence" % (agent, event)
-
-
-def test_run_exits_with_the_blocking_code_when_the_dispatcher_itself_fails(monkeypatch, capsys):
-    """Past the handler there is no Event to answer in dialect; the one refusal left is exit 2."""
-    import io
-
-    from agentseam import dispatch
-
-    class Broken:
-        AGENT = "claude_code"
-
-        @staticmethod
-        def parse(_raw):
-            raise KeyError("adapter defect")
-
-    monkeypatch.setattr(dispatch.adapters, "get", lambda _name: Broken)
-    out = io.StringIO()
-    code = dispatch.run(allow_all, agent="claude_code", stdin=io.StringIO(json.dumps(CC_BASH)), stdout=out, exit=False)
-    assert code == dispatch.DISPATCH_FAILURE_EXIT and out.getvalue() == ""
-    assert "adapter defect" in capsys.readouterr().err

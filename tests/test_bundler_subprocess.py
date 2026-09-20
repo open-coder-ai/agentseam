@@ -150,3 +150,25 @@ def test_a_raising_handler_prints_its_traceback_to_stderr_in_the_bundle_too(tmp_
     assert "RuntimeError: policy bug" in stderr
     assert (code, json.loads(text)["permission"]) == (0, "deny")
     assert "policy bug" not in text
+
+
+@pytest.mark.skipif(os.name == "nt", reason="closing fd 2 before exec is a POSIX preexec_fn")
+def test_a_bundle_with_no_stderr_keeps_its_traceback_out_of_the_verdict(tmp_path):
+    """With fd 2 closed at startup, sys.stderr is None and the traceback module's default
+    print goes to STDOUT -- inside the JSON the host parses. The verdict must be all there is."""
+    handler_source, handler_fn = _HANDLERS["raise"]
+    raw = SCENARIOS["claude_code"]["pre_tool"]
+    expected_text, expected_code, _event, _decision = dispatch.handle(raw, handler_fn, "claude_code")
+    path = tmp_path / "no-stderr.py"
+    path.write_text(_inject_handler(bundler.bundle("claude_code"), handler_source), encoding="utf-8")
+    proc = subprocess.run(
+        [sys.executable, "-S", str(path)],
+        input=json.dumps(raw).encode("utf-8"),
+        stdout=subprocess.PIPE,
+        cwd=str(tmp_path),
+        env={"PATH": os.environ.get("PATH", "")},
+        preexec_fn=lambda: os.close(2),  # noqa: PLW1509 (a single-threaded test process; fd 2 gone is the point)
+        timeout=30,
+        check=False,
+    )
+    assert (proc.stdout.decode("utf-8"), proc.returncode) == (expected_text, expected_code)
