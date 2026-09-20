@@ -6,6 +6,19 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+- **`parse()` and `detect()` are total over any JSON document, not just objects**
+  (`adapters/_payload.py`, `_cursor.py`, `_windsurf.py`, `_antigravity.py`,
+  `vscode_copilot.py`, `contract.py`). A valid JSON list, string, number or null on stdin
+  crashed `run(handler, agent=...)` and every generated bundle with an AttributeError
+  (exit 1: a non-blocking error to the host, so an allow with a traceback attached); an event
+  key holding a list or object raised `TypeError: unhashable type` out of `detect()` itself.
+  A payload that is not an object now parses to UNKNOWN on every adapter and is allowed
+  silently, the documented outcome at the edge of our knowledge; a name that is not text maps
+  to UNKNOWN the same way. Two siblings closed by the same probe: windsurf indexed a
+  non-object `tool_info`, and `tool_input_of()` let a JSON string nested past the recursion
+  limit raise `RecursionError` past its `JSONDecodeError` guard. No wire output moves.
+
 ## [0.3.0] - 2026-09-20
 
 ### Docs

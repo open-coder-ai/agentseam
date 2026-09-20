@@ -12,10 +12,27 @@ import json as _json
 from ..contract import UNKNOWN, Event, tool_input_of
 from ._probes import PROBES
 
+#: What an event key resolves to when it holds something other than text (a list, an object,
+#: a number). No vendor spells an event this way, so it maps to UNKNOWN wherever a wire name
+#: is looked up -- where the value itself, unhashable, would have raised instead.
+UNREADABLE_NAME = ""
+
+
+def wire_name_of(raw, key):
+    """The event name under `key`: text, None when absent, UNREADABLE_NAME when not text.
+
+    Total over anything `json.loads` can return: a payload that is not an object names no
+    event, and a name that is not a string is not one any adapter can map.
+    """
+    name = raw.get(key) if isinstance(raw, dict) else None
+    if name is None or isinstance(name, str):
+        return name
+    return UNREADABLE_NAME
+
 
 def _wire_name(cfg, raw):
     for key in cfg["claims"].get("event_key", ()):
-        name = raw.get(key)
+        name = wire_name_of(raw, key)
         if name is not None:
             return name
     return None
@@ -111,6 +128,8 @@ _FIELD_META = ("tool_input", "content_only_for_write_tools", "stringify")
 
 
 def _tool_input_raw(cfg, raw):
+    if not isinstance(raw, dict):
+        return None
     for key in cfg["fields"].get("tool_input", ("tool_input",)):
         value = raw.get(key)
         if value is not None:

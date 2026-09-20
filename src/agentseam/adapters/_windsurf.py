@@ -8,24 +8,28 @@ from __future__ import annotations
 
 from ..contract import DENY, ESCALATE, TRANSFORM
 from ._hook_json import _refusal_text
-from ._payload import hj_parse
+from ._payload import hj_parse, wire_name_of
 
 _MCP_EVENTS = ("pre_mcp_tool_use", "post_mcp_tool_use")
 
 
+def _tool_info(raw):
+    info = raw.get("tool_info") if isinstance(raw, dict) else None
+    return info if isinstance(info, dict) else {}
+
+
 def windsurf_wire(raw):
     """The wire event name, inferred from `tool_info` when the payload names none."""
-    name = raw.get("hook_event_name")
-    if name is not None:
+    name = wire_name_of(raw, "hook_event_name")
+    if name is not None or not isinstance(raw, dict):
         return name
-    info = raw.get("tool_info") or {}
-    return "pre_run_command" if info.get("command_line") else "pre_user_prompt"
+    return "pre_run_command" if _tool_info(raw).get("command_line") else "pre_user_prompt"
 
 
 def windsurf_claims(cfg, raw):
     if not isinstance(raw, dict):
         return False
-    if raw.get("hook_event_name") in cfg["events"]:
+    if wire_name_of(raw, "hook_event_name") in cfg["events"]:
         return True
     return "trajectory_id" in raw and isinstance(raw.get("tool_info"), dict)
 
@@ -33,7 +37,7 @@ def windsurf_claims(cfg, raw):
 def windsurf_parse(cfg, raw):
     name = windsurf_wire(raw)
     event = hj_parse(cfg, raw, wire=name)
-    info = raw.get("tool_info") or {}
+    info = _tool_info(raw)
     if name in _MCP_EVENTS:
         joined = "%s/%s" % (info["server"], info["tool"]) if info.get("server") and info.get("tool") else None
         event.tool = joined or info.get("tool")
