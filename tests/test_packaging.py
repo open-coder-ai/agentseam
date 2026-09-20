@@ -106,6 +106,25 @@ def test_a_multiline_command_body_uses_the_triple_quoted_toml_form():
     assert 'Line two with a "quote".' in rendered
 
 
+def test_a_gemini_command_toml_survives_control_characters():
+    """_toml_string escaped backslash and quote only, so a body or description carrying any
+    other control character rendered a commands/*.toml Gemini could not load at all -- the
+    sibling of the 0.3.0 hook-entry fix, in the other TOML this package writes."""
+    tomllib = pytest.importorskip("tomllib")
+    hostile = {
+        "a lone carriage return": "scan\rall",
+        "a form feed in a multi-line body": "line one\nline two\x0c",
+        "other C0 controls, DEL and a tab": "bell\x07 esc\x1b del\x7f tab\t",
+        "triple quotes at both edges": '"""quoted"""',
+        "a backslash before a newline": "trail\\\nnext",
+        "a Windows-authored body": "line one\r\nline two",
+    }
+    for label, body in hostile.items():
+        result = packaging.plan("gemini_cli", Bundle("b", parts=[Part(COMMAND, "c", body, description=body)]))
+        parsed = tomllib.loads(result.files["commands/c.toml"])
+        assert parsed == {"description": body, "prompt": body}, label
+
+
 def test_vscode_gets_doubled_extensions_and_no_manifest(bundle):
     result = packaging.plan("vscode_copilot", bundle)
     assert result.complete

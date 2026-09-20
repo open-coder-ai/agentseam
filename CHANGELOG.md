@@ -7,6 +7,16 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Fixed
+- **A Gemini command's `commands/*.toml` survives control characters, and a multi-line body
+  no longer gains a trailing newline** (`packaging.py`). `_toml_string` escaped backslash and
+  quote only, so a body or description carrying a lone carriage return, a form feed, any
+  other C0 control or DEL rendered TOML the extension could not load -- the sibling of the
+  0.3.0 hook-entry fix, in the other TOML this package writes. It now applies the same escape
+  set (`\uXXXX` for the rest; a tab stays raw, a line feed only in the triple-quoted form, a
+  carriage return always escaped so a reader's CRLF normalisation cannot change the body).
+  Separately, the triple-quoted form put a newline before its closing delimiter, which a TOML
+  reader keeps as part of the value: every multi-line prompt came back with an extra `\n`.
+  Pinned by a `tomllib` round-trip of each hostile body.
 - **A `*` in `repo_root` is a directory name, not the owner slot** (`install_config.py`).
   `resolve()` substituted the owner for every `*` in the *joined* path, so a checkout under
   `wild*card/` was wired at `wildagentseamcard/.claude/settings.json` -- a directory the agent
