@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.1] - 2026-09-20
 
 ### Fixed
 - **A Gemini command's `commands/*.toml` survives control characters, and a multi-line body
@@ -1671,7 +1671,7 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surfaces read content bytes (see above). A consumer needing content-based denial today
   should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
 
-[Unreleased]: https://github.com/open-coder-ai/agentseam/compare/v0.3.0...HEAD
+[0.3.1]: https://github.com/open-coder-ai/agentseam/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/open-coder-ai/agentseam/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/open-coder-ai/agentseam/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/open-coder-ai/agentseam/compare/v0.1.1...v0.2.0
