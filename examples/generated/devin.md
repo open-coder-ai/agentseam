@@ -338,5 +338,9 @@ Exit code: `0`
 **Permissions** — no model recorded: a permission system provably exists -- its hooks carry a PermissionRequest event and the vendor lists modifying permissions as a use case -- but its config was not read here
 
 
-**Packaging** — no format recorded: skills provably exist -- its hook loader is documented as following the same discovery rules as skills and rules -- but their layout was not read here
+**Packaging** — a one-skill bundle, rooted at `secrets-guard`:
 
+```
+.devin-plugin/plugin.json
+skills/secret-scan/SKILL.md
+```

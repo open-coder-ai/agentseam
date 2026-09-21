@@ -11,6 +11,7 @@ from agentseam.packaging import Bundle, Part
 from agentseam.packaging_data import (
     ALSO_READS,
     COMMAND,
+    EXECUTABLE,
     HOOKS,
     MCP,
     PACKAGING,
@@ -56,10 +57,10 @@ def test_every_agent_records_how_it_was_verified(agent):
 def test_a_skill_is_literally_the_same_file_in_every_bundle_format():
     """The claim the module is built on. If this drifts, "write it once" is a lie."""
     shared = packaging.same_path_for(SKILL)
-    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "copilot", "cursor", "gemini_cli"]
+    assert shared["skills/{name}/SKILL.md"] == ["claude_code", "codex_cli", "copilot", "cursor", "devin", "gemini_cli"]
     hooks = packaging.same_path_for(HOOKS)["hooks/hooks.json"]
     assert hooks == ["claude_code", "codex_cli", "cursor", "gemini_cli"]
-    assert packaging.same_path_for(SUBAGENT)["agents/{name}.md"] == ["claude_code", "gemini_cli"]
+    assert packaging.same_path_for(SUBAGENT)["agents/{name}.md"] == ["claude_code", "devin", "gemini_cli"]
 
 
 def test_commands_are_the_part_that_never_carries_across():
@@ -193,7 +194,34 @@ def test_no_unrecorded_reason_is_empty():
 
 def test_proven_but_unlocated_parts_are_distinguished_from_absent_ones():
     """ "We could not find the layout" and "there is no such thing" are different answers."""
-    for agent in ("antigravity", "devin", "grok", "junie", "kimi_code"):
+    for agent in ("antigravity", "grok", "junie", "kimi_code"):
         assert "exist" in UNRECORDED[agent], agent
     for agent in ("aider", "replit", "zed"):
         assert "exist" not in UNRECORDED[agent], agent
+
+
+def test_devin_native_hooks_path_differs_from_the_claude_fallback_one():
+    """Devin's own hooks.json sits at the plugin root; hooks/hooks.json -- what the CLI
+    changelog calls "Broader Claude plugin compatibility" -- is the Claude-fallback layout's
+    path, not this native one's, and no scripts/executable location is documented at all."""
+    row = PACKAGING["devin"]
+    assert row["manifest"] == ".devin-plugin/plugin.json"
+    assert row["parts"][HOOKS] == "hooks.json"
+    assert packaging.same_path_for(HOOKS)["hooks.json"] == ["devin"]
+    assert "hooks/hooks.json" in row["notes"]
+    assert row["parts"][EXECUTABLE] is None
+    assert row["plugin_root"] == ()
+
+
+def test_devin_plan_renders_the_native_layout_and_drops_commands(bundle):
+    result = packaging.plan("devin", bundle)
+    assert not result.complete
+    manifest = json.loads(result.files[".devin-plugin/plugin.json"])
+    assert manifest == {
+        "name": "secrets-guard",
+        "version": "1.2.0",
+        "description": "Keeps secrets out of memory files",
+    }
+    assert "skills/secret-scan/SKILL.md" in result.files
+    assert "agents/auditor.md" in result.files
+    assert result.unrepresentable[0].reason == PART_LIMITS[("devin", COMMAND)]
