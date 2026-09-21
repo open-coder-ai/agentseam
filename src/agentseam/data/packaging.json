@@ -155,5 +155,25 @@
       "method": "vendor source read from a clone: microsoft/vscode-docs docs/agent-customization/agent-plugins.md -- the directory example, the plugin manifest field table ($schema required), the plugin-format auto-detection rule (no $schema falls back to the unrelated Legacy Copilot format), and the plugin-root token table (Agent Plugins 1.0: ${PLUGIN_ROOT} only)",
       "date": "2026-08-29"
     }
+  },
+  "devin": {
+    "unit": "plugin",
+    "manifest": ".devin-plugin/plugin.json",
+    "manifest_format": "json",
+    "project_root": "{bundle}",
+    "plugin_root": [],
+    "parts": {
+      "skill": "skills/{name}/SKILL.md",
+      "subagent": "agents/{name}.md",
+      "command": null,
+      "hooks": "hooks.json",
+      "mcp": ".mcp.json",
+      "executable": null
+    },
+    "notes": "Native layout only. Devin's own precedence chain is .devin-plugin/plugin.json first, then a fallback to .claude-plugin/plugin.json (the Claude layout -- MCP only gets a plugin-root token there, via ${CLAUDE_PLUGIN_ROOT}), then to a root plugin.json in the open Agent Plugins 1.0.0 spec; the vendor's own words: 'Devin and Claude layouts behave exactly as before' outside that third format's runtime conventions. Native hooks sit at the plugin root as hooks.json, not the nested hooks/hooks.json every other format recorded here shares -- the CLI changelog's 'hooks are also loaded from hooks/hooks.json' names the Claude-fallback path, kept distinct here on purpose. A subagent may also be written agents/{name}/AGENT.md; the flat form is recorded to match the shape every other agent here uses. requiredPlugins/optionalPlugins/forbiddenPlugins entries (each an owner/repo string or a {source: github|url|git-subdir, ...} object) stand in for an index file -- a marketplace is a root plugin.json whose own required/optionalPlugins point git-subdir entries at plugins/<name>/ subfolders, and merging to the default branch is the release. Plugin hooks are, in the vendor's own words, 'currently best effort and fail open -- if a hook fails to load or run, the session continues without it', and documented for 'local Devin sessions (the CLI and Devin Desktop)' only; whether they fire in cloud sessions, or for SessionStart/SessionEnd, is not established here. command and executable are null: no slash-command location and no bundled-executable/scripts folder is documented for this layout; only the Agent Plugins 1.0.0 manifest's ./-prefixed MCP command resolves against the plugin root, and that convention is stated to apply only to plugins whose manifest is the root plugin.json, not this one. plugin_root is empty for the same reason -- hook commands do receive a DEVIN_PLUGIN_ROOT environment variable, but whether ${DEVIN_PLUGIN_ROOT} expands inside a hooks.json command string is not documented, so no token is claimed. The schema has no part for rules/ (triggered rules) or the optional always-on AGENTS.md; both are real plugin components this module cannot represent.",
+    "verified": {
+      "method": "vendor plugin reference and CLI changelog, page text read 2026-09-21 (https://docs.devin.ai/cli/extensibility/plugins/overview; https://docs.devin.ai/cli/changelog/stable)",
+      "date": "2026-09-21"
+    }
   }
 }

@@ -4,6 +4,24 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Devin's plugin layout is now recorded in `packaging.json`** (org-plan `plan/devin-plugins-repo.md`
+  §3 PR 1). `packaging-limits.json`'s `unrecorded.devin` entry only proved skills existed; the vendor's
+  own plugin reference and CLI changelog (page text read 2026-09-21) give the native layout in full:
+  manifest `.devin-plugin/plugin.json`, `skills/{name}/SKILL.md`, `agents/{name}.md`, and a root-level
+  `hooks.json` -- deliberately distinct from the shared `hooks/hooks.json` every other recorded format
+  here uses, since that path is the *Claude-fallback* layout's (`.claude-plugin/plugin.json`), one rung
+  down Devin's own precedence chain (native, then Claude, then the open Agent Plugins 1.0.0 format).
+  `command` and `executable` stay unrecorded: no slash-command location or bundled-executable/scripts
+  folder is documented for this layout, and `plugin_root` is empty because no `${DEVIN_PLUGIN_ROOT}`-style
+  expansion token is documented inside a `hooks.json` command string (only a same-named environment
+  variable handed to plugin-contributed hook processes). The precedence chain, the marketplace
+  convention (`requiredPlugins`/`optionalPlugins`/`forbiddenPlugins` standing in for an index file), and
+  the vendor's own "best effort and fail open" wording for plugin hooks are carried in the entry's notes
+  rather than invented fields, the way `codex_cli`'s notes carry its Legacy-vs-AgentPlugin story.
+
 ## [0.3.1] - 2026-09-20
 
 ### Fixed
