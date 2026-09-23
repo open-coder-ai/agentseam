@@ -36,13 +36,14 @@ def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
 
 def _cursor_wrapper(cfg, reverse, canonical_events, command, *, fail_closed):
     gates = cfg["verdicts"]["answer_events"]
+    allow_silent = cfg["verdicts"].get("allow_silent_events", ())
     hooks = {}
     for ev in canonical_events:
         name = reverse.get(ev)
         if not name:
             continue
         entry = {"command": command}
-        if fail_closed and name in gates:
+        if fail_closed and name in gates and name not in allow_silent:
             entry["failClosed"] = True
         hooks.setdefault(name, []).append(entry)
     return {"version": 1, "hooks": hooks}

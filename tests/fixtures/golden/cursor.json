@@ -297,19 +297,19 @@
         },
         "ask": {
           "exit": 0,
-          "stdout": ""
+          "stdout": "{\"followup_message\": \"confirm (stop cannot prompt for confirmation, so this is a block)\"}"
         },
         "deny": {
           "exit": 0,
-          "stdout": ""
+          "stdout": "{\"followup_message\": \"policy\"}"
         },
         "rewrite": {
           "exit": 0,
-          "stdout": ""
+          "stdout": "{\"followup_message\": \"redacted (stop cannot modify the input, so this is a block)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": ""
+          "stdout": "{\"followup_message\": \"needs change (stop cannot modify the input, so this is a block)\"}"
         },
         "vouch": {
           "exit": 0,

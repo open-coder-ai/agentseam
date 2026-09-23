@@ -113,7 +113,7 @@
             "additionalProperties": false,
             "required": ["grammar", "honours_escalate", "honours_transform"],
             "properties": {
-              "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5"]},
+              "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6"]},
               "honours_escalate": {"type": "boolean"},
               "honours_transform": {"type": "boolean"}
             }

@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from payloads import CU_EDIT, CU_PRE_TOOL, CU_READ, CU_SHELL, CU_SUBMIT  # noqa: E402
+from payloads import CU_EDIT, CU_PRE_TOOL, CU_READ, CU_SHELL, CU_STOP, CU_SUBMIT  # noqa: E402
 
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
@@ -76,6 +76,31 @@ def test_before_submit_prompt_speaks_continue_not_permission():
     assert event.event == A.PROMPT_SUBMIT
     assert body["continue"] is False and "permission" not in body
     assert json.loads(A.handle(CU_SUBMIT, allow_all)[0])["continue"] is True
+
+
+def test_a_refusal_at_stop_is_the_follow_up_the_agent_runs_next():
+    """Witnessed 3.21.18 (2026-09-23): {followup_message} is posted as the next turn and acted on."""
+    text, code, event, _ = A.handle(CU_STOP, deny_all)
+    assert event.event == A.STOP and code == 0
+    assert json.loads(text) == {"followup_message": "test-deny"}
+
+
+def test_a_clean_stop_is_silent():
+    """Silence at stop ends the turn as it would have; there is nothing to say."""
+    assert A.handle(CU_STOP, allow_all)[:2] == ("", 0)
+
+
+def test_an_ask_at_stop_degrades_to_a_follow_up_that_says_why():
+    body = json.loads(A.handle(CU_STOP, ask_all)[0])
+    assert body["followup_message"].startswith("confirm please")
+    assert "cannot prompt" in body["followup_message"]
+
+
+def test_stop_is_never_installed_fail_closed_because_its_silence_is_its_allow():
+    """A silent stop hook ended the turn as it would have (witnessed); failClosed there was not."""
+    config = A.adapters.get("cursor").hook_config([A.PRE_TOOL, A.STOP], "handler.py")
+    assert config["hooks"]["preToolUse"][0]["failClosed"] is True
+    assert "failClosed" not in config["hooks"]["stop"][0]
 
 
 def test_after_file_edit_is_post_write_and_has_no_output_contract():

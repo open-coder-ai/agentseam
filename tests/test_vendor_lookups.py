@@ -64,6 +64,12 @@ def test_shell_tools_are_recorded_only_where_established():
         assert adapters.shell_tools(agent) == (), "%s: () means not established, not no shell" % agent
 
 
+def test_cursor_write_tools_are_recorded_from_the_live_witness():
+    """3.21.18 (2026-09-23): a new file and an edit both arrived as `Write` with the full content at
+    generic preToolUse, and a deny there was honoured. One tool, because one was seen."""
+    assert tuple(adapters.get("cursor").WRITE_TOOLS) == ("Write",)
+
+
 def test_every_adapter_answers_the_shell_tool_question():
     for agent in sorted(adapters.ADAPTERS):
         assert isinstance(adapters.shell_tools(agent), tuple)

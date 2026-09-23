@@ -41,6 +41,13 @@ def test_cursor_file_writes_are_gated_before_the_write_and_observed_after():
     assert not A.can_block("cursor", A.FILE_CHANGED)
 
 
+def test_cursor_stop_hands_the_refusal_back_as_a_follow_up():
+    """Witnessed 3.21.18 (2026-09-23): the turn ends, the message comes back, the agent continues --
+    the same delivery Claude Code's Stop block has. Fails open (silence ends the turn), so best-effort."""
+    assert A.can_block("cursor", A.STOP) and not A.can_rewrite("cursor", A.STOP)
+    assert A.enforcement_level("cursor", A.STOP) == "best-effort"
+
+
 def test_full_tier_agents_can_block_and_rewrite():
     """block+rewrite is a capability claim, not a fail-mode one -- both hold regardless of"""
     for agent in ("claude_code", "vscode_copilot"):

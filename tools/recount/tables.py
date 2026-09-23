@@ -218,6 +218,10 @@ _VERDICT_DIALECT = {
         "flag_note": "observed after the fact (%s cannot prevent it): %s",
         "flag_note_default": "policy violation",
         "default_wire_event": "beforeShellExecution",
+        # Witnessed 3.21.18 (2026-09-23): a silent stop hook ended the turn as it would have,
+        # and failClosed at stop was not part of the witness, so the gate is never installed
+        # fail-closed and its allow stays the silence that was seen.
+        "allow_silent_events": ["stop"],
     },
     "windsurf": {
         "degrade_notes": {

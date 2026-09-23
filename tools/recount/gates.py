@@ -42,6 +42,8 @@ def _classify_grammar(stdout, exit_code):
         return None
     if "permission" in body or "continue" in body:
         return "G4"
+    if "followup_message" in body:
+        return "G6"
     if "hookSpecificOutput" in body:
         inner = body["hookSpecificOutput"]
         if not isinstance(inner, dict):
