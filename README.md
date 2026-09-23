@@ -54,10 +54,10 @@ Replit, Zed). Nothing here is emulated: `install` writes real per-agent config f
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-dark.svg">
-  <img alt="Capability matrix: 16 coding agents by 12 lifecycle events, graded from src/agentseam/matrix.py. Of 192 cells: 2 are enforceable, 33 best-effort, 56 detect, and 101 none. Zero cells anywhere are graded enforced -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-light.svg" width="760">
+  <img alt="Capability matrix: 16 coding agents by 12 lifecycle events, graded from src/agentseam/matrix.py. Of 192 cells: 2 are enforceable, 34 best-effort, 55 detect, and 101 none. Zero cells anywhere are graded enforced -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-light.svg" width="760">
 </picture>
 
-*192 cells generated from `src/agentseam/matrix.py`: 101 none, 56 detect, 33 best-effort, 2 enforceable, 0 enforced.*
+*192 cells generated from `src/agentseam/matrix.py`: 101 none, 55 detect, 34 best-effort, 2 enforceable, 0 enforced.*
 
 | Level | Meaning |
 |---|---|
@@ -85,7 +85,7 @@ to a silent pass-through.
 |---|---|---|---|
 | Claude Code | block + rewrite | `.claude/settings.json` | live-run · 2026-09-07 |
 | VS Code Copilot | block + rewrite | `.github/hooks/*.json` | live-run-partial · 2026-08-28 |
-| Cursor | block + rewrite (all tools, fail-open by default) | `.cursor/hooks.json` | live-run-partial · 2026-08-27 |
+| Cursor | block + rewrite (all tools, fail-open by default); `stop` returns a follow-up message | `.cursor/hooks.json` | live-run-partial · 2026-09-23 |
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` | vendor-source · 2026-08-28 |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` | live-run-partial · 2026-08-28 |
 | Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
@@ -213,7 +213,7 @@ vendor-docs`) — real, useful, and never the same claim; **recorded** means a w
 frozen to a file and replayed deterministically (`driver: recorded`) — the data is
 witnessed, the replay is not a new witness. `evidence_report.validate()` refuses a report
 that claims more than its driver earned. See [docs/coverage-gaps.md](docs/coverage-gaps.md)
-for the three gates nobody has witnessed yet.
+for which gates are witnessed and which are still open.
 
 ## Contributing
 
