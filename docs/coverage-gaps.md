@@ -5,8 +5,9 @@ initiative) covers 8 trials × 3 gateable events × 16 agents. Witnessed evidenc
 `claude_code@2.1.275` at **all three gates and all eight trials**, including `escalate` (the
 one `PreToolUse` reading no vendor doc settles) -- see
 `data/recordings/claude_code@2.1.275.json`. The three gaps this file was written for are
-closed for `claude_code`; every other agent's are open, and the procedure below is how you
-close one.
+closed for `claude_code`; `cursor@3.21.18` is witnessed at two of them (`pre_tool` and
+`stop`) -- see the `verified` record in `data/matrix.json`. Every other agent's are open, and
+the procedure below is how you close one.
 
 Closing them needs a machine where the vendor's own client is installed and authenticated.
 That is usually not a cloud session, but the constraint is the credential, not the cloud: a
@@ -33,7 +34,10 @@ initiative exists to enforce (contract invariant 1).
 
 `claude_code` is witnessed at all three gates at `2.1.275`. What remains open:
 
-1. **Every other agent, at every gate.** Fifteen of the sixteen have never been witnessed.
+1. **Every other agent, at every gate.** Fourteen of the sixteen have never been witnessed.
+   `cursor` is witnessed at `pre_tool` (a `{permission: deny}` on a `Write` was honoured and
+   the file never landed) and at `stop` (a `{followup_message}` re-ran the agent, and a silent
+   hook let the turn end, so `stop` fails open); its `prompt_submit` gate is still open.
 2. **`claude_code` on a platform other than `linux`.** A recording carries its `platform`.
 3. **Each new `claude_code` build.** `tools/watch_versions.py` is what notices a ship; a
    recording is only evidence for the version it names.

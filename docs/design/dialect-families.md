@@ -104,7 +104,7 @@ Consequences, applied to today's code:
 
 | stays code (engine / family module) | becomes config |
 | :--- | :--- |
-| The five grammar renderers G1–G5 | which grammar each event group uses, and the word tables filling it |
+| The six grammar renderers G1–G6 | which grammar each event group uses, and the word tables filling it |
 | Ordered-fallback field extraction machinery, `tool_input_of` (`contract.py:139-150`) | the per-vendor key chains (e.g. path = `file_path→absolute_path→path` `gemini_cli.py:79`; content gated to write tools `gemini_cli.py:71-73`; output = `last_assistant_message` `junie.py:65`) |
 | `degrade()` semantics (`dispatch.py:26-38`) and its generated-runtime twin (`bundler_templates.py:26-40`) | per-gate capability flags (`honours_escalate`, `honours_transform`, `honours_block`) and the degradation-note strings, verbatim from today's adapters so wire output stays byte-identical |
 | Shape-inference `claims`/event-naming for cursor, windsurf, antigravity (`cursor.py:96-98`, `windsurf.py:27-32`, `antigravity.py:25-31`) | marker-based `claims`: required markers, foreign markers, client_type allowlists (`junie.py:45-48`, `tabnine.py:52-55`, `gemini_cli.py:57-64`, `codex_cli.py:43-52`) |
