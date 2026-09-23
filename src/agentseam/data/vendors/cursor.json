@@ -29,42 +29,42 @@
   "evidence": {
     "claims": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
     },
     "config_path": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
     },
     "events": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
     },
     "family": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     },
     "fields": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_vendor_config.py::test_entries_match_recount"
     },
     "hook_entry": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
     "tools": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "date": "2026-09-23",
+      "test": "tests/test_vendor_lookups.py::test_cursor_write_tools_are_recorded_from_the_live_witness"
     },
     "verdicts": {
       "basis": "live-run-partial",
-      "date": "2026-08-27",
+      "date": "2026-09-23",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     }
   },
@@ -111,15 +111,23 @@
     "wrapper": "cursor"
   },
   "needs_trust": false,
-  "tools": {},
+  "tools": {
+    "write": [
+      "Write"
+    ]
+  },
   "verdicts": {
+    "allow_silent_events": [
+      "stop"
+    ],
     "answer_events": [
       "beforeMCPExecution",
       "beforeReadFile",
       "beforeShellExecution",
       "beforeSubmitPrompt",
       "beforeTabFileRead",
-      "preToolUse"
+      "preToolUse",
+      "stop"
     ],
     "bare_allow": "required",
     "default_wire_event": "beforeShellExecution",
@@ -161,6 +169,11 @@
         "grammar": "G4",
         "honours_escalate": false,
         "honours_transform": true
+      },
+      "stop": {
+        "grammar": "G6",
+        "honours_escalate": false,
+        "honours_transform": false
       }
     },
     "transform_grammar": "permission_updated_input",

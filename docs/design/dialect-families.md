@@ -64,6 +64,7 @@ open:
 | G3 hookSpecificOutput extras | `additionalContext` / nested `decision: block` / `tool_input` rewrite | claude_code (`claude_code.py:128-134,144`); vscode_copilot nested block (`vscode_copilot.py:143-147`); devin context + `updatedInput` (`devin.py:91-99,115-117`); gemini_cli rewrite (`gemini_cli.py:119-120`) |
 | G4 permission object | `{"permission": W, "user_message", "agent_message", "updated_input"?}` + `{"continue": bool}` + `{"additional_context"}` | cursor only (`cursor.py:150-200`) |
 | G5 exit code | reason text + exit 2; no JSON | windsurf only (`windsurf.py:62-88`) |
+| G6 follow-up message | `{"followup_message": R}` | cursor at `stop` only (`_cursor.py`): the turn has ended, so a refusal is the message the agent runs next -- witnessed 3.21.18, 2026-09-23 |
 
 ### 2.2 The families
 

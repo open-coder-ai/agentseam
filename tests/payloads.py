@@ -50,6 +50,8 @@ CU_PRE_TOOL = dict(
 )
 CU_READ = dict(CU_BASE, hook_event_name="beforeReadFile", file_path="/repo/.env", content="TOKEN=1")
 CU_SUBMIT = dict(CU_BASE, hook_event_name="beforeSubmitPrompt", prompt="ship it")
+#: The shape witnessed on 3.21.18: status and loop_count beside the base envelope.
+CU_STOP = dict(CU_BASE, hook_event_name="stop", status="completed", loop_count=0)
 
 
 CU_SHELL = {"command": "echo x >> CLAUDE.md", "cwd": "/repo"}

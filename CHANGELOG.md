@@ -4,6 +4,24 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-09-23
+
+### Added
+- **Cursor's write path is gateable, and its stop hook carries a refusal back.** A live witness on
+  3.21.18 (Windows, 2026-09-23; a logging probe on every event, then two response trials) settled two
+  facts this row had recorded the cautious way. The generic `preToolUse` gate fires for the file-writing
+  tool `Write` with `tool_input.file_path` and the FULL content before the file lands, and a
+  `{"permission": "deny"}` answered there was honoured -- the file was never created and the agent
+  reported the block; an edit to an existing file arrived as the same `Write` carrying the whole new
+  content, so `Write` is recorded as the write vocabulary (one tool, because one was seen). The `stop`
+  hook honours `{"followup_message": ...}`: Cursor posts the message as the next turn and the agent acts
+  on it (`loop_count` 0, then 1), the delivery Claude Code's Stop block has, so the row's `stop` cell now
+  blocks, fail-open, graded best-effort. The adapter speaks it as a sixth grammar, G6, at `stop` alone;
+  `afterFileEdit` still accepts nothing back, and the chat reply itself is not a tool call -- nothing
+  fires between the last tool and `stop`. Evidence: the row's `verified` record and the `tools` claim in
+  `recount/sourced.py`, pinned by `test_cursor_write_tools_are_recorded_from_the_live_witness` and
+  `test_cursor_stop_hands_the_refusal_back_as_a_follow_up`.
+
 ## [0.3.2] - 2026-09-21
 
 ### Added

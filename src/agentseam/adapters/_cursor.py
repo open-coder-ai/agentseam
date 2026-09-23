@@ -15,6 +15,7 @@ from ..contract import (
     POST_TOOL,
     PRE_TOOL,
     PROMPT_SUBMIT,
+    STOP,
     TOOL_FAILURE,
     TRANSFORM,
     degraded_from,
@@ -119,6 +120,14 @@ def _refusal_reason(v, gate, decision, name):
     return decision.reason
 
 
+def _followup_payload(v, decision, name):
+    """STOP: the turn has ended; a refusal comes back as the follow-up the agent runs next."""
+    gate = v["gates"].get(name)
+    if gate is None or decision.outcome not in (DENY, ESCALATE, TRANSFORM):
+        return "", 0
+    return _json.dumps({"followup_message": _refusal_reason(v, gate, decision, name)}), 0
+
+
 def _gate_payload(v, gate, decision, name):
     """The PRE_TOOL gate's (permission, reason) pair, before the shared trailing message rule."""
     words = v["words"]
@@ -140,6 +149,8 @@ def cursor_respond(cfg, decision, event):
         return "", 0
     if canonical in (POST_TOOL, TOOL_FAILURE):
         return _flag_payload(v, decision, name)
+    if canonical == STOP:
+        return _followup_payload(v, decision, name)
     gate = v["gates"].get(name)
     if canonical == PROMPT_SUBMIT and gate is not None:
         return _prompt_submit_payload(v, gate, decision, name)

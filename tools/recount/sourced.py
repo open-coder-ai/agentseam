@@ -25,7 +25,15 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: - codex_cli tools: the matrix row's own live capture (2026-08-28, 36 payloads:
 #:   "Codex sends exactly two tool names, Bash and apply_patch"); the date and basis are
 #:   that row's, the test the one that pins the recorded vocabulary.
+#: - cursor tools: the row's live witness of 2026-09-23 (3.21.18, Windows): `Write` at the
+#:   generic preToolUse gate, carrying file_path and the full content, for a new file and for
+#:   an edit alike; the only write tool seen, and a deny against it was honoured.
 EVIDENCE = {
+    ("cursor", "tools"): {
+        "basis": "live-run-partial",
+        "date": "2026-09-23",
+        "test": "tests/test_vendor_lookups.py::test_cursor_write_tools_are_recorded_from_the_live_witness",
+    },
     ("vscode_copilot", "tools"): {
         "basis": "vendor-docs",
         "date": "2026-09-01",
