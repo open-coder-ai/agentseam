@@ -246,7 +246,7 @@ def _index():
         )
     out.append(
         "\nAgents with no page are not omissions. Aider and Zed expose no hook surface at all,\n"
-        "and Junie, Replit and Tabnine have no adapter here yet -- `agentseam agents` lists\n"
+        "and Replit and Copilot have no adapter here yet -- `agentseam agents` lists\n"
         "every one of them with the reason.\n"
     )
     return "\n".join(out)

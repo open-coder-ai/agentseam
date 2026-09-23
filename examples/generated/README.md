@@ -29,6 +29,6 @@ without notice. Verify against your own installation before relying on any of it
 | [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.windsurf/hooks.json` |
 
 Agents with no page are not omissions. Aider and Zed expose no hook surface at all,
-and Junie, Replit and Tabnine have no adapter here yet -- `agentseam agents` lists
+and Replit and Copilot have no adapter here yet -- `agentseam agents` lists
 every one of them with the reason.
 

@@ -46,9 +46,11 @@ That one handler now runs in Claude Code, Cursor, VS Code Copilot, Codex, Gemini
 Windsurf and six more — and the install output tells you which agents get *best-effort*
 blocking, which get the stronger *enforceable* gate (Cursor, today), and which do not
 appear in the output at all because they have no hook surface to wire (aider, Copilot CLI,
-Replit, Zed). Nothing here is emulated: `install` writes real per-agent config files into
-`--repo`, the same files Claude Code, Cursor and the rest read on their next run, and
-`uninstall` removes only the entries agentseam itself wrote.
+Replit, Zed). Nothing here is emulated: `install` writes real per-agent config files, the same
+files Claude Code, Cursor and the rest read on their next run, and `uninstall` removes only the
+entries agentseam itself wrote. Most land under `--repo`; two do not, because the vendor reads
+them from the user's home directory — Junie's `~/.junie/config.json` and Kimi Code's
+`~/.kimi-code/config.toml`, as the agent table below shows.
 
 ## What each agent can actually do
 
@@ -109,8 +111,9 @@ to a silent pass-through.
 </details>
 
 Of the 12 agents that claim `pre_tool` at all, 4 — Claude Code, Codex CLI, Cursor, VS Code
-Copilot — rest on a live run against the real agent; the other 8 rest on documentation or a
-third-party install, not on a live run. Run `agentseam matrix --evidence` before you trust
+Copilot — rest on a live run against the real agent; seven of the other 8 rest on documentation
+or a third-party install, and Gemini CLI on a read of the vendor's own source. None of those
+eight rests on a live run. Run `agentseam matrix --evidence` before you trust
 any row you didn't witness yourself.
 
 ## What it is for
@@ -119,7 +122,7 @@ Not just guardrails. Anything that wants to watch or shape an agent's life:
 
 | | |
 |---|---|
-| **Observability** | one JSONL/OTel stream across every agent in the repo (`examples/event_log.py`) |
+| **Observability** | one JSONL stream across the agents an event set wires, ready to feed OTel or DuckDB (`examples/event_log.py`) |
 | **Notifications** | desktop notification on stop or prompt (`examples/notify.py`) |
 | **Cost tracking** | token/cost meters that work regardless of which agent ran |
 | **Guardrails** | secrets, memory governance, destructive-command blocks |
@@ -175,8 +178,8 @@ reason instead, and the command exits non-zero. Put it in CI and you find out th
 policy doesn't survive the trip to an agent *before* you rely on it.
 
 The reasons distinguish two things that are easy to blur: an agent whose permission system
-*provably exists* but whose schema nobody has read yet (Antigravity, Devin, Grok and Kimi
-Code each prove it through their own hook events) versus one where nothing is established at
+*provably exists* but whose schema nobody has read yet (Antigravity, Devin, Grok, Junie and
+Kimi Code each prove it through their own hook events) versus one where nothing is established at
 all. A missing hook surface is never recorded as a missing permission model either — Aider
 and Zed expose no hooks, which says nothing about what their config files can restrict.
 Every agent the matrix knows appears in `agentseam permissions` output, either with a
@@ -223,9 +226,14 @@ installed, one command reports what your version actually does, and the result b
 `verified` record with your handle on it:
 
 ```bash
-python3 tools/experiment.py run --agent <agent> --report \
+python3 tools/experiment.py run --agent <agent> --driver harness --report \
     --agent-version <version> --reporter @yourhandle > report.json
 ```
+
+`--driver harness` is what makes it a witness: it runs your installed agent. Without it the
+driver falls back to `reference`, which answers from the vendor's documented contract and
+reports `basis: vendor-docs` — useful as a contract test, but not evidence of what your build
+does, and `evidence_report.validate()` will not let it claim a live basis.
 
 Paste it into an [evidence report](https://github.com/open-coder-ai/agentseam/issues/new?template=evidence-report.yml).
 A result that contradicts the matrix is the one we most want: it is a row we are getting

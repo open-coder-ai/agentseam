@@ -1,7 +1,8 @@
 # Coverage gaps only a real agent can close
 
 The probe (`agentseam probe`, promoted from `tools/experiment.py` in wave 1 of the `armed`
-initiative) covers 8 trials × 3 gateable events × 16 agents. Witnessed evidence now covers
+initiative) covers 8 trials × 3 gateable events × the 12 agents that have an adapter (the
+other four in the matrix cannot be probed: there is nothing to drive). Witnessed evidence now covers
 `claude_code@2.1.275` at **all three gates and all eight trials**, including `escalate` (the
 one `PreToolUse` reading no vendor doc settles) -- see
 `data/recordings/claude_code@2.1.275.json`. The three gaps this file was written for are
