@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="650" viewBox="0 0 760 650" role="img" aria-labelledby="t d">
   <title id="t">agentseam capability matrix</title>
-  <desc id="d">Grid of 16 coding agents by 12 lifecycle events, shaded by the enforcement grade agentseam can honestly claim at that surface. Of 192 cells: 2 enforceable; 33 best-effort; 56 detect; 101 none. No agent is graded enforced at any event -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all.</desc>
+  <desc id="d">Grid of 16 coding agents by 12 lifecycle events, shaded by the enforcement grade agentseam can honestly claim at that surface. Of 192 cells: 2 enforceable; 34 best-effort; 55 detect; 101 none. No agent is graded enforced at any event -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all.</desc>
   <rect width="760" height="650" fill="#fcfcfb"/>
   <text x="14" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b" text-anchor="start">What each agent can honestly do, by event</text>
   <text x="14" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">16 agents × 12 events, graded from src/agentseam/matrix.py -- not one cell says “enforced”</text>
@@ -156,8 +156,8 @@
   <text x="151.833" y="309.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">EA</text>
   <rect x="178.667" y="295" width="49.6667" height="22" rx="2" fill="#5598e7"/>
   <text x="203.5" y="309.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
-  <rect x="230.333" y="295" width="49.6667" height="22" rx="2" fill="#5598e7"/>
-  <text x="255.167" y="309.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
+  <rect x="230.333" y="295" width="49.6667" height="22" rx="2" fill="#2a78d6"/>
+  <text x="255.167" y="309.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">BE</text>
   <rect x="282" y="295" width="49.6667" height="22" rx="2" fill="#5598e7"/>
   <text x="306.833" y="309.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
   <rect x="333.667" y="295" width="49.6667" height="22" rx="2" fill="#1c5cab"/>
@@ -421,10 +421,10 @@
   <text x="48" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">enforceable (2)</text>
   <rect x="227" y="573" width="14" height="14" rx="2" fill="#2a78d6"/>
   <text x="244" y="584" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">BE</text>
-  <text x="261" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">best-effort (33)</text>
+  <text x="261" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">best-effort (34)</text>
   <rect x="451" y="573" width="14" height="14" rx="2" fill="#5598e7"/>
   <text x="468" y="584" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">DT</text>
-  <text x="485" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">detect (56)</text>
+  <text x="485" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">detect (55)</text>
   <rect x="620" y="573" width="14" height="14" rx="2" fill="#d8d7d2"/>
   <text x="637" y="584" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">–</text>
   <text x="654" y="584" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">none (101)</text>
