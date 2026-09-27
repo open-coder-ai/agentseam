@@ -72,3 +72,38 @@ def test_one_handler_covers_gemini_too():
     poisoned["tool_input"]["content"] = "SECRET"
     _t, _c, event, decision = A.handle(poisoned, handler)
     assert event.agent == "gemini_cli" and decision.outcome == "deny"
+
+
+#: BeforeTool in the shape geminicli.com/docs/hooks/reference documents (read 2026-09-27): the
+#: base input {session_id, transcript_path, cwd, hook_event_name, timestamp} plus the event's own.
+GM_DOC_BEFORE_TOOL = {
+    "session_id": "gm-1",
+    "transcript_path": "/repo/.gemini/t.json",
+    "cwd": "/repo",
+    "hook_event_name": "BeforeTool",
+    "timestamp": "2026-09-27T00:00:00.000Z",
+    "tool_name": "run_shell_command",
+    "tool_input": {"command": "rm -rf /"},
+    "mcp_context": {},
+    "original_request_name": "run_shell_command",
+}
+
+
+def test_a_documented_gemini_payload_parses_when_gemini_is_named():
+    ev = A.adapters.get("gemini_cli").parse(GM_DOC_BEFORE_TOOL)
+    assert (ev.event, ev.tool, ev.command, ev.session_id) == (A.PRE_TOOL, "run_shell_command", "rm -rf /", "gm-1")
+    text, _code, _ev, _d = A.handle(GM_DOC_BEFORE_TOOL, lambda e: Decision.escalate("sure?"), agent="gemini_cli")
+    assert json.loads(text) == {"decision": "ask", "reason": "sure?"}
+
+
+def test_auto_detection_of_a_gemini_payload_is_never_weaker_than_gemini_itself():
+    """Tabnine CLI sends Gemini's exact shape, timestamp included, so detect() cannot tell them
+    apart. Declining would allow silently; resolving to Tabnine answers allow/deny identically
+    and turns what only Gemini honours (ask, transform) into a deny -- stricter, never weaker."""
+    assert A.adapters.detect(GM_DOC_BEFORE_TOOL) == "tabnine"
+    for decision in (Decision.deny("no"), Decision.allow()):
+        auto = A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d)[:2]
+        assert auto == A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d, agent="gemini_cli")[:2]
+    for decision in (Decision.escalate("sure?"), Decision.transform({"command": "ls"}, "safer")):
+        text, _code, _ev, _d = A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d)
+        assert json.loads(text)["decision"] == "deny"

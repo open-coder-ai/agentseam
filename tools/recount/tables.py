@@ -45,6 +45,9 @@ _CLAIMS = {
         "client_types": [None, "gemini_cli", "gemini"],
         "reject_markers": ["timestamp", "project_path", "prompt_id", "turn_id"],
         "reject_probes": ["looks_like_claude_code"],
+        "notes": "timestamp is in Gemini's documented base input too: rejecting it is a deliberate tie-break "
+        "toward Tabnine, which sends the same shape and whose deny/allow wire is identical (ask/transform "
+        "degrade to deny); a declining detect() would allow silently. Name gemini_cli to get ask/transform.",
     },
     "codex_cli": {
         "mode": "marker",
