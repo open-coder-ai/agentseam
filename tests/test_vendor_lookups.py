@@ -56,7 +56,7 @@ def test_shell_tools_are_recorded_only_where_established():
     post-C2 recount sourced them (recount/sourced.py holds the citations): Codex's live
     capture settled Bash, and Copilot's hooks reference names runtime bash/powershell with
     Bash as the Claude spelling PascalCase payloads report."""
-    assert adapters.shell_tools("claude_code") == ("Bash",)
+    assert adapters.shell_tools("claude_code") == ("Bash", "PowerShell")
     assert adapters.shell_tools("gemini_cli") == ("run_shell_command",)
     assert adapters.shell_tools("codex_cli") == ("Bash",)
     assert adapters.shell_tools("vscode_copilot") == ("bash", "powershell", "Bash")

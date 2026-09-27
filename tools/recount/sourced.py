@@ -32,7 +32,17 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #:   toolResult.textResultForLlm) are the vendor's hooks reference
 #:   (docs.github.com/en/copilot/reference/hooks-configuration, read 2026-09-27); no live
 #:   capture of that shape exists, so the claim now rests on the docs, not the live run.
+#: - claude_code tools: the write tools and Bash are the row's live run (2026-09-07);
+#:   PowerShell is the vendor's tools reference (code.claude.com/docs/en/tools-reference,
+#:   read 2026-09-27: on by default on Windows, "receive the tool's command string in
+#:   tool_input.command, with the same fields as the Bash tool"; match `Bash|PowerShell`),
+#:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("claude_code", "tools"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_adapter_claude_code.py::test_powershell_is_a_shell_tool_and_its_command_is_parsed",
+    },
     ("vscode_copilot", "fields"): {
         "basis": "vendor-docs",
         "date": "2026-09-27",
