@@ -88,7 +88,8 @@ def claims(raw):
         return False
     if name in _CLAIMABLE:
         return True
-    if name is None and _CLI_ARGS in raw:
+    if name is None and (_CLI_ARGS in raw or ("toolName" in raw and ("sessionId" in raw or _VSCODE_ENVELOPE in raw))):
+        # A CLI call may omit toolArgs; unclaimed, it would pass unseen as "unrecognized".
         return True
     ti = raw.get("tool_input")
     return raw.get("tool_name") in MEMORY_TOOLS and isinstance(ti, dict) and "command" in ti

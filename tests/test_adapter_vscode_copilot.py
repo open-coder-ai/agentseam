@@ -147,6 +147,15 @@ def test_copilot_cli_tool_args_reach_the_policy_as_object_or_json_text():
 def test_copilot_cli_payloads_are_detected_without_an_event_name():
     assert A.adapters.detect(CLI_PRE_TOOL) == "vscode_copilot"
     assert A.adapters.detect(CLI_PRE_TOOL_STR) == "vscode_copilot"
+    padded = dict(CLI_PRE_TOOL, toolArgs="  " + CLI_PRE_TOOL_STR["toolArgs"])
+    assert A.adapters.get("vscode_copilot").parse(padded).command == "rm -rf /"
+
+
+def test_a_copilot_cli_call_without_tool_args_is_still_judged():
+    """Unclaimed, it was "unrecognized" and allowed before the handler ever saw it."""
+    bare = {k: v for k, v in CLI_PRE_TOOL.items() if k != "toolArgs"}
+    assert A.adapters.detect(bare) == "vscode_copilot"
+    assert json.loads(A.handle(bare, deny_all)[0])["permissionDecision"] == "deny"
 
 
 def test_copilot_cli_deny_is_the_documented_top_level_permission_decision():

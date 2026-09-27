@@ -177,7 +177,7 @@ def tool_input_of(raw):
     """The tool's arguments as a dict, decoding the JSON-string form some vendors send."""
     if isinstance(raw, dict):
         return raw
-    if isinstance(raw, str) and raw[:1] == "{":
+    if isinstance(raw, str) and raw.lstrip()[:1] == "{":
         try:
             parsed = _json.loads(raw)
         except (ValueError, RecursionError):
