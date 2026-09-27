@@ -37,6 +37,10 @@ from . import _shell
 
 CLAUDE_CODE_TIMEOUT_SECONDS = 60
 
+#: The agents whose protocol this driver executes. Any other agent's config is a shape it
+#: cannot read, so every trial would score "the hook never fired" -- about the driver.
+MODELLED_AGENTS = ("claude_code",)
+
 ALLOW, DENY, ASK = "allow", "deny", "ask"
 
 #: Wire event -> which decision grammar the agent applies to the answer.
