@@ -9,6 +9,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from payloads import CC_BASH  # noqa: E402
@@ -90,3 +92,35 @@ def test_the_bundled_runtime_diverts_handler_output_the_same_way(tmp_path):
     assert proc.returncode == 0, proc.stderr
     assert _verdict(proc.stdout.decode("utf-8")) == "deny"
     assert b"child says hi" in proc.stderr and b"debug: inspecting" in proc.stderr
+
+
+_HELD = (
+    "def handle(event):\n"
+    "    import sys\n"
+    '    sys.__stdout__.write("held stream junk\\n")\n'
+    '    return Decision.deny("held-deny")\n'
+)
+
+
+def _hook(tmp_path, body):
+    script = tmp_path / "hook.py"
+    script.write_text(
+        "from agentseam import Decision, dispatch\n\n" + body + "\n\ndispatch.run(handle, agent='claude_code')\n",
+        encoding="utf-8",
+    )
+    return script
+
+
+def test_text_buffered_on_a_stream_the_handler_held_lands_on_stderr_not_after_the_verdict(tmp_path):
+    """redirect_stdout swaps only the name; sys.__stdout__ buffers until exit, past the verdict."""
+    proc = _run([sys.executable, str(_hook(tmp_path, _HELD))], CC_BASH, tmp_path)
+    assert _verdict(proc.stdout.decode("utf-8")) == "deny", proc.stdout
+    assert b"held stream junk" in proc.stderr
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="closing fd 2 is a POSIX shell construct")
+def test_with_stderr_closed_a_child_still_cannot_write_ahead_of_the_verdict(tmp_path):
+    """dup(1) would take the free fd 2, and diverting to "stderr" would be stdout again."""
+    script = _hook(tmp_path, _CHATTY)
+    proc = _run(["sh", "-c", f'"{sys.executable}" "{script}" 2>&-'], CC_BASH, tmp_path)
+    assert _verdict(proc.stdout.decode("utf-8")) == "deny", proc.stdout
