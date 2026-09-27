@@ -39,49 +39,49 @@ One handler wired for every hook this agent supports.
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "PreToolUse": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SessionStart": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "Stop": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SubagentStart": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SubagentStop": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "UserPromptSubmit": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ]
   }

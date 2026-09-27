@@ -89,17 +89,26 @@ def test_codex_hook_config_uses_matcher_group_shape():
     assert entry["hooks"][0] == {
         "type": "command",
         "command": '"C:\\py.exe" "guard.py"',
-        "commandWindows": '& "C:\\py.exe" "guard.py"; exit $LASTEXITCODE',
+        "commandWindows": '& "C:\\py.exe" "guard.py"; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE',
     }
 
 
 def test_windows_gets_a_powershell_callable_command():
     """Codex runs hooks through PowerShell on Windows, where a line beginning with a quoted"""
     mod = A.adapters.get("codex_cli")
-    keep = "; exit $LASTEXITCODE"
+    keep = "; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
     assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli' + keep
     assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"' + keep
     assert mod.powershell_command('& "C:\\py.exe" "g.py"' + keep) == '& "C:\\py.exe" "g.py"' + keep
+
+
+def test_a_missing_interpreter_refuses_and_an_old_suffix_is_upgraded():
+    """No native command ran: $LASTEXITCODE is $null, and `exit $null` would be 0 -- an allow."""
+    mod = A.adapters.get("codex_cli")
+    cmd = mod.powershell_command('"C:\\py.exe" "g.py"')
+    assert "if ($null -eq $LASTEXITCODE) { exit 2 }" in cmd
+    old = '& "C:\\py.exe" "g.py"; exit $LASTEXITCODE'
+    assert mod.powershell_command(old) == cmd
 
 
 def test_prompt_submit_uses_the_block_dialect_not_the_pretooluse_gate():
