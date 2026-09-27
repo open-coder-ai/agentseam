@@ -11,13 +11,15 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   child process it ran -- landed on stdout ahead of the JSON verdict; Claude Code and Gemini CLI then fail
   to parse the hook's answer and treat it as a non-blocking error, so the tool ran (witnessed live). While
   the handler runs, `sys.stdout` and fd 1 now point at stderr, in `dispatch` and in the bundled runtime
-  alike, and only the verdict reaches the real stdout.
+  alike, and only the verdict reaches the real stdout. Text buffered on a stream the handler held
+  (`sys.__stdout__`, a reference cached at import) is flushed to stderr before fd 1 is restored, and with
+  fd 2 closed the diversion goes to devnull rather than back to stdout.
 - **Copilot CLI's native camelCase hooks are read.** `preToolUse` sends `toolName` and `toolArgs` (an
   object, or JSON text in earlier builds) and no event name; `parse()` read only `tool_input`, so the
   command, path and content were `None` and every guard allowed the call. `toolArgs`, `sessionId` and
   `toolResult` are now read, the payload is detected, and a camelCase `preToolUse` is answered with the
   documented top-level `permissionDecision`/`permissionDecisionReason` (a transform blocks there, since the
-  CLI has no input rewrite).
+  CLI has no input rewrite). A call carrying `toolName` but no `toolArgs` is claimed and judged too.
 - **Claude Code's `PowerShell` tool is a shell tool.** It is on by default on Windows and carries the
   command in `tool_input.command`; `tools.shell` is now `Bash`, `PowerShell` (vendor docs, not yet live).
 - **Codex runs project hooks only once trusted.** `needs_trust` is now true for codex_cli with a sourced
@@ -34,7 +36,10 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   and the reference driver refuses agents other than claude_code, whose protocol is the only one it models.
 - **A PowerShell hook keeps its exit code.** `pwsh -Command` turns any failing native exit into 1, so a
   hook's exit 2 (block) reached Codex on Windows as a non-blocking error (openai/codex#48183). The
-  `commandWindows`/`windows` form now ends with `; exit $LASTEXITCODE`.
+  `commandWindows`/`windows` form now ends with `; if ($null -eq $LASTEXITCODE) { exit 2 }; exit
+  $LASTEXITCODE`: when the interpreter is not on PATH no native command runs, `$LASTEXITCODE` is
+  `$null`, and a bare `exit $LASTEXITCODE` would exit 0 -- an allow. An entry carrying the bare suffix is
+  upgraded.
 - **The pre-commit hook no longer blocks commits on Windows.** It picks the first of python3/python/py
   that actually runs, skipping the Microsoft Store stub `command -v` used to find.
 
