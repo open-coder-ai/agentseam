@@ -24,6 +24,7 @@ class ConfigAdapter:
         self.CONFIG_PATH = cfg["config_path"]
         self.CONFIG_FORMAT = cfg["config_format"]
         self.NEEDS_TRUST = cfg["needs_trust"]
+        self.TRUST_HINT = cfg.get("trust_hint")
         self.BLOCKING_EVENTS = tuple(cfg["verdicts"]["answer_events"])
         for attr, key in (("WRITE_TOOLS", "write"), ("SHELL_TOOLS", "shell"), ("MEMORY_TOOLS", "memory")):
             if cfg["tools"].get(key):

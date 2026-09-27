@@ -136,3 +136,27 @@ def test_the_real_captured_payload_resolves_to_codex_alone():
     assert A.adapters.detect(CX_LIVE_PROMPT_SUBMIT) == "codex_cli"
     event = A.adapters.get("codex_cli").parse(CX_LIVE_PROMPT_SUBMIT)
     assert event.event == A.PROMPT_SUBMIT and event.prompt == "<str:4>"
+
+
+def test_apply_patch_is_the_recorded_write_tool_and_its_patch_is_the_command():
+    """Codex's PreToolUse fires for apply_patch (learn.chatgpt.com/docs/hooks; live capture
+    2026-08-28): the patch rides in tool_input.command, so a write policy reads event.command."""
+    patch = "*** Begin Patch\n*** Add File: notes.md\n+token=abc\n*** End Patch\n"
+    raw = {
+        "session_id": "019a-codex",
+        "turn_id": "t-1",
+        "transcript_path": "/repo/.codex/r.jsonl",
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-5-codex",
+        "permission_mode": "default",
+        "tool_name": "apply_patch",
+        "tool_input": {"command": patch},
+        "tool_use_id": "call_1",
+    }
+    mod = A.adapters.get("codex_cli")
+    assert "apply_patch" in mod.WRITE_TOOLS
+    assert A.adapters.detect(raw) == "codex_cli"
+    ev = mod.parse(raw)
+    assert (ev.event, ev.tool, ev.command) == (A.PRE_TOOL, "apply_patch", patch)
+    assert mod.NEEDS_TRUST is True

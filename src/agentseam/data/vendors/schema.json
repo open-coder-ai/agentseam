@@ -24,6 +24,11 @@
     "config_path": {"type": "string", "minLength": 1},
     "config_format": {"enum": ["json", "toml"]},
     "needs_trust": {"type": "boolean"},
+    "trust_hint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "what the user does in the agent to trust a project hook, where needs_trust is true and a primary source says how (codex_cli's /hooks). Printed by `agentseam install` and `doctor`; travels with an evidence.trust_hint record."
+    },
     "repo_root_token": {
       "type": "string",
       "minLength": 1,
@@ -255,7 +260,8 @@
         "verdicts": {"$ref": "#/$defs/evidenceRecord"},
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
         "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
-        "repo_root_token": {"$ref": "#/$defs/evidenceRecord"}
+        "repo_root_token": {"$ref": "#/$defs/evidenceRecord"},
+        "trust_hint": {"$ref": "#/$defs/evidenceRecord"}
       },
       "required": ["family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry"]
     }

@@ -13,6 +13,14 @@ from __future__ import annotations
 #: documents such a token for its hooks surface, so no other entry carries the key.
 REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 
+#: Project hooks that run only once the user trusts them, and how the user does that.
+#: codex_cli: learn.chatgpt.com/docs/hooks (read 2026-09-27) -- "Project-local hooks load
+#: only when the project `.codex/` layer is trusted"; `/hooks` reviews and trusts them, and
+#: trust is recorded against the hook's hash, so a changed hook is skipped until re-trusted.
+TRUST_HINT = {
+    "codex_cli": "run /hooks in Codex and trust the new hook (trust is per hook hash: re-trust after any change)",
+}
+
 #: Per-claim evidence records that differ from `tables.evidence`'s default (the matrix
 #: row's own verified basis/date, tested by the recount consistency test).
 #: - vscode_copilot tools: the shell vocabulary is the vendor's hooks reference
@@ -38,6 +46,11 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #:   tool_input.command, with the same fields as the Bash tool"; match `Bash|PowerShell`),
 #:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("codex_cli", "trust_hint"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_cli.py::test_install_says_how_to_trust_a_hook_the_agent_will_not_run_yet",
+    },
     ("claude_code", "tools"): {
         "basis": "vendor-docs",
         "date": "2026-09-27",
@@ -75,6 +88,9 @@ def apply(agent, entry):
     """Fold this module's sourced records into one recounted entry, in place."""
     if agent in REPO_ROOT_TOKEN:
         entry["repo_root_token"] = REPO_ROOT_TOKEN[agent]
+    if agent in TRUST_HINT:
+        entry["needs_trust"] = True
+        entry["trust_hint"] = TRUST_HINT[agent]
     for (owner, claim), record in EVIDENCE.items():
         if owner == agent:
             entry["evidence"][claim] = dict(record)

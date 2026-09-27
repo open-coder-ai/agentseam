@@ -70,6 +70,11 @@
       "date": "2026-08-28",
       "test": "tests/test_vendor_lookups.py::test_shell_tools_are_recorded_only_where_established"
     },
+    "trust_hint": {
+      "basis": "vendor-docs",
+      "date": "2026-09-27",
+      "test": "tests/test_cli.py::test_install_says_how_to_trust_a_hook_the_agent_will_not_run_yet"
+    },
     "verdicts": {
       "basis": "live-run-partial",
       "date": "2026-08-28",
@@ -114,12 +119,16 @@
     "matcher": true,
     "wrapper": "hooks_map"
   },
-  "needs_trust": false,
+  "needs_trust": true,
   "tools": {
     "shell": [
       "Bash"
+    ],
+    "write": [
+      "apply_patch"
     ]
   },
+  "trust_hint": "run /hooks in Codex and trust the new hook (trust is per hook hash: re-trust after any change)",
   "verdicts": {
     "answer_events": [
       "PreToolUse",
