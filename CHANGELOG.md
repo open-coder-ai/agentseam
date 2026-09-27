@@ -4,6 +4,42 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2026-09-27
+
+### Fixed
+- **A handler's own output can no longer turn a deny into an allow.** Anything a handler printed -- or a
+  child process it ran -- landed on stdout ahead of the JSON verdict; Claude Code and Gemini CLI then fail
+  to parse the hook's answer and treat it as a non-blocking error, so the tool ran (witnessed live). While
+  the handler runs, `sys.stdout` and fd 1 now point at stderr, in `dispatch` and in the bundled runtime
+  alike, and only the verdict reaches the real stdout.
+- **Copilot CLI's native camelCase hooks are read.** `preToolUse` sends `toolName` and `toolArgs` (an
+  object, or JSON text in earlier builds) and no event name; `parse()` read only `tool_input`, so the
+  command, path and content were `None` and every guard allowed the call. `toolArgs`, `sessionId` and
+  `toolResult` are now read, the payload is detected, and a camelCase `preToolUse` is answered with the
+  documented top-level `permissionDecision`/`permissionDecisionReason` (a transform blocks there, since the
+  CLI has no input rewrite).
+- **Claude Code's `PowerShell` tool is a shell tool.** It is on by default on Windows and carries the
+  command in `tool_input.command`; `tools.shell` is now `Bash`, `PowerShell` (vendor docs, not yet live).
+- **Codex runs project hooks only once trusted.** `needs_trust` is now true for codex_cli with a sourced
+  `trust_hint`, and `agentseam install`/`doctor` say "not live until trusted" for every agent that gates
+  on trust. `apply_patch` is recorded as Codex's write tool; its patch arrives as `event.command`.
+- **Devin no longer claims `PermissionRequest` by name.** Claude Code sends it too; a Devin one carries
+  `prompt_id` and is claimed by the marker path like every other Devin event.
+- **`install()` edits a user's file more carefully.** A tool-name `--matcher` is written only at tool
+  events (a `Bash` matcher on Claude Code's SessionStart or Stop stopped those hooks firing), uninstall
+  prunes the event lists its own removal emptied, an existing event value that is not a list is refused
+  rather than overwritten, and the file keeps its own key order instead of being re-sorted.
+- **The probe blames the right thing.** A driver whose agent CLI is missing (shell exit 127/9009) raises
+  "driver binary not found" instead of scoring "the hook never fired -- config path or format is wrong",
+  and the reference driver refuses agents other than claude_code, whose protocol is the only one it models.
+- **The pre-commit hook no longer blocks commits on Windows.** It picks the first of python3/python/py
+  that actually runs, skipping the Microsoft Store stub `command -v` used to find.
+
+### Changed
+- gemini_cli's `timestamp` reject is kept as a documented tie-break: Gemini sends `timestamp` too, but
+  Tabnine sends the identical shape, and resolving to Tabnine answers allow/deny identically and degrades
+  ask/transform to deny, where declining would allow silently. Name `gemini_cli` to get ask and transform.
+
 ## [0.3.3] - 2026-09-23
 
 ### Added
@@ -1707,6 +1743,8 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surfaces read content bytes (see above). A consumer needing content-based denial today
   should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
 
+[0.3.4]: https://github.com/open-coder-ai/agentseam/compare/v0.3.3...v0.3.4
+[0.3.3]: https://github.com/open-coder-ai/agentseam/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/open-coder-ai/agentseam/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/open-coder-ai/agentseam/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/open-coder-ai/agentseam/compare/v0.2.1...v0.3.0
