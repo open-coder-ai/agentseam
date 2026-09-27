@@ -309,7 +309,7 @@
         "accept_markers": {"$ref": "#/$defs/stringList"},
         "accept_names": {
           "$ref": "#/$defs/stringList",
-          "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PermissionRequest/PostCompaction)."
+          "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PostCompaction)."
         },
         "accept_any_name": {
           "type": "boolean",
@@ -322,7 +322,7 @@
         },
         "reject_client_types": {
           "$ref": "#/$defs/stringList",
-          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name (devin's PermissionRequest, which kimi_code also sends)."
+          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name or marker (devin rejects kimi_code's client_type)."
         },
         "reject_markers": {"$ref": "#/$defs/stringList"},
         "reject_markers_unless_probe": {

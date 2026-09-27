@@ -21,8 +21,22 @@ def test_prompt_id_separates_devin_from_claude_code():
     assert A.adapters.detect(CC_BASH) == "claude_code"
 
 
-def test_a_devin_only_event_identifies_devin_without_prompt_id():
+def test_permission_request_is_not_devin_only_so_it_needs_prompt_id_like_any_other_event():
+    """Claude Code sends PermissionRequest too (code.claude.com/docs/en/hooks), so the name
+    alone used to hand a Claude Code payload to Devin's dialect. A Devin one carries prompt_id
+    (it follows a user prompt) and is claimed by the marker path; without it nobody guesses."""
     assert A.adapters.detect(DV_PERMISSION) == "devin"
+    assert A.adapters.detect({k: v for k, v in DV_PERMISSION.items() if k != "prompt_id"}) is None
+    claude = {
+        "session_id": "s",
+        "transcript_path": "/repo/t.jsonl",
+        "cwd": "/repo",
+        "permission_mode": "default",
+        "hook_event_name": "PermissionRequest",
+        "tool_name": "Bash",
+        "tool_input": {"command": "rm -rf /"},
+    }
+    assert not A.adapters.get("devin").claims(claude)
 
 
 def test_session_start_is_ambiguous_and_nobody_guesses():
@@ -94,16 +108,10 @@ def test_post_compaction_is_not_bent_into_pre_compact():
 
 
 def test_a_kimi_permission_request_is_left_to_kimi():
-    """PermissionRequest is claimed before any marker check because Claude Code never sends"""
+    """A client_type naming another vendor disqualifies the payload before any other check;"""
     payload = {"hook_event_name": "PermissionRequest", "client_type": "kimi_code_cli", "tool_name": "Bash"}
     assert not A.adapters.get("devin").claims(payload)
     assert A.adapters.detect(payload) == "kimi_code"
-
-
-def test_a_devin_permission_request_is_still_claimed_unconditionally():
-    """The narrowing is one recorded client_type, not a retreat from accept_names."""
-    payload = {"hook_event_name": "PermissionRequest", "tool_name": "Bash"}
-    assert A.adapters.get("devin").claims(payload)
 
 
 def test_a_degraded_rewrite_names_the_event_it_could_not_modify():

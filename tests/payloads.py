@@ -175,7 +175,14 @@ DV_PROMPT = {
     "session_id": "3f8d1c2a",
     "prompt_id": "b71e9d41",
 }
-DV_PERMISSION = {"hook_event_name": "PermissionRequest", "tool_name": "exec", "session_id": "3f8d1c2a"}
+#: Devin's documented common input (docs.devin.ai/cli/extensibility/hooks/overview): prompt_id is
+#: absent only before the first user prompt, and a permission request always follows one.
+DV_PERMISSION = {
+    "hook_event_name": "PermissionRequest",
+    "tool_name": "exec",
+    "session_id": "3f8d1c2a",
+    "prompt_id": "turn-1",
+}
 DV_SESSION_START = {"hook_event_name": "SessionStart", "session_id": "3f8d1c2a"}
 
 GK_SHELL = {

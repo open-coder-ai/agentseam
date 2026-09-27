@@ -65,14 +65,14 @@ _CLAIMS = {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "accept_markers": ["prompt_id"],
-        "accept_names": ["PermissionRequest", "PostCompaction"],
+        "accept_names": ["PostCompaction"],
         "reject_client_types": ["kimi_code_cli"],
         "reject_probes": ["looks_like_claude_code"],
         "notes": (
             "accept_names are names Claude Code never sends, claimed before any marker check "
-            "-- except against a client_type that names another vendor, since Kimi Code sends "
-            "PermissionRequest too; prompt_id is required alongside looks_like_claude_code(raw) "
-            "being false."
+            "-- except against a client_type that names another vendor. PermissionRequest is "
+            "not one: Claude Code sends it too (code.claude.com/docs/en/hooks), so it takes the "
+            "marker path; prompt_id is required alongside looks_like_claude_code(raw) being false."
         ),
     },
     "kimi_code": {
