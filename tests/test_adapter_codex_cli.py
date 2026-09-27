@@ -89,15 +89,17 @@ def test_codex_hook_config_uses_matcher_group_shape():
     assert entry["hooks"][0] == {
         "type": "command",
         "command": '"C:\\py.exe" "guard.py"',
-        "commandWindows": '& "C:\\py.exe" "guard.py"',
+        "commandWindows": '& "C:\\py.exe" "guard.py"; exit $LASTEXITCODE',
     }
 
 
 def test_windows_gets_a_powershell_callable_command():
     """Codex runs hooks through PowerShell on Windows, where a line beginning with a quoted"""
     mod = A.adapters.get("codex_cli")
-    assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli'
-    assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"'
+    keep = "; exit $LASTEXITCODE"
+    assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli' + keep
+    assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"' + keep
+    assert mod.powershell_command('& "C:\\py.exe" "g.py"' + keep) == '& "C:\\py.exe" "g.py"' + keep
 
 
 def test_prompt_submit_uses_the_block_dialect_not_the_pretooluse_gate():

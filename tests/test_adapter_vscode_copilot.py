@@ -45,7 +45,7 @@ def test_the_installed_config_is_the_shape_vs_code_actually_parses():
     mod = A.adapters.get("vscode_copilot")
     cfg = mod.hook_config([A.PRE_TOOL, A.STOP], "python3 guard.py")
     assert "version" not in cfg
-    entry = {"type": "command", "command": "python3 guard.py", "windows": "& python3 guard.py"}
+    entry = {"type": "command", "command": "python3 guard.py", "windows": "& python3 guard.py; exit $LASTEXITCODE"}
     assert cfg == {"hooks": {"PreToolUse": [entry], "Stop": [entry]}}
 
 
@@ -112,7 +112,7 @@ def test_windows_gets_a_powershell_callable_command():
     """hookExecutor.ts's getShellCommand spawns"""
     entry = A.adapters.get("vscode_copilot").hook_config([A.PRE_TOOL], '"C:\\py.exe" "g.py"')["hooks"]["PreToolUse"][0]
     assert entry["command"] == '"C:\\py.exe" "g.py"'
-    assert entry["windows"] == '& "C:\\py.exe" "g.py"'
+    assert entry["windows"] == '& "C:\\py.exe" "g.py"; exit $LASTEXITCODE'
 
 
 #: Copilot CLI's camelCase preToolUse input, in the shape docs.github.com/en/copilot/reference/

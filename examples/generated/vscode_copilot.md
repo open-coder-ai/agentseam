@@ -39,49 +39,49 @@ One handler wired for every hook this agent supports.
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "PreToolUse": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "SessionStart": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "Stop": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "SubagentStart": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "SubagentStop": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ],
     "UserPromptSubmit": [
       {
         "command": "python3 guard.py",
         "type": "command",
-        "windows": "& python3 guard.py"
+        "windows": "& python3 guard.py; exit $LASTEXITCODE"
       }
     ]
   }

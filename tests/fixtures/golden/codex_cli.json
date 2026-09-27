@@ -362,7 +362,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -373,7 +373,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -384,7 +384,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -395,7 +395,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -406,7 +406,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -417,7 +417,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -428,7 +428,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -439,7 +439,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -450,7 +450,7 @@
             "hooks": [
               {
                 "command": "python3 guard.py",
-                "commandWindows": "& python3 guard.py",
+                "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                 "type": "command"
               }
             ]
@@ -466,7 +466,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ],
@@ -478,7 +478,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -489,7 +489,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ],
@@ -501,7 +501,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -512,7 +512,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -523,7 +523,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -534,7 +534,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -545,7 +545,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]
@@ -556,7 +556,7 @@
               "hooks": [
                 {
                   "command": "python3 guard.py",
-                  "commandWindows": "& python3 guard.py",
+                  "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
                   "type": "command"
                 }
               ]

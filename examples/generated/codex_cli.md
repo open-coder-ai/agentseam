@@ -40,7 +40,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -51,7 +51,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -62,7 +62,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -73,7 +73,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -84,7 +84,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -95,7 +95,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -106,7 +106,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -117,7 +117,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -128,7 +128,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py",
+            "commandWindows": "& python3 guard.py; exit $LASTEXITCODE",
             "type": "command"
           }
         ]

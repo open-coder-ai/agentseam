@@ -32,6 +32,9 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **The probe blames the right thing.** A driver whose agent CLI is missing (shell exit 127/9009) raises
   "driver binary not found" instead of scoring "the hook never fired -- config path or format is wrong",
   and the reference driver refuses agents other than claude_code, whose protocol is the only one it models.
+- **A PowerShell hook keeps its exit code.** `pwsh -Command` turns any failing native exit into 1, so a
+  hook's exit 2 (block) reached Codex on Windows as a non-blocking error (openai/codex#48183). The
+  `commandWindows`/`windows` form now ends with `; exit $LASTEXITCODE`.
 - **The pre-commit hook no longer blocks commits on Windows.** It picks the first of python3/python/py
   that actually runs, skipping the Microsoft Store stub `command -v` used to find.
 
