@@ -18,7 +18,7 @@ from .install_config import (
     merge,
     remove_block,
     resolve,
-    strip_owned,
+    strip,
     write_block,
 )
 from .install_identity import installed
@@ -40,7 +40,7 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
-    existing = strip_owned(load(path), owner)
+    existing = strip(load(path), owner)
     fragment = mark(mod.hook_config(events, command, matcher=matcher, **extra), owner)
     dump(path, merge(existing, fragment))
     return path
@@ -55,7 +55,7 @@ def uninstall(agent, repo_root=".", owner="agentseam"):
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         return remove_block(path, owner)
     before = load(path)
-    after = strip_owned(before, owner)
+    after = strip(before, owner)
     if after == before:
         return False
     dump(path, after)

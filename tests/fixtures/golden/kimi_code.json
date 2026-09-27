@@ -439,8 +439,7 @@
         },
         {
           "command": "python3 guard.py",
-          "event": "PreCompact",
-          "matcher": "Bash"
+          "event": "PreCompact"
         },
         {
           "command": "python3 guard.py",
@@ -449,33 +448,27 @@
         },
         {
           "command": "python3 guard.py",
-          "event": "UserPromptSubmit",
-          "matcher": "Bash"
+          "event": "UserPromptSubmit"
         },
         {
           "command": "python3 guard.py",
-          "event": "SessionEnd",
-          "matcher": "Bash"
+          "event": "SessionEnd"
         },
         {
           "command": "python3 guard.py",
-          "event": "SessionStart",
-          "matcher": "Bash"
+          "event": "SessionStart"
         },
         {
           "command": "python3 guard.py",
-          "event": "Stop",
-          "matcher": "Bash"
+          "event": "Stop"
         },
         {
           "command": "python3 guard.py",
-          "event": "SubagentStart",
-          "matcher": "Bash"
+          "event": "SubagentStart"
         },
         {
           "command": "python3 guard.py",
-          "event": "SubagentStop",
-          "matcher": "Bash"
+          "event": "SubagentStop"
         },
         {
           "command": "python3 guard.py",

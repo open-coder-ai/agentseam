@@ -316,8 +316,7 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ],
-            "matcher": "Bash"
+            ]
           }
         ],
         "SessionStart": [
@@ -327,8 +326,7 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ],
-            "matcher": "Bash"
+            ]
           }
         ],
         "Stop": [
@@ -338,8 +336,7 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ],
-            "matcher": "Bash"
+            ]
           }
         ],
         "UserPromptSubmit": [
@@ -349,8 +346,7 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ],
-            "matcher": "Bash"
+            ]
           }
         ]
       },

@@ -38,7 +38,7 @@ def _cmd_install(args):
         lvl = ", ".join("%s=%s" % (e, enforcement_level(agent, e)) for e in events)
         try:
             path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
-        except ValueError as exc:
+        except (ValueError, install_mod.ConfigUnreadableError) as exc:
             print("skipped %-14s %s" % (agent, exc), file=sys.stderr)
             skipped += 1
             continue
