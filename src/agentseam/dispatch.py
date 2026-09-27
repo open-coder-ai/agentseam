@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import json
+import os
 import sys
 import traceback
 
@@ -43,6 +46,42 @@ def _refusal(exc):
     )
 
 
+def _divert_fd1():
+    """Point fd 1 at stderr (devnull if there is none); the saved fd 1, or None if it could not."""
+    try:
+        saved = os.dup(1)
+    except OSError:
+        return None
+    try:
+        os.dup2(2, 1)
+    except OSError:
+        sink = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(sink, 1)
+        os.close(sink)
+    return saved
+
+
+@contextlib.contextmanager
+def _stdout_to_stderr():
+    """While a handler runs, whatever it prints -- itself or a child process -- goes to stderr.
+
+    Stdout is the verdict channel: a handler's stray `print` ahead of the JSON makes the host
+    fail to parse it, and Claude Code and Gemini CLI then treat the hook as a non-blocking
+    error -- a deny became an allow, witnessed live.
+    """
+    sink = sys.stderr if sys.stderr is not None else io.StringIO()
+    saved = _divert_fd1()
+    try:
+        with contextlib.redirect_stdout(sink):
+            yield
+    finally:
+        if saved is not None:
+            with contextlib.suppress(Exception):
+                sink.flush()
+            os.dup2(saved, 1)
+            os.close(saved)
+
+
 def degrade(decision, event, agent=None):
     """Reduce a decision to what the agent can actually honor, honestly."""
     agent = agent or event.agent
@@ -72,7 +111,9 @@ def handle(raw, handler, agent=None):
     if event.event == UNKNOWN:
         return "", 0, event, Decision.allow("unmapped vendor event")
     try:
-        decision = _coerce(handler(event))
+        with _stdout_to_stderr():
+            result = handler(event)
+        decision = _coerce(result)
     except Exception as exc:  # noqa: BLE001 (whatever the handler's defect, the outcome is the same:
         # this event is refused in the vendor's own dialect. Letting it escape exits the hook
         # process with 1 and a traceback, which every host reads as a non-blocking error --

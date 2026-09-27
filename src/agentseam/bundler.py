@@ -30,6 +30,16 @@ _SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity
 #: its entry's gates speak; the reference left behind is unreachable for that entry's data.
 _GRAMMAR_RENDERERS = {"G1": "_g1", "G2": "_g2"}
 
+#: Modules runtime.py.tmpl uses itself, hoisted with whatever the spliced sources import.
+_RUNTIME_IMPORTS = (
+    ("contextlib", None),
+    ("io", None),
+    ("json", None),
+    ("os", None),
+    ("sys", None),
+    ("traceback", None),
+)
+
 
 def _read(path):
     with open(path, encoding="utf-8") as fh:
@@ -189,7 +199,7 @@ def bundle_entry(cfg):
     """
     agent = cfg["agent"]
     prefix = cfg["family"] if cfg["family"] in _SINGLETON_MODULES else "hj"
-    hoisted = {("json", None), ("sys", None), ("traceback", None)}
+    hoisted = set(_RUNTIME_IMPORTS)
 
     body = []
     body.append(
@@ -216,7 +226,7 @@ def bundle_entry(cfg):
 
 def _dialect_bundle(agent):
     """Contract + the dialect module itself: the composition for the one module vendor."""
-    hoisted = {("json", None), ("sys", None), ("traceback", None)}
+    hoisted = set(_RUNTIME_IMPORTS)
 
     body = []
     body.append(
