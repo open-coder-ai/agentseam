@@ -19,14 +19,25 @@ if ! git diff --cached --name-only | grep -qE '^(src/agentseam/|examples/(genera
     exit 0
 fi
 
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "pre-commit: python3 not found, skipping example refresh" >&2
+# The first candidate that actually RUNS a Python 3.9+. `command -v` alone is not enough: on
+# Windows it finds the Microsoft Store's python3 stub, which exits non-zero, and under set -e
+# that blocked every commit touching src/.
+py=
+for candidate in python3 python py; do
+    if command -v "$candidate" >/dev/null 2>&1 &&
+        "$candidate" -c 'import sys; sys.exit(sys.version_info < (3, 9))' >/dev/null 2>&1; then
+        py=$candidate
+        break
+    fi
+done
+if [ -z "$py" ]; then
+    echo "pre-commit: no working python3/python/py found, skipping example refresh" >&2
     echo "pre-commit: run 'python3 examples/generate.py' before pushing, or CI will fail" >&2
     exit 0
 fi
 
 before=$(git diff --cached --name-only -- examples/generated)
-python3 examples/generate.py >/dev/null
+"$py" examples/generate.py >/dev/null
 git add examples/generated
 
 # Report only when the commit actually gained something, so a no-op stays silent.

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -103,3 +105,24 @@ def test_the_hook_does_not_block_a_commit_when_it_cannot_run(clone):
     """A developer without python3 gets a warning, not a repository they cannot commit to."""
     assert "skipping example refresh" in HOOK.read_text()
     assert "exit 0" in HOOK.read_text()
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="builds a POSIX PATH of shell stubs")
+def test_a_python3_that_is_found_but_does_not_run_is_skipped_for_one_that_does(clone, tmp_path):
+    """Windows' Store `python3` stub is on PATH and exits non-zero; `command -v` found it, and
+    under `set -e` the hook then failed every commit that touched src/."""
+    stubs = tmp_path / "bin"
+    stubs.mkdir()
+    stub = stubs / "python3"
+    stub.write_text("#!/bin/sh\necho 'Python was not found; run without arguments to install' >&2\nexit 49\n")
+    stub.chmod(0o755)
+    os.symlink(sys.executable, str(stubs / "python"))
+    env = dict(os.environ, PATH=str(stubs) + os.pathsep + os.environ.get("PATH", ""))
+
+    entry = clone / "src" / "agentseam" / "data" / "vendors" / "windsurf.json"
+    entry.write_text(entry.read_text().replace("cannot prompt for confirmation", "has no confirmation prompt"))
+    assert _run(GIT + ["add", "src/agentseam/data/vendors/windsurf.json"], clone, env=env).returncode == 0
+    result = _run(GIT + ["commit", "-q", "-m", "change wording", "--no-gpg-sign"], clone, env=env)
+    assert result.returncode == 0, result.stderr
+    committed = _run(["git", "show", "--name-only", "--format=", "HEAD"], clone).stdout.split()
+    assert "examples/generated/windsurf.md" in committed
