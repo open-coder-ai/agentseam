@@ -45,7 +45,11 @@ def test_the_installed_config_is_the_shape_vs_code_actually_parses():
     mod = A.adapters.get("vscode_copilot")
     cfg = mod.hook_config([A.PRE_TOOL, A.STOP], "python3 guard.py")
     assert "version" not in cfg
-    entry = {"type": "command", "command": "python3 guard.py", "windows": "& python3 guard.py"}
+    entry = {
+        "type": "command",
+        "command": "python3 guard.py",
+        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+    }
     assert cfg == {"hooks": {"PreToolUse": [entry], "Stop": [entry]}}
 
 
@@ -112,4 +116,65 @@ def test_windows_gets_a_powershell_callable_command():
     """hookExecutor.ts's getShellCommand spawns"""
     entry = A.adapters.get("vscode_copilot").hook_config([A.PRE_TOOL], '"C:\\py.exe" "g.py"')["hooks"]["PreToolUse"][0]
     assert entry["command"] == '"C:\\py.exe" "g.py"'
-    assert entry["windows"] == '& "C:\\py.exe" "g.py"'
+    assert entry["windows"] == '& "C:\\py.exe" "g.py"; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE'
+
+
+#: Copilot CLI's camelCase preToolUse input, in the shape docs.github.com/en/copilot/reference/
+#: hooks-configuration documents (read 2026-09-27): no event name, toolName + toolArgs.
+CLI_PRE_TOOL = {
+    "sessionId": "cli-1",
+    "timestamp": 1790000000000,
+    "cwd": "/repo",
+    "toolName": "bash",
+    "toolArgs": {"command": "rm -rf /", "description": "clean"},
+}
+
+#: The same call with `toolArgs` as JSON text, the form earlier CLI builds sent.
+CLI_PRE_TOOL_STR = dict(CLI_PRE_TOOL, toolArgs=json.dumps({"command": "rm -rf /", "description": "clean"}))
+
+
+def test_copilot_cli_tool_args_reach_the_policy_as_object_or_json_text():
+    """parse() read only tool_input, so a CLI command arrived as None and every guard allowed it."""
+    mod = A.adapters.get("vscode_copilot")
+    for raw in (CLI_PRE_TOOL, CLI_PRE_TOOL_STR):
+        ev = mod.parse(raw)
+        assert (ev.event, ev.tool, ev.command, ev.session_id) == (A.PRE_TOOL, "bash", "rm -rf /", "cli-1")
+    edit = dict(CLI_PRE_TOOL, toolName="edit", toolArgs=json.dumps({"path": "/repo/.env", "new_str": "K=1"}))
+    ev = mod.parse(edit)
+    assert (ev.path, ev.content) == ("/repo/.env", "K=1")
+
+
+def test_copilot_cli_payloads_are_detected_without_an_event_name():
+    assert A.adapters.detect(CLI_PRE_TOOL) == "vscode_copilot"
+    assert A.adapters.detect(CLI_PRE_TOOL_STR) == "vscode_copilot"
+    padded = dict(CLI_PRE_TOOL, toolArgs="  " + CLI_PRE_TOOL_STR["toolArgs"])
+    assert A.adapters.get("vscode_copilot").parse(padded).command == "rm -rf /"
+
+
+def test_a_copilot_cli_call_without_tool_args_is_still_judged():
+    """Unclaimed, it was "unrecognized" and allowed before the handler ever saw it."""
+    bare = {k: v for k, v in CLI_PRE_TOOL.items() if k != "toolArgs"}
+    assert A.adapters.detect(bare) == "vscode_copilot"
+    assert json.loads(A.handle(bare, deny_all)[0])["permissionDecision"] == "deny"
+
+
+def test_copilot_cli_deny_is_the_documented_top_level_permission_decision():
+    """camelCase hooks read {permissionDecision, permissionDecisionReason} at the top level."""
+    text, code, _event, _decision = A.handle(CLI_PRE_TOOL_STR, deny_all)
+    assert code == 0
+    assert json.loads(text) == {"permissionDecision": "deny", "permissionDecisionReason": "test-deny"}
+    named = dict(CLI_PRE_TOOL, hookEventName="preToolUse")
+    assert json.loads(A.handle(named, deny_all)[0])["permissionDecision"] == "deny"
+    assert A.handle(CLI_PRE_TOOL, allow_all)[0] == ""
+
+
+def test_copilot_cli_cannot_rewrite_input_so_a_transform_blocks():
+    text, _code, _event, _decision = A.handle(CLI_PRE_TOOL, lambda _e: Decision.transform({"command": "ls"}, "safer"))
+    out = json.loads(text)
+    assert out["permissionDecision"] == "deny" and "cannot modify input" in out["permissionDecisionReason"]
+
+
+def test_copilot_cli_post_tool_is_told_apart_by_its_tool_result():
+    raw = dict(CLI_PRE_TOOL, toolResult={"resultType": "success", "textResultForLlm": "done"})
+    ev = A.adapters.get("vscode_copilot").parse(raw)
+    assert (ev.event, ev.output) == (A.POST_TOOL, "done")

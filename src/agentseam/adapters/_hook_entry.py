@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..contract import POST_TOOL, PRE_TOOL, TOOL_FAILURE
 from ._hook_json import hj_reverse
 from ._windows import powershell_command
 
@@ -9,6 +10,11 @@ from ._windows import powershell_command
 #: `powershell_command` is inlined only for vendors whose entry_extra names one of these;
 #: elsewhere the branch below is unreachable because entry_extra is empty.
 _WINDOWS_KEYS = ("commandWindows", "windows")
+
+#: The events a tool-name matcher means anything at. Elsewhere a vendor ignores it or reads it
+#: as something else (Claude Code's SessionStart matcher is the session source), so a `Bash`
+#: meant for pre_tool would silently stop a stop or session hook from ever firing.
+_MATCHER_EVENTS = (PRE_TOOL, POST_TOOL, TOOL_FAILURE)
 
 
 def _hook_dict(cfg, command):
@@ -28,7 +34,7 @@ def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
         if not name:
             continue
         rule = {"event": name, "command": command}
-        if matcher and hook_entry["matcher"]:
+        if matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
             rule["matcher"] = matcher
         rules.append(rule)
     return rules
@@ -70,7 +76,7 @@ def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
         if not name:
             continue
         entry = {"hooks": [_hook_dict(cfg, command)]}
-        if matcher and hook_entry["matcher"]:
+        if matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
             entry["matcher"] = matcher
         hooks.setdefault(name, []).append(entry)
     if hook_entry.get("group"):

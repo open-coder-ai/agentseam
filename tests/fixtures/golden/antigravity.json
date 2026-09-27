@@ -200,8 +200,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ]
         }

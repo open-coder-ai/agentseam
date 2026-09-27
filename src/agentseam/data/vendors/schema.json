@@ -24,6 +24,11 @@
     "config_path": {"type": "string", "minLength": 1},
     "config_format": {"enum": ["json", "toml"]},
     "needs_trust": {"type": "boolean"},
+    "trust_hint": {
+      "type": "string",
+      "minLength": 1,
+      "description": "what the user does in the agent to trust a project hook, where needs_trust is true and a primary source says how (codex_cli's /hooks). Printed by `agentseam install` and `doctor`; travels with an evidence.trust_hint record."
+    },
     "repo_root_token": {
       "type": "string",
       "minLength": 1,
@@ -255,7 +260,8 @@
         "verdicts": {"$ref": "#/$defs/evidenceRecord"},
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
         "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
-        "repo_root_token": {"$ref": "#/$defs/evidenceRecord"}
+        "repo_root_token": {"$ref": "#/$defs/evidenceRecord"},
+        "trust_hint": {"$ref": "#/$defs/evidenceRecord"}
       },
       "required": ["family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry"]
     }
@@ -303,7 +309,7 @@
         "accept_markers": {"$ref": "#/$defs/stringList"},
         "accept_names": {
           "$ref": "#/$defs/stringList",
-          "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PermissionRequest/PostCompaction)."
+          "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PostCompaction)."
         },
         "accept_any_name": {
           "type": "boolean",
@@ -316,7 +322,7 @@
         },
         "reject_client_types": {
           "$ref": "#/$defs/stringList",
-          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name (devin's PermissionRequest, which kimi_code also sends)."
+          "description": "client-type values that disqualify the payload outright, checked before `accept_names`: a positive self-identification beats a shared event name or marker (devin rejects kimi_code's client_type)."
         },
         "reject_markers": {"$ref": "#/$defs/stringList"},
         "reject_markers_unless_probe": {

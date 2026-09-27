@@ -14,7 +14,7 @@ from . import install as install_mod
 from . import instructions as instructions_mod
 from . import packaging as packaging_mod
 from . import permissions as permissions_mod
-from .cli_report import _cmd_doctor, _cmd_matrix, cmd_tier_table
+from .cli_report import _cmd_doctor, _cmd_matrix, cmd_tier_table, trust_note
 from .contract import EVENTS, PRE_TOOL
 from .matrix import MATRIX, enforcement_level
 
@@ -38,11 +38,14 @@ def _cmd_install(args):
         lvl = ", ".join("%s=%s" % (e, enforcement_level(agent, e)) for e in events)
         try:
             path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
-        except ValueError as exc:
+        except (ValueError, install_mod.ConfigUnreadableError) as exc:
             print("skipped %-14s %s" % (agent, exc), file=sys.stderr)
             skipped += 1
             continue
         print("wired %-16s -> %s   [%s]" % (agent, path, lvl))
+        note = trust_note(agent)
+        if note:
+            print("      %-16s %s" % ("", note))
     return 1 if skipped else 0
 
 

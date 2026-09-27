@@ -14,6 +14,13 @@ import subprocess
 from .. import harness
 from . import _shell
 
+#: Exit codes a shell uses for "no such command": POSIX sh, and cmd.exe's 9009.
+_NOT_FOUND_EXITS = (127, 9009)
+
+
+class DriverNotFoundError(ValueError):
+    """The driver's agent CLI is not installed or not on PATH, so nothing was measured."""
+
 
 def _reject_quoted_prompt(command):
     """Refuse a template that quotes {prompt}: the substitution already supplies quotes.
@@ -57,6 +64,12 @@ def drive_real(command, workspace, *, trigger):
             "stdout": (exc.stdout or "")[-2000:],
             "stderr": (exc.stderr or "")[-2000:],
         }
+    if proc.returncode in _NOT_FOUND_EXITS:
+        raise DriverNotFoundError(
+            "driver binary not found: the shell could not run %r (exit %d: %s). Install the "
+            "agent CLI or put it on PATH; no hook was measured, so this is not a finding about "
+            "the config." % (command, proc.returncode, (proc.stderr or "").strip()[-300:])
+        )
     return {
         "returncode": proc.returncode,
         "timed_out": False,

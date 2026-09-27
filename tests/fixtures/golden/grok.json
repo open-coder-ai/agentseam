@@ -514,8 +514,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "PreToolUse": [
@@ -536,8 +535,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "SessionStart": [
@@ -547,8 +545,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "Stop": [
@@ -558,8 +555,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "SubagentStart": [
@@ -569,8 +565,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "SubagentStop": [
@@ -580,8 +575,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "UserPromptSubmit": [
@@ -591,8 +585,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ]
         }

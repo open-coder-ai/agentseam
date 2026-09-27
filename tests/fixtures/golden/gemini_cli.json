@@ -342,8 +342,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "AfterTool": [
@@ -364,8 +363,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "BeforeTool": [
@@ -386,8 +384,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "SessionEnd": [
@@ -397,8 +394,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ],
           "SessionStart": [
@@ -408,8 +404,7 @@
                   "command": "python3 guard.py",
                   "type": "command"
                 }
-              ],
-              "matcher": "Bash"
+              ]
             }
           ]
         }

@@ -10,8 +10,8 @@ from __future__ import annotations
 import json
 from datetime import date
 
+from . import adapters, recordings
 from . import install as install_mod
-from . import recordings
 from . import staleness as staleness_mod
 from . import tier_table as tier_table_mod
 from .contract import EVENTS
@@ -66,6 +66,15 @@ def _print_evidence():
     return 0
 
 
+def trust_note(agent):
+    """What stands between a written config and a live gate, for agents that gate on trust."""
+    mod = adapters.get(agent)
+    if not getattr(mod, "NEEDS_TRUST", False):
+        return None
+    how = getattr(mod, "TRUST_HINT", None) or "trust it in the agent"
+    return "not live until trusted: %s" % how
+
+
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
     today = date.today()
@@ -89,6 +98,9 @@ def _cmd_doctor(args):
             "%-16s wired=%-5s verified=%s (%s)"
             % (name, "yes" if wired else "no", row["verified"].get("date", "?"), staleness_mod.summarize(state))
         )
+        note = trust_note(name) if wired else None
+        if note:
+            print("%-16s %s" % ("", note))
     return rc
 
 

@@ -44,7 +44,8 @@ def load(path):
 
 
 def dump(path, data):
-    _write_text(path, json.dumps(data, indent=2, sort_keys=True) + "\n")
+    """Keys in the file's own order: a re-sorted file is a diff of the user's that nobody asked for."""
+    _write_text(path, json.dumps(data, indent=2) + "\n")
 
 
 def _read_text(path):
@@ -92,12 +93,36 @@ def strip_owned(obj, owner):
     return obj
 
 
-def merge(base, addition):
+def strip(obj, owner):
+    """`obj` without `owner`'s entries, and without the lists and objects that removal emptied."""
+    return _prune_emptied(obj, strip_owned(obj, owner))
+
+
+def _prune_emptied(before, after):
+    if not (isinstance(before, dict) and isinstance(after, dict)):
+        return after
+    out = {}
+    for key, value in after.items():
+        kept = _prune_emptied(before.get(key), value)
+        if isinstance(kept, (list, dict)) and not kept and before.get(key):
+            continue
+        out[key] = kept
+    return out
+
+
+def merge(base, addition, where=()):
+    """Fold `addition` into `base`; a container where the user's file holds something else refuses."""
     for key, value in addition.items():
-        if isinstance(value, dict) and isinstance(base.get(key), dict):
-            merge(base[key], value)
-        elif isinstance(value, list) and isinstance(base.get(key), list):
-            base[key].extend(value)
+        current = base.get(key)
+        if isinstance(value, dict) and isinstance(current, dict):
+            merge(current, value, (*where, key))
+        elif isinstance(value, list) and isinstance(current, list):
+            current.extend(value)
+        elif isinstance(value, (dict, list)) and current is not None:
+            raise ConfigUnreadableError(
+                "%s in the existing config is a %s, not a %s; refusing to overwrite it."
+                % (".".join((*where, key)), type(current).__name__, type(value).__name__)
+            )
         else:
             base[key] = value
     return base

@@ -37,3 +37,19 @@ def test_the_registry_templates_all_pass_the_guard():
 
     for agent in harness.agents():
         experiment_driver._reject_quoted_prompt(harness.driver_command(agent))
+
+
+def test_a_missing_agent_binary_is_refused_not_scored_as_a_config_fault(tmp_path):
+    """A shell that cannot find the CLI exits 127, the hook never fires, and the trial used to
+    read "config path or format is wrong" -- blaming the config for a missing install."""
+    with pytest.raises(experiment_driver.DriverNotFoundError, match="binary not found"):
+        experiment_driver.drive_real(
+            "agentseam-no-such-agent-cli-xyz -p {prompt}", str(tmp_path), trigger="echo ok >> ACTION_RAN"
+        )
+
+
+def test_the_reference_driver_refuses_an_agent_it_does_not_model():
+    from agentseam.probe import experiment
+
+    with pytest.raises(ValueError, match="reference driver models only claude_code"):
+        experiment.run_trial("cursor", "deny")

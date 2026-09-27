@@ -182,6 +182,11 @@ def run_trial(
         raise ValueError("cannot gate at %r (have: %s)" % (event, ", ".join(EVENTS)))
     if driver == recorded_driver.DRIVER_NAME:
         return recorded_driver.run_trial(agent, trial, event=event, version=agent_version)
+    if driver == "reference" and agent not in reference_agent.MODELLED_AGENTS:
+        raise ValueError(
+            "the reference driver models only %s; %s needs a real driver (a CLI template "
+            "with {prompt}) or the recorded one" % (", ".join(reference_agent.MODELLED_AGENTS), agent)
+        )
     adapter = adapters.get(agent)
     workspace = tempfile.mkdtemp(prefix="agentseam-exp-%s-%s-" % (agent, trial))
     record_dir = os.path.join(workspace, ".record")

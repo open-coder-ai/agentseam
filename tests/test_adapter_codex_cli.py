@@ -89,15 +89,26 @@ def test_codex_hook_config_uses_matcher_group_shape():
     assert entry["hooks"][0] == {
         "type": "command",
         "command": '"C:\\py.exe" "guard.py"',
-        "commandWindows": '& "C:\\py.exe" "guard.py"',
+        "commandWindows": '& "C:\\py.exe" "guard.py"; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE',
     }
 
 
 def test_windows_gets_a_powershell_callable_command():
     """Codex runs hooks through PowerShell on Windows, where a line beginning with a quoted"""
     mod = A.adapters.get("codex_cli")
-    assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli'
-    assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"'
+    keep = "; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+    assert mod.powershell_command('"C:\\py.exe" "g.py" codex_cli') == '& "C:\\py.exe" "g.py" codex_cli' + keep
+    assert mod.powershell_command('& "C:\\py.exe" "g.py"') == '& "C:\\py.exe" "g.py"' + keep
+    assert mod.powershell_command('& "C:\\py.exe" "g.py"' + keep) == '& "C:\\py.exe" "g.py"' + keep
+
+
+def test_a_missing_interpreter_refuses_and_an_old_suffix_is_upgraded():
+    """No native command ran: $LASTEXITCODE is $null, and `exit $null` would be 0 -- an allow."""
+    mod = A.adapters.get("codex_cli")
+    cmd = mod.powershell_command('"C:\\py.exe" "g.py"')
+    assert "if ($null -eq $LASTEXITCODE) { exit 2 }" in cmd
+    old = '& "C:\\py.exe" "g.py"; exit $LASTEXITCODE'
+    assert mod.powershell_command(old) == cmd
 
 
 def test_prompt_submit_uses_the_block_dialect_not_the_pretooluse_gate():
@@ -136,3 +147,27 @@ def test_the_real_captured_payload_resolves_to_codex_alone():
     assert A.adapters.detect(CX_LIVE_PROMPT_SUBMIT) == "codex_cli"
     event = A.adapters.get("codex_cli").parse(CX_LIVE_PROMPT_SUBMIT)
     assert event.event == A.PROMPT_SUBMIT and event.prompt == "<str:4>"
+
+
+def test_apply_patch_is_the_recorded_write_tool_and_its_patch_is_the_command():
+    """Codex's PreToolUse fires for apply_patch (learn.chatgpt.com/docs/hooks; live capture
+    2026-08-28): the patch rides in tool_input.command, so a write policy reads event.command."""
+    patch = "*** Begin Patch\n*** Add File: notes.md\n+token=abc\n*** End Patch\n"
+    raw = {
+        "session_id": "019a-codex",
+        "turn_id": "t-1",
+        "transcript_path": "/repo/.codex/r.jsonl",
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-5-codex",
+        "permission_mode": "default",
+        "tool_name": "apply_patch",
+        "tool_input": {"command": patch},
+        "tool_use_id": "call_1",
+    }
+    mod = A.adapters.get("codex_cli")
+    assert "apply_patch" in mod.WRITE_TOOLS
+    assert A.adapters.detect(raw) == "codex_cli"
+    ev = mod.parse(raw)
+    assert (ev.event, ev.tool, ev.command) == (A.PRE_TOOL, "apply_patch", patch)
+    assert mod.NEEDS_TRUST is True

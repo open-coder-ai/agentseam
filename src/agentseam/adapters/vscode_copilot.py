@@ -57,6 +57,14 @@ _CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
 
 _VSCODE_ENVELOPE = "timestamp"
 
+#: Copilot CLI's own camelCase input (docs.github.com/en/copilot/reference/hooks-configuration,
+#: read 2026-09-27): {sessionId, timestamp, cwd, toolName, toolArgs[, toolResult]} and no event
+#: name at all. `toolArgs` is documented as the parsed arguments; the JSON-string form earlier
+#: CLI builds sent is decoded too.
+_CLI_ARGS = "toolArgs"
+_CLI_RESULT = "toolResult"
+_CLI_KEYS = (_CLI_ARGS, "toolName", "sessionId")
+
 
 def _name(raw):
     """The payload's own event name as text; None when it names none, UNKNOWN when the
@@ -80,15 +88,38 @@ def claims(raw):
         return False
     if name in _CLAIMABLE:
         return True
+    if name is None and (_CLI_ARGS in raw or ("toolName" in raw and ("sessionId" in raw or _VSCODE_ENVELOPE in raw))):
+        # A CLI call may omit toolArgs; unclaimed, it would pass unseen as "unrecognized".
+        return True
     ti = raw.get("tool_input")
     return raw.get("tool_name") in MEMORY_TOOLS and isinstance(ti, dict) and "command" in ti
+
+
+def _tool_input(raw):
+    """The tool's arguments: VS Code's `tool_input`, else the CLI's `toolArgs` (object or JSON text)."""
+    ti = raw.get("tool_input")
+    return tool_input_of(raw.get(_CLI_ARGS) if ti is None else ti)
+
+
+def is_cli_native(raw):
+    """True for Copilot CLI's camelCase payloads, which get its top-level permission answer."""
+    if not isinstance(raw, dict):
+        return False
+    name = _name(raw)
+    if name is None:
+        return any(k in raw for k in _CLI_KEYS)
+    return name in _CLAIMABLE
+
+
+def _cli_output(raw):
+    result = raw.get(_CLI_RESULT)
+    return result.get("textResultForLlm") if isinstance(result, dict) else None
 
 
 def parse(raw):
     if not isinstance(raw, dict):
         return Event(AGENT, UNKNOWN, raw=raw)
-    ti = raw.get("tool_input")
-    ti = tool_input_of(ti)
+    ti = _tool_input(raw)
     tool = raw.get("tool_name") or raw.get("toolName")
     path = content = None
     if tool in MEMORY_TOOLS:
@@ -100,7 +131,7 @@ def parse(raw):
     else:
         path = ti.get("filePath") or ti.get("file_path") or ti.get("path")
         content = ti.get("content") or ti.get("newText") or ti.get("new_str")
-    name = _name(raw) or "preToolUse"
+    name = _name(raw) or ("postToolUse" if _CLI_RESULT in raw else "preToolUse")
     return Event(
         AGENT,
         EVENT_MAP.get(name, UNKNOWN),
@@ -109,8 +140,8 @@ def parse(raw):
         path=path,
         content=content,
         prompt=raw.get("prompt"),
-        output=raw.get("tool_output") or raw.get("tool_response"),
-        session_id=raw.get("session_id"),
+        output=raw.get("tool_output") or raw.get("tool_response") or _cli_output(raw),
+        session_id=raw.get("session_id") or raw.get("sessionId"),
         tool_use_id=raw.get("tool_use_id"),
         cwd=raw.get("cwd"),
         raw=raw,
@@ -119,8 +150,7 @@ def parse(raw):
 
 def is_memory_write(event):
     """True when this event is a memory-tool content write (VS Code's memory surface)."""
-    ti = event.raw.get("tool_input")
-    ti = tool_input_of(ti)
+    ti = _tool_input(event.raw)
     return event.tool in MEMORY_TOOLS and ti.get("command") in MEMORY_WRITE_COMMANDS
 
 
@@ -184,6 +214,18 @@ def _pre_tool_out(decision, event):
     return out
 
 
+def _cli_pre_tool_out(decision):
+    """The CLI's documented top-level answer; it has no input rewrite, so a rewrite blocks."""
+    if decision.outcome == VOUCH:
+        out = {"permissionDecision": "allow"}
+        if decision.reason:
+            out[_PERMISSION_DECISION_REASON] = decision.reason
+        return out
+    if decision.outcome == ASK:
+        return {"permissionDecision": "ask", _PERMISSION_DECISION_REASON: decision.reason or "confirmation required"}
+    return {"permissionDecision": "deny", _PERMISSION_DECISION_REASON: _refusal_reason(decision)}
+
+
 def respond(decision, event):
     """Three dialects, one per event group -- not one gate shape everywhere."""
     import json as _json  # noqa: PLC0415 (bundler.py keeps this vendored file's own function-local
@@ -201,6 +243,9 @@ def respond(decision, event):
 
     if event.event != PRE_TOOL or decision.outcome == ALLOW:
         return "", 0
+
+    if is_cli_native(event.raw):
+        return _json.dumps(_cli_pre_tool_out(decision)), 0
 
     return _json.dumps({"hookSpecificOutput": _pre_tool_out(decision, event)}), 0
 

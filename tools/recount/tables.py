@@ -45,6 +45,9 @@ _CLAIMS = {
         "client_types": [None, "gemini_cli", "gemini"],
         "reject_markers": ["timestamp", "project_path", "prompt_id", "turn_id"],
         "reject_probes": ["looks_like_claude_code"],
+        "notes": "timestamp is in Gemini's documented base input too: rejecting it is a deliberate tie-break "
+        "toward Tabnine, which sends the same shape and whose deny/allow wire is identical (ask/transform "
+        "degrade to deny); a declining detect() would allow silently. Name gemini_cli to get ask/transform.",
     },
     "codex_cli": {
         "mode": "marker",
@@ -62,14 +65,14 @@ _CLAIMS = {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "accept_markers": ["prompt_id"],
-        "accept_names": ["PermissionRequest", "PostCompaction"],
+        "accept_names": ["PostCompaction"],
         "reject_client_types": ["kimi_code_cli"],
         "reject_probes": ["looks_like_claude_code"],
         "notes": (
             "accept_names are names Claude Code never sends, claimed before any marker check "
-            "-- except against a client_type that names another vendor, since Kimi Code sends "
-            "PermissionRequest too; prompt_id is required alongside looks_like_claude_code(raw) "
-            "being false."
+            "-- except against a client_type that names another vendor. PermissionRequest is "
+            "not one: Claude Code sends it too (code.claude.com/docs/en/hooks), so it takes the "
+            "marker path; prompt_id is required alongside looks_like_claude_code(raw) being false."
         ),
     },
     "kimi_code": {
@@ -108,14 +111,15 @@ _CLAIMS = {
         "accept_markers": ["timestamp"],
         "reject_markers": ["turn_id"],
         "notes": (
-            "Accepted three ways (vscode_copilot.py:44-58): (1) a name in EVENT_MAP with the "
+            "Accepted four ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the "
             "vscode envelope marker timestamp present and turn_id absent -- the only "
             "unconditional reject, captured above; (2) any lowercase-first event name in "
             "EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, "
             "cursor_version, conversation_id, generation_id or workspace_roots is present -- "
             "these only reject payloads that fall through to path (2), not every payload, so "
-            "they are not listed as unconditional reject_markers; (3) a memory-tool call "
-            "carrying tool_input.command."
+            "they are not listed as unconditional reject_markers; (3) a payload naming no "
+            "event but carrying toolArgs (Copilot CLI's camelCase input, which has no event "
+            "name); (4) a memory-tool call carrying tool_input.command."
         ),
     },
 }

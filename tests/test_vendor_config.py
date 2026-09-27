@@ -217,3 +217,12 @@ def test_loader_tuple_restore_preserves_field_chain_order():
     chain = VENDOR_CONFIG["gemini_cli"]["fields"]["path"]
     assert isinstance(chain, tuple)
     assert chain == ("tool_input.file_path", "tool_input.absolute_path", "tool_input.path")
+
+
+@pytest.mark.parametrize("agent", AGENTS)
+def test_a_trust_hint_travels_with_its_evidence_and_only_where_trust_is_needed(agent):
+    """How to trust a hook is a vendor fact: primary-sourced, and meaningless without needs_trust."""
+    entry = VENDOR_CONFIG[agent]
+    assert ("trust_hint" in entry) == ("trust_hint" in entry["evidence"])
+    if "trust_hint" in entry:
+        assert entry["needs_trust"] is True

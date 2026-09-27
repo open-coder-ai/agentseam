@@ -9,7 +9,7 @@
       "hookEventName"
     ],
     "mode": "marker",
-    "notes": "Accepted three ways (vscode_copilot.py:44-58): (1) a name in EVENT_MAP with the vscode envelope marker timestamp present and turn_id absent -- the only unconditional reject, captured above; (2) any lowercase-first event name in EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, cursor_version, conversation_id, generation_id or workspace_roots is present -- these only reject payloads that fall through to path (2), not every payload, so they are not listed as unconditional reject_markers; (3) a memory-tool call carrying tool_input.command.",
+    "notes": "Accepted four ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the vscode envelope marker timestamp present and turn_id absent -- the only unconditional reject, captured above; (2) any lowercase-first event name in EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, cursor_version, conversation_id, generation_id or workspace_roots is present -- these only reject payloads that fall through to path (2), not every payload, so they are not listed as unconditional reject_markers; (3) a payload naming no event but carrying toolArgs (Copilot CLI's camelCase input, which has no event name); (4) a memory-tool call carrying tool_input.command.",
     "reject_markers": [
       "turn_id"
     ]
@@ -55,9 +55,9 @@
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     },
     "fields": {
-      "basis": "live-run-partial",
-      "date": "2026-08-28",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "basis": "vendor-docs",
+      "date": "2026-09-27",
+      "test": "tests/test_adapter_vscode_copilot.py::test_copilot_cli_tool_args_reach_the_policy_as_object_or_json_text"
     },
     "hook_entry": {
       "basis": "live-run-partial",
@@ -90,7 +90,8 @@
     ],
     "output": [
       "tool_output",
-      "tool_response"
+      "tool_response",
+      "toolResult.textResultForLlm"
     ],
     "path": [
       "tool_input.filePath",
@@ -101,11 +102,16 @@
       "prompt"
     ],
     "session_id": [
-      "session_id"
+      "session_id",
+      "sessionId"
     ],
     "tool": [
       "tool_name",
       "toolName"
+    ],
+    "tool_input": [
+      "tool_input",
+      "toolArgs"
     ],
     "tool_use_id": [
       "tool_use_id"

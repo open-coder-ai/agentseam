@@ -13,6 +13,14 @@ from __future__ import annotations
 #: documents such a token for its hooks surface, so no other entry carries the key.
 REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 
+#: Project hooks that run only once the user trusts them, and how the user does that.
+#: codex_cli: learn.chatgpt.com/docs/hooks (read 2026-09-27) -- "Project-local hooks load
+#: only when the project `.codex/` layer is trusted"; `/hooks` reviews and trusts them, and
+#: trust is recorded against the hook's hash, so a changed hook is skipped until re-trusted.
+TRUST_HINT = {
+    "codex_cli": "run /hooks in Codex and trust the new hook (trust is per hook hash: re-trust after any change)",
+}
+
 #: Per-claim evidence records that differ from `tables.evidence`'s default (the matrix
 #: row's own verified basis/date, tested by the recount consistency test).
 #: - vscode_copilot tools: the shell vocabulary is the vendor's hooks reference
@@ -28,7 +36,31 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: - cursor tools: the row's live witness of 2026-09-23 (3.21.18, Windows): `Write` at the
 #:   generic preToolUse gate, carrying file_path and the full content, for a new file and for
 #:   an edit alike; the only write tool seen, and a deny against it was honoured.
+#: - vscode_copilot fields: the Copilot CLI camelCase chains (toolArgs, sessionId,
+#:   toolResult.textResultForLlm) are the vendor's hooks reference
+#:   (docs.github.com/en/copilot/reference/hooks-configuration, read 2026-09-27); no live
+#:   capture of that shape exists, so the claim now rests on the docs, not the live run.
+#: - claude_code tools: the write tools and Bash are the row's live run (2026-09-07);
+#:   PowerShell is the vendor's tools reference (code.claude.com/docs/en/tools-reference,
+#:   read 2026-09-27: on by default on Windows, "receive the tool's command string in
+#:   tool_input.command, with the same fields as the Bash tool"; match `Bash|PowerShell`),
+#:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("codex_cli", "trust_hint"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_cli.py::test_install_says_how_to_trust_a_hook_the_agent_will_not_run_yet",
+    },
+    ("claude_code", "tools"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_adapter_claude_code.py::test_powershell_is_a_shell_tool_and_its_command_is_parsed",
+    },
+    ("vscode_copilot", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_adapter_vscode_copilot.py::test_copilot_cli_tool_args_reach_the_policy_as_object_or_json_text",
+    },
     ("cursor", "tools"): {
         "basis": "live-run-partial",
         "date": "2026-09-23",
@@ -56,6 +88,9 @@ def apply(agent, entry):
     """Fold this module's sourced records into one recounted entry, in place."""
     if agent in REPO_ROOT_TOKEN:
         entry["repo_root_token"] = REPO_ROOT_TOKEN[agent]
+    if agent in TRUST_HINT:
+        entry["needs_trust"] = True
+        entry["trust_hint"] = TRUST_HINT[agent]
     for (owner, claim), record in EVIDENCE.items():
         if owner == agent:
             entry["evidence"][claim] = dict(record)

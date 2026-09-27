@@ -176,3 +176,15 @@ def test_install_all_skips_unwireable_agents_and_says_so(tmp_path):
 
     assert install_mod.installed("cursor", str(tmp_path))
     assert install_mod.installed("windsurf", str(tmp_path)) is False
+
+
+def test_install_says_how_to_trust_a_hook_the_agent_will_not_run_yet(tmp_path):
+    """Codex loads project-local hooks only once the user trusts them with `/hooks`
+    (learn.chatgpt.com/docs/hooks): a written config is not yet a live gate, so say so."""
+    out = _run(["install", "codex_cli", "python3 guard.py", "--repo", str(tmp_path)])
+    assert out.returncode == 0, out.stderr
+    assert "not live until trusted" in out.stdout and "/hooks" in out.stdout
+    doctor = _run(["doctor", "--repo", str(tmp_path)])
+    assert "/hooks" in doctor.stdout
+    plain = _run(["install", "claude_code", "python3 guard.py", "--repo", str(tmp_path)])
+    assert "trusted" not in plain.stdout

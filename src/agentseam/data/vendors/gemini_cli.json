@@ -10,6 +10,7 @@
       "hook_event_name"
     ],
     "mode": "marker",
+    "notes": "timestamp is in Gemini's documented base input too: rejecting it is a deliberate tie-break toward Tabnine, which sends the same shape and whose deny/allow wire is identical (ask/transform degrade to deny); a declining detect() would allow silently. Name gemini_cli to get ask/transform.",
     "reject_markers": [
       "timestamp",
       "project_path",

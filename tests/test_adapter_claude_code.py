@@ -201,3 +201,29 @@ def test_stop_does_not_speak_additional_context():
     """Rider A's brief named SessionStart and UserPromptSubmit specifically -- Stop keeps"""
     text, _, _, _ = A.handle(CC_STOP, lambda e: Decision.allow(context="ignored here"))
     assert text == ""
+
+
+#: Claude Code's PowerShell tool (code.claude.com/docs/en/tools-reference, read 2026-09-27):
+#: on by default on Windows; hooks "receive the tool's command string in tool_input.command,
+#: with the same fields as the Bash tool".
+CC_POWERSHELL = {
+    "session_id": "s1",
+    "transcript_path": "C:\\repo\\t.jsonl",
+    "cwd": "C:\\repo",
+    "permission_mode": "default",
+    "hook_event_name": "PreToolUse",
+    "tool_name": "PowerShell",
+    "tool_input": {"command": "Remove-Item -Recurse -Force C:\\repo", "description": "clean"},
+    "tool_use_id": "toolu_01",
+}
+
+
+def test_powershell_is_a_shell_tool_and_its_command_is_parsed():
+    """A shell guard keyed on the recorded shell tools never saw a Windows user's PowerShell calls."""
+    assert "PowerShell" in A.adapters.shell_tools("claude_code")
+    ev = A.adapters.get("claude_code").parse(CC_POWERSHELL)
+    assert (ev.event, ev.tool, ev.command) == (A.PRE_TOOL, "PowerShell", "Remove-Item -Recurse -Force C:\\repo")
+    assert A.adapters.detect(CC_POWERSHELL) == "claude_code"
+    guard = lambda e: Decision.deny("no shell") if e.tool in A.adapters.shell_tools("claude_code") else None  # noqa: E731
+    text, _code, _event, _decision = A.handle(CC_POWERSHELL, guard)
+    assert json.loads(text)["hookSpecificOutput"]["permissionDecision"] == "deny"
