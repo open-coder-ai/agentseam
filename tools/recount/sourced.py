@@ -28,7 +28,16 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: - cursor tools: the row's live witness of 2026-09-23 (3.21.18, Windows): `Write` at the
 #:   generic preToolUse gate, carrying file_path and the full content, for a new file and for
 #:   an edit alike; the only write tool seen, and a deny against it was honoured.
+#: - vscode_copilot fields: the Copilot CLI camelCase chains (toolArgs, sessionId,
+#:   toolResult.textResultForLlm) are the vendor's hooks reference
+#:   (docs.github.com/en/copilot/reference/hooks-configuration, read 2026-09-27); no live
+#:   capture of that shape exists, so the claim now rests on the docs, not the live run.
 EVIDENCE = {
+    ("vscode_copilot", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-09-27",
+        "test": "tests/test_adapter_vscode_copilot.py::test_copilot_cli_tool_args_reach_the_policy_as_object_or_json_text",
+    },
     ("cursor", "tools"): {
         "basis": "live-run-partial",
         "date": "2026-09-23",

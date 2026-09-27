@@ -14,12 +14,13 @@ def _fields_vscode_copilot(mod):
     return {
         "fields": {
             "tool": ["tool_name", "toolName"],
+            "tool_input": ["tool_input", "toolArgs"],
             "path": ["tool_input.filePath", "tool_input.file_path", "tool_input.path"],
             "content": ["tool_input.content", "tool_input.newText", "tool_input.new_str"],
             "command": ["tool_input.command"],
-            "output": ["tool_output", "tool_response"],
+            "output": ["tool_output", "tool_response", "toolResult.textResultForLlm"],
             "prompt": ["prompt"],
-            "session_id": ["session_id"],
+            "session_id": ["session_id", "sessionId"],
             "cwd": ["cwd"],
             "tool_use_id": ["tool_use_id"],
         },
