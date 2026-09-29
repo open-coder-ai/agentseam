@@ -4,6 +4,25 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **`install vscode_copilot` now writes `bash` and `powershell` beside `command` and `windows`.** Live on
+  Windows (VS Code Copilot Chat agent mode, "Copilot CLI runtime"), Copilot ran the plain `command` in
+  PowerShell and ignored `windows`; the command errored and Copilot denied every tool call ("hook errored").
+  Every entry now carries `powershell` (the same wrapped form as `windows`) and `bash`; re-installing upgrades
+  an older entry in place. Other vendors are unchanged.
+- **A `Write` (file creation) carries its content to the policy.** Its text arrives as `tool_input.file_text`,
+  which only the memory tool's branch read, so a content guard saw `None`.
+- **Copilot's camelCase `agentStop` payload is a stop.** It names no event (`sessionId`, `transcriptPath`,
+  `stopReason`); it was read as a `preToolUse` and, unclaimed, passed unseen.
+
+### Added
+- Evidence for `vscode_copilot` from a second live Windows run (2026-09-28): the snake_case tool payloads and
+  tools seen, a witnessed `permissionDecision` deny, both `agentStop` and `Stop` firing at every turn end, and a
+  Stop block answered with both dialects' keys (which one Copilot reads is not isolated). A hook that errored
+  blocked every tool once; `fail_mode` stays `open`, recorded as a note, not a claim.
+
 ## [0.3.4] - 2026-09-27
 
 ### Fixed

@@ -9,7 +9,7 @@
       "hookEventName"
     ],
     "mode": "marker",
-    "notes": "Accepted four ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the vscode envelope marker timestamp present and turn_id absent -- the only unconditional reject, captured above; (2) any lowercase-first event name in EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, cursor_version, conversation_id, generation_id or workspace_roots is present -- these only reject payloads that fall through to path (2), not every payload, so they are not listed as unconditional reject_markers; (3) a payload naming no event but carrying toolArgs (Copilot CLI's camelCase input, which has no event name); (4) a memory-tool call carrying tool_input.command.",
+    "notes": "Accepted five ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the vscode envelope marker timestamp present and turn_id absent -- the only unconditional reject, captured above; (2) any lowercase-first event name in EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, cursor_version, conversation_id, generation_id or workspace_roots is present -- these only reject payloads that fall through to path (2), not every payload, so they are not listed as unconditional reject_markers; (3) a payload naming no event but carrying toolArgs (Copilot CLI's camelCase input, which has no event name); (4) a memory-tool call carrying tool_input.command; (5) a payload naming no event but carrying stopReason (Copilot's camelCase agentStop, live 2026-09-28), parsed as a stop.",
     "reject_markers": [
       "turn_id"
     ]
@@ -36,22 +36,22 @@
   "evidence": {
     "claims": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
     },
     "config_path": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
     },
     "events": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
     },
     "family": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     },
     "fields": {
@@ -61,7 +61,7 @@
     },
     "hook_entry": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
     "tools": {
@@ -71,7 +71,7 @@
     },
     "verdicts": {
       "basis": "live-run-partial",
-      "date": "2026-08-28",
+      "date": "2026-09-28",
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     }
   },
@@ -83,7 +83,8 @@
     "content": [
       "tool_input.content",
       "tool_input.newText",
-      "tool_input.new_str"
+      "tool_input.new_str",
+      "tool_input.file_text"
     ],
     "cwd": [
       "cwd"
@@ -129,6 +130,8 @@
   },
   "hook_entry": {
     "entry_extra": {
+      "bash": "the command as given",
+      "powershell": "powershell wrapper (_windows.py)",
       "windows": "powershell wrapper (_windows.py)"
     },
     "matcher": false,

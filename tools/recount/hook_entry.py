@@ -10,7 +10,13 @@ _EXTRA = {
     "windsurf": {"also_wires": {"pre_tool": "pre_mcp_tool_use"}},
     "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
     "tabnine": {"entry_extra": {"name": "agentseam"}},
-    "vscode_copilot": {"entry_extra": {"windows": "powershell wrapper (_windows.py)"}},
+    "vscode_copilot": {
+        "entry_extra": {
+            "bash": "the command as given",
+            "powershell": "powershell wrapper (_windows.py)",
+            "windows": "powershell wrapper (_windows.py)",
+        }
+    },
 }
 
 

@@ -111,7 +111,7 @@ _CLAIMS = {
         "accept_markers": ["timestamp"],
         "reject_markers": ["turn_id"],
         "notes": (
-            "Accepted four ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the "
+            "Accepted five ways (vscode_copilot.py claims()): (1) a name in EVENT_MAP with the "
             "vscode envelope marker timestamp present and turn_id absent -- the only "
             "unconditional reject, captured above; (2) any lowercase-first event name in "
             "EVENT_MAP (Copilot CLI's own camelCase names), unless permission_mode, model, "
@@ -119,7 +119,8 @@ _CLAIMS = {
             "these only reject payloads that fall through to path (2), not every payload, so "
             "they are not listed as unconditional reject_markers; (3) a payload naming no "
             "event but carrying toolArgs (Copilot CLI's camelCase input, which has no event "
-            "name); (4) a memory-tool call carrying tool_input.command."
+            "name); (4) a memory-tool call carrying tool_input.command; (5) a payload naming no event "
+            "but carrying stopReason (Copilot's camelCase agentStop, live 2026-09-28), parsed as a stop."
         ),
     },
 }

@@ -16,7 +16,7 @@ def _fields_vscode_copilot(mod):
             "tool": ["tool_name", "toolName"],
             "tool_input": ["tool_input", "toolArgs"],
             "path": ["tool_input.filePath", "tool_input.file_path", "tool_input.path"],
-            "content": ["tool_input.content", "tool_input.newText", "tool_input.new_str"],
+            "content": ["tool_input.content", "tool_input.newText", "tool_input.new_str", "tool_input.file_text"],
             "command": ["tool_input.command"],
             "output": ["tool_output", "tool_response", "toolResult.textResultForLlm"],
             "prompt": ["prompt"],

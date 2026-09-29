@@ -270,49 +270,63 @@
       "hooks": {
         "PostToolUse": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "PreToolUse": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "SessionStart": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "Stop": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "SubagentStart": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "SubagentStop": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
         ],
         "UserPromptSubmit": [
           {
+            "bash": "python3 guard.py",
             "command": "python3 guard.py",
+            "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command",
             "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
           }
@@ -324,49 +338,63 @@
         "hooks": {
           "PostToolUse": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "PreToolUse": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "SessionStart": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "Stop": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "SubagentStart": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "SubagentStop": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
           ],
           "UserPromptSubmit": [
             {
+              "bash": "python3 guard.py",
               "command": "python3 guard.py",
+              "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
               "type": "command",
               "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
             }
