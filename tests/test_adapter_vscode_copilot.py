@@ -6,7 +6,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from payloads import VS_MEM_CREATE, VS_MEM_REPLACE, VS_MEM_VIEW  # noqa: E402
+from payloads import (  # noqa: E402
+    CLI_LIVE_AGENT_STOP,
+    VS_LIVE_STOP,
+    VS_LIVE_WRITE,
+    VS_MEM_CREATE,
+    VS_MEM_REPLACE,
+    VS_MEM_VIEW,
+)
 
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
@@ -45,10 +52,13 @@ def test_the_installed_config_is_the_shape_vs_code_actually_parses():
     mod = A.adapters.get("vscode_copilot")
     cfg = mod.hook_config([A.PRE_TOOL, A.STOP], "python3 guard.py")
     assert "version" not in cfg
+    ps = "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
     entry = {
         "type": "command",
         "command": "python3 guard.py",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py",
+        "powershell": ps,
+        "windows": ps,
     }
     assert cfg == {"hooks": {"PreToolUse": [entry], "Stop": [entry]}}
 
@@ -117,6 +127,8 @@ def test_windows_gets_a_powershell_callable_command():
     entry = A.adapters.get("vscode_copilot").hook_config([A.PRE_TOOL], '"C:\\py.exe" "g.py"')["hooks"]["PreToolUse"][0]
     assert entry["command"] == '"C:\\py.exe" "g.py"'
     assert entry["windows"] == '& "C:\\py.exe" "g.py"; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE'
+    assert entry["powershell"] == entry["windows"]
+    assert entry["bash"] == entry["command"]
 
 
 #: Copilot CLI's camelCase preToolUse input, in the shape docs.github.com/en/copilot/reference/
@@ -178,3 +190,32 @@ def test_copilot_cli_post_tool_is_told_apart_by_its_tool_result():
     raw = dict(CLI_PRE_TOOL, toolResult={"resultType": "success", "textResultForLlm": "done"})
     ev = A.adapters.get("vscode_copilot").parse(raw)
     assert (ev.event, ev.output) == (A.POST_TOOL, "done")
+
+
+def test_a_live_write_carries_its_path_and_file_text_to_the_policy():
+    """Write (file creation) sends `file_text`; only the memory tool's file_text was read, so a
+    content guard saw None and allowed the call (Windows capture, 2026-09-28)."""
+    ev = A.adapters.get("vscode_copilot").parse(VS_LIVE_WRITE)
+    assert (ev.event, ev.tool) == (A.PRE_TOOL, "Write")
+    assert ev.path == VS_LIVE_WRITE["tool_input"]["path"]
+    assert ev.content == "example file text"
+
+
+def test_both_stop_spellings_parse_to_stop_and_are_claimed():
+    """With one command under agentStop and Stop, both fire on every turn end (2026-09-28); the
+    camelCase one names no event at all, and was read as a preToolUse."""
+    mod = A.adapters.get("vscode_copilot")
+    for raw in (VS_LIVE_STOP, CLI_LIVE_AGENT_STOP):
+        assert A.adapters.detect(raw) == "vscode_copilot"
+        ev = mod.parse(raw)
+        assert ev.event == A.STOP
+        assert ev.session_id == "00000000-0000-0000-0000-000000000000"
+        assert ev.cwd == "C:\\example\\repo"
+
+
+def test_a_stop_block_answers_both_spellings_in_the_documented_nested_dialect():
+    """Live, a reply carrying BOTH the top-level and nested keys was honoured; which one Copilot
+    reads is not isolated, so the answer keeps the documented nested shape."""
+    for raw in (VS_LIVE_STOP, CLI_LIVE_AGENT_STOP):
+        out = A.handle(raw, deny_all)[0]
+        assert json.loads(out)["hookSpecificOutput"]["decision"] == "block"

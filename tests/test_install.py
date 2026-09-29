@@ -244,3 +244,33 @@ def test_a_star_in_the_repo_root_is_a_directory_name_not_the_owner_slot(tmp_path
     assert written == root / ".claude" / "settings.json", written
     assert written.exists()
     assert I.installed("claude_code", str(root)) and I.uninstall("claude_code", str(root)) is True
+
+
+def test_vscode_copilot_entries_carry_a_shell_key_for_every_shell(tmp_path):
+    """Copilot CLI runtime on Windows ran the plain `command` in PowerShell and errored, blocking every tool."""
+    command = '"C:\\Python314\\python.exe" "C:\\repo\\hook.py"'
+    path = I.install("vscode_copilot", ["pre_tool", "stop"], command, str(tmp_path))
+    hooks = json.loads(Path(path).read_text())["hooks"]
+    powershell = "& " + command + "; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+    for name in ("PreToolUse", "Stop"):
+        (entry,) = hooks[name]
+        assert entry["command"] == entry["bash"] == command
+        assert entry["powershell"] == entry["windows"] == powershell
+
+
+def test_vscode_copilot_reinstall_upgrades_an_old_entry_without_duplicating(tmp_path):
+    old = {"type": "command", "command": "python3 h.py", "windows": "& python3 h.py", "_agentseam": "agentseam"}
+    cfg = tmp_path / ".github" / "hooks" / "agentseam.json"
+    cfg.parent.mkdir(parents=True)
+    cfg.write_text(json.dumps({"hooks": {"PreToolUse": [old]}}))
+    for _ in range(2):
+        I.install("vscode_copilot", ["pre_tool"], "python3 h.py", str(tmp_path))
+    (entry,) = json.loads(cfg.read_text())["hooks"]["PreToolUse"]
+    assert {"bash", "powershell", "windows"} <= set(entry)
+
+
+def test_other_vendors_gain_no_powershell_or_bash_key(tmp_path):
+    for agent in ("claude_code", "cursor", "codex_cli"):
+        text = Path(I.install(agent, ["pre_tool"], "python3 h.py", str(tmp_path))).read_text()
+        assert '"powershell"' not in text
+        assert '"bash"' not in text

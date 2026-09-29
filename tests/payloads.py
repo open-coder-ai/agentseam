@@ -137,6 +137,38 @@ VS_MEM_REPLACE = {
 VS_MEM_VIEW = {"tool_name": "memory", "tool_input": {"command": "view", "path": "/memories/a.md"}}
 
 
+#: Live capture, Windows, 2026-09-28 (VS Code Copilot Chat agent mode, "Copilot CLI runtime"),
+#: sanitized: ids, paths and file text are placeholders.
+VS_LIVE_WRITE = {
+    "hook_event_name": "PreToolUse",
+    "session_id": "00000000-0000-0000-0000-000000000000",
+    "timestamp": "2026-09-28T00:00:00.000Z",
+    "cwd": "C:\\example\\repo",
+    "tool_name": "Write",
+    "tool_input": {"path": "C:\\example\\repo\\new.txt", "file_text": "example file text"},
+}
+
+VS_LIVE_STOP = {
+    "hook_event_name": "Stop",
+    "session_id": "00000000-0000-0000-0000-000000000000",
+    "timestamp": "2026-09-28T00:00:00.000Z",
+    "cwd": "C:\\example\\repo",
+    "transcript_path": "C:\\example\\transcript.jsonl",
+    "stop_reason": "end_turn",
+    "stop_hook_active": False,
+}
+
+#: The same turn end as Copilot's own camelCase `agentStop`: no event name, epoch-ms timestamp.
+CLI_LIVE_AGENT_STOP = {
+    "sessionId": "00000000-0000-0000-0000-000000000000",
+    "timestamp": 1790000000000,
+    "cwd": "C:\\example\\repo",
+    "transcriptPath": "C:\\example\\transcript.jsonl",
+    "stopReason": "end_turn",
+    "stop_hook_active": False,
+}
+
+
 WS_COMMAND = {
     "hook_event_name": "pre_run_command",
     "trajectory_id": "traj-1",
