@@ -4,7 +4,7 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.3.5] - 2026-09-29
 
 ### Fixed
 - **`install vscode_copilot` now writes `bash` and `powershell` beside `command` and `windows`.** Live on
@@ -1770,6 +1770,7 @@ versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   surfaces read content bytes (see above). A consumer needing content-based denial today
   should use a hook (`agentseam.install`/`dispatch`), not `permissions.plan()`.
 
+[0.3.5]: https://github.com/open-coder-ai/agentseam/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/open-coder-ai/agentseam/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/open-coder-ai/agentseam/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/open-coder-ai/agentseam/compare/v0.3.1...v0.3.2
