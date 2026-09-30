@@ -18,11 +18,14 @@
 
 <p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/demo.gif" width="760" alt="Terminal recording: agentseam install all wires one handler into every coding agent's own hook config in a single command. The output grades each agent honestly -- best-effort for eleven of them, the stronger enforceable gate for Cursor -- and says nothing at all for aider, Copilot CLI, Replit and Zed, which have no hook surface to wire."></p>
 
-Your coding agent has a shell, your git history and your cloud credentials. A rule in its
-prompt is forgotten when the context fills; a hook that refuses the tool call is not. The
-catch: every coding agent invented its own hook system — different event names, payload
-shapes, ways to say "no", config files — so every security guard, cost tracker or audit log
-gets written once per agent, or targets one agent and stops there. agentseam is the layer underneath:
+Coding agents already ask before they run a shell command. What they don't check is the code
+they write — SQL injection in a Spring repository, unsafe deserialization, a wildcard IAM grant,
+an MCP server pinned to `@latest`, a secret written into agent memory. An application-security
+guard at the agent's own hook can refuse that write (best-effort in most agents, as graded
+below); a rule in the prompt is forgotten when the context fills. The catch: every coding agent invented its own hook system —
+different event names, payload shapes, ways to say "no", config files — so every app-sec guard,
+cost tracker or audit log gets written once per agent, or targets one agent and stops there.
+agentseam is the layer that lets an app-sec guard be written once for 16 agents:
 one normalized event, one `Decision`, and an explicit, verified map of what each agent can
 do with it. When an agent cannot enforce something, agentseam says so instead of installing
 a hook that silently does nothing. Every outcome a handler can return — `allow`, `deny`,
@@ -103,11 +106,14 @@ enforcement time.
 
 | Area | Examples of what gets refused | Catalog |
 |---|---|---|
+| Java & Kotlin security | SQL/command/SpEL/template injection, XXE, SSRF, unsafe deserialization, trust-all TLS — 129 rules in 16 packs | [`base/java-security`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/java-security) |
+| Agent-code security, unsafe code & cloud privilege | `eval`/`exec` or `shell=True` on model output, unsafe tool and memory wiring in agent frameworks (29 rules in 10 packs), wildcard IAM grants | [`agentic-security/agentic-code-security`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security/agentic-code-security), [`agentic-security/block-wildcard-iam`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security/block-wildcard-iam) |
+| Supply chain & prompt injection | MCP servers at `@latest`, unpinned Actions, hallucinated packages, invisible Unicode | [`base/verify-mcp-allowlist`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/verify-mcp-allowlist), [`base/block-invisible-unicode`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-invisible-unicode) |
+| OWASP Top 10 for Agentic Applications | one policy per risk, ASI01–ASI10 | [`agentic-security/`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security) |
+| Accessibility (ADA / Section 508 / WCAG) | a change that strips an accessible name an element already had (`alt`, `aria-label`, `lang`) | [`base/no-a11y-regression`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/no-a11y-regression) |
 | Secrets & data leakage | hard-coded keys, private data in commits, POSTs to unapproved hosts | [`base/scan-secrets`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/scan-secrets), [`base/block-unapproved-egress`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-unapproved-egress) |
 | Destructive commands & hook bypass | `rm -rf`, `git push --force`, `--no-verify`, `curl \| sh` | [`base/block-destructive-commands`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-destructive-commands), [`base/block-no-verify`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-no-verify) |
 | Agent self-protection | an agent editing its own guardrail config or CI, spawning sub-agents with permissions skipped | [`base/protect-agent-config`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/protect-agent-config), [`base/block-unguarded-agent-spawn`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-unguarded-agent-spawn) |
-| Supply chain & prompt injection | MCP servers at `@latest`, unpinned Actions, hallucinated packages, invisible Unicode | [`base/verify-mcp-allowlist`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/verify-mcp-allowlist), [`base/block-invisible-unicode`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-invisible-unicode) |
-| OWASP Top 10 for Agentic Applications | one policy per risk, ASI01–ASI10 | [`agentic-security/`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security) |
 
 The in-agent tier is exactly the agentseam matrix: a catalog policy is never labelled stronger
 than `enforcement_level()` grades the agent it runs in.
