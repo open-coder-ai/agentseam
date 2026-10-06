@@ -162,7 +162,7 @@ advisory, with 4,280 eval cases of which 4,098 run automatically. Each policy is
 
 The in-agent tier is exactly the agentseam matrix: a catalog policy is never labelled stronger than
 `enforcement_level()` grades the agent it runs in. No agent reaches `enforced`. Chock does not replace
-code review, your SAST suite or a penetration test; it removes the findings those stages keep repeating.
+code review, your SAST suite or a penetration test; it refuses known classes while the agent writes, so they are fixed before review.
 
 ## Supported agents
 
