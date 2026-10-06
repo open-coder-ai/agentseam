@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg" alt="agentseam mark: five uneven vendor lines converging through a seam into five even lines" width="104">
-  <h1>agentseam</h1>
-  <p><b>One handler API over every coding agent's hooks, instruction files, plugins and config — with a matrix of what each agent can actually enforce.</b></p>
+  <img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/cover-agentseam.png" alt="agentseam cover panel in the dusk palette: five uneven vendor hook lines converge through one seam into five even lines." width="760">
+  <h1>Teach your AI agent what not to do.</h1>
+  <p><b>Open-source guardrails for AI coding agents: rules the agent reads, checks that run as it writes, and gates at commit and in CI.<br>agentseam is the layer underneath: one handler API over every coding agent's hooks, instruction files, plugins and config, with a verified matrix of what each agent can actually enforce.</b></p>
 
 [![CI](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml/badge.svg)](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/agentseam)](https://pypi.org/project/agentseam/)
@@ -13,16 +13,78 @@
 
 <p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/demo.gif" width="760" alt="Terminal recording: agentseam install all wires one handler into every coding agent's own hook config in a single command. The output grades each agent honestly -- best-effort for eleven of them, the stronger enforceable gate for Cursor -- and says nothing at all for aider, Copilot CLI, Replit and Zed, which have no hook surface to wire."></p>
 
-Every coding agent invented its own hook system: different event names, payload shapes,
-ways to say "no", config files. So every guardrail, cost tracker or audit log gets written
-once per agent — or targets one agent and stops there. agentseam is the layer underneath:
-one normalized event, one `Decision`, and an explicit, verified map of what each agent can
-do with it. When an agent cannot enforce something, agentseam says so instead of installing
-a hook that silently does nothing. Every outcome a handler can return — `allow`, `deny`,
-`escalate` (alias `ask`), `transform` (alias `rewrite`), `warn`, `vouch` — degrades honestly
-on an agent that cannot express it, never silently. Agents are not equally capable, and
-pretending otherwise is how a "policy" silently fails; the capability matrix below is data,
-not marketing.
+agentseam is a stdlib-only Python library and CLI that turns every coding agent's own hook system into one
+normalized event and one `Decision`, and records, per agent and per lifecycle event, what that agent can
+really do with it. Write a guard once and `agentseam install` wires it into the agent's own config. When
+an agent cannot enforce something, agentseam says so instead of installing a hook that silently does nothing.
+
+## Application security for the code your agents write
+
+Coding agents already ask before they run a shell command. What they do not check is the code they write:
+SQL injection in a Spring repository, a wildcard IAM grant, an MCP server pinned to `@latest`, a secret
+written into agent memory. A guard at the agent's own `pre_tool` hook can refuse that write; a rule in the
+prompt is forgotten when the context fills. Every agent invented its own hook system, so such a guard is
+normally written once per agent, or for one agent and then stops. agentseam is the layer that makes it
+one guard for 16 agents, and the matrix keeps the claim honest: a guard is only called enforced where
+the agent can enforce it.
+
+The Quick start handler is a guard. It reads the normalized `pre_tool` event and refuses content carrying
+an AWS access key ID; agentseam turns each vendor's payload into that one event and turns the returned
+`Decision` back into the vendor's own way of saying "no".
+
+| A guard returns | What the agent does with it | Where it cannot |
+|---|---|---|
+| `Decision.deny(reason)` | refuses the tool call; the reason goes back to the agent | an agent with no `pre_tool` surface (aider, Copilot CLI, Replit, Zed) never asks |
+| `Decision.escalate(reason)` | hands the call to the agent's own human-approval path | where the agent has no approval prompt at that gate, it blocks instead |
+| `Decision.transform(new_input)` | runs the tool with a rewritten input (a redacted value, say) | degrades to `escalate`, never to a silent pass |
+| `Decision.allow()` | lets it through | n/a |
+
+The full outcome set is `allow`, `deny`, `escalate`, `transform`, `warn` and `vouch`; `ask` and `rewrite` are
+deprecated aliases of `escalate` and `transform`. A handler that raises is turned into a refusal in the agent's own dialect. What agentseam
+cannot fix is the host: if the hook process dies or times out, a best-effort agent runs the tool anyway.
+
+**No LLM, no tokens.** agentseam makes no model call and `src/agentseam` imports no networking module
+(checked with `grep -rn "import socket\|urllib\|http.client\|requests" src/agentseam`, empty at `c5d2a00`).
+A handler is your own local code: whatever it costs, it costs no tokens, and a refusal adds one short
+reason to the agent's context. **Shift left:** the known classes are refused in the agent's own turn,
+before they reach commit, review or CI.
+
+## Install
+
+agentseam itself is `pip install agentseam` (Python 3.9 or newer, no dependencies); the Quick start below
+runs end to end. The guardrails built on it, the [chock](https://github.com/open-coder-ai/chock) engine and the
+[chock-catalog](https://github.com/open-coder-ai/chock-catalog) policies, are adopted in two ways, and the chock.sh builder is a third.
+
+<p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/adopt.png" width="760" alt="Panel comparing two ways to adopt Chock guardrails: in your repository for teams, enforced at commit and in CI, or in your coding agent as plugins, best-effort and failing open."></p>
+
+| Way | For | What you get |
+|---|---|---|
+| **In your repository** | teams | commit gates enforced at commit and in CI; every clone runs `chock sync --repo .` once, because git never clones hooks |
+| **In your coding agent, as plugins** | one person, no repo changes | in-agent checks, best-effort, failing open; not run in CI |
+| **One Claude Code plugin from a selection** | trying it | the chock.sh builder (launching soon) gives a `chock install --selection '…' --apply` command |
+
+chock is not on PyPI. Install the frozen engine (Python 3.11 or newer):
+
+```bash
+pip install "chock @ git+https://github.com/open-coder-ai/chock@992711af4cf8d4fd9c4c861f10ef6e53374d75d7"
+```
+
+In your repository:
+
+```bash
+chock init .
+chock add <id> --ref <catalog commit> --verify-sha <sha256> --skip-compile   # once per policy
+chock sync --repo . --ci
+```
+
+Commit the result. Plugin route: the five plugin repos are
+[claude](https://github.com/open-coder-ai/chock-claude-plugins),
+[cursor](https://github.com/open-coder-ai/chock-cursor-plugins),
+[copilot](https://github.com/open-coder-ai/chock-copilot-plugins),
+[codex](https://github.com/open-coder-ai/chock-codex-plugins) and
+[devin](https://github.com/open-coder-ai/chock-devin-plugins); each README has its client's install lines.
+Chock adds no new place your code goes: checks run where the agent writes. The agent still sends its
+context to its own model provider; chock adds no additional destination.
 
 ## Quick start
 
@@ -43,42 +105,69 @@ agentseam install all "python3 my_handler.py" --events pre_tool --repo .
 ```
 
 That one handler now runs in Claude Code, Cursor, VS Code Copilot, Codex, Gemini CLI,
-Windsurf and six more — and the install output tells you which agents get *best-effort*
+Windsurf and six more. The install output tells you which agents get *best-effort*
 blocking, which get the stronger *enforceable* gate (Cursor, today), and which do not
 appear in the output at all because they have no hook surface to wire (aider, Copilot CLI,
 Replit, Zed). Nothing here is emulated: `install` writes real per-agent config files, the same
 files Claude Code, Cursor and the rest read on their next run, and `uninstall` removes only the
 entries agentseam itself wrote. Most land under `--repo`; two do not, because the vendor reads
-them from the user's home directory — Junie's `~/.junie/config.json` and Kimi Code's
-`~/.kimi-code/config.toml`, as the agent table below shows.
+them from the user's home directory: Junie's `~/.junie/config.json` and Kimi Code's
+`~/.kimi-code/config.toml`.
 
-## What each agent can actually do
+## How it works
+
+An adapter per agent owns three things: payload parsing, the response dialect and the config shape.
+Adapters are data (`src/agentseam/data/vendors/<agent>.json`, validated against `schema.json`) plus a
+small family module when a vendor speaks a new dialect. The matrix is data too, and
+`matrix.enforcement_level(agent, event)` is the authority for every grade below.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-dark.svg">
   <img alt="Capability matrix: 16 coding agents by 12 lifecycle events, graded from src/agentseam/matrix.py. Of 192 cells: 2 are enforceable, 34 best-effort, 55 detect, and 101 none. Zero cells anywhere are graded enforced -- eleven agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Copilot, Replit and Zed have no hook surface at pre_tool at all." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/matrix-light.svg" width="760">
 </picture>
 
-*192 cells generated from `src/agentseam/matrix.py`: 101 none, 55 detect, 34 best-effort, 2 enforceable, 0 enforced.*
+*192 cells (16 agents by 12 events), from `matrix.enforcement_level()` run at `c5d2a00`: 101 none, 55 detect, 34 best-effort, 2 enforceable, 0 enforced.*
 
-| Level | Meaning |
-|---|---|
-| enforced | the agent blocks, and fails closed if the hook dies — no agent is graded here at `pre_tool` today |
-| best-effort | it blocks, but fails *open* (a crashed hook allows) |
-| detect | observable after the fact only; prevention is not available |
-| enforceable | it blocks and *can* be told to fail closed, but doesn't by default |
-| none | no hook surface at all |
+| Level | Meaning | Agents at `pre_tool` today |
+|---|---|---|
+| enforced | the agent blocks, and fails closed if the hook dies | none |
+| enforceable | it blocks and *can* be told to fail closed, but doesn't by default | 1: Cursor |
+| best-effort | it blocks, but fails *open* (a crashed hook allows) | 11: Claude Code, VS Code Copilot, Codex CLI, Gemini CLI, Windsurf, Devin, Grok CLI, Antigravity, Kimi Code, Junie, Tabnine |
+| detect | observable after the fact only; prevention is not available | 0 (55 cells at other events) |
+| none | no hook surface at all | 4: aider, Copilot CLI, Replit, Zed |
 
-A row is only claimed when a `verified: {basis, version, date}` record backs it. No row
-asserts a capability nobody has verified — run `agentseam doctor` to see what is wired on
-this machine and flag rows that haven't been re-verified in 90 days. Grading never exceeds
-evidence: a `vendor-docs` row cannot back `enforced`, however its cell reads, because
-`enforcement_level()` caps every grade by what its own basis can actually support.
+A row is only claimed when a `verified: {basis, version, date}` record backs it. Run `agentseam doctor` to
+see what is wired on this machine and flag rows not re-verified in 90 days. Grading never exceeds
+evidence: `enforcement_level()` caps every grade by what its own basis can support, so a `vendor-docs`
+row cannot back `enforced`. A pre-tool guard is one layer, not the whole defence: pair it with a git hook or
+CI gate that the agent cannot skip.
+
+## What it stops
+
+agentseam stops nothing by itself; it carries guards. The guards below ship in chock-catalog, which
+`registry.yaml` at `9a64623` lists as 71 policies: 35 enforced at commit, 11 in-agent (best-effort) and 25
+advisory, with 4,280 eval cases of which 4,098 run automatically. Each policy is a manifest, labelled by tier.
+
+| Class of flaw | Policy | Tier (`registry.yaml`) |
+|---|---|---|
+| Injection, XXE, SSRF, unsafe deserialization, path traversal and trust-all TLS in Java and Kotlin | [`java-security`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/java-security) | enforced at commit |
+| Host code execution, unpinned MCP servers, shell-reaching tools and approvals switched off in agent code and config | [`agentic-code-security`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security/agentic-code-security) | enforced at commit |
+| Wildcard IAM grants | [`block-wildcard-iam`](https://github.com/open-coder-ai/chock-catalog/tree/main/agentic-security/block-wildcard-iam) | enforced at commit |
+| MCP servers and agent components pinned to `@latest` | [`block-unpinned-agent-components`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-unpinned-agent-components), [`verify-mcp-allowlist`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/verify-mcp-allowlist) | enforced at commit |
+| Unpinned GitHub Actions, packages outside an allowlist | [`pin-github-actions`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/pin-github-actions), [`verify-dependency-exists`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/verify-dependency-exists) | enforced at commit |
+| Bidi and tag Unicode in source | [`block-invisible-unicode`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-invisible-unicode) | enforced at commit |
+| A change that strips an accessible name an element already had | [`no-a11y-regression`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/no-a11y-regression) | enforced at commit |
+| Hard-coded secrets and secret files | [`scan-secrets`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/scan-secrets) | enforced at commit |
+| Destructive commands, `--no-verify`, `curl \| sh`, edits to the agent's own guard config | [`block-destructive-commands`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-destructive-commands), [`block-no-verify`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-no-verify), [`block-curl-pipe-sh`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/block-curl-pipe-sh), [`protect-agent-config`](https://github.com/open-coder-ai/chock-catalog/tree/main/base/protect-agent-config) | enforced at commit, or best-effort in-agent |
+
+The in-agent tier is exactly the agentseam matrix: a catalog policy is never labelled stronger than
+`enforcement_level()` grades the agent it runs in. No agent reaches `enforced`. Chock does not replace
+code review, your SAST suite or a penetration test; it refuses known classes while the agent writes, so they are fixed before review.
 
 ## Supported agents
 
 `unadapted` is a fourth, deliberately separate state from `none`: agentseam has no hook
-adapter for that agent yet — a claim about *us*, not about the agent, since it still
+adapter for that agent yet, which is a claim about *us*, not about the agent, since it still
 receives instruction files and simply cannot have its tool calls gated here. A
 `Decision.transform(...)` on an agent that cannot transform degrades to `escalate`, never
 to a silent pass-through.
@@ -103,37 +192,34 @@ to a silent pass-through.
 | Kimi Code CLI | block on 3 of its 20 events (fail-open) | `~/.kimi-code/config.toml` | vendor-docs · 2026-08-26 |
 | Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` | vendor-docs · 2026-08-26 |
 | Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
-| Zed | no hook surface at all — instruction files only | — | vendor-docs · 2026-08-26 |
-| Aider | no hook surface at all — instruction files only | — | vendor-docs · 2026-08-26 |
-| Replit | no hook surface found in its docs — instruction files only | — | vendor-docs · 2026-08-26 |
-| Copilot CLI marketplace bundle | packaging identity only — dispatches through the VS Code Copilot adapter, not a hook surface of its own | — | vendor-docs · 2026-08-29 |
+| Zed | no hook surface at all; instruction files only | none | vendor-docs · 2026-08-26 |
+| Aider | no hook surface at all; instruction files only | none | vendor-docs · 2026-08-26 |
+| Replit | no hook surface found in its docs; instruction files only | none | vendor-docs · 2026-08-26 |
+| Copilot CLI marketplace bundle | packaging identity only; dispatches through the VS Code Copilot adapter | none | vendor-docs · 2026-08-29 |
 
 </details>
 
-Of the 12 agents that claim `pre_tool` at all, 4 — Claude Code, Codex CLI, Cursor, VS Code
-Copilot — rest on a live run against the real agent; seven of the other 8 rest on documentation
+Of the 12 agents that claim `pre_tool` at all, 4 (Claude Code, Codex CLI, Cursor, VS Code
+Copilot) rest on a live run against the real agent; seven of the other 8 rest on documentation
 or a third-party install, and Gemini CLI on a read of the vendor's own source. None of those
-eight rests on a live run. Run `agentseam matrix --evidence` before you trust
-any row you didn't witness yourself.
+eight rests on a live run. Run `agentseam matrix --evidence` before you trust any row you didn't witness yourself.
 
-## What it is for
+## Beyond security guards
 
-Not just guardrails. Anything that wants to watch or shape an agent's life:
+Anything that wants to watch or shape an agent's life uses the same event stream:
 
 | | |
 |---|---|
 | **Observability** | one JSONL stream across the agents an event set wires, ready to feed OTel or DuckDB (`examples/event_log.py`) |
 | **Notifications** | desktop notification on stop or prompt (`examples/notify.py`) |
-| **Cost tracking** | token/cost meters that work regardless of which agent ran |
-| **Guardrails** | secrets, memory governance, destructive-command blocks |
+| **Cost tracking** | token and cost meters that work regardless of which agent ran |
 | **Process gates** | TDD enforcement, "tests before push" |
-| **Context injection** | inject memory/instructions at session start |
+| **Context injection** | inject memory or instructions at session start |
 
-## Instructions and permissions across agents
+### Instructions across agents
 
-Multi-agent repos hand-maintain a drawer of near-identical files — CLAUDE.md, AGENTS.md,
-`.cursor/rules/*`, `.github/copilot-instructions.md`, GEMINI.md, `.windsurfrules`,
-`codex.md` — and they drift.
+Multi-agent repos hand-maintain near-identical files (CLAUDE.md, AGENTS.md, `.cursor/rules/*`,
+`.github/copilot-instructions.md`, GEMINI.md, `.windsurfrules`, `codex.md`) and they drift.
 
 ```bash
 agentseam instructions --text "Prefer pnpm. Tests live beside source."
@@ -147,16 +233,15 @@ created   .junie/guidelines.md
 covered by AGENTS.md: codex_cli, copilot, cursor, gemini_cli, kimi_code, vscode_copilot, windsurf, zed
 ```
 
-16 agents reached with 9 files written, because 8 of them read `AGENTS.md` natively and a
-second copy would only drift. Content is written as a marker-delimited block, so anything a
-human wrote in those files is preserved untouched, and `instructions --list` shows what a
-repo is already telling its agents without writing anything.
+16 agents reached with 9 files written, because 8 of them read `AGENTS.md` natively and a second copy
+would only drift. Content is a marker-delimited block, so anything a human wrote in those files is
+preserved, and `instructions --list` shows what a repo already tells its agents without writing.
 
-Permissions are the same story with sharper edges: every agent has a settings file with an
-allow/deny model, and no two of them are the same kind of object. Claude Code evaluates an
-ordered rule list. Gemini CLI keeps tool-name allowlists. Codex runs a Starlark program over
-command prefixes. VS Code holds a map of auto-approve patterns. They do **not** have the
-same expressive power.
+### Permissions across agents
+
+Every agent has a settings file with an allow/deny model, and no two are the same kind of object: Claude
+Code evaluates an ordered rule list, Gemini CLI keeps tool-name allowlists, Codex runs a Starlark program
+over command prefixes, VS Code holds a map of auto-approve patterns.
 
 ```bash
 agentseam permissions --rule 'deny:shell:curl *' --rule 'allow:shell:npm test'
@@ -172,26 +257,15 @@ agentseam permissions --rule 'deny:shell:curl *' --rule 'allow:shell:npm test'
 # pattern false withholds auto-approval but still lets a human approve the command
 ```
 
-VS Code has no deny — the tool refuses rather than pretends. Rendering a "deny" there would
-hand back a guardrail that stops nothing, so agentseam returns the rule unrendered with the
-reason instead, and the command exits non-zero. Put it in CI and you find out that your
-policy doesn't survive the trip to an agent *before* you rely on it.
+VS Code has no deny, so agentseam returns the rule unrendered with the reason and exits non-zero rather
+than hand back a guardrail that stops nothing. Put it in CI and you learn that your policy does not survive
+the trip to an agent *before* you rely on it. Every agent in the matrix appears in the output, with a
+recorded model or the reason there is none; a test pins that the two sets add up to the matrix exactly.
 
-The reasons distinguish two things that are easy to blur: an agent whose permission system
-*provably exists* but whose schema nobody has read yet (Antigravity, Devin, Grok, Junie and
-Kimi Code each prove it through their own hook events) versus one where nothing is established at
-all. A missing hook surface is never recorded as a missing permission model either — Aider
-and Zed expose no hooks, which says nothing about what their config files can restrict.
-Every agent the matrix knows appears in `agentseam permissions` output, either with a
-recorded model or named with the reason there isn't one, and a test enforces that the two
-sets add up to the matrix exactly — a silently absent agent would read as "nothing to say
-here" when the truth is "nobody looked".
+### Verify a claim against your own agent
 
-## Verify a claim against your own agent
-
-Claude Code's row rests on a full live run; Codex CLI, Cursor, and VS Code Copilot each rest
-on a partial one. If you have another of these agents installed, an hour turns its row from
-"the vendor says so" into evidence:
+Claude Code's row rests on a full live run; Codex CLI, Cursor and VS Code Copilot each on a partial one. If
+you have another of these agents installed, an hour turns its row from "the vendor says so" into evidence:
 
 ```bash
 python3 tools/capture.py detect
@@ -201,83 +275,83 @@ python3 tools/capture.py report
 python3 tools/capture.py uninstall --agent cursor
 ```
 
-The probe always allows, so it cannot interfere with real work, and payloads are reduced to
-shape before anything touches disk — keys and types survive, values do not. A different
-probe, `agentseam probe` (`tools/experiment.py` from a checkout — same code, promoted so it
-ships in the wheel), does the opposite on purpose: it denies, crashes and stalls, so it only
-ever runs in a throwaway directory a harness creates and removes — never point it at a
-config you work in. See [tools/VERIFY.md](tools/VERIFY.md).
+The probe always allows, so it cannot interfere with real work, and payloads are reduced to shape
+before anything touches disk: keys and types survive, values do not. `agentseam probe` does the opposite on
+purpose (it denies, crashes and stalls), so it only runs in a throwaway directory a harness creates and
+removes. See [tools/VERIFY.md](tools/VERIFY.md). A report's `driver` and `basis` fields say how it was
+obtained: **witnessed** (a real vendor client, watched), **tested** (an automated check, no vendor client)
+or **recorded** (a witnessed run replayed). `evidence_report.validate()` refuses a report that claims more
+than its driver earned; [docs/coverage-gaps.md](docs/coverage-gaps.md) lists which gates are still open.
 
-A report's own `driver` and `basis` fields say how it was obtained, from a closed
-vocabulary: **witnessed** means a real vendor client, watched, right now (`driver:
-real-agent`, `basis: live-run` or `live-run-partial`); **tested** means an automated check
-exercised the code path with no vendor client at all (`driver: reference`, `basis:
-vendor-docs`) — real, useful, and never the same claim; **recorded** means a witnessed run
-frozen to a file and replayed deterministically (`driver: recorded`) — the data is
-witnessed, the replay is not a new witness. `evidence_report.validate()` refuses a report
-that claims more than its driver earned. See [docs/coverage-gaps.md](docs/coverage-gaps.md)
-for which gates are witnessed and which are still open.
+## FAQ for people and agents
+
+**Does agentseam use an LLM?** No. It makes no model call and imports no networking module in `src/agentseam`.
+
+**Does my code leave my machine?** agentseam adds no new place your code goes: handlers run locally in the
+hook process. The agent still sends its context to its own model provider.
+
+**Which agents does it work with?** 16 are in the matrix, 12 of them with a hook adapter; see Supported agents.
+
+**How do I install it, through the repo or through plugins?** `pip install agentseam` for the library. For
+guardrails, see Install above: the repository route (commit and CI) or the five plugin repos (in-agent).
+
+**What does it cost?** Free and open source (Apache-2.0). A check costs no tokens; a refusal adds one short reason to the agent's context.
+
+**Does it replace SAST or code review?** No. It catches known classes in the agent's turn; review, SAST and testing still run.
+
+**Which OWASP and CWE items does it cover?** agentseam maps none itself. The catalog's OWASP mappings are
+partial and labelled so; see chock-catalog `docs/coverage.md`.
+
+## For tools and agents
+
+- [`llms.txt`](llms.txt): a short machine-readable summary of this repo.
+- [`src/agentseam/matrix.py`](src/agentseam/matrix.py) and [`src/agentseam/data/matrix.json`](src/agentseam/data/matrix.json): the capability matrix as data.
+- [`src/agentseam/data/vendors/`](src/agentseam/data/vendors): one JSON entry per config-driven agent, validated by `schema.json`.
+- [`registry.yaml`](https://github.com/open-coder-ai/chock-catalog/blob/main/registry.yaml): every catalog policy with its tier and eval counts.
+- [`docs/coverage.md`](https://github.com/open-coder-ai/chock-catalog/blob/main/docs/coverage.md): catalog coverage, with partial mappings labelled.
+- [`.claude-plugin/marketplace.json`](https://github.com/open-coder-ai/chock-claude-plugins/blob/main/.claude-plugin/marketplace.json): the Claude plugin marketplace.
 
 ## Contributing
 
-The most valuable contribution needs no code. Most rows in the matrix above rest on vendor
-documentation rather than on anyone watching the agent run. If you have one of those agents
-installed, one command reports what your version actually does, and the result becomes a
-`verified` record with your handle on it:
+The most valuable contribution needs no code. Most rows in the matrix rest on vendor documentation rather
+than on anyone watching the agent run. One command reports what your installed version does, and the
+result becomes a `verified` record with your handle on it:
 
 ```bash
 python3 tools/experiment.py run --agent <agent> --driver harness --report \
     --agent-version <version> --reporter @yourhandle > report.json
 ```
 
-`--driver harness` is what makes it a witness: it runs your installed agent. Without it the
-driver falls back to `reference`, which answers from the vendor's documented contract and
-reports `basis: vendor-docs` — useful as a contract test, but not evidence of what your build
-does, and `evidence_report.validate()` will not let it claim a live basis.
-
-Paste it into an [evidence report](https://github.com/open-coder-ai/agentseam/issues/new?template=evidence-report.yml).
-A result that contradicts the matrix is the one we most want: it is a row we are getting
-wrong in public. The walk-through, including the capture probe for payload shapes, is in
+`--driver harness` makes it a witness: it runs your installed agent. Without it the driver falls back to
+`reference`, which reports `basis: vendor-docs`: a contract test, not evidence of what your build does.
+Paste the result into an [evidence report](https://github.com/open-coder-ai/agentseam/issues/new?template=evidence-report.yml);
+a result that contradicts the matrix is the one we most want. The walk-through is in
 [CONTRIBUTING.md](CONTRIBUTING.md#contributing-evidence-you-do-not-need-to-write-code).
 
-Other ways in:
+| First contribution | Where to start |
+|---|---|
+| Turn a `vendor-docs` row into a live-run row | have the agent installed? [tools/VERIFY.md](tools/VERIFY.md), an hour, no code |
+| Add an agent adapter | a vendor config entry, a matrix row and real-payload fixtures ([steps](CONTRIBUTING.md#adding-an-agent-adapter)); Goose, Crush and OpenCode are researched and unbuilt |
+| Correct a matrix row that claims too much | the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md) template |
+| Write a guard others can adopt | ship it as a policy in [chock-catalog](https://github.com/open-coder-ai/chock-catalog) |
+| Bugs and docs | a [good first issue](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) |
 
-- **An adapter for an agent that is missing.** Goose, Crush and OpenCode are researched and
-  unbuilt; each is a config entry plus a matrix row. Start from the
-  [adapter request](https://github.com/open-coder-ai/agentseam/issues/new?template=adapter_request.md) template and
-  [CONTRIBUTING.md](CONTRIBUTING.md#adding-an-agent-adapter).
-- **A matrix correction.** A row that claims more than the agent does is the bug this project
-  exists to prevent; the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md)
-  template is for exactly that.
-- **Bugs and docs.** Issues and PRs welcome — start with a
-  [good first issue](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-  if you want a bounded one. `pytest -q` and `ruff check .` are the whole local loop, the
-  runtime path stays stdlib-only, and every commit is signed off (`git commit -s`).
-
-Adding an adapter must never require touching `contract.py`, `dispatch.py`, or any consumer
-— if it does, the abstraction is wrong, and the PR should say so rather than route around it.
-Evidence carries the reporter's handle, and a weekly check opens an issue naming any agent
-that has shipped since its evidence was taken (`evidence: <agent> <version> — re-witness
-wanted`) — that issue is a work order for whoever has the agent installed.
-
-More: [Bundles](docs/bundles.md) · [Design](docs/design.md) ·
-[per-vendor examples](docs/vendor-examples.md) · [ARCHITECTURE.md](ARCHITECTURE.md).
+`pytest -q` and `ruff check .` are the whole local loop; the runtime path stays stdlib-only and every commit
+is signed off (`git commit -s`). Adding an adapter must never require touching `contract.py`,
+`dispatch.py` or any consumer; if it does, the abstraction is wrong. More: [Bundles](docs/bundles.md) ·
+[Design](docs/design.md) · [per-vendor examples](docs/vendor-examples.md) · [ARCHITECTURE.md](ARCHITECTURE.md) ·
+[SECURITY.md](SECURITY.md).
 
 ## Part of open-coder-ai
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/family-dark.svg">
-  <img alt="Layered diagram of the open-coder-ai family: agentseam is the foundation across the bottom, chock sits on it, chock-catalog feeds chock and generates four plugin repositories, chock-threat-intel feeds the catalog, and context-report runs as a verification arm beside all of them." src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/figures/family-light.svg" width="800">
-</picture>
-
-| | |
+| Repository | Role |
 |---|---|
-| [agentseam](https://github.com/open-coder-ai/agentseam) | the primitives — one handler API and a verified capability matrix across 16 agents |
-| [chock](https://github.com/open-coder-ai/chock) | the compiler — one policy into git hooks, CI gates and native pre-tool hooks |
-| [chock-catalog](https://github.com/open-coder-ai/chock-catalog) | the policies — 39, each labelled enforced or advisory, with replayed evals |
-| [context-report](https://github.com/open-coder-ai/context-report) | the evidence — a signed report of whether an agent artifact actually works |
+| [agentseam](https://github.com/open-coder-ai/agentseam) | the primitives: one handler API and a verified capability matrix across 16 agents |
+| [chock](https://github.com/open-coder-ai/chock) | the compiler: one policy into git hooks, CI gates and native pre-tool hooks |
+| [chock-catalog](https://github.com/open-coder-ai/chock-catalog) | the policies: 71 (35 enforced at commit, 11 in-agent, 25 advisory; `registry.yaml` at `9a64623`) |
 | [chock-threat-intel](https://github.com/open-coder-ai/chock-threat-intel) | the threat ledger the catalog's policies answer to |
-| chock-{claude,cursor,copilot,codex}-plugins | the catalog, packaged for each agent's plugin format (generated) |
-| chock-quickstart · chock-example | template repos: what `chock init` leaves behind, and a full adoption |
+| [context-report](https://github.com/open-coder-ai/context-report) | the evidence: a signed report of whether an agent artifact actually works |
+| chock-{claude,cursor,copilot,codex,devin}-plugins | the catalog, packaged for each agent's plugin format (generated) |
+| [chock-quickstart](https://github.com/open-coder-ai/chock-quickstart) · [chock-example](https://github.com/open-coder-ai/chock-example) | template repos: what `chock init` leaves behind, and a full adoption |
 
 Apache-2.0.
