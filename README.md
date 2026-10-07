@@ -1,10 +1,8 @@
 <div align="center">
 
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/cover-agentseam.png" alt="agentseam: Write a guard once. Run it in the agent you use. One handler API over each agent's hooks, instruction files and config, with an honest matrix of where a guard can block." width="100%"></p>
+<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/cover-agentseam.png" alt="agentseam wordmark and mark on a dusk-blue background." width="100%"></p>
 
 </div>
-
-<details><summary>Text version</summary>
 
 # Teach your AI agent what not to do.
 
@@ -15,11 +13,6 @@ Open-source guardrails for AI coding agents: rules the agent reads, checks that 
 [![CI](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml/badge.svg)](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml) [![PyPI](https://img.shields.io/pypi/v/agentseam)](https://pypi.org/project/agentseam/) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-coder-ai/agentseam/badge)](https://scorecard.dev/viewer/?uri=github.com/open-coder-ai/agentseam) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 agentseam is a stdlib-only Python library and CLI that turns every coding agent's own hook system into one normalized event and one `Decision`, and records, per agent and per lifecycle event, what that agent can really do with it. Write a guard once and `agentseam install` wires it into the agent's own config. When an agent cannot enforce something, agentseam says so instead of installing a hook that silently does nothing. Free and open source (Apache-2.0).
-
-</details>
-
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/appsec.png" alt="Nine areas Chock checks, application security first, each with the policies that cover it and whether they enforce at commit, in the agent, or only advise." width="100%"></p>
-<details><summary>Text version</summary>
 
 ## Application security for the code your agents write
 
@@ -52,8 +45,6 @@ A handler is your own local code: whatever it costs, it costs no tokens, and a r
 reason to the agent's context. **Shift left:** the known classes are refused in the agent's own turn,
 before they reach commit, review or CI.
 
-</details>
-
 ## Install
 
 chock is on PyPI, but the release there (0.15.2, 30 Sep 2026) is older than the engine this page describes. Install the frozen engine from its commit (Python 3.11 or newer):
@@ -61,9 +52,6 @@ chock is on PyPI, but the release there (0.15.2, 30 Sep 2026) is older than the 
 ```bash
 pip install "chock @ git+https://github.com/open-coder-ai/chock@992711af4cf8d4fd9c4c861f10ef6e53374d75d7"
 ```
-
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/adopt.png" alt="Two adoption routes: in your repository with chock init, chock add and chock sync, or in your coding agent as plugins." width="100%"></p>
-<details><summary>Text version</summary>
 
 agentseam itself is `pip install agentseam` (Python 3.9 or newer, no dependencies); the Quick start below runs end to end.
 
@@ -93,14 +81,6 @@ Commit the result. Plugin route: the five plugin repos are
 [devin](https://github.com/open-coder-ai/chock-devin-plugins); each README has its client's install lines.
 Chock adds no new place your code goes: checks run where the agent writes. The agent still sends its
 context to its own model provider; chock adds no additional destination.
-
-</details>
-
-<p>
-<img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/layers.png" alt="The stack: agentseam is the primitives layer under chock, the catalog, the plugins, your agents and the evidence repos." width="100%"><br>
-<img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/matrix.png" alt="Capability matrix: 16 agents by 12 lifecycle events is 192 cells, of which 0 are graded enforced, 2 enforceable, 34 best-effort, 55 detect and 101 none, counted with matrix.enforcement_level() at agentseam 104da73." width="100%">
-</p>
-<details><summary>Text version</summary>
 
 ## How it works
 
@@ -171,12 +151,6 @@ to a silent pass-through.
 | Gemini CLI | block + rewrite (fail-open) | `.gemini/settings.json` | vendor-source · 2026-08-28 |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` | live-run-partial · 2026-08-28 |
 | Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
-
-<details>
-<summary>10 more agents</summary>
-
-| Agent | What it enforces | Config file | Verified |
-|---|---|---|---|
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` | vendor-docs · 2026-08-26 |
 | Grok CLI | block on PreToolUse only (fail-open) | `.grok/hooks/agentseam.json` | vendor-docs · 2026-08-26 |
 | Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-08-26 |
@@ -187,8 +161,6 @@ to a silent pass-through.
 | Aider | no hook surface at all; instruction files only | none | vendor-docs · 2026-08-26 |
 | Replit | no hook surface found in its docs; instruction files only | none | vendor-docs · 2026-08-26 |
 | Copilot CLI marketplace bundle | packaging identity only; dispatches through the VS Code Copilot adapter | none | vendor-docs · 2026-08-29 |
-
-</details>
 
 Of the 12 agents that claim `pre_tool` at all, 4 (Claude Code, Codex CLI, Cursor, VS Code
 Copilot) rest on a live run against the real agent; seven of the other 8 rest on documentation
@@ -296,16 +268,9 @@ The in-agent tier is exactly the agentseam matrix: a catalog policy is never lab
 `enforcement_level()` grades the agent it runs in. No agent reaches `enforced`. Chock does not replace
 code review, your SAST suite or a penetration test; it refuses known classes while the agent writes, so they are fixed before review.
 
-</details>
-
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/honest.png" alt="Guardrails, not guarantees: the three tiers, no matrix cell graded enforced, and no OWASP Agentic risk fully covered." width="100%"></p>
-<details><summary>Text version</summary>
-
 ## Guardrails, not guarantees
 
 Tiers: `commit` is a git hook or CI gate that exits non-zero. `in-agent` is the agent's pre-tool hook: best-effort, and it fails open. `advisory` is rule text the agent reads. No agent reaches `enforced` today: 0 of 192 matrix cells are graded enforced. OWASP mappings are partial: 10 of 10 Agentic risks have a policy, 7 have a slice refused at commit, none is fully covered. The engine is frozen at the commit above. Chock does not stop every attack: it closes common, known entry points before they ship.
-
-</details>
 
 ## FAQ for people and agents
 
@@ -334,9 +299,6 @@ partial and labelled so; see chock-catalog `docs/coverage.md`.
 - [`registry.yaml`](https://github.com/open-coder-ai/chock-catalog/blob/main/registry.yaml): every catalog policy with its tier and eval counts.
 - [`docs/coverage.md`](https://github.com/open-coder-ai/chock-catalog/blob/main/docs/coverage.md): catalog coverage, with partial mappings labelled.
 - [`.claude-plugin/marketplace.json`](https://github.com/open-coder-ai/chock-claude-plugins/blob/main/.claude-plugin/marketplace.json): the Claude plugin marketplace.
-
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/family.png" alt="The 13 public repositories of open-coder-ai: core, policies, evidence, plugins, templates and community files." width="100%"></p>
-<details><summary>Text version</summary>
 
 ## Part of open-coder-ai
 
@@ -393,4 +355,3 @@ is signed off (`git commit -s`). Adding an adapter must never require touching `
 
 Apache-2.0. See [LICENSE](LICENSE).
 
-</details>
