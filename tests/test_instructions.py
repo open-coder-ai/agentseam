@@ -109,5 +109,5 @@ def test_the_readme_arithmetic_cannot_drift():
     p = I.plan(I.agents(), repo_root=".")
     agents_reached = len(p["covered"]) + len(p["per_agent"])
     files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
-    assert agents_reached == len(I.INSTRUCTION_FILES) == 21
+    assert agents_reached == len(I.INSTRUCTION_FILES) == 25
     assert files_written == 9

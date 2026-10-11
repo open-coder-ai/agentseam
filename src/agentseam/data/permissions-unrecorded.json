@@ -15,5 +15,9 @@
   "opencode": "a permission model provably exists -- its config schema (https://opencode.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here",
   "cline": "a permission model provably exists -- its docs have an Auto Approve & YOLO Mode page (https://docs.cline.bot/features/auto-approve, listed in https://docs.cline.bot/llms.txt on 2026-10-11) -- but it was not read or mapped here",
   "goose": "a permission model provably exists -- the v1.54.0 release notes (2026-10-08) name goose modes and Desktop permission modes -- but its config was not read here",
-  "roo_code": "an auto-approve model provably existed (https://roocodeinc.github.io/Roo-Code/features/auto-approving-actions in the archived docs) but it was not mapped here, and the extension was shut down on 2026-05-15"
+  "roo_code": "an auto-approve model provably existed (https://roocodeinc.github.io/Roo-Code/features/auto-approving-actions in the archived docs) but it was not mapped here, and the extension was shut down on 2026-05-15",
+  "openhands": "no permission model was read here; the hooks docs (https://docs.openhands.dev/openhands/usage/customization/hooks, read 2026-10-11) were the only page mapped",
+  "amp": "a permission model provably exists -- the legacy amp.permissions rules with allow, ask, reject and delegate actions (https://ampcode.com/notes/permissions, read 2026-10-11), now a built-in plugin -- but it was not mapped here",
+  "kiro": "a permission model provably exists -- agent profiles carry permissions.rules with allow, ask or deny effects (https://kiro.dev/docs/custom-agents/configuration-reference.md, read 2026-10-11) -- but it was not mapped here",
+  "factory_droid": "a permission model provably exists -- permission_mode off, spec and auto-low/medium/high, named in the hooks payload (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but it was not mapped here"
 }
