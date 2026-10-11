@@ -23,6 +23,7 @@ _FAMILY = {
     "openhands": "flat_decision",
     "factory_droid": "hook_json",
     "mistral_vibe": "flat_decision",
+    "cline": "hook_json",
     "cursor": "cursor",
     "windsurf": "windsurf",
     "antigravity": "antigravity",
@@ -176,6 +177,18 @@ _CLAIMS = {
             "post_tool, post_agent), which no other adapter maps, so the event name alone separates it "
             "(docs.mistral.ai/vibe/code/cli/hooks and vibe/core/hooks/models.py HookType at mistral-vibe "
             "2.26.1, read 2026-10-11)."
+        ),
+    },
+    "cline": {
+        "mode": "marker",
+        "event_key": ["hookName"],
+        "accept_markers": ["clineVersion"],
+        "notes": (
+            "Every Cline hook payload carries clineVersion beside hookName (.clinerules/hooks/README.md in "
+            "cline/cline, read 2026-10-11; the SDK's createPayloadBase sets it on every event, empty when "
+            "CLINE_VERSION is unset). No other vendor sends either key, so the claim is a marker one. "
+            "hookName is the documented file name (PreToolUse) from the VS Code extension and the SDK's own "
+            "event name (tool_call) from the CLI; both are mapped."
         ),
     },
     "vscode_copilot": {

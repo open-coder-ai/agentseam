@@ -17,7 +17,11 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: codex_cli: learn.chatgpt.com/docs/hooks (read 2026-09-27) -- "Project-local hooks load
 #: only when the project `.codex/` layer is trusted"; `/hooks` reviews and trusts them, and
 #: trust is recorded against the hook's hash, so a changed hook is skipped until re-trusted.
+#: cline: .clinerules/hooks/README.md in cline/cline ("Enabling Hooks": open Cline settings, Feature
+#: Settings, check "Enable Hooks"; read 2026-10-11) and cline.bot/blog/cline-v3-36-hooks ("macOS and
+#: Linux only").
 TRUST_HINT = {
+    "cline": "in the VS Code extension, tick Enable Hooks under Cline's Feature settings; hooks run on macOS and Linux only",
     "codex_cli": "run /hooks in Codex and trust the new hook (trust is per hook hash: re-trust after any change)",
 }
 
@@ -46,6 +50,11 @@ TRUST_HINT = {
 #:   tool_input.command, with the same fields as the Bash tool"; match `Bash|PowerShell`),
 #:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("cline", "trust_hint"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-11",
+        "test": "tests/test_adapter_cline.py::test_install_names_the_settings_switch",
+    },
     ("codex_cli", "trust_hint"): {
         "basis": "vendor-docs",
         "date": "2026-09-27",

@@ -133,6 +133,18 @@ _VERDICT_DIALECT = {
         "note_style": "because",
         "echo": "payload",
     },
+    "cline": {
+        "degrade_notes": {
+            "escalate": "Cline hooks cannot ask the user, so this is a block",
+            "escalate_from_transform": "Cline's documented hooks cannot modify tool parameters, so this is a block",
+            "transform": "Cline's documented hooks cannot modify tool parameters, so this is a block",
+        },
+        "reason_defaults": {"deny_gate": "blocked"},
+        "note_style": "suffix",
+        "echo": "payload",
+        "context_events": ["PreToolUse", "tool_call"],
+        "context_source": "context",
+    },
     "cursor": {
         "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
         "degrade_notes": {

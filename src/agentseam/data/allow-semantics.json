@@ -80,6 +80,11 @@
       "bare_allow": "silent",
       "basis": "vendor-docs",
       "note": "Documented verbatim (docs.mistral.ai/vibe/code/cli/hooks, read 2026-10-11): \"Exit 0, empty stdout: Passthrough.\" decision defaults to allow and nothing documents an explicit allow meaning more, so silence is spoken. Non-conforming stdout is a hook failure (a warning, or a denial under strict = true), so a stray log line on stdout is not an allow."
+    },
+    "cline": {
+      "bare_allow": "inert",
+      "basis": "vendor-docs",
+      "note": "Documented (.clinerules/hooks/README.md in cline/cline, read 2026-10-11): every hook returns {\"cancel\": boolean}, and cancel false or omitted lets execution continue. Both hosts read false exactly as an absent field (the SDK's parseHookControl and the extension's HookFactory, same date), and an empty stdout with exit 0 also continues, so the documented {\"cancel\": false} is spoken and cannot skip any approval Cline would otherwise ask for."
     }
   },
   "vouch_notes": {

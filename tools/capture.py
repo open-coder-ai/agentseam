@@ -49,6 +49,7 @@ FOOTPRINTS = {
     "openhands": ("~/.openhands", ".openhands"),
     "factory_droid": ("~/.factory", ".factory"),
     "mistral_vibe": ("~/.vibe", ".vibe"),
+    "cline": ("~/.cline", "~/Documents/Cline", ".clinerules", ".cline"),
     "antigravity": ("~/.gemini/antigravity", ".agents"),
     "vscode_copilot": ("~/.copilot", ".github/hooks"),
     "windsurf": ("~/.codeium/windsurf", ".windsurf"),

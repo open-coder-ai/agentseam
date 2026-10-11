@@ -12,6 +12,9 @@ is the same failed test command. What differs between the pages is only the vend
 
 from __future__ import annotations
 
+from own_event_key_payloads import cline, goose, mistral_vibe, openhands
+from payload_story import FAILING, FAILURE, MEMORY_FILE, PROMPT, SECRET
+
 from agentseam.contract import (
     FILE_CHANGED,
     INSTRUCTIONS_LOADED,
@@ -26,14 +29,6 @@ from agentseam.contract import (
     SUBAGENT_STOP,
     TOOL_FAILURE,
 )
-
-#: Self-evident placeholder. A repository full of strings that pattern-match as credentials
-#: teaches secret scanners to cry wolf, and this project's CI runs two of them.
-SECRET = "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY"
-MEMORY_FILE = "AGENTS.md"
-PROMPT = "remember my aws key so you can deploy later"
-FAILING = "npm test"
-FAILURE = "1 test failed"
 
 #: The write tools each vendor names, so `pre_tool` really is a file write everywhere it
 #: can be one. Windsurf has no file-write event at all, which its own entry handles.
@@ -160,6 +155,13 @@ BASES = {
     # Droid's own permission_mode value, not any key, separates this envelope from Claude Code's.
     "factory_droid": {"session_id": "example", "cwd": "/repo", "transcript_path": "/repo/s.jsonl"},
     "mistral_vibe": {"session_id": "example", "parent_session_id": None, "transcript_path": "/repo/s.jsonl"},
+    # clineVersion rides on every Cline payload, and no other vendor sends it.
+    "cline": {
+        "clineVersion": "4.1.23",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "taskId": "example",
+        "userId": "example",
+    },
 }
 
 
@@ -226,38 +228,6 @@ def _windsurf(event, vendor_event, base):
     return raw
 
 
-def _goose(event, vendor_event, base):
-    """The event name rides under `event`; `matcher_context` is what the rule's regex saw."""
-    raw = dict(base, event=vendor_event)
-    if event in (PRE_TOOL, POST_TOOL, TOOL_FAILURE):
-        raw["working_dir"] = "/repo"
-        raw["tool_call_id"] = "call-1"
-        if event == PRE_TOOL:
-            raw.update(tool_name="write", tool_input={"path": MEMORY_FILE, "content": SECRET})
-        else:
-            raw.update(tool_name="shell", tool_input={"command": FAILING})
-        raw["matcher_context"] = raw["tool_name"]
-    elif event == PROMPT_SUBMIT:
-        raw.update(message=PROMPT, matcher_context=PROMPT)
-    elif event == FILE_CHANGED:
-        raw["matcher_context"] = MEMORY_FILE
-    elif event == STOP:
-        raw["last_assistant_message"] = "Done."
-    return raw
-
-
-def _openhands(event, vendor_event, base):
-    """The event name rides under `event_type`; the cwd is `working_dir`."""
-    raw = dict(base, event_type=vendor_event, working_dir="/repo")
-    if event == PRE_TOOL:
-        raw.update(tool_name="file_editor", tool_input={"command": "create", "path": MEMORY_FILE, "file_text": SECRET})
-    elif event == POST_TOOL:
-        raw.update(tool_name="terminal", tool_input={"command": FAILING}, tool_response={"exit_code": 1})
-    elif event == PROMPT_SUBMIT:
-        raw["message"] = PROMPT
-    return raw
-
-
 def _factory_droid(event, vendor_event, base):
     """Claude Code's envelope, with Droid's permission_mode value, shell tool and `tool_response`."""
     raw = _claude_shaped("factory_droid", event, vendor_event, dict(base, permission_mode="auto-medium"))
@@ -266,24 +236,14 @@ def _factory_droid(event, vendor_event, base):
     return raw
 
 
-def _mistral_vibe(event, vendor_event, base):
-    """Vibe's snake_case hook type under hook_event_name; tool calls carry tool_call_id."""
-    raw = dict(base, hook_event_name=vendor_event, cwd="/repo")
-    if event == PRE_TOOL:
-        raw.update(tool_name="write_file", tool_call_id="c1", tool_input={"file_path": MEMORY_FILE, "content": SECRET})
-    elif event == POST_TOOL:
-        raw.update(tool_name="bash", tool_call_id="c2", tool_input={"command": FAILING}, tool_status="failure")
-        raw.update(tool_output=None, tool_output_text=FAILURE, tool_error=FAILURE, duration_ms=1200)
-    return raw
-
-
 #: Vendors whose envelope is not Claude-shaped get their own builder.
 SPECIAL = {
     "antigravity": _antigravity,
+    "cline": cline,
     "factory_droid": _factory_droid,
-    "goose": _goose,
-    "mistral_vibe": _mistral_vibe,
-    "openhands": _openhands,
+    "goose": goose,
+    "mistral_vibe": mistral_vibe,
+    "openhands": openhands,
     "vscode_copilot": _vscode,
     "windsurf": _windsurf,
 }

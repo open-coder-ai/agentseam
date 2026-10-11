@@ -1,0 +1,193 @@
+{
+  "agent": "cline",
+  "claims": {
+    "accept_markers": [
+      "clineVersion"
+    ],
+    "event_key": [
+      "hookName"
+    ],
+    "mode": "marker",
+    "notes": "Every Cline hook payload carries clineVersion beside hookName (.clinerules/hooks/README.md in cline/cline, read 2026-10-11; the SDK's createPayloadBase sets it on every event, empty when CLINE_VERSION is unset). No other vendor sends either key, so the claim is a marker one. hookName is the documented file name (PreToolUse) from the VS Code extension and the SDK's own event name (tool_call) from the CLI; both are mapped."
+  },
+  "config_format": "hook_dir",
+  "config_path": ".clinerules/hooks",
+  "display": "Cline",
+  "events": {
+    "PostToolUse": "post_tool",
+    "PreToolUse": "pre_tool",
+    "SessionShutdown": "unknown",
+    "TaskCancel": "unknown",
+    "TaskComplete": "stop",
+    "TaskError": "unknown",
+    "TaskResume": "session_start",
+    "TaskStart": "session_start",
+    "UserPromptSubmit": "prompt_submit",
+    "agent_abort": "unknown",
+    "agent_end": "stop",
+    "agent_error": "unknown",
+    "agent_resume": "session_start",
+    "agent_start": "session_start",
+    "prompt_submit": "prompt_submit",
+    "session_shutdown": "unknown",
+    "tool_call": "pre_tool",
+    "tool_result": "post_tool"
+  },
+  "evidence": {
+    "claims": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+    },
+    "config_path": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+    },
+    "events": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_examples.py::test_each_payload_parses_to_the_event_it_is_filed_under"
+    },
+    "family": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    },
+    "fields": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "hook_entry": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "tools": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+    },
+    "trust_hint": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_adapter_cline.py::test_install_names_the_settings_switch"
+    },
+    "verdicts": {
+      "basis": "vendor-docs",
+      "date": "2026-10-11",
+      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+    }
+  },
+  "family": "hook_json",
+  "fields": {
+    "command": [
+      "tool_input.command",
+      "tool_input.commands[]",
+      "tool_input.commands",
+      "tool_input.cmd"
+    ],
+    "content": [
+      "tool_input.content",
+      "tool_input.new_text",
+      "tool_input.diff",
+      "tool_input.input"
+    ],
+    "cwd": [
+      "workspaceRoots[0]"
+    ],
+    "output": [
+      "postToolUse.result"
+    ],
+    "path": [
+      "tool_input.path",
+      "tool_input.file_path"
+    ],
+    "prompt": [
+      "userPromptSubmit.prompt"
+    ],
+    "session_id": [
+      "taskId"
+    ],
+    "tool": [
+      "preToolUse.toolName",
+      "postToolUse.toolName",
+      "tool_call.name",
+      "tool_result.name"
+    ],
+    "tool_input": [
+      "tool_call.input",
+      "tool_result.input",
+      "preToolUse.parameters",
+      "postToolUse.parameters"
+    ],
+    "tool_use_id": [
+      "tool_call.id",
+      "tool_result.id"
+    ]
+  },
+  "hook_entry": {
+    "matcher": false,
+    "wrapper": "hook_dir"
+  },
+  "needs_trust": true,
+  "tools": {
+    "shell": [
+      "run_commands",
+      "execute_command"
+    ],
+    "write": [
+      "editor",
+      "apply_patch",
+      "write_to_file",
+      "replace_in_file"
+    ]
+  },
+  "trust_hint": "in the VS Code extension, tick Enable Hooks under Cline's Feature settings; hooks run on macOS and Linux only",
+  "verdicts": {
+    "answer_events": [
+      "PreToolUse",
+      "tool_call"
+    ],
+    "bare_allow": "inert",
+    "context_events": [
+      "PreToolUse",
+      "tool_call"
+    ],
+    "context_source": "context",
+    "degrade_notes": {
+      "escalate": "Cline hooks cannot ask the user, so this is a block",
+      "escalate_from_transform": "Cline's documented hooks cannot modify tool parameters, so this is a block",
+      "transform": "Cline's documented hooks cannot modify tool parameters, so this is a block"
+    },
+    "echo": "payload",
+    "gates": {
+      "PreToolUse": {
+        "grammar": "G7",
+        "honours_escalate": false,
+        "honours_transform": false
+      },
+      "tool_call": {
+        "grammar": "G7",
+        "honours_escalate": false,
+        "honours_transform": false
+      }
+    },
+    "note_style": "suffix",
+    "reason_defaults": {
+      "deny_gate": "blocked"
+    },
+    "vocabulary": [
+      "cancel"
+    ],
+    "vocabulary_basis": "verified"
+  },
+  "wire_events": {
+    "post_tool": "PostToolUse",
+    "pre_tool": "PreToolUse",
+    "prompt_submit": "UserPromptSubmit",
+    "session_start": "TaskStart",
+    "stop": "TaskComplete"
+  }
+}

@@ -2830,16 +2830,142 @@
   },
   "cline": {
     "display": "Cline",
-    "tier": "unadapted",
-    "config": null,
+    "tier": "block",
+    "config": ".clinerules/hooks",
     "verified": {
       "basis": "vendor-docs",
-      "version": "cline 3.0.70, the npm CLI latest on 2026-10-11; the vendor's hook thread (cline/cline#13277) was filed against VS Code extension 4.1.9 and 4.1.10",
+      "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
       "date": "2026-10-11",
-      "method": "read the vendor's own docs and posts on 2026-10-11: https://docs.cline.bot/getting-started/config (project hooks in .cline/hooks/ and the older .clinerules/hooks/, global ~/.cline/hooks/, CLINE_HOOKS_DIR), https://cline.bot/blog/cline-v3-36-hooks (hooks are executables named exactly after the event -- PreToolUse, PostToolUse, UserPromptSubmit, TaskStart, TaskResume, TaskCancel -- reading JSON on stdin and answering {cancel, contextModification, errorMessage} on stdout; macOS and Linux only), and the maintainers' replies on https://github.com/cline/cline/issues/13277 (hooks are at parity on the current engine for directly-integrated providers; tool calls run by provider-executed agents such as Claude Code and Codex never reach the hook pipeline; the payload's hookName differs from the file name). The docs page https://docs.cline.bot/customization/hooks now redirects to https://docs.cline.bot/sdk/plugins, which documents an in-process TypeScript plugin API (beforeTool, failureMode fail_open|fail_closed) for the SDK, CLI and Kanban only."
+      "method": "read the vendor's own hook documentation on 2026-10-11: .clinerules/hooks/README.md in https://github.com/cline/cline (the hooks reference the old docs.cline.bot/features/hooks pages now redirect away from: executables with no extension named exactly after the event -- TaskStart, TaskResume, TaskCancel, TaskComplete, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact -- in the workspace's .clinerules/hooks/ or the global ~/Documents/Cline/Hooks/, a shebang required, executable on Unix, Windows not supported; stdin carries clineVersion, hookName, timestamp, taskId, workspaceRoots and userId plus one per-event object such as preToolUse {toolName, parameters}; stdout answers {cancel, contextModification, errorMessage}, where cancel true blocks and false or omitted continues; the hook cannot modify the tool's parameters; any hook cancelling blocks; tool hooks run blocking everywhere, 30 s in the extension and up to 120 s in the CLI/SDK), https://cline.bot/blog/cline-v3-36-hooks (the same contract; enable hooks under Features in Cline's settings; macOS and Linux only) and https://docs.cline.bot/getting-started/config (.cline/hooks/ and the older .clinerules/hooks/ in a project). Cross-checked on 2026-10-11 against the vendor's source at that commit: the SDK/CLI hook runner (sdk/packages/core/src/hooks/hook-file-hooks.ts) maps the file PreToolUse to its own event tool_call and sends that name as hookName, alongside a raw tool_call {id, name, input} and the documented preToolUse; cancel true at tool_call throws a controlled stop before the tool runs; a timeout, invalid JSON or a failed hook command is logged and skipped (fail-open); prompt_submit hooks run detached and \"cannot cancel or inject context\", and TaskStart/TaskResume run fire-and-forget unless the host opts into blocking. The VS Code extension (apps/vscode/src/sdk/hooks-adapter.ts) runs the same files through its HookFactory, which sends hookName PreToolUse and treats exit 0 with no JSON as continue; a hook error is logged and the tool proceeds; TaskResume, TaskError, SessionShutdown and PreCompact are not wired there. preToolUse.parameters carries every non-string argument as JSON text (run_commands' commands list arrives as a JSON string). Current tools: run_commands {commands}, editor {path, old_text, new_text}, apply_patch {input}, read_files; the extension's message translator also names execute_command, write_to_file and replace_in_file."
     },
-    "events": {},
-    "notes": "Unadapted, not none: Cline has a real command-hook surface, but its dialect is one no agentseam family speaks -- hooks are discovered as executables named after the event in a hooks directory, with no config file for an install to write, and a block is {\"cancel\": true}. Building it means a new family module, which is a core change outside a vendor-config batch. Recorded limits for whoever builds it: the hooks docs page redirects to the SDK Plugins page (an in-process TypeScript API, a different feature with the same name); hooks do not attach to tool calls executed inside a provider's own agent loop (Claude Code, Codex), per the maintainers on cline/cline#13277; and the v3.36 announcement says hooks run on macOS and Linux only. Instruction files still reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/178"
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2b): Cline runs one executable per event from .clinerules/hooks/, named exactly after the event, and reads {\"cancel\": true, \"errorMessage\"} on stdout as a block. agentseam speaks that cancel object (grammar G7) at PreToolUse only, the one event whose cancel is read before the tool runs on both hosts. The two hosts name the same file differently in the payload: the VS Code extension sends hookName PreToolUse, the CLI/SDK sends its own event name tool_call; both are mapped, and every payload carries clineVersion, which no other vendor sends. Fail-open on both hosts: a hook that times out, crashes or prints something other than JSON is logged and the tool runs. Escalate and transform degrade to a block: hooks cannot ask the user, and the documented contract says a hook cannot modify the tool's parameters. UserPromptSubmit and TaskStart are detect only: the CLI runs them detached, so their cancel is never read there. PostToolUse is detect only: its cancel stops the task after the tool already ran. run_commands' command list arrives as JSON text in preToolUse.parameters and is read as one command per line; apply_patch's target path lives inside the patch text and is not extracted. Install writes .clinerules/hooks/<Event> with a #!/bin/sh shebang and the executable bit, read by both hosts (.cline/hooks/ is read by the CLI/SDK only), and refuses to overwrite a hook file it did not write: Cline runs one file per event name per directory. Hooks must be enabled in the VS Code extension's settings, and run on macOS and Linux only. Tool calls executed inside a provider's own agent loop (Claude Code, Codex as providers) never reach the hook pipeline, per the maintainers on cline/cline#13277. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/178"
   },
   "roo_code": {
     "display": "Roo Code",

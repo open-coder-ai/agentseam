@@ -113,6 +113,7 @@ def test_a_deny_at_a_blocking_event_is_never_silent(agent):
             _PROBE_PAYLOAD,
             hook_event_name=vendor_event,
             hookEventName=vendor_event,
+            hookName=vendor_event,
             event=vendor_event,
             event_type=vendor_event,
             client_type=agent,

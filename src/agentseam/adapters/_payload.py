@@ -102,12 +102,26 @@ def _segment(node, part):
     return node.get(part) if isinstance(node, dict) else None
 
 
+def _list_at(node, path):
+    """The list under `path`, decoding the JSON text Cline sends in a list's place."""
+    items = _walk(node, path)
+    if isinstance(items, str) and items.lstrip()[:1] == "[":
+        try:
+            items = _json.loads(items)
+        except (ValueError, RecursionError):
+            return None
+    return items if isinstance(items, (list, tuple)) else None
+
+
 def _walk(node, path):
-    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[0]` indexes."""
+    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[]` its strings, `a[0]` indexes."""
+    if path.endswith("[]"):
+        joined = "\n".join(item for item in _list_at(node, path[:-2]) or () if isinstance(item, str))
+        return joined or None
     if "[]." in path:
         head, sub = path.split("[].", 1)
-        items = _walk(node, head)
-        if not isinstance(items, (list, tuple)):
+        items = _list_at(node, head)
+        if items is None:
             return None
         joined = "\n".join(str(item.get(sub, "")) for item in items if isinstance(item, dict))
         return joined or None
@@ -142,7 +156,7 @@ def _tool_input_raw(cfg, raw):
     if not isinstance(raw, dict):
         return None
     for key in cfg["fields"].get("tool_input", ("tool_input",)):
-        value = raw.get(key)
+        value = _walk(raw, key)
         if value is not None:
             return value
     return None

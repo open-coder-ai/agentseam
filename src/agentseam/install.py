@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from . import adapters
+from . import install_hook_dir as hook_dir
 from .install_config import (
     BEGIN,
     END,
@@ -37,6 +38,9 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     check_wireable(mod, agent, events)
     extra = fail_closed_kwarg(mod, fail_closed)
     path = resolve(mod, repo_root, owner)
+    if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
+        hook_dir.write(path, mod.hook_config(events, command, matcher=matcher, **extra), owner)
+        return path
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
@@ -52,6 +56,8 @@ def uninstall(agent, repo_root=".", owner="agentseam"):
     path = resolve(mod, repo_root, owner)
     if not os.path.exists(path):
         return False
+    if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
+        return hook_dir.remove(path, mod.REVERSE_EVENT_MAP.values(), owner)
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         return remove_block(path, owner)
     before = load(path)

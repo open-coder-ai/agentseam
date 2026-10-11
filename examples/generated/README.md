@@ -17,6 +17,7 @@ without notice. Verify against your own installation before relying on any of it
 |---|---|---|---|---|---|---|
 | [Antigravity](antigravity.md) | 3 | best-effort | yes | no | `vendor-docs` | `.agents/hooks.json` |
 | [Claude Code](claude_code.md) | 12 | best-effort | yes | yes | `live-run` | `.claude/settings.json` |
+| [Cline](cline.md) | 5 | best-effort | yes | no | `vendor-docs` | `.clinerules/hooks` |
 | [OpenAI Codex CLI](codex_cli.md) | 9 | best-effort | yes | yes | `live-run-partial` | `.codex/hooks.json` |
 | [Cursor](cursor.md) | 11 | enforceable | yes | yes | `live-run-partial` | `.cursor/hooks.json` |
 | [Devin](devin.md) | 6 | best-effort | yes | yes | `vendor-docs` | `.devin/hooks.v1.json` |
