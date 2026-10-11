@@ -31,6 +31,8 @@ INSTRUCTION_FILES = {
     "devin": {"files": [".devin/README.md"], "shared": False, "imports": None},
     "grok": {"files": [".grok/GROK.md"], "shared": False, "imports": None},
     "kimi_code": {"files": [".kimi-code/AGENTS.md"], "shared": True, "imports": None},
+    "opencode": {"files": ["AGENTS.md"], "shared": True, "imports": None},
+    "kilo_code": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "replit": {"files": ["replit.md"], "shared": False, "imports": None},
     "tabnine": {"files": ["guidelines.md"], "shared": False, "imports": None},
     "antigravity": {"files": [".agents/rules/agentseam.md"], "shared": False, "imports": None},

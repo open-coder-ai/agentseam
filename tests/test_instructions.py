@@ -105,9 +105,9 @@ def test_nested_paths_are_created(tmp_path):
 
 
 def test_the_readme_arithmetic_cannot_drift():
-    """README says "16 agents reached with 9 files written". Pin it to the data."""
+    """README's "agents reached with 9 files written" arithmetic, pinned to the data."""
     p = I.plan(I.agents(), repo_root=".")
     agents_reached = len(p["covered"]) + len(p["per_agent"])
     files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
-    assert agents_reached == len(I.INSTRUCTION_FILES) == 16
+    assert agents_reached == len(I.INSTRUCTION_FILES) == 18
     assert files_written == 9

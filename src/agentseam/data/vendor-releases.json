@@ -50,9 +50,19 @@
     "kind": null,
     "note": "JetBrains plugin marketplace. Feed exists but is not yet wired here."
   },
+  "kilo_code": {
+    "kind": "npm",
+    "id": "@kilocode/cli",
+    "note": "The Kilo CLI. Resolved on 2026-10-11 to 7.8.8. The VS Code extension is marketplace-only; the docs read say they apply to both."
+  },
   "kimi_code": {
     "kind": null,
     "note": "No confirmed release feed. Manual check."
+  },
+  "opencode": {
+    "kind": "npm",
+    "id": "@opencode/cli",
+    "note": "OpenCode v2. Resolved on 2026-10-11 to 2.0.26. The v1 line still publishes as opencode-ai (1.18.35 on 2026-10-11); this row was read against both."
   },
   "replit": {
     "kind": null,
