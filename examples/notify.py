@@ -6,8 +6,8 @@
 Highest-breadth hook use case in the wild, normally re-written per agent. Here it is
 agent-agnostic in ten lines.
 
-With this event set, 13 of the 14 adapters wire; antigravity is skipped whole with the
-reason printed, and the command exits non-zero.
+With this event set, 14 of the 16 adapters wire; antigravity and mistral_vibe are skipped
+whole with the reason printed, and the command exits non-zero.
 """
 
 import subprocess

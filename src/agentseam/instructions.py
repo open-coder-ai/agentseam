@@ -29,7 +29,7 @@ INSTRUCTION_FILES = {
     "zed": {"files": [".rules"], "shared": True, "imports": None},
     "junie": {"files": [".junie/guidelines.md"], "shared": False, "imports": None},
     "devin": {"files": [".devin/README.md"], "shared": False, "imports": None},
-    "grok": {"files": [".grok/GROK.md"], "shared": False, "imports": None},
+    "grok": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "kimi_code": {"files": [".kimi-code/AGENTS.md"], "shared": True, "imports": None},
     "opencode": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "kilo_code": {"files": ["AGENTS.md"], "shared": True, "imports": None},

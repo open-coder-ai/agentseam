@@ -51,7 +51,15 @@ def _rejected_by_markers(c, raw):
     return any(PROBES[probe](raw) for probe in c.get("reject_probes", ()))
 
 
+def _accepted_by_values(c, raw):
+    """True unless the entry names accepted values and the payload carries none of them."""
+    values = c.get("accept_values")
+    return not values or any(key in raw and raw[key] in allowed for key, allowed in values.items())
+
+
 def _accepted_by_markers(c, raw, name):
+    if not _accepted_by_values(c, raw):
+        return False
     accept = c.get("accept_markers", ())
     if not accept or any(marker in raw for marker in accept):
         return True

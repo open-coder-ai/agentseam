@@ -21,6 +21,8 @@ _FAMILY = {
     "grok": "flat_decision",
     "goose": "flat_decision",
     "openhands": "flat_decision",
+    "factory_droid": "hook_json",
+    "mistral_vibe": "flat_decision",
     "cursor": "cursor",
     "windsurf": "windsurf",
     "antigravity": "antigravity",
@@ -38,8 +40,9 @@ _CLAUDE_CODE_CLAIMS_NOTES = (
     "2026-10-10), and an MCP tool spelled mcp_<server>_<tool> rather than Claude's mcp__<server>__<tool> "
     "(kiro.dev/docs/hooks/types, updated 2026-10-10), are Kiro's. Kiro's V3 primary names (read, write, "
     "shell) and its tool-less events carry nothing Claude Code does not, so those still read as "
-    "claude_code. Neither vendor has an adapter, so their payloads detect as no agent rather than as "
-    "claude_code."
+    "claude_code. factory_droid claims Droid's payloads on those same permission_mode values "
+    "(accept_values, D2a); Kiro has no adapter, so its separable payloads detect as no agent rather "
+    "than as claude_code."
 )
 
 _GROK_CLAIMS_NOTES = (
@@ -149,6 +152,30 @@ _CLAIMS = {
         "notes": (
             "OpenHands names the event under `event_type`, a key no other adapter's payload uses, "
             "so the event key alone separates it (docs.openhands.dev hooks page, read 2026-10-11)."
+        ),
+    },
+    "factory_droid": {
+        "mode": "marker",
+        "event_key": ["hook_event_name"],
+        "accept_values": {"permission_mode": ["off", "spec", "auto-low", "auto-medium", "auto-high"]},
+        "notes": (
+            "Droid's payload carries Claude Code's keys, so only a value separates it: every Droid event "
+            "carries permission_mode, and Droid sends only off, spec, auto-low, auto-medium or auto-high "
+            "there (docs.factory.com/harness/hooks, read 2026-10-11; droid 0.238.0's own hook-input builder "
+            "maps every autonomy mode to one of those five, defaulting to off). claude_code rejects exactly "
+            "those values (reject_values), so a payload is claimed by one of the two and never by both. A "
+            "Droid build that sent a Claude Code permission_mode value would detect as claude_code again, "
+            "whose deny Droid also reads."
+        ),
+    },
+    "mistral_vibe": {
+        "mode": "marker",
+        "event_key": ["hook_event_name"],
+        "notes": (
+            "Vibe names the event under hook_event_name with its own snake_case hook types (pre_tool, "
+            "post_tool, post_agent), which no other adapter maps, so the event name alone separates it "
+            "(docs.mistral.ai/vibe/code/cli/hooks and vibe/core/hooks/models.py HookType at mistral-vibe "
+            "2.26.1, read 2026-10-11)."
         ),
     },
     "vscode_copilot": {

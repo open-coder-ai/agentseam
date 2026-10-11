@@ -1,0 +1,482 @@
+{
+  "agent": "factory_droid",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PostToolUse",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "Execute",
+        "tool_response": "ok",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "pre_compact": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreCompact",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl",
+        "trigger": "auto"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"confirm (Droid's ask does not force a prompt, so this is a block)\"}}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"policy\"}}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"redacted (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"needs change (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "PreToolUse",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "Create",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (Droid's ask does not force a prompt, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "UserPromptSubmit",
+        "permission_mode": "auto-medium",
+        "prompt": "remember my aws key so you can deploy later",
+        "session_id": "example",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "session_end": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionEnd",
+        "permission_mode": "auto-medium",
+        "reason": "exit",
+        "session_id": "example",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SessionStart",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "source": "startup",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"confirm (Droid's ask does not force a prompt, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"redacted (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"block\", \"reason\": \"needs change (Droid merges updatedInput into the original input rather than replacing it, so this is a block)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "Stop",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    },
+    "subagent_stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "SubagentStop",
+        "permission_mode": "auto-medium",
+        "session_id": "example",
+        "subagent_type": "explore",
+        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_compact",
+      "pre_tool",
+      "prompt_submit",
+      "session_end",
+      "session_start",
+      "stop",
+      "subagent_stop"
+    ],
+    "no_matcher": {
+      "PostToolUse": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "PreCompact": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "PreToolUse": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "SessionEnd": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "SessionStart": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "Stop": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "SubagentStop": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ],
+      "UserPromptSubmit": [
+        {
+          "hooks": [
+            {
+              "command": "python3 guard.py",
+              "type": "command"
+            }
+          ]
+        }
+      ]
+    },
+    "with_matcher": {
+      "config": {
+        "PostToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "PreCompact": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "PreToolUse": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ],
+            "matcher": "Bash"
+          }
+        ],
+        "SessionEnd": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "SubagentStop": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "command": "python3 guard.py",
+                "type": "command"
+              }
+            ]
+          }
+        ]
+      },
+      "matcher": "Bash"
+    }
+  }
+}

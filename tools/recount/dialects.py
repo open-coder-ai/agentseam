@@ -110,6 +110,29 @@ _VERDICT_DIALECT = {
         },
         "note_style": "because",
     },
+    "factory_droid": {
+        "words": {"block": "block", "deny": "deny"},
+        "degrade_notes": {
+            "escalate": "Droid's ask does not force a prompt, so this is a block",
+            "escalate_from_transform": "Droid merges updatedInput into the original input rather than replacing it, so this is a block",
+            "transform": "Droid merges updatedInput into the original input rather than replacing it, so this is a block",
+        },
+        "reason_defaults": {"deny_gate": "blocked"},
+        "note_style": "suffix",
+        "echo": "reverse_map",
+        "context_events": ["SessionStart", "UserPromptSubmit"],
+        "context_source": "context",
+    },
+    "mistral_vibe": {
+        "words": {"block": "deny"},
+        "degrade_notes": {
+            "escalate": "Vibe cannot prompt for confirmation from a hook",
+            "escalate_from_transform": "agentseam does not write Vibe's tool_input rewrite",
+            "transform": "agentseam does not write Vibe's tool_input rewrite",
+        },
+        "note_style": "because",
+        "echo": "payload",
+    },
     "cursor": {
         "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
         "degrade_notes": {
