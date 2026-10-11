@@ -1,5 +1,5 @@
 {
-  "_about": "Value-based detection (org-plan plan/one-oh-gaps.md D1). `vendor_doc_payloads` are copied from the cited vendor docs; `golden_detection` pins what detect() returned for every golden wire fixture before D1, which D1 must not change; factory_droid and mistral_vibe (D2a) are pinned from their first capture. Home-directory paths in the vendors' examples are replaced with /repo, because tests/test_no_private_data.py forbids home paths in tracked files; no path value takes part in detection.",
+  "_about": "Value-based detection (org-plan plan/one-oh-gaps.md D1). `vendor_doc_payloads` are copied from the cited vendor docs; `golden_detection` pins what detect() returned for every golden wire fixture before D1, which D1 must not change; factory_droid and mistral_vibe (D2a) and cline (D2b) are pinned from their first capture. Home-directory paths in the vendors' examples are replaced with /repo, because tests/test_no_private_data.py forbids home paths in tracked files; no path value takes part in detection.",
   "vendor_doc_payloads": [
     {
       "name": "factory_droid_pre_tool_use_create",
@@ -89,6 +89,80 @@
         },
         "timestamp": "2026-04-14T12:00:00Z"
       }
+    },
+    {
+      "name": "cline_pre_tool_use_vscode",
+      "vendor": "cline",
+      "expect": "cline",
+      "why": "clineVersion is a key no other vendor sends; the extension names the event after the hook file (PreToolUse). Before D2b no adapter claimed it.",
+      "source": {
+        "url": "https://github.com/cline/cline/blob/main/.clinerules/hooks/README.md",
+        "section": "Hook Input/Output: Input (via stdin as JSON), with the README's own write_to_file example",
+        "version": "Cline VS Code extension 4.1.23 and CLI 3.0.70, cline/cline main c3a40572 (2026-10-10)",
+        "read": "2026-10-11"
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "PreToolUse",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "taskId": "1760140800000",
+        "workspaceRoots": [
+          "/repo"
+        ],
+        "userId": "user",
+        "preToolUse": {
+          "toolName": "write_to_file",
+          "parameters": {
+            "path": "src/index.js",
+            "content": "console.log(1)"
+          }
+        }
+      },
+      "expect_event": "pre_tool"
+    },
+    {
+      "name": "cline_tool_call_cli",
+      "vendor": "cline",
+      "expect": "cline",
+      "why": "The CLI/SDK sends its own event name (tool_call) for the PreToolUse file, plus the raw tool_call; clineVersion is present, empty when CLINE_VERSION is unset.",
+      "source": {
+        "url": "https://github.com/cline/cline/blob/main/sdk/packages/core/src/hooks/hook-file-hooks.ts",
+        "section": "createPayloadBase and runToolCallStart (the payload a PreToolUse file receives from the CLI)",
+        "version": "Cline VS Code extension 4.1.23 and CLI 3.0.70, cline/cline main c3a40572 (2026-10-10)",
+        "read": "2026-10-11"
+      },
+      "payload": {
+        "clineVersion": "",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "taskId": "conv-1",
+        "sessionContext": {
+          "rootSessionId": "conv-1"
+        },
+        "workspaceRoots": [
+          "/repo"
+        ],
+        "userId": "user",
+        "agent_id": "agent-1",
+        "parent_agent_id": null,
+        "hookName": "tool_call",
+        "iteration": 1,
+        "tool_call": {
+          "id": "call-1",
+          "name": "run_commands",
+          "input": {
+            "commands": [
+              "npm test"
+            ]
+          }
+        },
+        "preToolUse": {
+          "toolName": "run_commands",
+          "parameters": {
+            "commands": "[\"npm test\"]"
+          }
+        }
+      },
+      "expect_event": "pre_tool"
     }
   ],
   "golden_detection": {
@@ -110,6 +184,13 @@
       "subagent_start": "claude_code",
       "subagent_stop": "claude_code",
       "tool_failure": "claude_code"
+    },
+    "cline": {
+      "post_tool": "cline",
+      "pre_tool": "cline",
+      "prompt_submit": "cline",
+      "session_start": "cline",
+      "stop": "cline"
     },
     "codex_cli": {
       "post_tool": "codex_cli",

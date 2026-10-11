@@ -1,0 +1,255 @@
+{
+  "agent": "cline",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "PostToolUse",
+        "postToolUse": {
+          "executionTimeMs": 1200,
+          "parameters": {
+            "commands": "[\"npm test\"]"
+          },
+          "result": "1 test failed",
+          "success": false,
+          "toolName": "run_commands"
+        },
+        "taskId": "example",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "userId": "example",
+        "workspaceRoots": [
+          "/repo"
+        ]
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": "{\"cancel\": false}"
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"cancel\": true, \"errorMessage\": \"confirm (Cline hooks cannot ask the user, so this is a block)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"cancel\": true, \"errorMessage\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"cancel\": true, \"errorMessage\": \"redacted (Cline's documented hooks cannot modify tool parameters, so this is a block)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"cancel\": true, \"errorMessage\": \"needs change (Cline's documented hooks cannot modify tool parameters, so this is a block)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": "{\"cancel\": false}"
+        }
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "PreToolUse",
+        "preToolUse": {
+          "parameters": {
+            "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+            "path": "AGENTS.md"
+          },
+          "toolName": "write_to_file"
+        },
+        "taskId": "example",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "userId": "example",
+        "workspaceRoots": [
+          "/repo"
+        ]
+      }
+    },
+    "prompt_submit": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "UserPromptSubmit",
+        "taskId": "example",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "userId": "example",
+        "userPromptSubmit": {
+          "attachments": [],
+          "prompt": "remember my aws key so you can deploy later"
+        },
+        "workspaceRoots": [
+          "/repo"
+        ]
+      }
+    },
+    "session_start": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "TaskStart",
+        "taskId": "example",
+        "taskStart": {
+          "taskMetadata": {
+            "initialTask": "remember my aws key so you can deploy later",
+            "taskId": "example",
+            "ulid": "example"
+          }
+        },
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "userId": "example",
+        "workspaceRoots": [
+          "/repo"
+        ]
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "clineVersion": "4.1.23",
+        "hookName": "TaskComplete",
+        "taskComplete": {
+          "taskMetadata": {
+            "taskId": "example",
+            "ulid": "example"
+          }
+        },
+        "taskId": "example",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "userId": "example",
+        "workspaceRoots": [
+          "/repo"
+        ]
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "prompt_submit",
+      "session_start",
+      "stop"
+    ],
+    "no_matcher": {
+      "PostToolUse": "python3 guard.py",
+      "PreToolUse": "python3 guard.py",
+      "TaskComplete": "python3 guard.py",
+      "TaskStart": "python3 guard.py",
+      "UserPromptSubmit": "python3 guard.py"
+    },
+    "with_matcher": {
+      "config": {
+        "PostToolUse": "python3 guard.py",
+        "PreToolUse": "python3 guard.py",
+        "TaskComplete": "python3 guard.py",
+        "TaskStart": "python3 guard.py",
+        "UserPromptSubmit": "python3 guard.py"
+      },
+      "matcher": "Bash"
+    }
+  }
+}

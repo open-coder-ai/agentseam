@@ -4,7 +4,7 @@ Every function takes the vendor's `data/vendors/<agent>.json` entry as its first
 `_family.bind()` closes them over one entry (with `_payload.py`'s claims/parse side), and a
 bundle inlines both modules next to a `VENDOR` literal. What varies per vendor is only the
 data the entry carries (dialect-families.md §3.1: words, key chains, flags, note strings);
-the shapes rendered here are the family's G1/G2 grammars and the shared
+the shapes rendered here are the family's G1/G2 grammars, Cline's G7 cancel object, and the shared
 `hookSpecificOutput` context/transform bodies.
 """
 
@@ -184,6 +184,17 @@ def _g2(v, gate, decision, name):
     return _json.dumps({"hookSpecificOutput": out}), 0
 
 
+def _g7(v, decision, wire):
+    """Cancel object: `{"cancel": false}` lets the call through, `{"cancel": true, "errorMessage"}` stops it."""
+    if decision.outcome in (ALLOW, VOUCH, WARN):
+        out = {"cancel": False}
+        value = _context_value(v, decision)
+        if wire in v.get("context_events", ()) and value:
+            out["contextModification"] = value
+        return _json.dumps(out), 0
+    return _json.dumps({"cancel": True, "errorMessage": _refusal_text(v, decision, at_gate=True, wire=wire)}), 0
+
+
 def hj_respond(cfg, decision, event, wire=None):
     """(stdout_text, exit_code) in this entry's dialect for the gate the payload names.
 
@@ -208,4 +219,6 @@ def hj_respond(cfg, decision, event, wire=None):
         return "", 0
     if gate["grammar"] == "G2":
         return _g2(v, gate, decision, name)
+    if gate["grammar"] == "G7":
+        return _g7(v, decision, wire)
     return _g1(v, gate, decision, wire, name)

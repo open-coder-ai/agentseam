@@ -21,7 +21,7 @@ SQL injection in a Spring repository, a wildcard IAM grant, an MCP server pinned
 written into agent memory. A guard at the agent's own `pre_tool` hook can refuse that write; a rule in the
 prompt is forgotten when the context fills. Every agent invented its own hook system, so such a guard is
 normally written once per agent, or for one agent and then stops. agentseam is the layer that makes it
-one guard for the 16 agents it has a hook adapter for (27 are in the matrix), and the matrix keeps the
+one guard for the 17 agents it has a hook adapter for (27 are in the matrix), and the matrix keeps the
 claim honest: a guard is only called enforced where the agent can enforce it.
 
 The Quick start handler is a guard. It reads the normalized `pre_tool` event and refuses content carrying
@@ -89,15 +89,15 @@ Adapters are data (`src/agentseam/data/vendors/<agent>.json`, validated against 
 small family module when a vendor speaks a new dialect. The matrix is data too, and
 `matrix.enforcement_level(agent, event)` is the authority for every grade below.
 
-*324 cells (27 agents by 12 events), from `matrix.enforcement_level()` run at `9fde141`: 208 none, 70 detect, 44 best-effort, 2 enforceable, 0 enforced.*
+*324 cells (27 agents by 12 events), from `matrix.enforcement_level()` run at `a100491`: 203 none, 74 detect, 45 best-effort, 2 enforceable, 0 enforced.*
 
 | Level | Meaning | Agents at `pre_tool` today |
 |---|---|---|
 | enforced | the agent blocks, and fails closed if the hook dies | none |
 | enforceable | it blocks and *can* be told to fail closed, but doesn't by default | 1: Cursor |
-| best-effort | it blocks, but fails *open* (a crashed hook allows) | 15: Claude Code, VS Code Copilot, Codex CLI, Gemini CLI, Windsurf, Devin, Grok CLI, Antigravity, Kimi Code, Junie, Tabnine, goose, OpenHands, Factory Droid, Mistral Vibe |
-| detect | observable after the fact only; prevention is not available | 0 (70 cells at other events) |
-| none | nothing agentseam can gate: no hook surface, or no adapter yet (`unadapted`) | 11: aider and Zed (no hook surface); Amp, Cline, Copilot CLI, DeepSeek Harness, Kilo Code, Kiro, OpenCode, Replit, Roo Code (`unadapted`) |
+| best-effort | it blocks, but fails *open* (a crashed hook allows) | 16: Claude Code, VS Code Copilot, Codex CLI, Gemini CLI, Windsurf, Devin, Grok CLI, Antigravity, Kimi Code, Junie, Tabnine, goose, OpenHands, Factory Droid, Mistral Vibe, Cline |
+| detect | observable after the fact only; prevention is not available | 0 (74 cells at other events) |
+| none | nothing agentseam can gate: no hook surface, or no adapter yet (`unadapted`) | 10: aider and Zed (no hook surface); Amp, Copilot CLI, DeepSeek Harness, Kilo Code, Kiro, OpenCode, Replit, Roo Code (`unadapted`) |
 
 A row is only claimed when a `verified: {basis, version, date}` record backs it. Run `agentseam doctor` to
 see what is wired on this machine and flag rows not re-verified in 90 days. Grading never exceeds
@@ -161,16 +161,17 @@ to a silent pass-through.
 | OpenHands | block at PreToolUse, UserPromptSubmit and Stop (fail-open) | `.openhands/hooks.json` | vendor-docs · 2026-10-11 |
 | Factory Droid | block at PreToolUse, UserPromptSubmit and Stop (fail-open); ask and rewrite degrade to a block | `.factory/hooks.json` | vendor-docs · 2026-10-11 |
 | Mistral Vibe | block at pre_tool and post_agent (fail-open unless `strict`); project hooks need a trusted folder | `.vibe/hooks.toml` | vendor-docs · 2026-10-11 |
+| Cline | block at PreToolUse only, `{"cancel": true}` (fail-open); ask and rewrite degrade to a block; hooks must be enabled in its settings, macOS and Linux only | `.clinerules/hooks/<Event>` (one executable per event) | vendor-docs · 2026-10-11 |
 | Zed | no hook surface at all; instruction files only | none | vendor-docs · 2026-10-11 |
 | Aider | no hook surface at all; instruction files only | none | vendor-docs · 2026-08-26 |
 | Replit | no hook surface found in its docs; instruction files only | none | vendor-docs · 2026-08-26 |
 | Copilot CLI marketplace bundle | packaging identity only; dispatches through the VS Code Copilot adapter | none | vendor-docs · 2026-08-29 |
-| OpenCode, Kilo Code, Cline, Roo Code, Amp, Kiro, DeepSeek Harness | `unadapted`: no adapter yet; each row's notes say why and what it would take; instruction files only | none | vendor-docs · 2026-10-11 |
+| OpenCode, Kilo Code, Roo Code, Amp, Kiro, DeepSeek Harness | `unadapted`: no adapter yet; each row's notes say why and what it would take; instruction files only | none | vendor-docs · 2026-10-11 |
 
-Of the 16 agents that claim `pre_tool` at all, 4 (Claude Code, Codex CLI, Cursor, VS Code
-Copilot) rest on a live run against the real agent; eleven of the other 12 rest on documentation
+Of the 17 agents that claim `pre_tool` at all, 4 (Claude Code, Codex CLI, Cursor, VS Code
+Copilot) rest on a live run against the real agent; twelve of the other 13 rest on documentation
 or a third-party install, and Gemini CLI on a read of the vendor's own source. None of those
-twelve rests on a live run. Run `agentseam matrix --evidence` before you trust any row you didn't witness yourself.
+thirteen rests on a live run. Run `agentseam matrix --evidence` before you trust any row you didn't witness yourself.
 
 ### Beyond security guards
 
@@ -284,7 +285,7 @@ Tiers: `commit` is a git hook or CI gate that exits non-zero. `in-agent` is the 
 **Does my code leave my machine?** agentseam adds no new place your code goes: handlers run locally in the
 hook process. The agent still sends its context to its own model provider.
 
-**Which agents does it work with?** 27 are in the matrix, 16 of them with a hook adapter; see Supported agents.
+**Which agents does it work with?** 27 are in the matrix, 17 of them with a hook adapter; see Supported agents.
 
 **How do I install it, through the repo or through plugins?** `pip install agentseam` for the library. For
 guardrails, see Install above: the repository route (commit and CI) or the five plugin repos (in-agent).
@@ -345,7 +346,7 @@ a result that contradicts the matrix is the one we most want. The walk-through i
 | First contribution | Where to start |
 |---|---|
 | Turn a `vendor-docs` row into a live-run row | have the agent installed? [tools/VERIFY.md](tools/VERIFY.md), an hour, no code |
-| Add an agent adapter | a vendor config entry, a matrix row and real-payload fixtures ([steps](CONTRIBUTING.md#adding-an-agent-adapter)); the `unadapted` rows (OpenCode, Cline, Kiro, Mistral Vibe and others) are researched, and each row's notes say what an adapter needs |
+| Add an agent adapter | a vendor config entry, a matrix row and real-payload fixtures ([steps](CONTRIBUTING.md#adding-an-agent-adapter)); the `unadapted` rows (OpenCode, Kiro, Kilo Code and others) are researched, and each row's notes say what an adapter needs |
 | Correct a matrix row that claims too much | the [matrix correction](https://github.com/open-coder-ai/agentseam/issues/new?template=matrix_correction.md) template |
 | Write a guard others can adopt | ship it as a policy in [chock-catalog](https://github.com/open-coder-ai/chock-catalog) |
 | Bugs and docs | a [good first issue](https://github.com/open-coder-ai/agentseam/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) |

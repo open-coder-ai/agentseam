@@ -28,7 +28,7 @@ _SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity
 
 #: Grammar -> the renderer `hj_respond` routes to it. A bundle carries only the renderers
 #: its entry's gates speak; the reference left behind is unreachable for that entry's data.
-_GRAMMAR_RENDERERS = {"G1": "_g1", "G2": "_g2"}
+_GRAMMAR_RENDERERS = {"G1": "_g1", "G2": "_g2", "G7": "_g7"}
 
 #: Modules runtime.py.tmpl uses itself, hoisted with whatever the spliced sources import.
 _RUNTIME_IMPORTS = (

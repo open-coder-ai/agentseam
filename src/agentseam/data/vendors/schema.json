@@ -22,7 +22,7 @@
     "display": {"type": "string", "minLength": 1},
     "family": {"enum": ["hook_json", "flat_decision", "cursor", "windsurf", "antigravity"]},
     "config_path": {"type": "string", "minLength": 1},
-    "config_format": {"enum": ["json", "toml"]},
+    "config_format": {"enum": ["json", "toml", "hook_dir"], "description": "hook_dir: config_path is a directory holding one executable per event, named exactly as the wire event (cline)."},
     "needs_trust": {"type": "boolean"},
     "trust_hint": {
       "type": "string",
@@ -118,7 +118,7 @@
             "additionalProperties": false,
             "required": ["grammar", "honours_escalate", "honours_transform"],
             "properties": {
-              "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6"]},
+              "grammar": {"enum": ["G1", "G2", "G3", "G4", "G5", "G6", "G7"]},
               "honours_escalate": {"type": "boolean"},
               "honours_transform": {"type": "boolean"}
             }
@@ -230,7 +230,7 @@
       "additionalProperties": false,
       "required": ["wrapper", "matcher"],
       "properties": {
-        "wrapper": {"enum": ["hooks_map", "flat_entries", "flat_list", "cursor"]},
+        "wrapper": {"enum": ["hooks_map", "flat_entries", "flat_list", "cursor", "hook_dir"]},
         "matcher": {"type": "boolean", "description": "whether passing `matcher=` to hook_config() changes its output at all."},
         "bare": {"type": "boolean", "description": "the hooks table IS the whole config value, with no wrapper key around it (devin's hooks.v1.json)."},
         "group": {"type": "string", "description": "top-level wrapper key when the hooks table sits inside one (antigravity's GROUP)."},

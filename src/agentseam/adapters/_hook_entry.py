@@ -80,6 +80,11 @@ def _flat_entries_wrapper(hook_entry, reverse, canonical_events, command):
     return {"hooks": hooks}
 
 
+def _hook_dir_wrapper(reverse, canonical_events, command):
+    """File name -> command: one executable per event, named exactly as the wire event (cline)."""
+    return {reverse[ev]: command for ev in canonical_events if reverse.get(ev)}
+
+
 def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
     hook_entry = cfg["hook_entry"]
     hooks = {}
@@ -111,6 +116,8 @@ def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_clos
         return _cursor_wrapper(cfg, reverse, canonical_events, command, fail_closed=fail_closed)
     if wrapper == "flat_entries":
         return _flat_entries_wrapper(hook_entry, reverse, canonical_events, command)
+    if wrapper == "hook_dir":
+        return _hook_dir_wrapper(reverse, canonical_events, command)
     return _default_wrapper(cfg, reverse, canonical_events, command, matcher)
 
 

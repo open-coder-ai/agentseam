@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="760" height="914" viewBox="0 0 760 914" role="img" aria-labelledby="t d">
   <title id="t">agentseam capability matrix</title>
-  <desc id="d">Grid of 27 coding agents by 12 lifecycle events, shaded by the enforcement grade agentseam can honestly claim at that surface. Of 324 cells: 2 enforceable; 44 best-effort; 70 detect; 208 none. No agent is graded enforced at any event -- fifteen agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Amp, Cline, Copilot, DeepSeek Harness, Kilo Code, Kiro, OpenCode, Replit, Roo Code and Zed have nothing agentseam can gate at pre_tool.</desc>
+  <desc id="d">Grid of 27 coding agents by 12 lifecycle events, shaded by the enforcement grade agentseam can honestly claim at that surface. Of 324 cells: 2 enforceable; 45 best-effort; 74 detect; 203 none. No agent is graded enforced at any event -- sixteen agents reach only best-effort at pre_tool, Cursor alone reaches enforceable there, and aider, Amp, Copilot, DeepSeek Harness, Kilo Code, Kiro, OpenCode, Replit, Roo Code and Zed have nothing agentseam can gate at pre_tool.</desc>
   <rect width="760" height="914" fill="#fcfcfb"/>
   <text x="14" y="20" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="15" font-weight="600" fill="#0b0b0b" text-anchor="start">What each agent can honestly do, by event</text>
   <text x="14" y="36" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">27 agents × 12 events, graded from src/agentseam/matrix.py -- not one cell says “enforced”</text>
@@ -139,18 +139,18 @@
   <text x="668.5" y="261.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
   <rect x="695.333" y="247" width="49.6667" height="22" rx="2" fill="#5598e7"/>
   <text x="720.167" y="261.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
-  <rect x="127" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
-  <text x="151.833" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
-  <rect x="178.667" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
-  <text x="203.5" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
-  <rect x="230.333" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
-  <text x="255.167" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
+  <rect x="127" y="271" width="49.6667" height="22" rx="2" fill="#2a78d6"/>
+  <text x="151.833" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">BE</text>
+  <rect x="178.667" y="271" width="49.6667" height="22" rx="2" fill="#5598e7"/>
+  <text x="203.5" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
+  <rect x="230.333" y="271" width="49.6667" height="22" rx="2" fill="#5598e7"/>
+  <text x="255.167" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
   <rect x="282" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
   <text x="306.833" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
-  <rect x="333.667" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
-  <text x="358.5" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
-  <rect x="385.333" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
-  <text x="410.167" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
+  <rect x="333.667" y="271" width="49.6667" height="22" rx="2" fill="#5598e7"/>
+  <text x="358.5" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
+  <rect x="385.333" y="271" width="49.6667" height="22" rx="2" fill="#5598e7"/>
+  <text x="410.167" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#fcfcfb" text-anchor="middle">DT</text>
   <rect x="437" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
   <text x="461.833" y="285.5" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#52514e" text-anchor="middle">–</text>
   <rect x="488.667" y="271" width="49.6667" height="22" rx="2" fill="#d8d7d2"/>
@@ -696,13 +696,13 @@
   <text x="48" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">enforceable (2)</text>
   <rect x="227" y="837" width="14" height="14" rx="2" fill="#2a78d6"/>
   <text x="244" y="848" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">BE</text>
-  <text x="261" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">best-effort (44)</text>
+  <text x="261" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">best-effort (45)</text>
   <rect x="451" y="837" width="14" height="14" rx="2" fill="#5598e7"/>
   <text x="468" y="848" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">DT</text>
-  <text x="485" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">detect (70)</text>
+  <text x="485" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">detect (74)</text>
   <rect x="620" y="837" width="14" height="14" rx="2" fill="#d8d7d2"/>
   <text x="637" y="848" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="8.5" font-weight="600" fill="#0b0b0b" text-anchor="start">–</text>
-  <text x="654" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">none (208)</text>
+  <text x="654" y="848" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="400" fill="#52514e" text-anchor="start">none (203)</text>
   <text x="14" y="874" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">“enforced” never appears above: no agent in this matrix blocks and fails closed at any event.</text>
   <text x="14" y="892" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="10" font-weight="400" fill="#52514e" text-anchor="start">– marks no hook surface at all, not a weak grade -- it is drawn in grey, never on the ramp.</text>
 </svg>

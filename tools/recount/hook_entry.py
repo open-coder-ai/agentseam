@@ -33,6 +33,8 @@ def _classify(agent, no_matcher, with_matcher):
     matcher_effective = no_matcher != with_matcher
     if isinstance(no_matcher, list):
         return dict({"wrapper": "flat_list", "matcher": matcher_effective}, **_EXTRA.get(agent, {}))
+    if all(isinstance(value, str) for value in no_matcher.values()):
+        return {"wrapper": "hook_dir", "matcher": matcher_effective}
     if "version" in no_matcher and "hooks" in no_matcher:
         return {"wrapper": "cursor", "matcher": matcher_effective}
     bare = False
