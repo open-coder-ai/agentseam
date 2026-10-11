@@ -1,4 +1,4 @@
-"""Render agentseam's capability matrix: 18 agents x 12 events, graded from src/agentseam/matrix.py.
+"""Render agentseam's capability matrix: 21 agents x 12 events, graded from src/agentseam/matrix.py.
 
 Run from this directory:
 
@@ -40,7 +40,7 @@ LEGEND_H = 92
 
 GRID_X0 = MARGIN_L + LABEL_W
 GRID_Y0 = TITLE_H + HEADER_H
-GRID_H = 18 * CELL_H
+GRID_H = 21 * CELL_H
 H = GRID_Y0 + GRID_H + LEGEND_H
 
 #: Column order is a display choice (roughly lifecycle order); the set is not -- it is
@@ -64,7 +64,7 @@ _actual_events = {e for row in matrix.MATRIX.values() for e in row["events"]}
 assert set(EVENTS) == _actual_events, f"EVENTS list drifted from matrix.py: {_actual_events}"
 
 AGENTS = matrix.agents()  # sorted() -- the same order matrix.py itself considers canonical
-assert len(AGENTS) == 18, f"expected 18 agents, matrix.py now has {len(AGENTS)}"
+assert len(AGENTS) == 21, f"expected 21 agents, matrix.py now has {len(AGENTS)}"
 
 #: Ordinal position each grade takes in the shared 5-step LEVELS ramp (index 4 = darkest =
 #: strongest, matching the ENFORCEMENT ramp's own advisory-to-enforced direction). `none` is
@@ -95,7 +95,7 @@ GRADE_ORDER_DISPLAY = [GRADE_ENFORCED, GRADE_ENFORCEABLE, GRADE_BEST_EFFORT, GRA
 
 
 def cell_grades():
-    """{(agent, event): grade} for the full 18x12 grid, and a grade -> count tally."""
+    """{(agent, event): grade} for the full 21x12 grid, and a grade -> count tally."""
     grades = {}
     counts = {g: 0 for g in GRADE_ORDER_DISPLAY}
     for agent in AGENTS:
@@ -116,11 +116,11 @@ def render(t, name, grades, counts):
     total = sum(counts.values())
     present = [g for g in GRADE_ORDER_DISPLAY if counts[g] > 0]
     desc = (
-        "Grid of 18 coding agents by 12 lifecycle events, shaded by the enforcement grade "
+        "Grid of 21 coding agents by 12 lifecycle events, shaded by the enforcement grade "
         "agentseam can honestly claim at that surface. Of %d cells: %s. No agent is graded "
-        "enforced at any event -- eleven agents reach only best-effort at pre_tool, Cursor "
-        "alone reaches enforceable there, and aider, Copilot, Kilo Code, OpenCode, Replit "
-        "and Zed have nothing agentseam can gate at pre_tool."
+        "enforced at any event -- twelve agents reach only best-effort at pre_tool, Cursor "
+        "alone reaches enforceable there, and aider, Cline, Copilot, Kilo Code, OpenCode, "
+        "Replit, Roo Code and Zed have nothing agentseam can gate at pre_tool."
         % (total, "; ".join("%d %s" % (counts[g], LABEL[g]) for g in present))
     )
     svg = p.open_svg(W, H, t, "agentseam capability matrix", desc)
@@ -128,7 +128,7 @@ def render(t, name, grades, counts):
     svg += p.text(
         MARGIN_L,
         36,
-        "18 agents × 12 events, graded from src/agentseam/matrix.py -- not one cell says “enforced”",
+        "21 agents × 12 events, graded from src/agentseam/matrix.py -- not one cell says “enforced”",
         t["secondary"],
         10.5,
     )
