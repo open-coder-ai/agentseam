@@ -1,10 +1,20 @@
 {
   "agent": "grok",
   "claims": {
-    "event_key": [
+    "accept_markers": [
       "hookEventName"
     ],
-    "mode": "marker"
+    "event_key": [
+      "hook_event_name",
+      "hookEventName"
+    ],
+    "mode": "marker",
+    "notes": "Grok Build sends hookEventName with grok's snake_case value (pre_tool_use) beside a hook_event_name key carrying the PascalCase name (github.com/xai-org/grok-build user-guide/10-hooks.md, read 2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older camelCase-only shape falls back to hookEventName, which is required either way.",
+    "reject_markers_unless_probe": {
+      "event_keys_agree": [
+        "hook_event_name"
+      ]
+    }
   },
   "config_format": "json",
   "config_path": ".grok/hooks/agentseam.json",
