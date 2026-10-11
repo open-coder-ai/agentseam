@@ -115,6 +115,8 @@ def _g1_transform(v, decision, name, words):
         return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
     if decision.updated_input is None:
         return None
+    if v.get("transform_grammar") == "hook_output_snake_tool_input":
+        return _json.dumps({"hook_specific_output": {"tool_input": decision.updated_input}}), 0
     if v.get("transform_grammar") == "top_level_updated_input":
         out = {"decision": words.get("transform", "allow"), "updatedInput": decision.updated_input}
         if decision.reason:

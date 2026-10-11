@@ -14,6 +14,7 @@ import pytest  # noqa: E402
 
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
+from agentseam import install as install_mod  # noqa: E402
 
 BASE = {"session_id": "s1", "parent_session_id": None, "transcript_path": "/repo/s.jsonl", "cwd": "/repo"}
 PRE_BASH = dict(
@@ -66,15 +67,29 @@ def test_a_deny_at_post_tool_is_not_spoken():
     assert _speak(POST_TOOL, Decision.deny("too late"))[:2] == ("", 0)
 
 
-@pytest.mark.parametrize(
-    "decision",
-    [lambda: Decision.escalate("confirm?"), lambda: Decision.transform({"command": "ls"}, "narrow")],
-    ids=["escalate", "transform"],
-)
-def test_what_agentseam_cannot_say_to_vibe_degrades_to_a_deny(decision):
-    body = json.loads(_speak(PRE_BASH, decision())[0])
+def test_an_escalate_degrades_to_a_deny():
+    body = json.loads(_speak(PRE_BASH, Decision.escalate("confirm?"))[0])
     assert body["decision"] == "deny"
     assert "hook_specific_output" not in body
+
+
+def test_a_transform_at_pre_tool_is_the_documented_snake_case_full_replacement():
+    """hook_specific_output.tool_input is a full replacement of the model's arguments (docs, read 2026-10-11)."""
+    text, code, _e, _d = _speak(PRE_BASH, Decision.transform({"command": "ls"}, "narrow"))
+    assert (json.loads(text), code) == ({"hook_specific_output": {"tool_input": {"command": "ls"}}}, 0)
+    assert A.can_transform("mistral_vibe", A.PRE_TOOL)
+
+
+def test_a_transform_with_no_replacement_input_is_a_deny_not_an_empty_rewrite():
+    body = json.loads(_speak(PRE_BASH, Decision.transform(None, "needs change"))[0])
+    assert body == {"decision": "deny", "reason": "needs change (no replacement input was supplied)"}
+
+
+def test_a_transform_at_post_agent_degrades_to_a_deny():
+    """Vibe reads tool_input only at pre_tool; post_agent has no tool call to rewrite."""
+    assert not A.can_transform("mistral_vibe", A.STOP)
+    body = json.loads(_speak(POST_AGENT, Decision.transform({"command": "ls"}, "narrow"))[0])
+    assert body == {"decision": "deny", "reason": "narrow (Vibe rewrites tool input only at pre_tool)"}
 
 
 def test_install_writes_the_hooks_toml_vibe_reads():
@@ -92,6 +107,44 @@ def test_install_writes_the_hooks_toml_vibe_reads():
     assert narrowed["hooks"][0]["match"] == "bash"
 
 
+def test_strict_is_written_only_when_asked_and_only_at_pre_tool():
+    """strict = true turns pre_tool failures into denials; HookConfig rejects it on post_agent."""
+    tomllib = pytest.importorskip("tomllib")
+    mod = A.adapters.get("mistral_vibe")
+    events = [A.PRE_TOOL, A.POST_TOOL, A.STOP]
+    assert all("strict" not in h for h in mod.hook_config(events, "guard.py"))
+    assert mod.hook_config(events, "guard.py") == mod.hook_config(events, "guard.py", fail_closed=False)
+    hooks = tomllib.loads(mod.render_config(mod.hook_config(events, "guard.py", fail_closed=True)))["hooks"]
+    assert [(h["type"], h.get("strict")) for h in hooks] == [
+        ("pre_tool", True),
+        ("post_tool", None),
+        ("post_agent", None),
+    ]
+
+
+def test_install_writes_strict_only_under_the_opt_in(tmp_path):
+    tomllib = pytest.importorskip("tomllib")
+    path = install_mod.install("mistral_vibe", [A.PRE_TOOL, A.STOP], "guard.py", repo_root=str(tmp_path))
+    assert all("strict" not in h for h in tomllib.loads(Path(path).read_text())["hooks"])
+    install_mod.install("mistral_vibe", [A.PRE_TOOL, A.STOP], "guard.py", repo_root=str(tmp_path), fail_closed=True)
+    hooks = tomllib.loads(Path(path).read_text())["hooks"]
+    assert [(h["type"], h.get("strict")) for h in hooks] == [("pre_tool", True), ("post_agent", None)]
+    wired = {"repo_root": str(tmp_path), "events": [A.PRE_TOOL, A.STOP], "command": "guard.py"}
+    assert install_mod.installed("mistral_vibe", fail_closed=True, **wired)
+    assert not install_mod.installed("mistral_vibe", **wired)
+
+
+def test_the_tier_row_reads_fail_closed_only_under_the_option():
+    from agentseam import tier_table
+
+    row = next(r for r in tier_table.rows() if r["agent"] == "mistral_vibe")
+    assert (row["fail_mode"], row["grade"], row["basis"]) == ("configurable", "best-effort", "vendor-docs")
+    row = next(r for r in tier_table.rows(fail_closed=True) if r["agent"] == "mistral_vibe")
+    assert (row["fail_mode"], row["grade"], row["basis"]) == ("closed", "best-effort", "vendor-docs")
+    stop = next(r for r in tier_table.rows(A.STOP, fail_closed=True) if r["agent"] == "mistral_vibe")
+    assert stop["fail_mode"] == "open"
+
+
 def test_two_commands_never_share_a_rule_name():
     """Vibe drops a second [[hooks]] table whose name it has already seen, in any file."""
     mod = A.adapters.get("mistral_vibe")
@@ -99,7 +152,7 @@ def test_two_commands_never_share_a_rule_name():
     assert one != two and one.startswith("agentseam-pre_tool-")
 
 
-def test_the_grade_is_capped_by_docs_basis_and_fails_open():
+def test_the_grade_is_capped_by_docs_basis():
     for event in (A.PRE_TOOL, A.STOP):
         assert A.enforcement_level("mistral_vibe", event) == "best-effort"
     assert A.enforcement_level("mistral_vibe", A.POST_TOOL) == "detect"

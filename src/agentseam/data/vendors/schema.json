@@ -125,7 +125,7 @@
           }
         },
         "transform_grammar": {
-          "enum": ["hook_specific_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
+          "enum": ["hook_specific_tool_input", "hook_output_snake_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
         },
         "words": {
           "type": "object",
@@ -253,6 +253,16 @@
           "type": "string",
           "minLength": 1,
           "description": "flat_list only: the matcher written at a tool event when the caller passes none (mistral_vibe documents match as required for pre_tool and post_tool)."
+        },
+        "fail_closed_rule": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["key", "events"],
+          "description": "flat_list only: the opt-in fail-closed flag. hook_config(fail_closed=True) sets `key` = true on the rules for these canonical events and nowhere else; the default leaves it out (mistral_vibe's strict, which its HookConfig rejects on post_agent and which only clears output text at post_tool).",
+          "properties": {
+            "key": {"enum": ["strict"]},
+            "events": {"$ref": "#/$defs/stringList"}
+          }
         },
         "also_wires": {
           "type": "object",

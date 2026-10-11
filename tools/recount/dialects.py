@@ -127,8 +127,9 @@ _VERDICT_DIALECT = {
         "words": {"block": "deny"},
         "degrade_notes": {
             "escalate": "Vibe cannot prompt for confirmation from a hook",
-            "escalate_from_transform": "agentseam does not write Vibe's tool_input rewrite",
-            "transform": "agentseam does not write Vibe's tool_input rewrite",
+            "escalate_from_transform": "Vibe rewrites tool input only at pre_tool",
+            "transform": "Vibe rewrites tool input only at pre_tool",
+            "transform_missing_input": "no replacement input was supplied",
         },
         "note_style": "because",
         "echo": "payload",

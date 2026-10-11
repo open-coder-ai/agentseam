@@ -18,6 +18,9 @@ _EXTRA = {
         "rule_keys": {"event": "type", "matcher": "match"},
         "rule_name_prefix": "agentseam-",
         "default_match": "*",
+        # strict = true only when install is called with fail_closed=True, and only at
+        # pre_tool: HookConfig rejects it on post_agent (mistral-vibe 2.26.1 models.py).
+        "fail_closed_rule": {"key": "strict", "events": ("pre_tool",)},
     },
     "vscode_copilot": {
         "entry_extra": {

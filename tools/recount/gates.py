@@ -73,6 +73,9 @@ def _classify_transform_grammar(stdout):
     inner = body.get("hookSpecificOutput")
     if isinstance(inner, dict) and "tool_input" in inner:
         return "hook_specific_tool_input"
+    snake = body.get("hook_specific_output")
+    if isinstance(snake, dict) and "tool_input" in snake:
+        return "hook_output_snake_tool_input"
     if isinstance(inner, dict) and "updatedInput" in inner and inner.get("updatedInput") is not None:
         return "hook_specific_updated_input"
     if "updatedInput" in body and body.get("updatedInput") is not None:

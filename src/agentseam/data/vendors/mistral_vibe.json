@@ -88,6 +88,12 @@
   },
   "hook_entry": {
     "default_match": "*",
+    "fail_closed_rule": {
+      "events": [
+        "pre_tool"
+      ],
+      "key": "strict"
+    },
     "matcher": true,
     "rule_keys": {
       "event": "type",
@@ -116,8 +122,9 @@
     "bare_allow": "silent",
     "degrade_notes": {
       "escalate": "Vibe cannot prompt for confirmation from a hook",
-      "escalate_from_transform": "agentseam does not write Vibe's tool_input rewrite",
-      "transform": "agentseam does not write Vibe's tool_input rewrite"
+      "escalate_from_transform": "Vibe rewrites tool input only at pre_tool",
+      "transform": "Vibe rewrites tool input only at pre_tool",
+      "transform_missing_input": "no replacement input was supplied"
     },
     "echo": "payload",
     "gates": {
@@ -129,10 +136,11 @@
       "pre_tool": {
         "grammar": "G1",
         "honours_escalate": false,
-        "honours_transform": false
+        "honours_transform": true
       }
     },
     "note_style": "because",
+    "transform_grammar": "hook_output_snake_tool_input",
     "vocabulary": [
       "allow",
       "deny"

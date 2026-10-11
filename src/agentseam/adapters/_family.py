@@ -53,8 +53,15 @@ class ConfigAdapter:
         return hook_entry_config(self.CONFIG, canonical_events, command, matcher)
 
 
+class _OptInFailClosedAdapter(ConfigAdapter):
+    """A flat_list entry with a `fail_closed_rule`: install writes the vendor's flag only when asked."""
+
+    def hook_config(self, canonical_events, command, matcher=None, *, fail_closed=False):
+        return hook_entry_config(self.CONFIG, canonical_events, command, matcher, fail_closed=fail_closed)
+
+
 class _CursorAdapter(ConfigAdapter):
-    """F3: the G4 dialect, and the only hook_config that takes fail_closed."""
+    """F3: the G4 dialect, whose hook_config takes fail_closed and defaults it on."""
 
     def claims(self, raw):
         return cursor_claims(self.CONFIG, raw)
@@ -104,4 +111,6 @@ def _hook_entry_windows(cfg):
 
 def bind(cfg):
     """The adapter object for one vendor config entry."""
+    if cfg["family"] not in _FAMILY_ADAPTERS and "fail_closed_rule" in cfg["hook_entry"]:
+        return _OptInFailClosedAdapter(cfg)
     return _FAMILY_ADAPTERS.get(cfg["family"], ConfigAdapter)(cfg)
