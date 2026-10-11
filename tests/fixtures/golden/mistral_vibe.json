@@ -62,11 +62,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (agentseam does not write Vibe's tool_input rewrite)\"}"
+          "stdout": "{\"hook_specific_output\": {\"tool_input\": {\"content\": \"safe\"}}}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (agentseam does not write Vibe's tool_input rewrite)\"}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (no replacement input was supplied)\"}"
         },
         "vouch": {
           "exit": 0,
@@ -103,11 +103,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (agentseam does not write Vibe's tool_input rewrite)\"}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Vibe rewrites tool input only at pre_tool)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (agentseam does not write Vibe's tool_input rewrite)\"}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Vibe rewrites tool input only at pre_tool)\"}"
         },
         "vouch": {
           "exit": 0,

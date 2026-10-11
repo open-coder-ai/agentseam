@@ -110,5 +110,5 @@ def cmd_tier_table(args):
     Printed rather than written: which file it belongs in, and what wiring column joins onto
     it, are the consumer's business. agentseam owns the rows.
     """
-    print(tier_table_mod.markdown(args.event))
+    print(tier_table_mod.markdown(args.event, fail_closed=args.fail_closed))
     return 0

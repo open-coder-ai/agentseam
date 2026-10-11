@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from agentseam import Decision, adapters  # noqa: E402
+from agentseam.allow_semantics import ALLOW_SEMANTICS, ALLOW_SILENT  # noqa: E402
 
 _FAIL_CLOSED_KEYS = ("failClosed", "fail_closed")
 
@@ -31,6 +32,11 @@ def _fail_closed_adapters():
         if "fail_closed" in inspect.signature(mod.hook_config).parameters:
             out.append(agent)
     return out
+
+
+def _silence_is_a_hook_error(agent):
+    """False where the vendor documents empty stdout as a passthrough even fail-closed (mistral_vibe's strict)."""
+    return ALLOW_SEMANTICS.get(agent, (None,))[0] != ALLOW_SILENT
 
 
 def _marked_fail_closed(entry):
@@ -58,10 +64,10 @@ def test_some_adapter_still_asks_for_fail_closed():
     assert _fail_closed_adapters(), "no adapter takes fail_closed -- has the capability moved?"
 
 
-@pytest.mark.parametrize("agent", _fail_closed_adapters())
+@pytest.mark.parametrize("agent", [a for a in _fail_closed_adapters() if _silence_is_a_hook_error(a)])
 def test_a_fail_closed_gate_is_never_answered_with_silence(agent):
     mod = adapters.get(agent)
-    config = mod.hook_config(sorted(getattr(mod, "REVERSE_EVENT_MAP", {})), "CMD")
+    config = mod.hook_config(sorted(getattr(mod, "REVERSE_EVENT_MAP", {})), "CMD", fail_closed=True)
     silent = []
     for event_name, entries in sorted(config.get("hooks", {}).items()):
         if not any(_marked_fail_closed(e) for e in entries if isinstance(e, dict)):

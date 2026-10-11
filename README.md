@@ -160,7 +160,7 @@ to a silent pass-through.
 | goose | block at PreToolUse (fail mode configurable) and Stop (fail-open) | `.agents/plugins/agentseam/hooks/hooks.json` | vendor-docs · 2026-10-11 |
 | OpenHands | block at PreToolUse, UserPromptSubmit and Stop (fail-open) | `.openhands/hooks.json` | vendor-docs · 2026-10-11 |
 | Factory Droid | block at PreToolUse, UserPromptSubmit and Stop (fail-open); ask and rewrite degrade to a block | `.factory/hooks.json` | vendor-docs · 2026-10-11 |
-| Mistral Vibe | block at pre_tool and post_agent (fail-open unless `strict`); project hooks need a trusted folder | `.vibe/hooks.toml` | vendor-docs · 2026-10-11 |
+| Mistral Vibe | block + rewrite at pre_tool (fail mode configurable: `strict`, written by `install(..., fail_closed=True)`), block at post_agent (fail-open); project hooks need a trusted folder | `.vibe/hooks.toml` | vendor-docs · 2026-10-11 |
 | Cline | block at PreToolUse only, `{"cancel": true}` (fail-open); ask and rewrite degrade to a block; hooks must be enabled in its settings, macOS and Linux only | `.clinerules/hooks/<Event>` (one executable per event) | vendor-docs · 2026-10-11 |
 | Zed | no hook surface at all; instruction files only | none | vendor-docs · 2026-10-11 |
 | Aider | no hook surface at all; instruction files only | none | vendor-docs · 2026-08-26 |

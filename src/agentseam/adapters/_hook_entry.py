@@ -52,6 +52,19 @@ def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
     return rules
 
 
+def _flag_fail_closed(hook_entry, reverse, rules):
+    """Set the entry's opt-in fail-closed flag on the rules at its `fail_closed_rule` events."""
+    opt_in = hook_entry.get("fail_closed_rule")
+    if not opt_in:
+        return rules
+    event_key = hook_entry.get("rule_keys", {}).get("event", "event")
+    wires = {reverse[ev] for ev in opt_in["events"] if ev in reverse}
+    for rule in rules:
+        if rule[event_key] in wires:
+            rule[opt_in["key"]] = True
+    return rules
+
+
 def _cursor_wrapper(cfg, reverse, canonical_events, command, *, fail_closed):
     gates = cfg["verdicts"]["answer_events"]
     allow_silent = cfg["verdicts"].get("allow_silent_events", ())
@@ -101,19 +114,23 @@ def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
     return hooks if hook_entry.get("bare") else {"hooks": hooks}
 
 
-def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=True):
+def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=None):
     """The vendor's hooks-config fragment wiring `command` for these canonical events.
 
-    `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the
-    entry says otherwise; a False installs an observer, not a gate.
+    `fail_closed` is read by the `cursor` wrapper, whose gates fail open unless the entry
+    says otherwise (None means True there; a False installs an observer, not a gate), and
+    by a `flat_list` entry's `fail_closed_rule`, which None leaves off: an opt-in.
     """
     hook_entry = cfg["hook_entry"]
     reverse = hj_reverse(cfg)
     wrapper = hook_entry["wrapper"]
     if wrapper == "flat_list":
-        return _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher)
+        rules = _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher)
+        return _flag_fail_closed(hook_entry, reverse, rules) if fail_closed else rules
     if wrapper == "cursor":
-        return _cursor_wrapper(cfg, reverse, canonical_events, command, fail_closed=fail_closed)
+        return _cursor_wrapper(
+            cfg, reverse, canonical_events, command, fail_closed=True if fail_closed is None else fail_closed
+        )
     if wrapper == "flat_entries":
         return _flat_entries_wrapper(hook_entry, reverse, canonical_events, command)
     if wrapper == "hook_dir":
@@ -133,13 +150,15 @@ def _toml_char(ch):
 
 
 def _toml_value(value):
-    if isinstance(value, int) and not isinstance(value, bool):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
         return str(value)
     return '"%s"' % "".join(_toml_char(ch) for ch in str(value))
 
 
-#: Kimi Code's four fields, and Mistral Vibe's name/type/match spelling of the same rule.
-_TOML_RULE_KEYS = ("name", "event", "type", "matcher", "match", "command", "timeout")
+#: Kimi Code's four fields, and Mistral Vibe's name/type/match spelling of the same rule plus its strict flag.
+_TOML_RULE_KEYS = ("name", "event", "type", "matcher", "match", "command", "timeout", "strict")
 
 
 def render_config(rules):
