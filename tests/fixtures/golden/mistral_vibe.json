@@ -1,0 +1,175 @@
+{
+  "agent": "mistral_vibe",
+  "events": {
+    "post_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "duration_ms": 1200,
+        "hook_event_name": "post_tool",
+        "parent_session_id": null,
+        "session_id": "example",
+        "tool_call_id": "call-2",
+        "tool_error": "1 test failed",
+        "tool_input": {
+          "command": "npm test"
+        },
+        "tool_name": "bash",
+        "tool_output": null,
+        "tool_output_text": "1 test failed",
+        "tool_status": "failure",
+        "transcript_path": "/repo/.vibe/session.jsonl"
+      }
+    },
+    "pre_tool": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Vibe cannot prompt for confirmation from a hook)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (agentseam does not write Vibe's tool_input rewrite)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (agentseam does not write Vibe's tool_input rewrite)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "pre_tool",
+        "parent_session_id": null,
+        "session_id": "example",
+        "tool_call_id": "call-1",
+        "tool_input": {
+          "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+          "file_path": "AGENTS.md"
+        },
+        "tool_name": "write_file",
+        "transcript_path": "/repo/.vibe/session.jsonl"
+      }
+    },
+    "stop": {
+      "outcomes": {
+        "allow": {
+          "exit": 0,
+          "stdout": ""
+        },
+        "ask": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"confirm (Vibe cannot prompt for confirmation from a hook)\"}"
+        },
+        "deny": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"policy\"}"
+        },
+        "rewrite": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (agentseam does not write Vibe's tool_input rewrite)\"}"
+        },
+        "rewrite-without-input": {
+          "exit": 0,
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (agentseam does not write Vibe's tool_input rewrite)\"}"
+        },
+        "vouch": {
+          "exit": 0,
+          "stdout": ""
+        }
+      },
+      "payload": {
+        "cwd": "/repo",
+        "hook_event_name": "post_agent",
+        "parent_session_id": null,
+        "session_id": "example",
+        "transcript_path": "/repo/.vibe/session.jsonl"
+      }
+    }
+  },
+  "hook_config": {
+    "command": "python3 guard.py",
+    "events": [
+      "post_tool",
+      "pre_tool",
+      "stop"
+    ],
+    "no_matcher": [
+      {
+        "command": "python3 guard.py",
+        "match": "*",
+        "name": "agentseam-post_tool-19247793",
+        "type": "post_tool"
+      },
+      {
+        "command": "python3 guard.py",
+        "match": "*",
+        "name": "agentseam-pre_tool-19247793",
+        "type": "pre_tool"
+      },
+      {
+        "command": "python3 guard.py",
+        "name": "agentseam-post_agent-19247793",
+        "type": "post_agent"
+      }
+    ],
+    "with_matcher": {
+      "config": [
+        {
+          "command": "python3 guard.py",
+          "match": "Bash",
+          "name": "agentseam-post_tool-19247793",
+          "type": "post_tool"
+        },
+        {
+          "command": "python3 guard.py",
+          "match": "Bash",
+          "name": "agentseam-pre_tool-19247793",
+          "type": "pre_tool"
+        },
+        {
+          "command": "python3 guard.py",
+          "name": "agentseam-post_agent-19247793",
+          "type": "post_agent"
+        }
+      ],
+      "matcher": "Bash"
+    }
+  }
+}

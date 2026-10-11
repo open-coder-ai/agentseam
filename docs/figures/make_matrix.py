@@ -116,11 +116,11 @@ def render(t, name, grades, counts):
     total = sum(counts.values())
     present = [g for g in GRADE_ORDER_DISPLAY if counts[g] > 0]
     desc = (
-        "Grid of 25 coding agents by 12 lifecycle events, shaded by the enforcement grade "
+        "Grid of 27 coding agents by 12 lifecycle events, shaded by the enforcement grade "
         "agentseam can honestly claim at that surface. Of %d cells: %s. No agent is graded "
-        "enforced at any event -- thirteen agents reach only best-effort at pre_tool, Cursor "
+        "enforced at any event -- fifteen agents reach only best-effort at pre_tool, Cursor "
         "alone reaches enforceable there, and aider, Amp, Cline, Copilot, DeepSeek Harness, "
-        "Factory Droid, Kilo Code, Kiro, Mistral Vibe, OpenCode, Replit, Roo Code and Zed have "
+        "Kilo Code, Kiro, OpenCode, Replit, Roo Code and Zed have "
         "nothing agentseam can gate at pre_tool." % (total, "; ".join("%d %s" % (counts[g], LABEL[g]) for g in present))
     )
     svg = p.open_svg(W, H, t, "agentseam capability matrix", desc)

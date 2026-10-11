@@ -239,6 +239,21 @@
           "description": "flat map of the vendor-specific extra fields this adapter's hook_config() entries carry (commandWindows, name, windows), verbatim.",
           "additionalProperties": {"type": "string"}
         },
+        "rule_keys": {
+          "type": "object",
+          "description": "flat_list only: rule key -> the vendor's own name for it (mistral_vibe's event -> type, matcher -> match).",
+          "additionalProperties": {"enum": ["type", "match"]}
+        },
+        "rule_name_prefix": {
+          "type": "string",
+          "minLength": 1,
+          "description": "flat_list only: each rule gets a name, this prefix plus the wire event and the command's CRC-32 (mistral_vibe requires a unique name per [[hooks]] table)."
+        },
+        "default_match": {
+          "type": "string",
+          "minLength": 1,
+          "description": "flat_list only: the matcher written at a tool event when the caller passes none (mistral_vibe documents match as required for pre_tool and post_tool)."
+        },
         "also_wires": {
           "type": "object",
           "description": "canonical event -> a second wire event name also wired whenever that canonical event is (windsurf's pre_mcp_tool_use beside pre_run_command). Event wiring, not an entry field, which is why it does not live in entry_extra.",
@@ -307,6 +322,11 @@
           "description": "accepted values of the vendor's own client-type field; null means the field may be absent."
         },
         "accept_markers": {"$ref": "#/$defs/stringList"},
+        "accept_values": {
+          "type": "object",
+          "additionalProperties": {"type": "array"},
+          "description": "payload key -> values of which the payload must carry one: a value only this vendor is documented to send, where its keys are another vendor's (factory_droid's permission_mode values, which claude_code rejects through reject_values). Checked after every reject path, beside accept_markers."
+        },
         "accept_names": {
           "$ref": "#/$defs/stringList",
           "description": "vendor event names accepted unconditionally, before any other check -- names no other vendor sends (devin's PostCompaction)."

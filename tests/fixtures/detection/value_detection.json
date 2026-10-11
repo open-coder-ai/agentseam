@@ -1,11 +1,11 @@
 {
-  "_about": "Value-based detection (org-plan plan/one-oh-gaps.md D1). `vendor_doc_payloads` are copied from the cited vendor docs; `golden_detection` pins what detect() returned for every golden wire fixture before D1, which D1 must not change. Home-directory paths in the vendors' examples are replaced with /repo, because tests/test_no_private_data.py forbids home paths in tracked files; no path value takes part in detection.",
+  "_about": "Value-based detection (org-plan plan/one-oh-gaps.md D1). `vendor_doc_payloads` are copied from the cited vendor docs; `golden_detection` pins what detect() returned for every golden wire fixture before D1, which D1 must not change; factory_droid and mistral_vibe (D2a) are pinned from their first capture. Home-directory paths in the vendors' examples are replaced with /repo, because tests/test_no_private_data.py forbids home paths in tracked files; no path value takes part in detection.",
   "vendor_doc_payloads": [
     {
       "name": "factory_droid_pre_tool_use_create",
       "vendor": "factory_droid",
-      "expect": null,
-      "why": "Droid has no adapter (D2); permission_mode 'off' is a value Claude Code never sends.",
+      "expect": "factory_droid",
+      "why": "permission_mode 'off' is a value Claude Code never sends and factory_droid accepts (D2a; before it, D1 left this undetected).",
       "source": {
         "url": "https://docs.factory.com/harness/hooks",
         "section": "Hook input (tool hooks example)",
@@ -23,7 +23,8 @@
           "file_path": "/repo/file.txt",
           "content": "file content"
         }
-      }
+      },
+      "expect_event": "pre_tool"
     },
     {
       "name": "kiro_agent_spawn",
@@ -142,6 +143,16 @@
       "session_start": "devin",
       "stop": "devin"
     },
+    "factory_droid": {
+      "post_tool": "factory_droid",
+      "pre_compact": "factory_droid",
+      "pre_tool": "factory_droid",
+      "prompt_submit": "factory_droid",
+      "session_end": "factory_droid",
+      "session_start": "factory_droid",
+      "stop": "factory_droid",
+      "subagent_stop": "factory_droid"
+    },
     "gemini_cli": {
       "post_tool": "gemini_cli",
       "pre_compact": "gemini_cli",
@@ -191,6 +202,11 @@
       "subagent_start": "kimi_code",
       "subagent_stop": "kimi_code",
       "tool_failure": "kimi_code"
+    },
+    "mistral_vibe": {
+      "post_tool": "mistral_vibe",
+      "pre_tool": "mistral_vibe",
+      "stop": "mistral_vibe"
     },
     "openhands": {
       "post_tool": "openhands",

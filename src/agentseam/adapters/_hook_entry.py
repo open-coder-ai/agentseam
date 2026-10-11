@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import zlib as _zlib
+
 from ..contract import POST_TOOL, PRE_TOOL, TOOL_FAILURE
 from ._hook_json import hj_reverse
 from ._windows import powershell_command
@@ -27,16 +29,26 @@ def _hook_dict(cfg, command):
     return entry
 
 
+def _flat_list_rule(hook_entry, ev, name, command, matcher):
+    """One `[[hooks]]` rule, under the vendor's own key names where `rule_keys` renames them."""
+    rule = {"event": name, "command": command}
+    if hook_entry["matcher"] and ev in _MATCHER_EVENTS:
+        matcher = matcher or hook_entry.get("default_match")
+        if matcher:
+            rule["matcher"] = matcher
+    if "rule_name_prefix" in hook_entry:
+        # Vibe dedupes [[hooks]] by name across files; the command's checksum keeps two owners' rules apart.
+        rule["name"] = "%s%s-%08x" % (hook_entry["rule_name_prefix"], name, _zlib.crc32(command.encode("utf-8")))
+    keys = hook_entry.get("rule_keys", {})
+    return {keys.get(key, key): value for key, value in rule.items()}
+
+
 def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
     rules = []
     for ev in canonical_events:
         name = reverse.get(ev)
-        if not name:
-            continue
-        rule = {"event": name, "command": command}
-        if matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
-            rule["matcher"] = matcher
-        rules.append(rule)
+        if name:
+            rules.append(_flat_list_rule(hook_entry, ev, name, command, matcher))
     return rules
 
 
@@ -119,12 +131,16 @@ def _toml_value(value):
     return '"%s"' % "".join(_toml_char(ch) for ch in str(value))
 
 
+#: Kimi Code's four fields, and Mistral Vibe's name/type/match spelling of the same rule.
+_TOML_RULE_KEYS = ("name", "event", "type", "matcher", "match", "command", "timeout")
+
+
 def render_config(rules):
-    """Emit `[[hooks]]` tables. Only the four documented fields, in a documented order."""
+    """Emit `[[hooks]]` tables. Only the documented fields, in a documented order."""
     blocks = []
     for rule in rules:
         lines = ["[[hooks]]"]
-        for key in ("event", "matcher", "command", "timeout"):
+        for key in _TOML_RULE_KEYS:
             if rule.get(key) is not None:
                 lines.append("%s = %s" % (key, _toml_value(rule[key])))
         blocks.append("\n".join(lines))

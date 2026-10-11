@@ -13,6 +13,12 @@ _EXTRA = {
     # goose reads on_failure at PreToolUse only and ignores it elsewhere; "block" makes a
     # failed hook deny instead of being skipped (goose-docs.ai hooks guide, read 2026-10-11).
     "goose": {"entry_extra": {"on_failure": "block"}},
+    # Vibe reads [[hooks]] {name, type, match, command}: same rule, its own key names.
+    "mistral_vibe": {
+        "rule_keys": {"event": "type", "matcher": "match"},
+        "rule_name_prefix": "agentseam-",
+        "default_match": "*",
+    },
     "vscode_copilot": {
         "entry_extra": {
             "bash": "the command as given",
@@ -26,7 +32,7 @@ _EXTRA = {
 def _classify(agent, no_matcher, with_matcher):
     matcher_effective = no_matcher != with_matcher
     if isinstance(no_matcher, list):
-        return {"wrapper": "flat_list", "matcher": matcher_effective}
+        return dict({"wrapper": "flat_list", "matcher": matcher_effective}, **_EXTRA.get(agent, {}))
     if "version" in no_matcher and "hooks" in no_matcher:
         return {"wrapper": "cursor", "matcher": matcher_effective}
     bare = False

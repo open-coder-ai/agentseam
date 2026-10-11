@@ -47,6 +47,7 @@ _WRITE_TOOL = {
     "gemini_cli": "write_file",
     "grok": "Write",
     "kimi_code": "Write",
+    "factory_droid": "Create",
 }
 
 
@@ -156,6 +157,9 @@ BASES = {
     "windsurf": {"trajectory_id": "example"},
     "goose": {"session_id": "example"},
     "openhands": {"session_id": "example"},
+    # Droid's own permission_mode value, not any key, separates this envelope from Claude Code's.
+    "factory_droid": {"session_id": "example", "cwd": "/repo", "transcript_path": "/repo/s.jsonl"},
+    "mistral_vibe": {"session_id": "example", "parent_session_id": None, "transcript_path": "/repo/s.jsonl"},
 }
 
 
@@ -254,10 +258,31 @@ def _openhands(event, vendor_event, base):
     return raw
 
 
+def _factory_droid(event, vendor_event, base):
+    """Claude Code's envelope, with Droid's permission_mode value, shell tool and `tool_response`."""
+    raw = _claude_shaped("factory_droid", event, vendor_event, dict(base, permission_mode="auto-medium"))
+    if event == POST_TOOL:
+        raw.update(tool_name="Execute", tool_response=raw.pop("tool_output"))
+    return raw
+
+
+def _mistral_vibe(event, vendor_event, base):
+    """Vibe's snake_case hook type under hook_event_name; tool calls carry tool_call_id."""
+    raw = dict(base, hook_event_name=vendor_event, cwd="/repo")
+    if event == PRE_TOOL:
+        raw.update(tool_name="write_file", tool_call_id="c1", tool_input={"file_path": MEMORY_FILE, "content": SECRET})
+    elif event == POST_TOOL:
+        raw.update(tool_name="bash", tool_call_id="c2", tool_input={"command": FAILING}, tool_status="failure")
+        raw.update(tool_output=None, tool_output_text=FAILURE, tool_error=FAILURE, duration_ms=1200)
+    return raw
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
 SPECIAL = {
     "antigravity": _antigravity,
+    "factory_droid": _factory_droid,
     "goose": _goose,
+    "mistral_vibe": _mistral_vibe,
     "openhands": _openhands,
     "vscode_copilot": _vscode,
     "windsurf": _windsurf,

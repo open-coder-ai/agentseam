@@ -1730,7 +1730,7 @@
         }
       }
     },
-    "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN -- timeouts, crashes and malformed output are recorded and the call proceeds. Payload fields are camelCase (hookEventName, toolName) while event values stay PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust (/hooks-trust or --trust) before they run, so a written config is not yet a live one. Grok Build (2026-10-11): this row IS xAI's Grok Build (the grok binary, https://github.com/xai-org/grok-build), not a separate product; its hooks page https://docs.x.ai/build/features/hooks (last updated 2026-07-02) matches this row's contract, xAI names no rename, and grok_build therefore gets no row of its own. The row predates Grok Build 1.0.13 and is stale against the vendor's newer user guide (https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/10-hooks.md, read 2026-10-11 against changelog v1.0.50 of 2026-10-06, https://x.ai/changelog/build): hookEventName now carries snake_case values (pre_tool_use) beside a hook_event_name key with the PascalCase name, payloads add timestamp, permissionMode, promptId and toolUseId, tool names are grok's own (run_terminal_command, search_replace), PreToolUse also takes ask, defer and hookSpecificOutput.updatedInput, and UserPromptSubmit, Stop and SubagentStop accept decision: block. Measured 2026-10-11: a payload shaped like the guide's example was claimed by vscode_copilot, not grok. Since value-based detection (D1) it detects as grok and parses to pre_tool: hookEventName being the snake_case twin of hook_event_name is what separates it, and grok's adapter reads the event from hook_event_name, so the {decision: deny, reason} answer this row records reaches a current build's PreToolUse. Not confirmed on a live build, and not widened here: grok's own tool names (run_terminal_command, search_replace) are in no tool list, so shell and write policies do not see those calls as shell or write; ask, defer and updatedInput stay unclaimed; PostToolUse output arrives as toolResult, which the adapter does not read. The capabilities above are left as recorded until a live run settles the shape. The .grok/GROK.md instruction file came from the community superagent-ai/grok-cli; Grok Build reads AGENTS.md, CLAUDE.md and .grok/rules/*.md (https://docs.x.ai/build/features/project-rules, last updated 2026-07-04). Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/188"
+    "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN -- timeouts, crashes and malformed output are recorded and the call proceeds. Payload fields are camelCase (hookEventName, toolName) while event values stay PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust (/hooks-trust or --trust) before they run, so a written config is not yet a live one. Grok Build (2026-10-11): this row IS xAI's Grok Build (the grok binary, https://github.com/xai-org/grok-build), not a separate product; its hooks page https://docs.x.ai/build/features/hooks (last updated 2026-07-02) matches this row's contract, xAI names no rename, and grok_build therefore gets no row of its own. The row predates Grok Build 1.0.13 and is stale against the vendor's newer user guide (https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/10-hooks.md, read 2026-10-11 against changelog v1.0.50 of 2026-10-06, https://x.ai/changelog/build): hookEventName now carries snake_case values (pre_tool_use) beside a hook_event_name key with the PascalCase name, payloads add timestamp, permissionMode, promptId and toolUseId, tool names are grok's own (run_terminal_command, search_replace), PreToolUse also takes ask, defer and hookSpecificOutput.updatedInput, and UserPromptSubmit, Stop and SubagentStop accept decision: block. Measured 2026-10-11: a payload shaped like the guide's example was claimed by vscode_copilot, not grok. Since value-based detection (D1) it detects as grok and parses to pre_tool: hookEventName being the snake_case twin of hook_event_name is what separates it, and grok's adapter reads the event from hook_event_name, so the {decision: deny, reason} answer this row records reaches a current build's PreToolUse. Not confirmed on a live build, and not widened here: grok's own tool names (run_terminal_command, search_replace) are in no tool list, so shell and write policies do not see those calls as shell or write; ask, defer and updatedInput stay unclaimed; PostToolUse output arrives as toolResult, which the adapter does not read. The capabilities above are left as recorded until a live run settles the shape. Instruction files reach it through AGENTS.md (D2a, 2026-10-11): xAI's project-rules page (https://docs.x.ai/build/features/project-rules, titled AGENTS.md, last updated 2026-07-04, read 2026-10-11) says Grok Build reads AGENTS.md, Agents.md, AGENT.md, CLAUDE.md, Claude.md and CLAUDE.local.md in every directory from the repo root down, plus .grok/rules/*.md; the .grok/GROK.md file agentseam used to write came from the community superagent-ai/grok-cli and is not on that list. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/188"
   },
   "antigravity": {
     "display": "Antigravity",
@@ -3042,33 +3042,310 @@
       "method": "read the vendor's own docs on 2026-10-11 (pages updated 2026-10-10): https://kiro.dev/docs/hooks/ (command hooks live as standalone files .kiro/hooks/<id>.json shaped {\"version\": \"v1\", \"hooks\": [{name, trigger, matcher, action: {type: command, command}, timeout}]}, and CLI V3 also reads ~/.kiro/hooks/; the command receives session context as JSON on stdin), https://kiro.dev/docs/hooks/types/ and https://kiro.dev/docs/hooks/actions.md (payload keys hook_event_name, cwd, session_id, tool_name, tool_input; CLI: exit 0 allows, exit 2 blocks PreToolUse and PreTaskExec, other codes warn and proceed, and a CLI UserPromptSubmit hook cannot block; IDE: any non-zero exit blocks Pre Tool Use; the CLI tab gives timeout_ms with a 30 s default while the field reference gives timeout in seconds with a 60 s default), https://kiro.dev/docs/cli/v3/hooks-migration.md (trigger table and the CLI 2.x camelCase aliases), https://kiro.dev/docs/custom-agents/configuration-reference.md (profile-scoped hooks fire only for that agent) and https://kiro.dev/docs/steering.md (AGENTS.md is always included). Changelogs: https://kiro.dev/changelog/ide/ and https://kiro.dev/changelog/cli/."
     },
     "events": {},
-    "notes": "Unadapted, not none: Kiro has a real command-hook surface, but its dialect is one no agentseam family speaks. The config is a versioned list of named hooks with a trigger and an action object, which no install wrapper writes; the verdict is an exit code only, and the IDE and CLI read it differently (IDE: any non-zero exit blocks Pre Tool Use; CLI: only exit 2 blocks, other codes fail open); and the payload is Claude-shaped (hook_event_name, cwd, session_id, tool_name, tool_input) with no key that separates it from a Claude Code payload. Building it means a new family module, which is a core change outside a vendor-config batch. Value-based detection (D1) now declines a Kiro payload naming an MCP tool as mcp_<server>_<tool> (Claude Code spells it mcp__<server>__<tool>) or a tool alias Claude Code never sends (fs_read, fsRead, fs_write, fsWrite, execute_bash, execute_cmd, use_aws; kiro.dev/docs/reference/built-in-tools, updated 2026-10-10), so it detects as no agent. One naming a V3 primary tool (read, write, shell), or carrying no tool (SessionStart, UserPromptSubmit, Stop), has nothing that separates it and is still recognised as Claude Code, whose deny is a JSON body with exit 0; Kiro reads only the exit code, so that deny would not block. Kiro is not a supported target: do not wire agentseam into it by hand. The docs also disagree on the timeout field (timeout in seconds, default 60, vs timeout_ms, default 30,000). Built-in tools are execute_bash (execute_pwsh on Windows) and fs_write, fs_append, str_replace, delete_file. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/183"
+    "notes": "Unadapted, not none: Kiro has a real command-hook surface, but its dialect is one no agentseam family speaks. The config is a versioned list of named hooks with a trigger and an action object, which no install wrapper writes; the verdict is an exit code only, and the IDE and CLI read it differently (IDE: any non-zero exit blocks Pre Tool Use; CLI: only exit 2 blocks, other codes fail open); and the payload is Claude-shaped (hook_event_name, cwd, session_id, tool_name, tool_input) with no key that separates it from a Claude Code payload. Building it means a new family module, which is a core change outside a vendor-config batch. Value-based detection (D1) now declines a Kiro payload naming an MCP tool as mcp_<server>_<tool> (Claude Code spells it mcp__<server>__<tool>) or a tool alias Claude Code never sends (fs_read, fsRead, fs_write, fsWrite, execute_bash, execute_cmd, use_aws; kiro.dev/docs/reference/built-in-tools, updated 2026-10-10), so it detects as no agent. One naming a V3 primary tool (read, write, shell), or carrying no tool (SessionStart, UserPromptSubmit, Stop), has nothing that separates it and is still recognised as Claude Code, whose deny is a JSON body with exit 0; Kiro reads only the exit code, so that deny would not block. Kiro is not a supported target: do not wire agentseam into it by hand. D2a (2026-10-11) re-checked this and kept the row unadapted: D1's detection covers only part of Kiro's documented events (the alias and mcp_<server>_<tool> tool calls), not the V3 primary-tool or tool-less payloads, and an adapter cannot claim those without making Claude Code payloads ambiguous; the exit-code-only verdict and the versioned hook file would also need a new family. The docs also disagree on the timeout field (timeout in seconds, default 60, vs timeout_ms, default 30,000). Built-in tools are execute_bash (execute_pwsh on Windows) and fs_write, fs_append, str_replace, delete_file. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/183"
   },
   "factory_droid": {
     "display": "Factory Droid",
-    "tier": "unadapted",
-    "config": null,
+    "tier": "block",
+    "config": ".factory/hooks.json",
     "verified": {
       "basis": "vendor-docs",
       "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
       "date": "2026-10-11",
-      "method": "read the vendor's own docs on 2026-10-11 (docs.factory.ai now redirects to docs.factory.com): https://docs.factory.com/harness/hooks (project hooks in .factory/hooks.json and user hooks in ~/.factory/hooks.json, keyed directly by event name with no hooks wrapper, each a list of {matcher, commandRegex, hooks: [{type: command, command, timeout}]}; events PreToolUse, PostToolUse, UserPromptSubmit, Notification, Stop, SubagentStop, PreCompact, SessionStart, SessionEnd; the stdin payload carries session_id, transcript_path, cwd, permission_mode (off, spec, auto-low, auto-medium, auto-high), hook_event_name, tool_name and tool_input; tools include Execute, Edit, Create and ApplyPatch; exit 2 blocks PreToolUse, hookSpecificOutput.permissionDecision takes allow, deny or ask with updatedInput, and decision: block applies at PostToolUse, UserPromptSubmit and Stop; any other non-zero exit is a non-blocking error and Droid continues; $FACTORY_PROJECT_DIR names the project root), https://docs.factory.com/harness/agents-md (AGENTS.md, with CLAUDE.md as a compatible name) and https://docs.factory.com/changelog/release-notes."
+      "method": "read the vendor's own docs on 2026-10-11 (docs.factory.ai now redirects to docs.factory.com): https://docs.factory.com/harness/hooks (project hooks in .factory/hooks.json and user hooks in ~/.factory/hooks.json, keyed directly by event name with no hooks wrapper, each a list of {matcher, commandRegex, hooks: [{type: command, command, timeout}]}; events PreToolUse, PostToolUse, UserPromptSubmit, Notification, Stop, SubagentStop, PreCompact, SessionStart, SessionEnd; the stdin payload carries session_id, transcript_path, cwd, permission_mode (off, spec, auto-low, auto-medium, auto-high), hook_event_name, tool_name and tool_input; tools include Execute, Edit, Create and ApplyPatch; exit 2 blocks PreToolUse, hookSpecificOutput.permissionDecision takes allow, deny or ask with updatedInput, and decision: block applies at PostToolUse, UserPromptSubmit and Stop; any other non-zero exit is a non-blocking error and Droid continues; $FACTORY_PROJECT_DIR names the project root), https://docs.factory.com/harness/agents-md (AGENTS.md, with CLAUDE.md as a compatible name) and https://docs.factory.com/changelog/release-notes. Cross-checked on 2026-10-11 against droid 0.238.0's own shipped bundle (npm @factory/cli-linux-x64@0.238.0, the strings of bin/droid): every hook input it builds sets permission_mode through one mapping that returns only off, spec, auto-low, auto-medium or auto-high (normal and any unknown mode become off); PreToolUse acts on hookSpecificOutput.permissionDecision deny (and exit 2) as a block, but ask only logs and falls through to the normal permission flow, and allow merges updatedInput into the original input ({...input, ...updatedInput}) rather than replacing it; tool inputs are Execute {command, summary, timeout}, Create {file_path, content}, Edit {file_path, old_str, new_str, change_all}, MultiEdit {file_path, changes: [{old_str, new_str}]} and ApplyPatch {input: the patch text}."
     },
-    "events": {},
-    "notes": "Unadapted, not none: Droid's hooks speak the Claude Code dialect, but its payload carries the same keys as a Claude Code payload, including transcript_path and permission_mode, the markers agentseam uses to recognise Claude Code. Only values differ (tool names such as Execute and Create, permission_mode values such as auto-low). Value-based detection (D1) now separates them on permission_mode, which every Droid payload carries and whose Droid values (off, spec, auto-low, auto-medium, auto-high) Claude Code never sends: Claude Code declines such a payload, so it detects as no agent rather than as Claude Code, and agentseam does not gate it. A factory_droid adapter (D2) can claim on the same values without making Claude Code payloads ambiguous. Droid's Execute and Create are not in any tool list, so an adapter must add them for shell and write policies to see those calls. Fail mode is documented only for non-2 exits (fail-open); timeout and malformed-output behaviour are not documented. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/184"
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_end": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "pre_compact": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "subagent_stop": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2a): Droid's hooks speak the Claude Code dialect, and its payload carries the same keys as a Claude Code payload, including transcript_path and permission_mode, the markers agentseam uses to recognise Claude Code. A value separates them: every Droid payload carries permission_mode with one of Droid's own values (off, spec, auto-low, auto-medium, auto-high), which Claude Code never sends, so claude_code declines such a payload and factory_droid claims it (claims.accept_values). If a Droid build ever sent a Claude Code permission_mode value, the payload would read as claude_code again, whose deny Droid also honours. A deny is hookSpecificOutput.permissionDecision: deny at PreToolUse and decision: block at UserPromptSubmit and Stop. Escalate and transform degrade to a block: Droid's documented ask does not force a prompt in 0.238.0 (it falls through to the autonomy level's normal permission flow, which may auto-approve), and updatedInput is merged into the original input rather than replacing it, so a transform cannot remove a field. Shell policies see Execute; write policies see Create, Edit, MultiEdit and ApplyPatch, whose patch text is read as content but whose target path lives inside the patch and is not extracted. Install writes .factory/hooks.json keyed directly by event name, the documented project file; Droid snapshots hooks at startup, so a new hook applies to the next session. Fail mode is documented only for non-2 exits (fail-open); timeout and malformed-output behaviour are not documented. The Notification event is not mapped. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/184"
   },
   "mistral_vibe": {
     "display": "Mistral Vibe",
-    "tier": "unadapted",
-    "config": null,
+    "tier": "block",
+    "config": ".vibe/hooks.toml",
     "verified": {
       "basis": "vendor-docs",
       "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
       "date": "2026-10-11",
-      "method": "read the vendor's own docs on 2026-10-11: https://docs.mistral.ai/vibe/code/cli/hooks (no page date shown; the same text is the README's Hooks section at v2.26.1) documents command hooks as [[hooks]] TOML tables in ./.vibe/hooks.toml (project-level, loaded first, trusted folders only) and ~/.vibe/hooks.toml (user-level), each {name, type, match, command, timeout, strict, description}, where type is one of pre_tool, post_tool or post_agent and the project entry wins on a duplicate name; the stdin payload carries session_id, parent_session_id, transcript_path, cwd and hook_event_name (the snake_case type), plus tool_name, tool_call_id and tool_input at pre_tool and tool_status, tool_output, tool_output_text, tool_error and duration_ms at post_tool; a verdict is exit 0 plus stdout JSON {decision: allow|deny, reason, system_message, hook_specific_output}, where deny makes reason the tool error the model sees and hook_specific_output.tool_input replaces the arguments at pre_tool; a non-zero exit, a timeout (default 60 s) or a spawn failure is a hook failure, which warns and proceeds unless strict = true turns it into a denial at pre_tool; pre_tool fires before the user permission prompt and the first deny short-circuits the rest. Cross-checked against the 2.26.1 sdist (vibe/core/hooks/models.py HookType; _pre_tool.py on_strict_failure). The README documents AGENTS.md (trusted folders only), per-tool permission always|never|ask under [tools.<name>] in config.toml, and an ACP server, vibe-acp."
+      "method": "read the vendor's own docs on 2026-10-11: https://docs.mistral.ai/vibe/code/cli/hooks (no page date shown; the same text is the README's Hooks section at v2.26.1) documents command hooks as [[hooks]] TOML tables in ./.vibe/hooks.toml (project-level, loaded first, trusted folders only) and ~/.vibe/hooks.toml (user-level), each {name, type, match, command, timeout, strict, description}, where type is one of pre_tool, post_tool or post_agent and the project entry wins on a duplicate name; the stdin payload carries session_id, parent_session_id, transcript_path, cwd and hook_event_name (the snake_case type), plus tool_name, tool_call_id and tool_input at pre_tool and tool_status, tool_output, tool_output_text, tool_error and duration_ms at post_tool; a verdict is exit 0 plus stdout JSON {decision: allow|deny, reason, system_message, hook_specific_output}, where deny makes reason the tool error the model sees and hook_specific_output.tool_input replaces the arguments at pre_tool; a non-zero exit, a timeout (default 60 s) or a spawn failure is a hook failure, which warns and proceeds unless strict = true turns it into a denial at pre_tool; pre_tool fires before the user permission prompt and the first deny short-circuits the rest. Cross-checked against the 2.26.1 sdist (vibe/core/hooks/models.py HookType; _pre_tool.py on_strict_failure). The README documents AGENTS.md (trusted folders only), per-tool permission always|never|ask under [tools.<name>] in config.toml, and an ACP server, vibe-acp. Cross-checked on 2026-10-11 against the 2.26.1 sdist: vibe/core/hooks/config.py reads [[hooks]] tables as HookConfig {name, type, command, match, timeout, strict, description} and drops a second table with an already-seen name (\"Duplicate hook name\"), project file first; models.py rejects match on post_agent; _pre_tool.py matches a tool hook with no match as \"*\"; the built-in tool names are bash, powershell and git_bash (shell) and write_file {file_path, content} and edit {file_path, old_string, new_string, replace_all} (vibe/core/tools/builtins)."
     },
-    "events": {},
-    "notes": "Unadapted, not none: Vibe documents a real command-hook surface that can deny and rewrite a pre_tool call, and its payload is unambiguous today (its snake_case event names pre_tool, post_tool and post_agent are mapped by no adapter, so detect() claims a Vibe payload for nobody, measured 2026-10-11). The verdict fits the flat_decision family's {decision: deny, reason}. What no family writes is the config: Vibe reads [[hooks]] tables keyed name, type and match, while the TOML renderer writes event and matcher and no name, so an install would produce entries Vibe does not read and the gate would silently never run. Building it means a renderer option for those keys, which is engine work outside a vendor-config batch. Fail mode is configurable (open by default, closed with strict = true); project hooks load only in trusted folders. Only three events exist: there is no prompt-submit or session event, and post_agent is the stop-like event. Vibe also speaks ACP (vibe-acp), a client-agent protocol, not a hook surface; it is not claimed as one. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/187"
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2a): Vibe's payload is unambiguous (its snake_case hook types pre_tool, post_tool and post_agent are mapped by no other adapter, so the event name alone separates it), and its verdict is the flat_decision family's {decision: deny, reason}. A deny at pre_tool refuses the call and its reason becomes the tool error; at post_agent (the stop-like event) it asks the agent to retry, capped by Vibe at 3 retries per hook per user turn. Install writes [[hooks]] tables in Vibe's own keys: name (agentseam-<type>-<CRC-32 of the command>, unique because Vibe drops a duplicate name across files), type, match (\"*\" when no matcher is given, since the docs call it required at tool hooks) and command. Escalate degrades to a block: no hook verdict prompts. Transform also degrades to a block: Vibe does accept a full tool_input replacement under hook_specific_output, but agentseam does not write that shape yet. Fail mode is open by default (a non-zero exit, timeout or malformed stdout warns and proceeds) and closed with strict = true, which install does not set. Project hooks load only in trusted folders, so a written config is not yet a live one. There is no prompt-submit or session event. Vibe also speaks ACP (vibe-acp), a client-agent protocol, not a hook surface; it is not claimed as one. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/187"
   },
   "deepseek_harness": {
     "display": "DeepSeek Harness (dsh)",

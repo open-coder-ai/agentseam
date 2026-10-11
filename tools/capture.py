@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Capture what an agent really sends, and check it against what agentseam claims.
 
-Twelve of fourteen adapters here were built from vendor documentation and have never had a
+Fourteen of sixteen adapters here were built from vendor documentation and have never had a
 real payload put through them; Claude Code and Cursor are the two that have. Docs go stale and field names get misread, and nothing in this
 repository would notice. This closes that.
 
@@ -47,6 +47,8 @@ FOOTPRINTS = {
     "grok": ("~/.grok", ".grok"),
     "kimi_code": ("~/.kimi-code",),
     "openhands": ("~/.openhands", ".openhands"),
+    "factory_droid": ("~/.factory", ".factory"),
+    "mistral_vibe": ("~/.vibe", ".vibe"),
     "antigravity": ("~/.gemini/antigravity", ".agents"),
     "vscode_copilot": ("~/.copilot", ".github/hooks"),
     "windsurf": ("~/.codeium/windsurf", ".windsurf"),
