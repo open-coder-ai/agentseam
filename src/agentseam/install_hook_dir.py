@@ -59,7 +59,7 @@ def write(directory, fragment, owner):
             os.makedirs(directory, exist_ok=True)
             # O_EXCL: a file (or link) appearing since the check above fails here, never gets written through.
             with os.fdopen(
-                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644), "w", encoding="utf-8", newline="\n"
+                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8", newline="\n"
             ) as fh:
                 fh.write(script(command, owner))
         os.chmod(path, os.stat(path).st_mode | _EXECUTABLE)
