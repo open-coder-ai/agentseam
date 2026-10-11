@@ -58,6 +58,9 @@
     "windsurf": "vendor documentation unreachable from the environment this was written in",
     "zed": "no packaging format established here",
     "kilo_code": "plugins, skills and agents provably exist (.kilo/plugin/, .kilo/skills/ and .kilo/agent/ per https://kilo.ai/docs, read 2026-10-11) but a bundle layout for them was not established here",
-    "opencode": "plugins, skills, agents and commands provably exist (.opencode/plugins/ and .opencode/skills/ per https://opencode.ai/v2/docs, read 2026-10-11) but a bundle layout for them was not established here"
+    "opencode": "plugins, skills, agents and commands provably exist (.opencode/plugins/ and .opencode/skills/ per https://opencode.ai/v2/docs, read 2026-10-11) but a bundle layout for them was not established here",
+    "cline": "plugins provably exist -- TypeScript AgentPlugin modules installed with `cline plugin install` into .cline/plugins/ or ~/.cline/plugins/ (https://docs.cline.bot/customization/plugins, read 2026-10-11), for the SDK, CLI and Kanban only -- but a bundle layout for them was not established here",
+    "goose": "plugins provably exist in the Open Plugins layout -- plugin.json, skills/<name>/SKILL.md and hooks/hooks.json under .agents/plugins/<name>/ (https://goose-docs.ai/docs/guides/context-engineering/plugins/, read 2026-10-11) -- but no bundle renderer for that format was built here",
+    "roo_code": "no packaging format established here; the extension was shut down on 2026-05-15"
   }
 }

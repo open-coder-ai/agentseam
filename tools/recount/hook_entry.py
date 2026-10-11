@@ -10,6 +10,9 @@ _EXTRA = {
     "windsurf": {"also_wires": {"pre_tool": "pre_mcp_tool_use"}},
     "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
     "tabnine": {"entry_extra": {"name": "agentseam"}},
+    # goose reads on_failure at PreToolUse only and ignores it elsewhere; "block" makes a
+    # failed hook deny instead of being skipped (goose-docs.ai hooks guide, read 2026-10-11).
+    "goose": {"entry_extra": {"on_failure": "block"}},
     "vscode_copilot": {
         "entry_extra": {
             "bash": "the command as given",

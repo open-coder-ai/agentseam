@@ -12,5 +12,8 @@
   "windsurf": "vendor documentation unreachable from the environment this was written in; no permission model claimed rather than one guessed",
   "zed": "no permission model established here. As with Aider, this is independent of its lack of a hook surface",
   "kilo_code": "a permission model provably exists -- its config schema (https://app.kilo.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here",
-  "opencode": "a permission model provably exists -- its config schema (https://opencode.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here"
+  "opencode": "a permission model provably exists -- its config schema (https://opencode.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here",
+  "cline": "a permission model provably exists -- its docs have an Auto Approve & YOLO Mode page (https://docs.cline.bot/features/auto-approve, listed in https://docs.cline.bot/llms.txt on 2026-10-11) -- but it was not read or mapped here",
+  "goose": "a permission model provably exists -- the v1.54.0 release notes (2026-10-08) name goose modes and Desktop permission modes -- but its config was not read here",
+  "roo_code": "an auto-approve model provably existed (https://roocodeinc.github.io/Roo-Code/features/auto-approving-actions in the archived docs) but it was not mapped here, and the extension was shut down on 2026-05-15"
 }

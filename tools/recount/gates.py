@@ -188,7 +188,7 @@ def _vocabulary_basis(agent):
 
 
 def verdicts(agent, mod):
-    from .tables import verdict_dialect
+    from .dialects import verdict_dialect
 
     gates, transform_grammar, empty_object = _gates(agent, mod)
     out = {
