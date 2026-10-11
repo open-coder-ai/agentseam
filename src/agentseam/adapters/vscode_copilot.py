@@ -83,7 +83,7 @@ def _name(raw):
 
 def claims(raw):
     """True for a payload from either product."""
-    if not isinstance(raw, dict):
+    if not isinstance(raw, dict) or _is_grok_build(raw):
         return False
     name = _name(raw)
     if name in EVENT_MAP and _VSCODE_ENVELOPE in raw and "turn_id" not in raw:
@@ -99,6 +99,12 @@ def claims(raw):
         return True
     ti = raw.get("tool_input")
     return raw.get("tool_name") in MEMORY_TOOLS and isinstance(ti, dict) and "command" in ti
+
+
+def _is_grok_build(raw):
+    """Grok Build's envelope: hookEventName is hook_event_name's snake_case twin (pre_tool_use, PreToolUse)."""
+    snake, pascal = raw.get("hookEventName"), raw.get("hook_event_name")
+    return isinstance(pascal, str) and str(snake).islower() and str(snake).replace("_", "") == pascal.lower()
 
 
 def _tool_input(raw):

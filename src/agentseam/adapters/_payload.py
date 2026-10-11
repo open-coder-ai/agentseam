@@ -42,6 +42,9 @@ def _rejected_by_markers(c, raw):
     for marker in c.get("reject_markers", ()):
         if marker in raw:
             return True
+    for key, values in c.get("reject_values", {}).items():
+        if key in raw and raw[key] in values:
+            return True
     for probe, markers in c.get("reject_markers_unless_probe", {}).items():
         if any(marker in raw for marker in markers) and not PROBES[probe](raw):
             return True

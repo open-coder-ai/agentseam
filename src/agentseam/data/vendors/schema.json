@@ -330,6 +330,11 @@
           "additionalProperties": {"$ref": "#/$defs/stringList"},
           "description": "probe name -> markers that reject the payload UNLESS the named probe passes it (claude_code's prompt_id, rescued by looks_like_claude_code)."
         },
+        "reject_values": {
+          "type": "object",
+          "additionalProperties": {"type": "array"},
+          "description": "payload key -> values that disqualify it: a value this vendor is documented never to send and another Claude-shaped vendor does (claude_code rejects Factory Droid's permission_mode values). Checked with the markers, so it beats every accept path but reject_client_types and accept_names."
+        },
         "reject_probes": {
           "$ref": "#/$defs/stringList",
           "description": "named engine predicates (e.g. looks_like_claude_code) -- the design's own [h]: config may cite one, never embed its logic (dialect-families.md §7). A payload any listed probe matches is rejected."

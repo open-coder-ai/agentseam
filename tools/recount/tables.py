@@ -28,6 +28,29 @@ _FAMILY = {
 
 _SHAPE_INFERRED = frozenset({"cursor", "windsurf", "antigravity"})
 
+_CLAUDE_CODE_CLAIMS_NOTES = (
+    "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real Claude Code payload "
+    "may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27). A value Claude"
+    " Code never sends beats every marker key, looks_like_claude_code's included (value-based detection, "
+    "D1): permission_mode values off, spec, auto-low, auto-medium and auto-high are Factory Droid's "
+    "(docs.factory.com/harness/hooks, read 2026-10-11); tool_name values fs_read, fsRead, fs_write, "
+    "fsWrite, execute_bash, execute_cmd and use_aws (kiro.dev/docs/reference/built-in-tools, updated "
+    "2026-10-10), and an MCP tool spelled mcp_<server>_<tool> rather than Claude's mcp__<server>__<tool> "
+    "(kiro.dev/docs/hooks/types, updated 2026-10-10), are Kiro's. Kiro's V3 primary names (read, write, "
+    "shell) and its tool-less events carry nothing Claude Code does not, so those still read as "
+    "claude_code. Neither vendor has an adapter, so their payloads detect as no agent rather than as "
+    "claude_code."
+)
+
+_GROK_CLAIMS_NOTES = (
+    "Grok Build sends hookEventName with grok's snake_case value (pre_tool_use) beside a hook_event_name "
+    "key carrying the PascalCase name (github.com/xai-org/grok-build user-guide/10-hooks.md, read "
+    "2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) "
+    "finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose "
+    "two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older "
+    "camelCase-only shape falls back to hookEventName, which is required either way."
+)
+
 _CLAIMS = {
     "claude_code": {
         "mode": "marker",
@@ -35,11 +58,12 @@ _CLAIMS = {
         "client_types": [None, "claude_code"],
         "reject_markers": ["turn_id", "project_path", "timestamp"],
         "reject_markers_unless_probe": {"looks_like_claude_code": ["prompt_id"]},
-        "notes": (
-            "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real "
-            "Claude Code payload may carry prompt_id and must still be accepted "
-            "(matrix-notes.json: fixed 2026-08-27)."
-        ),
+        "reject_probes": ["names_a_single_underscore_mcp_tool"],
+        "reject_values": {
+            "permission_mode": ["off", "spec", "auto-low", "auto-medium", "auto-high"],
+            "tool_name": ["fs_read", "fsRead", "fs_write", "fsWrite", "execute_bash", "execute_cmd", "use_aws"],
+        },
+        "notes": _CLAUDE_CODE_CLAIMS_NOTES,
     },
     "gemini_cli": {
         "mode": "marker",
@@ -105,7 +129,10 @@ _CLAIMS = {
     },
     "grok": {
         "mode": "marker",
-        "event_key": ["hookEventName"],
+        "event_key": ["hook_event_name", "hookEventName"],
+        "accept_markers": ["hookEventName"],
+        "reject_markers_unless_probe": {"event_keys_agree": ["hook_event_name"]},
+        "notes": _GROK_CLAIMS_NOTES,
     },
     "goose": {
         "mode": "marker",
