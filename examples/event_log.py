@@ -7,7 +7,7 @@
 One timeline for Claude Code + Cursor + Copilot in the same repo: something no
 single-agent logger can produce. Feed it to OTel, DuckDB, or just grep it.
 
-With this event set, 10 of the 13 adapters wire; antigravity, junie and windsurf are
+With this event set, 11 of the 14 adapters wire; antigravity, junie and windsurf are
 skipped whole with the reason printed, and the command exits non-zero so a script can
 notice. An agent either wires for every requested event or not at all.
 """

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640"
-     role="img" aria-label="agentseam — the primitives layer for every coding agent: one handler API over per-agent hooks, instruction files, plugin packaging, and config. 13 adapters (claude_code, antigravity, codex_cli, cursor, devin, gemini_cli, goose, grok, junie, kimi_code, tabnine, vscode_copilot, windsurf); 12 normalized events (pre_tool, post_tool, tool_failure, prompt_submit, session_start, session_end, subagent_start, subagent_stop, instructions_loaded, file_changed, pre_compact, stop); 6 decision outcomes (allow, deny, escalate, transform, warn, vouch); and the 5 honest enforcement levels a consumer may claim (enforced, enforceable, best-effort, detect, none). 21 agents in the capability matrix, 13 adapted, zero dependencies, Apache-2.0, version 0.3.5.">
+     role="img" aria-label="agentseam — the primitives layer for every coding agent: one handler API over per-agent hooks, instruction files, plugin packaging, and config. 14 adapters (claude_code, antigravity, codex_cli, cursor, devin, gemini_cli, goose, grok, junie, kimi_code, openhands, tabnine, vscode_copilot, windsurf); 12 normalized events (pre_tool, post_tool, tool_failure, prompt_submit, session_start, session_end, subagent_start, subagent_stop, instructions_loaded, file_changed, pre_compact, stop); 6 decision outcomes (allow, deny, escalate, transform, warn, vouch); and the 5 honest enforcement levels a consumer may claim (enforced, enforceable, best-effort, detect, none). 25 agents in the capability matrix, 14 adapted, zero dependencies, Apache-2.0, version 0.3.5.">
   <rect width="1280" height="640" fill="#0D1626"/>
   <rect x="45.0" y="39.0" width="38" height="38" rx="8.4" fill="#111E33"/>
   <line x1="51.1" y1="45.5" x2="64.0" y2="50.4" stroke="#D9B45C" stroke-width="1.33" stroke-opacity="0.55" stroke-linecap="round"/>
@@ -32,7 +32,7 @@
   <rect x="506" y="118" width="230" height="378" rx="10" fill="#111E33" stroke="#D9B45C" stroke-opacity="0.16" stroke-width="1"/>
   <circle cx="526" cy="143" r="2.6" fill="#D9B45C" fill-opacity="0.9"/>
   <text x="536" y="147" font-family="Geist Mono" font-size="11" font-weight="700" letter-spacing="2.3" fill="#D9B45C">ADAPTERS</text>
-  <text x="719" y="147" font-family="Geist Mono" font-size="14" font-weight="700" text-anchor="end" fill="#D9B45C">13</text>
+  <text x="719" y="147" font-family="Geist Mono" font-size="14" font-weight="700" text-anchor="end" fill="#D9B45C">14</text>
   <line x1="523" y1="158" x2="719" y2="158" stroke="#D9B45C" stroke-opacity="0.14" stroke-width="1" stroke-dasharray="2 3"/>
   <circle cx="526" cy="175" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
   <text x="536" y="179" font-family="Geist Mono" font-size="12.5" fill="#E8EEF6">claude_code</text>
@@ -55,11 +55,13 @@
   <circle cx="526" cy="409" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
   <text x="536" y="413" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">kimi_code</text>
   <circle cx="526" cy="435" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
-  <text x="536" y="439" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">tabnine</text>
+  <text x="536" y="439" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">openhands</text>
   <circle cx="526" cy="461" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
-  <text x="536" y="465" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">vscode_copilot</text>
+  <text x="536" y="465" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">tabnine</text>
   <circle cx="526" cy="487" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
-  <text x="536" y="491" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">windsurf</text>
+  <text x="536" y="491" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">vscode_copilot</text>
+  <circle cx="526" cy="513" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
+  <text x="536" y="517" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">windsurf</text>
   <rect x="754" y="118" width="230" height="378" rx="10" fill="#111E33" stroke="#D9B45C" stroke-opacity="0.16" stroke-width="1"/>
   <circle cx="774" cy="143" r="2.6" fill="#D9B45C" fill-opacity="0.9"/>
   <text x="784" y="147" font-family="Geist Mono" font-size="11" font-weight="700" letter-spacing="2.3" fill="#D9B45C">EVENTS</text>
@@ -121,9 +123,9 @@
   <circle cx="1022" cy="487" r="1.7" fill="#9FB0C4" fill-opacity="0.5"/>
   <text x="1032" y="491" font-family="Geist Mono" font-size="12.5" fill="#9FB0C4">none</text>
   <line x1="48" y1="560" x2="1232" y2="560" stroke="#D9B45C" stroke-opacity="0.13" stroke-width="1"/>
-  <text x="48" y="590" font-family="Geist Mono" font-size="15" font-weight="700" fill="#D9B45C">21</text>
+  <text x="48" y="590" font-family="Geist Mono" font-size="15" font-weight="700" fill="#D9B45C">25</text>
   <text x="72" y="590" font-family="Geist Mono" font-size="10.5" letter-spacing="1.6" fill="#5A6B80">AGENTS IN MATRIX</text>
-  <text x="212" y="590" font-family="Geist Mono" font-size="15" font-weight="700" fill="#D9B45C">13</text>
+  <text x="212" y="590" font-family="Geist Mono" font-size="15" font-weight="700" fill="#D9B45C">14</text>
   <text x="236" y="590" font-family="Geist Mono" font-size="10.5" letter-spacing="1.6" fill="#5A6B80">ADAPTED</text>
   <text x="320" y="590" font-family="Geist Mono" font-size="15" font-weight="700" fill="#D9B45C">12</text>
   <text x="344" y="590" font-family="Geist Mono" font-size="10.5" letter-spacing="1.6" fill="#5A6B80">NORMALIZED EVENTS</text>

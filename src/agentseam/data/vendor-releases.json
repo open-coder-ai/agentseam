@@ -12,6 +12,11 @@
     "id": "aider-chat",
     "note": "The pip-installable CLI; the project publishes every release here."
   },
+  "amp": {
+    "kind": "npm",
+    "id": "@ampcode/cli",
+    "note": "@sourcegraph/amp is now an alias. Resolved on 2026-10-11 to 0.0.1791676897-g77c125."
+  },
   "antigravity": {
     "kind": null,
     "note": "IDE download, no public release feed found. Manual check."
@@ -43,6 +48,11 @@
     "kind": null,
     "note": "Hosted. There is no version to pin; the vendor can change behaviour under a row without any observable release."
   },
+  "factory_droid": {
+    "kind": "npm",
+    "id": "droid",
+    "note": "Resolved on 2026-10-11 to 0.238.0 (published 2026-10-10); @factory/cli publishes the same version."
+  },
   "gemini_cli": {
     "kind": "npm",
     "id": "@google/gemini-cli"
@@ -69,10 +79,19 @@
     "kind": null,
     "note": "No confirmed release feed. Manual check."
   },
+  "kiro": {
+    "kind": null,
+    "note": "No machine-readable feed confirmed; manual check against https://kiro.dev/changelog/ide/ (1.2.56, 2026-10-08) and https://kiro.dev/changelog/cli/ (2.29.0, 2026-10-09)."
+  },
   "opencode": {
     "kind": "npm",
     "id": "@opencode/cli",
     "note": "OpenCode v2. Resolved on 2026-10-11 to 2.0.26. The v1 line still publishes as opencode-ai (1.18.35 on 2026-10-11); this row was read against both."
+  },
+  "openhands": {
+    "kind": "pypi",
+    "id": "openhands-sdk",
+    "note": "The agent SDK runs the hooks. Resolved on 2026-10-11 to 1.54.0 (uploaded 2026-10-09). The OpenHands app (GitHub OpenHands/OpenHands) was at v1.26.0 (2026-10-08)."
   },
   "replit": {
     "kind": null,

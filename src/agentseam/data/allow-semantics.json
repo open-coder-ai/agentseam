@@ -65,6 +65,11 @@
     "windsurf": {
       "bare_allow": "silent",
       "note": "Exit-code-only protocol -- 2 blocks a pre_* hook and everything else allows. stdout carries no decision, so there is no word to say."
+    },
+    "openhands": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented verbatim (docs.openhands.dev hooks page, read 2026-10-11): exit \"0 - Success. The operation proceeds normally.\" {\"decision\":\"allow\"} also exists, but nothing documents it meaning more than a plain allow, so silence is spoken. Non-JSON stdout is ignored by the SDK (executor.py), so a stray log line on stdout is not a decision."
     }
   },
   "vouch_notes": {

@@ -61,6 +61,10 @@
     "opencode": "plugins, skills, agents and commands provably exist (.opencode/plugins/ and .opencode/skills/ per https://opencode.ai/v2/docs, read 2026-10-11) but a bundle layout for them was not established here",
     "cline": "plugins provably exist -- TypeScript AgentPlugin modules installed with `cline plugin install` into .cline/plugins/ or ~/.cline/plugins/ (https://docs.cline.bot/customization/plugins, read 2026-10-11), for the SDK, CLI and Kanban only -- but a bundle layout for them was not established here",
     "goose": "plugins provably exist in the Open Plugins layout -- plugin.json, skills/<name>/SKILL.md and hooks/hooks.json under .agents/plugins/<name>/ (https://goose-docs.ai/docs/guides/context-engineering/plugins/, read 2026-10-11) -- but no bundle renderer for that format was built here",
-    "roo_code": "no packaging format established here; the extension was shut down on 2026-05-15"
+    "roo_code": "no packaging format established here; the extension was shut down on 2026-05-15",
+    "openhands": "skills and hooks provably exist -- AGENTS.md, skills and .openhands/hooks.json per https://docs.openhands.dev/overview/skills and the hooks page, read 2026-10-11 -- but a bundle layout for them was not established here",
+    "amp": "plugins provably exist -- TypeScript modules in .amp/plugins/ or ~/.config/amp/plugins/ (https://ampcode.com/docs/customize/plugins, read 2026-10-11) -- but a bundle layout for them was not established here",
+    "kiro": "hooks, steering and agent profiles provably exist -- .kiro/hooks/*.json, .kiro/steering/ and .kiro/agents/*.json (https://kiro.dev/docs/hooks/ and https://kiro.dev/docs/steering.md, read 2026-10-11) -- but a bundle layout for them was not established here",
+    "factory_droid": "plugins provably exist -- a .factory-plugin/plugin.json manifest with hooks/hooks.json in the plugin root (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but no bundle renderer for that format was built here"
   }
 }

@@ -114,6 +114,7 @@ def test_a_deny_at_a_blocking_event_is_never_silent(agent):
             hook_event_name=vendor_event,
             hookEventName=vendor_event,
             event=vendor_event,
+            event_type=vendor_event,
             client_type=agent,
         )
         text, code = mod.respond(Decision.deny("policy"), mod.parse(raw))

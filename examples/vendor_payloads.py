@@ -155,6 +155,7 @@ BASES = {
     "vscode_copilot": {"session_id": "example"},
     "windsurf": {"trajectory_id": "example"},
     "goose": {"session_id": "example"},
+    "openhands": {"session_id": "example"},
 }
 
 
@@ -241,8 +242,26 @@ def _goose(event, vendor_event, base):
     return raw
 
 
+def _openhands(event, vendor_event, base):
+    """The event name rides under `event_type`; the cwd is `working_dir`."""
+    raw = dict(base, event_type=vendor_event, working_dir="/repo")
+    if event == PRE_TOOL:
+        raw.update(tool_name="file_editor", tool_input={"command": "create", "path": MEMORY_FILE, "file_text": SECRET})
+    elif event == POST_TOOL:
+        raw.update(tool_name="terminal", tool_input={"command": FAILING}, tool_response={"exit_code": 1})
+    elif event == PROMPT_SUBMIT:
+        raw["message"] = PROMPT
+    return raw
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
-SPECIAL = {"antigravity": _antigravity, "goose": _goose, "vscode_copilot": _vscode, "windsurf": _windsurf}
+SPECIAL = {
+    "antigravity": _antigravity,
+    "goose": _goose,
+    "openhands": _openhands,
+    "vscode_copilot": _vscode,
+    "windsurf": _windsurf,
+}
 
 
 def payload(agent, event, vendor_event):

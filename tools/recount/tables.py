@@ -20,6 +20,7 @@ _FAMILY = {
     "tabnine": "flat_decision",
     "grok": "flat_decision",
     "goose": "flat_decision",
+    "openhands": "flat_decision",
     "cursor": "cursor",
     "windsurf": "windsurf",
     "antigravity": "antigravity",
@@ -113,6 +114,14 @@ _CLAIMS = {
             "goose names the event under `event`, a key no other adapter's payload uses (every "
             "other marker family reads hook_event_name or hookEventName), so the event key alone "
             "separates it."
+        ),
+    },
+    "openhands": {
+        "mode": "marker",
+        "event_key": ["event_type"],
+        "notes": (
+            "OpenHands names the event under `event_type`, a key no other adapter's payload uses, "
+            "so the event key alone separates it (docs.openhands.dev hooks page, read 2026-10-11)."
         ),
     },
     "vscode_copilot": {

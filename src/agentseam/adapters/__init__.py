@@ -20,6 +20,7 @@ _CONFIG_DRIVEN = (
     "grok",
     "junie",
     "kimi_code",
+    "openhands",
     "tabnine",
     "windsurf",
 )
