@@ -201,12 +201,15 @@ def test_vocabulary_basis_is_unverified_only_for_tabnine():
 
 def test_reject_probes_stay_under_the_three_probe_budget():
     """[h]: "if D2 finds more than ~3 named probes are needed, [the design] should be
-    revisited rather than the list grown." Recounted: exactly one (looks_like_claude_code),
-    used by three vendors -- reject_markers_unless_probe cites the same predicate, so its
-    keys count toward the same budget."""
+    revisited rather than the list grown." Recounted: exactly three since value-based
+    detection -- looks_like_claude_code (claude_code, gemini_cli, devin), event_keys_agree
+    (grok) and names_a_single_underscore_mcp_tool (claude_code against Kiro).
+    reject_markers_unless_probe cites the same predicates, so its keys count toward the
+    same budget. A fourth means revisiting the design, not raising this number."""
     probes = {p for entry in VENDOR_CONFIG.values() for p in entry["claims"].get("reject_probes", [])}
     probes |= {p for entry in VENDOR_CONFIG.values() for p in entry["claims"].get("reject_markers_unless_probe", {})}
-    assert probes == {"looks_like_claude_code"}
+    assert probes == {"looks_like_claude_code", "event_keys_agree", "names_a_single_underscore_mcp_tool"}
+    assert len(probes) <= 3
 
 
 def test_loader_tuple_restore_preserves_field_chain_order():

@@ -1,0 +1,228 @@
+{
+  "_about": "Value-based detection (org-plan plan/one-oh-gaps.md D1). `vendor_doc_payloads` are copied verbatim from the cited vendor docs; `golden_detection` pins what detect() returned for every golden wire fixture before D1, which D1 must not change.",
+  "vendor_doc_payloads": [
+    {
+      "name": "factory_droid_pre_tool_use_create",
+      "vendor": "factory_droid",
+      "expect": null,
+      "why": "Droid has no adapter (D2); permission_mode 'off' is a value Claude Code never sends.",
+      "source": {
+        "url": "https://docs.factory.com/harness/hooks",
+        "section": "Hook input (tool hooks example)",
+        "version": "droid 0.238.0 (npm latest, published 2026-10-10)",
+        "read": "2026-10-11"
+      },
+      "payload": {
+        "session_id": "abc123",
+        "transcript_path": "/Users/.../.factory/projects/.../session.jsonl",
+        "cwd": "/Users/me/project",
+        "permission_mode": "off",
+        "hook_event_name": "PreToolUse",
+        "tool_name": "Create",
+        "tool_input": {
+          "file_path": "/Users/me/project/file.txt",
+          "content": "file content"
+        }
+      }
+    },
+    {
+      "name": "kiro_agent_spawn",
+      "vendor": "kiro",
+      "expect": null,
+      "why": "Kiro has no adapter (D2); agentSpawn is no event Claude Code sends.",
+      "source": {
+        "url": "https://kiro.dev/docs/hooks/types/",
+        "version": "Kiro CLI 2.29.0 (changelog, 2026-10-09); page updated 2026-10-10",
+        "read": "2026-10-11",
+        "section": "Agent Spawn (CLI 2.x and V3 alias)"
+      },
+      "payload": {
+        "hook_event_name": "agentSpawn",
+        "cwd": "/current/working/directory",
+        "session_id": "abc123-def456-789"
+      }
+    },
+    {
+      "name": "kiro_pre_tool_use_mcp",
+      "vendor": "kiro",
+      "expect": null,
+      "why": "Kiro has no adapter (D2); mcp_<server>_<tool> is not Claude Code's mcp__<server>__<tool> spelling.",
+      "source": {
+        "url": "https://kiro.dev/docs/hooks/types/",
+        "version": "Kiro CLI 2.29.0 (changelog, 2026-10-09); page updated 2026-10-10",
+        "read": "2026-10-11",
+        "section": "MCP tool hooks"
+      },
+      "payload": {
+        "hook_event_name": "PreToolUse",
+        "cwd": "/current/working/directory",
+        "session_id": "abc123-def456-789",
+        "tool_name": "mcp_postgres_query",
+        "tool_input": {
+          "sql": "SELECT * FROM orders LIMIT 10;"
+        }
+      }
+    },
+    {
+      "name": "grok_build_pre_tool_use",
+      "vendor": "grok",
+      "expect": "grok",
+      "expect_event": "pre_tool",
+      "why": "hookEventName is hook_event_name's snake_case twin, the Grok Build envelope (agentseam#185 measured vscode_copilot here).",
+      "source": {
+        "url": "https://github.com/xai-org/grok-build/blob/2bdd1d6a6369de0e8c68132ea4539e9abd9e14a8/crates/codegen/xai-grok-pager/docs/user-guide/10-hooks.md",
+        "section": "Writing Hook Scripts > Input",
+        "version": "Grok Build v1.0.50 (x.ai/changelog/build, 2026-10-06); guide at main 2bdd1d6",
+        "read": "2026-10-11"
+      },
+      "payload": {
+        "hookEventName": "pre_tool_use",
+        "hook_event_name": "PreToolUse",
+        "sessionId": "abc-123",
+        "cwd": "/Users/you/project",
+        "workspaceRoot": "/Users/you/project",
+        "permissionMode": "default",
+        "toolName": "run_terminal_command",
+        "toolInput": {
+          "command": "npm test"
+        },
+        "timestamp": "2026-04-14T12:00:00Z"
+      }
+    }
+  ],
+  "golden_detection": {
+    "antigravity": {
+      "post_tool": "antigravity",
+      "pre_tool": "antigravity",
+      "stop": "antigravity"
+    },
+    "claude_code": {
+      "file_changed": "claude_code",
+      "instructions_loaded": "claude_code",
+      "post_tool": "claude_code",
+      "pre_compact": "claude_code",
+      "pre_tool": "claude_code",
+      "prompt_submit": "claude_code",
+      "session_end": "claude_code",
+      "session_start": "claude_code",
+      "stop": "claude_code",
+      "subagent_start": "claude_code",
+      "subagent_stop": "claude_code",
+      "tool_failure": "claude_code"
+    },
+    "codex_cli": {
+      "post_tool": "codex_cli",
+      "pre_compact": "codex_cli",
+      "pre_tool": "codex_cli",
+      "prompt_submit": "codex_cli",
+      "session_end": "codex_cli",
+      "session_start": "codex_cli",
+      "stop": "codex_cli",
+      "subagent_start": "codex_cli",
+      "subagent_stop": "codex_cli"
+    },
+    "cursor": {
+      "file_changed": "cursor",
+      "post_tool": "cursor",
+      "pre_compact": "cursor",
+      "pre_tool": "cursor",
+      "prompt_submit": "cursor",
+      "session_end": "cursor",
+      "session_start": "cursor",
+      "stop": "cursor",
+      "subagent_start": "cursor",
+      "subagent_stop": "cursor",
+      "tool_failure": "cursor"
+    },
+    "devin": {
+      "post_tool": "devin",
+      "pre_tool": "devin",
+      "prompt_submit": "devin",
+      "session_end": "devin",
+      "session_start": "devin",
+      "stop": "devin"
+    },
+    "gemini_cli": {
+      "post_tool": "gemini_cli",
+      "pre_compact": "gemini_cli",
+      "pre_tool": "gemini_cli",
+      "prompt_submit": "gemini_cli",
+      "session_end": null,
+      "session_start": null,
+      "stop": "gemini_cli"
+    },
+    "goose": {
+      "file_changed": "goose",
+      "post_tool": "goose",
+      "pre_tool": "goose",
+      "prompt_submit": "goose",
+      "session_end": "goose",
+      "session_start": "goose",
+      "stop": "goose",
+      "tool_failure": "goose"
+    },
+    "grok": {
+      "post_tool": "grok",
+      "pre_compact": "grok",
+      "pre_tool": "grok",
+      "prompt_submit": "grok",
+      "session_end": "grok",
+      "session_start": "grok",
+      "stop": "grok",
+      "subagent_start": "grok",
+      "subagent_stop": "grok",
+      "tool_failure": "grok"
+    },
+    "junie": {
+      "pre_tool": "junie",
+      "prompt_submit": "junie",
+      "session_end": "junie",
+      "session_start": "junie",
+      "stop": "junie"
+    },
+    "kimi_code": {
+      "post_tool": "kimi_code",
+      "pre_compact": "kimi_code",
+      "pre_tool": "kimi_code",
+      "prompt_submit": "kimi_code",
+      "session_end": "kimi_code",
+      "session_start": "kimi_code",
+      "stop": "kimi_code",
+      "subagent_start": "kimi_code",
+      "subagent_stop": "kimi_code",
+      "tool_failure": "kimi_code"
+    },
+    "openhands": {
+      "post_tool": "openhands",
+      "pre_tool": "openhands",
+      "prompt_submit": "openhands",
+      "session_end": "openhands",
+      "session_start": "openhands",
+      "stop": "openhands"
+    },
+    "tabnine": {
+      "post_tool": "tabnine",
+      "pre_compact": "tabnine",
+      "pre_tool": "tabnine",
+      "prompt_submit": "tabnine",
+      "session_end": "tabnine",
+      "session_start": null,
+      "stop": "tabnine"
+    },
+    "vscode_copilot": {
+      "post_tool": "vscode_copilot",
+      "pre_tool": "vscode_copilot",
+      "prompt_submit": "vscode_copilot",
+      "session_start": null,
+      "stop": "vscode_copilot",
+      "subagent_start": "vscode_copilot",
+      "subagent_stop": "vscode_copilot"
+    },
+    "windsurf": {
+      "post_tool": "windsurf",
+      "pre_tool": "windsurf",
+      "prompt_submit": "windsurf",
+      "stop": "windsurf"
+    }
+  }
+}
