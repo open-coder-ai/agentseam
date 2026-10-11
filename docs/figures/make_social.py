@@ -64,7 +64,7 @@ def build():
     svg += p.text(
         74,
         500,
-        "25 agents × 12 events, verified from src/agentseam/matrix.py — not one cell claims more than its evidence.",
+        "27 agents × 12 events, verified from src/agentseam/matrix.py — not one cell claims more than its evidence.",
         t["secondary"],
         15,
     )

@@ -40,6 +40,8 @@ INSTRUCTION_FILES = {
     "amp": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "kiro": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "factory_droid": {"files": ["AGENTS.md"], "shared": True, "imports": None},
+    "mistral_vibe": {"files": ["AGENTS.md"], "shared": True, "imports": None},
+    "deepseek_harness": {"files": ["AGENTS.md"], "shared": True, "imports": None},
     "replit": {"files": ["replit.md"], "shared": False, "imports": None},
     "tabnine": {"files": ["guidelines.md"], "shared": False, "imports": None},
     "antigravity": {"files": [".agents/rules/agentseam.md"], "shared": False, "imports": None},

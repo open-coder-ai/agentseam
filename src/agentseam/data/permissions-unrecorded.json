@@ -19,5 +19,7 @@
   "openhands": "no permission model was read here; the hooks docs (https://docs.openhands.dev/openhands/usage/customization/hooks, read 2026-10-11) were the only page mapped",
   "amp": "a permission model provably exists -- the legacy amp.permissions rules with allow, ask, reject and delegate actions (https://ampcode.com/notes/permissions, read 2026-10-11), now a built-in plugin -- but it was not mapped here",
   "kiro": "a permission model provably exists -- agent profiles carry permissions.rules with allow, ask or deny effects (https://kiro.dev/docs/custom-agents/configuration-reference.md, read 2026-10-11) -- but it was not mapped here",
-  "factory_droid": "a permission model provably exists -- permission_mode off, spec and auto-low/medium/high, named in the hooks payload (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but it was not mapped here"
+  "factory_droid": "a permission model provably exists -- permission_mode off, spec and auto-low/medium/high, named in the hooks payload (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but it was not mapped here",
+  "mistral_vibe": "a permission model provably exists -- per-tool permission always, never or ask under [tools.<name>] in config.toml, and built-in agents ask, plan, accept-edits and auto-approve (the v2.26.1 README, read 2026-10-11) -- but it was not mapped here",
+  "deepseek_harness": "a permission model provably exists -- sandbox modes read-only (the default), workspace-write and danger-full-access with an approval ladder for escalation (packages/sandbox/sandbox-policy/README.md at dsh-v0.2.1-alpha.2, read 2026-10-11), not a per-tool list -- but it was not mapped here"
 }
