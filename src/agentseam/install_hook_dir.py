@@ -30,6 +30,12 @@ def _text(path):
         return None
 
 
+def _refuse_link(path):
+    """A planted symlink would have install write through it to its target, and chmod that +x."""
+    if os.path.islink(path):
+        raise ConfigUnreadableError("%s is a symlink; refusing to write or remove through it." % path)
+
+
 def _owned(path, owner):
     text = _text(path) if os.path.isfile(path) else None
     return text is not None and block_bounds(text, owner) is not None
@@ -39,6 +45,7 @@ def write(directory, fragment, owner):
     """Write one executable per event; a file of the same name that is not ours refuses them all."""
     for name in fragment:
         path = os.path.join(directory, name)
+        _refuse_link(path)
         if os.path.lexists(path) and not _owned(path, owner):
             raise ConfigUnreadableError(
                 "%s exists and carries no %s block; refusing to overwrite it (Cline runs one %s per hooks "
@@ -50,7 +57,10 @@ def write(directory, fragment, owner):
             write_block(path, command + "\n", owner)
         else:
             os.makedirs(directory, exist_ok=True)
-            with open(path, "w", encoding="utf-8", newline="\n") as fh:
+            # O_EXCL: a file (or link) appearing since the check above fails here, never gets written through.
+            with os.fdopen(
+                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644), "w", encoding="utf-8", newline="\n"
+            ) as fh:
                 fh.write(script(command, owner))
         os.chmod(path, os.stat(path).st_mode | _EXECUTABLE)
 
@@ -60,6 +70,7 @@ def remove(directory, names, owner):
     changed = False
     for name in names:
         path = os.path.join(directory, name)
+        _refuse_link(path)
         if not _owned(path, owner):
             continue
         remove_block(path, owner)

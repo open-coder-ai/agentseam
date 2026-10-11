@@ -181,3 +181,24 @@ def test_the_installed_file_runs_and_answers_in_dialect(tmp_path):
     )
     assert done.returncode == 0, done.stderr
     assert json.loads(done.stdout) == {"cancel": True, "errorMessage": "blocked: ls\nrm -rf /"}
+
+
+@pytest.mark.skipif(os.name == "nt", reason="symlinks need privileges on Windows")
+@pytest.mark.parametrize("owned", [True, False], ids=["link-to-owned", "link-to-foreign"])
+def test_a_symlinked_hook_file_is_refused_and_its_target_left_alone(tmp_path, owned):
+    elsewhere = tmp_path / "elsewhere"
+    if owned:
+        I.install("cline", [A.PRE_TOOL], "guard", repo_root=str(elsewhere))
+        target = elsewhere / ".clinerules" / "hooks" / "PreToolUse"
+    else:
+        target = tmp_path / "target.sh"
+        target.write_text("echo foreign\n", encoding="utf-8")
+    before = (target.read_bytes(), os.stat(target).st_mode)
+    hooks = tmp_path / "repo" / ".clinerules" / "hooks"
+    hooks.mkdir(parents=True)
+    (hooks / "PreToolUse").symlink_to(target)
+    with pytest.raises(I.ConfigUnreadableError):
+        I.install("cline", [A.PRE_TOOL], "guard", repo_root=str(tmp_path / "repo"))
+    with pytest.raises(I.ConfigUnreadableError):
+        I.uninstall("cline", str(tmp_path / "repo"))
+    assert (target.read_bytes(), os.stat(target).st_mode) == before
