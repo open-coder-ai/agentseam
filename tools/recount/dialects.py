@@ -101,6 +101,15 @@ _VERDICT_DIALECT = {
         },
         "note_style": "because",
     },
+    "openhands": {
+        "words": {"block": "deny"},
+        "degrade_notes": {
+            "escalate": "OpenHands cannot prompt for confirmation",
+            "escalate_from_transform": "OpenHands cannot modify a tool call",
+            "transform": "OpenHands cannot modify a tool call",
+        },
+        "note_style": "because",
+    },
     "cursor": {
         "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
         "degrade_notes": {
