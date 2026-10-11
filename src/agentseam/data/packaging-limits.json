@@ -65,6 +65,8 @@
     "openhands": "skills and hooks provably exist -- AGENTS.md, skills and .openhands/hooks.json per https://docs.openhands.dev/overview/skills and the hooks page, read 2026-10-11 -- but a bundle layout for them was not established here",
     "amp": "plugins provably exist -- TypeScript modules in .amp/plugins/ or ~/.config/amp/plugins/ (https://ampcode.com/docs/customize/plugins, read 2026-10-11) -- but a bundle layout for them was not established here",
     "kiro": "hooks, steering and agent profiles provably exist -- .kiro/hooks/*.json, .kiro/steering/ and .kiro/agents/*.json (https://kiro.dev/docs/hooks/ and https://kiro.dev/docs/steering.md, read 2026-10-11) -- but a bundle layout for them was not established here",
-    "factory_droid": "plugins provably exist -- a .factory-plugin/plugin.json manifest with hooks/hooks.json in the plugin root (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but no bundle renderer for that format was built here"
+    "factory_droid": "plugins provably exist -- a .factory-plugin/plugin.json manifest with hooks/hooks.json in the plugin root (https://docs.factory.com/harness/hooks, read 2026-10-11) -- but no bundle renderer for that format was built here",
+    "mistral_vibe": "skills provably exist -- the README documents skills and an AGENTS.md hierarchy under .vibe/ and ~/.vibe/ (https://docs.mistral.ai/vibe/code/cli/hooks and the v2.26.1 README, read 2026-10-11) -- but a bundle layout for them was not established here",
+    "deepseek_harness": "plugins provably exist -- dsh composes Cordis plugin packages mounted by name in its YAML config, the experimental hook bridges among them (https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-alpha.2/packages/experimental, read 2026-10-11) -- but a bundle layout for them was not established here"
   }
 }
