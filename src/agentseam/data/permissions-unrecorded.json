@@ -10,5 +10,7 @@
   "replit": "no permission model established here",
   "tabnine": "no permission model established here; vendor documentation is unreachable from this environment",
   "windsurf": "vendor documentation unreachable from the environment this was written in; no permission model claimed rather than one guessed",
-  "zed": "no permission model established here. As with Aider, this is independent of its lack of a hook surface"
+  "zed": "no permission model established here. As with Aider, this is independent of its lack of a hook surface",
+  "kilo_code": "a permission model provably exists -- its config schema (https://app.kilo.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here",
+  "opencode": "a permission model provably exists -- its config schema (https://opencode.ai/config.json, read 2026-10-11) has a permission key taking allow, ask or deny per tool -- but it was not mapped here"
 }
