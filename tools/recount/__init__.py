@@ -4,6 +4,7 @@ Split by activity (tests/test_repo_standards.py's 300-line budget): `mechanical.
 constants), `fields.py` (AST-read field-fallback chains), `gates.py` (golden-fixture-replayed
 verdict grammar), `hook_entry.py` (golden-fixture-replayed hook_config() shape), `tables.py`
 (the design's own stated judgment calls: family assignment, marker claims, evidence),
+`dialects.py` (the stated word tables and degradation notes `gates.py` folds in),
 `sourced.py` (primary-sourced additions carrying their own evidence records).
 """
 

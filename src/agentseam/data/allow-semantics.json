@@ -33,6 +33,11 @@
       "date": "2026-08-28",
       "note": "Source (google-gemini/gemini-cli @ main, read from a clone 2026-08-28): nothing in the tree tests for 'allow'. Only isBlockingDecision() (block|deny) and isAskDecision() (ask) are ever consulted, and hookAggregator SYNTHESISES decision:'allow' itself when no hook blocked or asked. The word cannot skip a confirmation here the way VS Code's can, so the documented reply is kept."
     },
+    "goose": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented verbatim (goose-docs.ai hooks guide, read 2026-10-11): \"Exit 0 with empty stdout allows.\" {\"decision\":\"allow\"} with exit 0 also allows, but nothing documents it meaning more than a plain allow, so silence is spoken. A stray log line on stdout reads as no decision, which is a hook failure, not an allow."
+    },
     "grok": {
       "bare_allow": "silent",
       "note": "There is no allow verb to speak: the vocabulary is {decision: deny, reason} and nothing more, and exit 0 is how a hook says it has no objection."

@@ -16,6 +16,7 @@ _CONFIG_DRIVEN = (
     "cursor",
     "devin",
     "gemini_cli",
+    "goose",
     "grok",
     "junie",
     "kimi_code",

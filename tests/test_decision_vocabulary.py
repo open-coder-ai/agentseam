@@ -109,7 +109,13 @@ def test_a_deny_at_a_blocking_event_is_never_silent(agent):
     for vendor_event, canonical in sorted(getattr(mod, "EVENT_MAP", {}).items()):
         if not (MATRIX[agent]["events"].get(canonical) or {}).get("block"):
             continue
-        raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, hookEventName=vendor_event, client_type=agent)
+        raw = dict(
+            _PROBE_PAYLOAD,
+            hook_event_name=vendor_event,
+            hookEventName=vendor_event,
+            event=vendor_event,
+            client_type=agent,
+        )
         text, code = mod.respond(Decision.deny("policy"), mod.parse(raw))
         if not text.strip() and code == 0:
             silent.append("%s/%s (-> %s) answered a deny with silence" % (agent, vendor_event, canonical))

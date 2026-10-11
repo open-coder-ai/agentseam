@@ -154,6 +154,7 @@ BASES = {
     },
     "vscode_copilot": {"session_id": "example"},
     "windsurf": {"trajectory_id": "example"},
+    "goose": {"session_id": "example"},
 }
 
 
@@ -220,8 +221,28 @@ def _windsurf(event, vendor_event, base):
     return raw
 
 
+def _goose(event, vendor_event, base):
+    """The event name rides under `event`; `matcher_context` is what the rule's regex saw."""
+    raw = dict(base, event=vendor_event)
+    if event in (PRE_TOOL, POST_TOOL, TOOL_FAILURE):
+        raw["working_dir"] = "/repo"
+        raw["tool_call_id"] = "call-1"
+        if event == PRE_TOOL:
+            raw.update(tool_name="write", tool_input={"path": MEMORY_FILE, "content": SECRET})
+        else:
+            raw.update(tool_name="shell", tool_input={"command": FAILING})
+        raw["matcher_context"] = raw["tool_name"]
+    elif event == PROMPT_SUBMIT:
+        raw.update(message=PROMPT, matcher_context=PROMPT)
+    elif event == FILE_CHANGED:
+        raw["matcher_context"] = MEMORY_FILE
+    elif event == STOP:
+        raw["last_assistant_message"] = "Done."
+    return raw
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
-SPECIAL = {"antigravity": _antigravity, "vscode_copilot": _vscode, "windsurf": _windsurf}
+SPECIAL = {"antigravity": _antigravity, "goose": _goose, "vscode_copilot": _vscode, "windsurf": _windsurf}
 
 
 def payload(agent, event, vendor_event):

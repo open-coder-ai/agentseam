@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Capture what an agent really sends, and check it against what agentseam claims.
 
-Ten of twelve adapters here were built from vendor documentation and have never had a
+Eleven of thirteen adapters here were built from vendor documentation and have never had a
 real payload put through them; Claude Code and Cursor are the two that have. Docs go stale and field names get misread, and nothing in this
 repository would notice. This closes that.
 
@@ -43,6 +43,7 @@ FOOTPRINTS = {
     "cursor": ("~/.cursor", ".cursor"),
     "devin": ("~/.config/devin", ".devin"),
     "gemini_cli": ("~/.gemini", ".gemini"),
+    "goose": ("~/.config/goose", "~/.agents/plugins"),
     "grok": ("~/.grok", ".grok"),
     "kimi_code": ("~/.kimi-code",),
     "antigravity": ("~/.gemini/antigravity", ".agents"),

@@ -21,6 +21,11 @@
     "id": "@anthropic-ai/claude-code",
     "note": "The reference row. Drift here matters most: every other adapter was shaped against it."
   },
+  "cline": {
+    "kind": "npm",
+    "id": "cline",
+    "note": "The Cline CLI. Resolved on 2026-10-11 to 3.0.70. The VS Code extension is marketplace-only; its hook thread (cline/cline#13277) was read against 4.1.9 and 4.1.10."
+  },
   "codex_cli": {
     "kind": "npm",
     "id": "@openai/codex"
@@ -41,6 +46,11 @@
   "gemini_cli": {
     "kind": "npm",
     "id": "@google/gemini-cli"
+  },
+  "goose": {
+    "kind": "github_releases",
+    "id": "aaif-goose/goose",
+    "note": "goose moved from block/goose to the Agentic AI Foundation. Resolved on 2026-10-11 to v1.54.0."
   },
   "grok": {
     "kind": null,
@@ -67,6 +77,10 @@
   "replit": {
     "kind": null,
     "note": "Hosted; see devin."
+  },
+  "roo_code": {
+    "kind": null,
+    "note": "Shut down on 2026-05-15; RooCodeInc/Roo-Code is archived at v3.54.0, so there is no further release to track."
   },
   "tabnine": {
     "kind": null,
