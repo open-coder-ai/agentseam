@@ -1,0 +1,10 @@
+#!/bin/sh
+# Reject a commit without a DCO sign-off, before CI's `dco` job does it a round trip later.
+#
+# Enabled by the same `git config core.hooksPath .githooks` as pre-commit. The pattern is the
+# one the `dco` job in .github/workflows/ci.yml greps for, so the two cannot disagree.
+if grep -qi '^Signed-off-by: .\+ <.\+@.\+>' "$1"; then
+    exit 0
+fi
+echo "commit-msg: no Signed-off-by trailer; commit with -s (see CONTRIBUTING.md, DCO)" >&2
+exit 1

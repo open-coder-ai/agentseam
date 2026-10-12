@@ -1,4 +1,4 @@
-"""The pre-commit hook must actually refresh the examples."""
+"""The pre-commit hook must actually refresh the examples; commit-msg must demand a DCO sign-off."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 HOOK = ROOT / ".githooks" / "pre-commit"
+MSG_HOOK = ROOT / ".githooks" / "commit-msg"
 
 GIT = ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com"]
 
@@ -37,8 +38,8 @@ def clone(tmp_path):
     return target
 
 
-def _commit(clone, message):
-    return _run(GIT + ["commit", "-q", "-m", message, "--no-gpg-sign"], clone)
+def _commit(clone, message, *, signoff=True):
+    return _run(GIT + ["commit", "-q", "-m", message, "--no-gpg-sign"] + (["-s"] if signoff else []), clone)
 
 
 def test_hook_is_executable():
@@ -50,10 +51,12 @@ def test_hook_is_executable():
     travels with a clone, so it is the mode worth asserting on every platform."""
     if not shutil.which("git"):  # pragma: no cover - git is present everywhere we run
         pytest.skip("git unavailable")
-    assert HOOK.exists()
-    recorded = _run(["git", "ls-files", "-s", "--", ".githooks/pre-commit"], ROOT).stdout.split()
-    assert recorded, "pre-commit hook is not tracked by git, so no clone will ever run it"
-    assert recorded[0] == "100755", "git records mode %s, not the executable 100755" % recorded[0]
+    for hook in (HOOK, MSG_HOOK):
+        assert hook.exists()
+        rel = hook.relative_to(ROOT).as_posix()
+        recorded = _run(["git", "ls-files", "-s", "--", rel], ROOT).stdout.split()
+        assert recorded, "%s is not tracked by git, so no clone will ever run it" % rel
+        assert recorded[0] == "100755", "git records mode %s for %s, not the executable 100755" % (recorded[0], rel)
 
 
 def test_changing_an_adapter_refreshes_the_pages_in_the_same_commit(clone):
@@ -122,7 +125,26 @@ def test_a_python3_that_is_found_but_does_not_run_is_skipped_for_one_that_does(c
     entry = clone / "src" / "agentseam" / "data" / "vendors" / "windsurf.json"
     entry.write_text(entry.read_text().replace("cannot prompt for confirmation", "has no confirmation prompt"))
     assert _run(GIT + ["add", "src/agentseam/data/vendors/windsurf.json"], clone, env=env).returncode == 0
-    result = _run(GIT + ["commit", "-q", "-m", "change wording", "--no-gpg-sign"], clone, env=env)
+    result = _run(GIT + ["commit", "-q", "-s", "-m", "change wording", "--no-gpg-sign"], clone, env=env)
     assert result.returncode == 0, result.stderr
     committed = _run(["git", "show", "--name-only", "--format=", "HEAD"], clone).stdout.split()
     assert "examples/generated/windsurf.md" in committed
+
+
+def test_a_commit_without_a_sign_off_is_rejected(clone):
+    """CI's dco job rejects it anyway; the hook says so before the push, not after."""
+    readme = clone / "README.md"
+    readme.write_text(readme.read_text() + "\n<!-- unsigned -->\n")
+    assert _run(GIT + ["add", "README.md"], clone).returncode == 0
+
+    result = _commit(clone, "unsigned change", signoff=False)
+    assert result.returncode != 0
+    assert "Signed-off-by" in result.stderr
+    assert _commit(clone, "signed change").returncode == 0
+
+
+def test_the_sign_off_pattern_matches_the_ci_dco_job():
+    """Two spellings of one check drift; the hook must grep for exactly what CI greps for."""
+    pattern = "'^Signed-off-by: .\\+ <.\\+@.\\+>'"
+    assert pattern in MSG_HOOK.read_text()
+    assert pattern in (ROOT / ".github" / "workflows" / "ci.yml").read_text()

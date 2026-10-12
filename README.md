@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg" alt="agentseam mark: five uneven vendor lines converging through a seam into five even lines" width="104">
+  <img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/logo.svg" alt="agentseam: one handler API over every coding agent's hooks, drawn as five uneven vendor lines converging through a seam into five even lines" width="104">
   <h1>agentseam</h1>
   <p><b>One handler API over every coding agent's hooks, instruction files, plugins and config — with a matrix of what each agent can actually enforce.</b></p>
 
@@ -9,6 +9,8 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-coder-ai/agentseam/badge)](https://scorecard.dev/viewer/?uri=github.com/open-coder-ai/agentseam)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+<p><code>pip install agentseam</code> · Python 3.9+ · no dependencies · <a href="#quick-start">Quick start</a></p>
 </div>
 
 <p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/demo.gif" width="760" alt="Terminal recording: agentseam install all wires one handler into every coding agent's own hook config in a single command. The output grades each agent honestly -- best-effort for eleven of them, the stronger enforceable gate for Cursor -- and says nothing at all for aider, Copilot CLI, Replit and Zed, which have no hook surface to wire."></p>

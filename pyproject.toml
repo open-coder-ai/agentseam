@@ -36,6 +36,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Software Development :: Libraries",
   "Topic :: Software Development :: Libraries :: Python Modules",
+  # No `Typing :: Typed` and no py.typed: the public API is not annotated (mypy
+  # --disallow-untyped-defs flags every function in src/agentseam), and the marker would
+  # tell type checkers the absent annotations are authoritative. Add both once it is typed.
 ]
 dependencies = []                      # stdlib only, on purpose: adapters must stay vendorable
 
