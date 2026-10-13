@@ -47,6 +47,8 @@ _SEPARATORS = ("/", "\\", "@", "\n", " ")
 _TOOL_NAME_KEYS = frozenset({"tool_name", "toolName", "name", "mcp_server_name"})
 MAX_TOOL_NAME_LEN = 128
 
+TOOL_INPUT_KEYS = frozenset({"tool_input", "toolInput", "tool_args", "toolArgs", "arguments", "input", "params"})
+
 
 def _is_enumlike(value, key=None):
     cap = MAX_TOOL_NAME_LEN if key in _TOOL_NAME_KEYS else MAX_ENUM_LEN
@@ -78,21 +80,21 @@ def _embedded_json(value):
     return parsed if isinstance(parsed, (dict, list)) else None
 
 
-def redact(value, key=None):
+def redact(value, key=None, *, in_tool_input=False):
     """Shape-only copy of `value`. Never returns any string the caller passed in."""
     if isinstance(value, dict):
-        return {k: redact(v, key=k) for k, v in value.items()}
+        return {k: redact(v, key=k, in_tool_input=in_tool_input or k in TOOL_INPUT_KEYS) for k, v in value.items()}
     inner = _embedded_json(value)
     if inner is not None:
-        return {"<json-string>": redact(inner, key=key)}
+        return {"<json-string>": redact(inner, key=key, in_tool_input=in_tool_input)}
     if isinstance(value, list):
-        shaped = [redact(v) for v in value[:2]]
+        shaped = [redact(v, in_tool_input=in_tool_input) for v in value[:2]]
         if len(value) > 2:
             shaped.append("<...%d more>" % (len(value) - 2))
         return shaped
     if isinstance(value, bool) or isinstance(value, (int, float)) or value is None:
         return value
-    if key in STRUCTURAL_KEYS and _is_enumlike(value, key=key):
+    if not in_tool_input and key in STRUCTURAL_KEYS and _is_enumlike(value, key=key):
         return value
     return _type_of(value)
 

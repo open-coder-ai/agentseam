@@ -11,7 +11,7 @@ sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "tools"))
 
 import pytest  # noqa: E402
-from redact import STRUCTURAL_KEYS, keys_of, redact  # noqa: E402
+from redact import STRUCTURAL_KEYS, TOOL_INPUT_KEYS, keys_of, redact  # noqa: E402
 
 SENSITIVE = {
     "hook_event_name": "PreToolUse",
@@ -115,3 +115,42 @@ def test_a_string_that_is_not_json_stays_a_string():
     assert redact({"x": "42"}) == {"x": "<str:2>"}
     assert redact({"y": "true"}) == {"y": "<str:4>"}
     assert redact({"z": "{not json"}) == {"z": "<str:9>"}
+
+
+AKIA = "AKIAIOSFODNN7EXAMPLE"
+
+
+@pytest.mark.parametrize("input_key", sorted(TOOL_INPUT_KEYS))
+def test_a_structural_key_inside_tool_input_is_redacted(input_key):
+    """`name` is structural at the top level, but inside a tool call it is whatever the model wrote."""
+    shaped = redact({"tool_name": "Write", input_key: {"name": AKIA}})
+    assert AKIA not in json.dumps(shaped)
+    assert shaped[input_key]["name"] == "<str:%d>" % len(AKIA)
+    assert shaped["tool_name"] == "Write"
+
+
+def test_structural_keys_are_redacted_at_any_depth_under_tool_input():
+    payload = {"tool_input": {"a": [{"b": {"type": AKIA, "status": "ok"}}], "kind": "x"}}
+    shaped = redact(payload)
+    assert AKIA not in json.dumps(shaped)
+    assert shaped["tool_input"]["a"][0]["b"] == {"type": "<str:20>", "status": "<str:2>"}
+    assert shaped["tool_input"]["kind"] == "<str:1>"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"tool_input": json.dumps({"name": AKIA})},
+        {"tool_input": {"nested": json.dumps({"deeper": {"source": AKIA}})}},
+        {"toolArgs": json.dumps([{"version": AKIA}])},
+    ],
+)
+def test_structural_keys_inside_embedded_json_under_tool_input_are_redacted(payload):
+    assert AKIA not in json.dumps(redact(payload))
+
+
+def test_structural_values_outside_tool_input_still_survive():
+    """The envelope keeps its enums; only the tool-input subtree loses them."""
+    shaped = redact({"hook_event_name": "PreToolUse", "name": "Write", "tool_input": {"name": "Write"}})
+    assert shaped["hook_event_name"] == "PreToolUse" and shaped["name"] == "Write"
+    assert shaped["tool_input"]["name"] == "<str:5>"
