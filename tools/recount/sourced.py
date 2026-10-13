@@ -139,6 +139,16 @@ EVIDENCE = {
         "date": "2026-10-13",
         "test": "tests/test_vendor_config.py::test_no_vendor_vocabulary_is_left_unverified",
     },
+    ("windsurf", "claims"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event",
+    },
+    ("windsurf", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event",
+    },
     ("grok", "also_reads"): {
         "basis": "vendor-source",
         "date": "2026-10-13",

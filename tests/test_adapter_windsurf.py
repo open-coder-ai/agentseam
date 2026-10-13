@@ -90,3 +90,34 @@ def test_matrix_records_that_no_file_write_event_exists():
     assert A.FILE_CHANGED not in row["events"]
     assert "NO file-write event" in row["notes"]
     assert A.enforcement_level("windsurf", A.PRE_TOOL) == "best-effort"
+
+
+# docs.devin.ai/desktop/cascade/hooks (read 2026-10-13): every payload names its event in
+# agent_action_name; the MCP and prompt fields live in tool_info.
+DOCS_MCP = {
+    "agent_action_name": "pre_mcp_tool_use",
+    "trajectory_id": "t",
+    "tool_info": {"mcp_server_name": "github", "mcp_tool_arguments": {"owner": "o"}, "mcp_tool_name": "create_issue"},
+}
+DOCS_PROMPT = {"agent_action_name": "pre_user_prompt", "trajectory_id": "t", "tool_info": {"user_prompt": "echo hello"}}
+DOCS_POST_MCP = {
+    "agent_action_name": "post_mcp_tool_use",
+    "tool_info": {"mcp_result": "r", "mcp_server_name": "github", "mcp_tool_name": "list_commits"},
+}
+
+
+def test_the_documented_payloads_parse_by_their_named_event():
+    mod = A.adapters.get("windsurf")
+    mcp = mod.parse(DOCS_MCP)
+    assert (mcp.event, mcp.tool) == (A.PRE_TOOL, "github/create_issue")
+    prompt = mod.parse(DOCS_PROMPT)
+    assert (prompt.event, prompt.prompt) == (A.PROMPT_SUBMIT, "echo hello")
+    post = mod.parse(DOCS_POST_MCP)
+    assert (post.event, post.tool, post.output) == (A.POST_TOOL, "github/list_commits", "r")
+    assert A.adapters.detect(DOCS_POST_MCP) == "windsurf"
+
+
+def test_a_documented_mcp_call_is_refused_at_its_own_gate():
+    _text, code, event, _d = A.handle(DOCS_MCP, lambda e: Decision.deny("no"), agent="windsurf")
+    assert event.event == A.PRE_TOOL
+    assert code == 2
