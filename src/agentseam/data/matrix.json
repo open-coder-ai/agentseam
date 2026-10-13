@@ -1734,7 +1734,7 @@
   },
   "antigravity": {
     "display": "Antigravity",
-    "tier": "block",
+    "tier": "block+rewrite",
     "config": ".agents/hooks.json",
     "verified": {
       "basis": "vendor-docs",
@@ -1745,7 +1745,7 @@
     "events": {
       "pre_tool": {
         "block": true,
-        "rewrite": false,
+        "rewrite": true,
         "fail_mode": "open",
         "evidence": {
           "block": {
@@ -1756,9 +1756,9 @@
           },
           "rewrite": {
             "basis": "vendor-docs",
-            "date": "2026-08-26",
+            "date": "2026-10-13",
             "version": "2.0 / CLI",
-            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+            "method": "https://antigravity.google/docs/hooks (read 2026-10-13), PreToolUse output fields: `overwrite`, \"Replacement arguments merged (shallow top-level merge) into toolCall.args before execution\", beside the required `decision`. Emitted shape tested by tests/test_adapter_antigravity.py::test_transform_emits_the_documented_overwrite."
           },
           "fail_mode": {
             "basis": "vendor-docs",
@@ -1819,7 +1819,7 @@
         }
       }
     },
-    "notes": "Richest decision vocabulary here -- allow, deny, ask, force_ask and deny_unless_prior_grant -- but no rewrite, since permissionOverrides widens permissions rather than changing arguments. The payload carries NO event name, so the event is inferred from shape, and PreToolUse/PostToolUse differ only by an `error` field documented as empty rather than absent; ties go to PreToolUse because the opposite guess would skip the gate. PreInvocation and PostInvocation have identical payloads and are unmapped. Fail mode is not documented, so the weaker claim (open) is recorded rather than a guess in our own favour."
+    "notes": "Richest decision vocabulary here -- allow, auto_approve, deny, ask, force_ask and deny_unless_prior_grant (https://antigravity.google/docs/hooks, read 2026-10-13). PreToolUse can rewrite: its documented `overwrite` object is merged into toolCall.args (shallow, top level) before the tool runs, so a transform is {\"decision\": \"allow\", \"overwrite\": ...} -- a key the replacement input leaves out is kept, not removed. permissionOverrides only widens permissions and is not used. Stop's `decision: \"continue\"` keeps the agent going; any other value allows the stop. All of this is read from the docs, not run. The payload carries NO event name, so the event is inferred from shape, and PreToolUse/PostToolUse differ only by an `error` field documented as empty rather than absent; ties go to PreToolUse because the opposite guess would skip the gate. PreInvocation and PostInvocation have identical payloads and are unmapped. Fail mode is not documented, so the weaker claim (open) is recorded rather than a guess in our own favour."
   },
   "gemini_cli": {
     "display": "Gemini CLI",

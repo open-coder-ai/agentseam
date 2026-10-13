@@ -125,7 +125,7 @@
           }
         },
         "transform_grammar": {
-          "enum": ["hook_specific_tool_input", "hook_output_snake_tool_input", "hook_specific_updated_input", "top_level_updated_input", "permission_updated_input"]
+          "enum": ["hook_specific_tool_input", "hook_output_snake_tool_input", "hook_specific_updated_input", "top_level_updated_input", "top_level_overwrite", "permission_updated_input"]
         },
         "words": {
           "type": "object",
