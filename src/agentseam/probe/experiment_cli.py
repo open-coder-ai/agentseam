@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 
 from .. import contract
 from . import experiment, experiment_probe, experiment_report, recorded_driver
@@ -44,6 +45,10 @@ def main(argv=None):
         return 0
 
     args.driver = recorded_driver.resolve_driver(args.agent, args.driver, event=args.event, version=args.agent_version)
+    refusal = experiment.driver_refusal(args.agent, args.driver)
+    if refusal:
+        print("experiment.py run: %s" % refusal, file=sys.stderr)
+        return 2
     if args.record:
         recorded_driver.check_record_args(parser, driver=args.driver, agent_version=args.agent_version)
 

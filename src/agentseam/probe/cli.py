@@ -8,6 +8,7 @@ standalone CLI both call the identical engine and can never quietly drift apart.
 from __future__ import annotations
 
 import json
+import sys
 
 from . import conformance_report, experiment, experiment_probe, experiment_report, recorded_driver
 
@@ -22,6 +23,10 @@ def cmd_list(_args):
 def cmd_run(args):
     """`agentseam probe run`: exercise one agent's hooks against a driver; table, or --report."""
     driver = recorded_driver.resolve_driver(args.agent, args.driver, event=args.event, version=args.agent_version)
+    refusal = experiment.driver_refusal(args.agent, driver)
+    if refusal:
+        print("agentseam probe run: %s" % refusal, file=sys.stderr)
+        return 2
     if args.record:
         # `args._parser` is the actual `run` subparser (stashed via set_defaults in
         # add_subparser below), so a bad --record invocation gets the identical error text
