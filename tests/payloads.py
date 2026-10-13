@@ -216,16 +216,6 @@ DV_PERMISSION = {
     "prompt_id": "turn-1",
 }
 DV_SESSION_START = {"hook_event_name": "SessionStart", "session_id": "3f8d1c2a"}
-#: docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks (read 2026-10-13): PostToolUse carries
-#: tool_response, "Object with success (boolean), output (string), and error (string or null)".
-DV_POST_TOOL = {
-    "hook_event_name": "PostToolUse",
-    "tool_name": "exec",
-    "tool_input": {"command": "npm test"},
-    "tool_response": {"success": True, "output": "12 passed", "error": None},
-    "session_id": "3f8d1c2a",
-    "prompt_id": "b71e9d40",
-}
 
 GK_SHELL = {
     "hookEventName": "PreToolUse",
