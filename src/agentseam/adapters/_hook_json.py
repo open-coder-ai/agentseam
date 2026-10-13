@@ -115,7 +115,8 @@ def _g1_allow(v, decision, wire, name, words):
 
 def _g1_transform(v, decision, name, words):
     """None when the transform isn't representable here; `_g1` falls through to the block path."""
-    if v.get("transform_grammar") == "hook_specific_tool_input":
+    missing_blocks = decision.updated_input is None and _TRANSFORM_MISSING_INPUT in v.get("degrade_notes", {})
+    if v.get("transform_grammar") == "hook_specific_tool_input" and not missing_blocks:
         return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
     if decision.updated_input is None:
         return None

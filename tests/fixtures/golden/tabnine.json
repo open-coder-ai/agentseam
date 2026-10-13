@@ -91,11 +91,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Tabnine cannot modify a tool call)\"}"
+          "stdout": "{\"hookSpecificOutput\": {\"tool_input\": {\"content\": \"safe\"}}}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Tabnine cannot modify a tool call)\"}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (no replacement input was supplied)\"}"
         },
         "vouch": {
           "exit": 0,

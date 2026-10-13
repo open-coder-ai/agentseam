@@ -53,3 +53,16 @@ def test_the_reference_driver_refuses_an_agent_it_does_not_model():
 
     with pytest.raises(ValueError, match="reference driver models only claude_code"):
         experiment.run_trial("cursor", "deny")
+
+
+@pytest.mark.parametrize("cli", ["agentseam", "experiment"])
+def test_both_clis_refuse_an_unmodelled_reference_run_in_one_line(cli, capsys):
+    """A refusal the user caused is a one-line error and exit 2, not a traceback."""
+    from agentseam import cli as agentseam_cli
+    from agentseam.probe import experiment_cli
+
+    argv = ["run", "--agent", "cursor", "--driver", "reference"]
+    code = agentseam_cli.main(["probe", *argv]) if cli == "agentseam" else experiment_cli.main(argv)
+    err = capsys.readouterr().err
+    assert code == 2
+    assert err.count("\n") == 1 and "reference driver models only claude_code; cursor needs" in err

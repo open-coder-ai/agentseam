@@ -98,12 +98,11 @@ def test_a_documented_gemini_payload_parses_when_gemini_is_named():
 
 def test_auto_detection_of_a_gemini_payload_is_never_weaker_than_gemini_itself():
     """Tabnine CLI sends Gemini's exact shape, timestamp included, so detect() cannot tell them
-    apart. Declining would allow silently; resolving to Tabnine answers allow/deny identically
-    and turns what only Gemini honours (ask, transform) into a deny -- stricter, never weaker."""
+    apart. Declining would allow silently; resolving to Tabnine answers allow, deny and a whole
+    transform identically, and turns what only Gemini honours (ask) into a deny -- stricter, never weaker."""
     assert A.adapters.detect(GM_DOC_BEFORE_TOOL) == "tabnine"
-    for decision in (Decision.deny("no"), Decision.allow()):
+    for decision in (Decision.deny("no"), Decision.allow(), Decision.transform({"command": "ls"}, "safer")):
         auto = A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d)[:2]
         assert auto == A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d, agent="gemini_cli")[:2]
-    for decision in (Decision.escalate("sure?"), Decision.transform({"command": "ls"}, "safer")):
-        text, _code, _ev, _d = A.handle(GM_DOC_BEFORE_TOOL, lambda e, d=decision: d)
-        assert json.loads(text)["decision"] == "deny"
+    text, _code, _ev, _d = A.handle(GM_DOC_BEFORE_TOOL, lambda e: Decision.escalate("sure?"))
+    assert json.loads(text)["decision"] == "deny"

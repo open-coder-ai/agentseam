@@ -154,13 +154,13 @@ to a silent pass-through.
 | Cursor | block + rewrite (all tools, fail-open by default); `stop` returns a follow-up message | `.cursor/hooks.json` | live-run-partial · 2026-09-23 |
 | Gemini CLI | block + rewrite (fail-open); Google is sunsetting it for consumer tiers in favor of Antigravity CLI | `.gemini/settings.json` | vendor-source · 2026-08-28 |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` | live-run-partial · 2026-08-28 |
-| Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
+| Windsurf | block via exit code only; no file-write event | `.devin/hooks.json` | third-party-install · 2026-08-26 |
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` | vendor-docs · 2026-08-26 |
 | Grok CLI (xAI Grok Build) | block on PreToolUse only (fail-open); the row predates Grok Build 1.0.13 and needs a live run | `.grok/hooks/agentseam.json` | vendor-docs · 2026-08-26 |
 | Antigravity | block + rewrite at PreToolUse via the documented [`overwrite`](https://antigravity.google/docs/hooks) (read from docs, not run), and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-10-13 |
 | Kimi Code CLI | block on 3 of its 20 events (fail-open) | `~/.kimi-code/config.toml` | vendor-docs · 2026-08-26 |
 | Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` | vendor-docs · 2026-08-26 |
-| Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
+| Tabnine CLI | block on 6 of its 11 events, incl. post-tool; rewrite at pre-tool per the docs, not live-run (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
 | goose | block at PreToolUse (fail mode configurable) and Stop (fail-open) | `.agents/plugins/agentseam/hooks/hooks.json` | vendor-docs · 2026-10-11 |
 | OpenHands | block at PreToolUse, UserPromptSubmit and Stop (fail-open) | `.openhands/hooks.json` | vendor-docs · 2026-10-11 |
 | Factory Droid | block at PreToolUse, UserPromptSubmit and Stop (fail-open); ask and rewrite degrade to a block | `.factory/hooks.json` | vendor-docs · 2026-10-11 |

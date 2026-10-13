@@ -201,7 +201,13 @@ git commit -s -m "feat(adapters): add gemini-cli adapter"
 ```
 
 CI checks every commit on a PR, and with `core.hooksPath` set (see Local checks) the
-`.githooks/commit-msg` hook rejects an unsigned commit before it leaves your machine. Forgot one?
+`.githooks/commit-msg` hook rejects an unsigned commit before it leaves your machine.
+
+The hook rejects rather than adding the trailer for you, on purpose. `Signed-off-by` is your
+own statement that you can certify the DCO for this change. A hook that wrote it would make
+that statement on your behalf for every commit, including the ones you never read it for, so
+the trailer would no longer mean anything. `-s` is the deliberate act; the hook only checks
+you made it. Forgot one?
 
 ```bash
 git commit --amend -s --no-edit && git push --force-with-lease
