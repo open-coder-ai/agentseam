@@ -123,8 +123,8 @@
     "gates": {
       "PermissionRequest": {
         "grammar": "G1",
-        "honours_escalate": true,
-        "honours_transform": true
+        "honours_escalate": false,
+        "honours_transform": false
       },
       "PreToolUse": {
         "grammar": "G1",
