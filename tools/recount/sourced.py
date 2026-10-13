@@ -13,6 +13,14 @@ from __future__ import annotations
 #: documents such a token for its hooks surface, so no other entry carries the key.
 REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 
+#: Other agents' repo hook configs this agent also loads and runs. grok:
+#: docs.x.ai/build/features/hooks (read 2026-10-13) -- "Claude Code (.claude/settings.json)
+#: and Cursor (.cursor/hooks.json) hook files are read as well"; xai-org/grok-build@2bdd1d6
+#: crates/codegen/xai-grok-hooks/src/discovery.rs:386-398 adds .claude/settings.local.json,
+#: and user-guide/10-hooks.md:77 says these are scanned by default. Its dedup key is
+#: (event, command, url, matcher) (discovery.rs:233), so only an identical hook runs once.
+ALSO_READS = {"grok": [".claude/settings.json", ".claude/settings.local.json", ".cursor/hooks.json"]}
+
 #: Project hooks that run only once the user trusts them, and how the user does that.
 #: codex_cli: learn.chatgpt.com/docs/hooks (read 2026-09-27) -- "Project-local hooks load
 #: only when the project `.codex/` layer is trusted"; `/hooks` reviews and trusts them, and
@@ -126,6 +134,11 @@ EVIDENCE = {
         "date": "2026-08-28",
         "test": "tests/test_vendor_lookups.py::test_shell_tools_are_recorded_only_where_established",
     },
+    ("grok", "also_reads"): {
+        "basis": "vendor-source",
+        "date": "2026-10-13",
+        "test": "tests/test_doctor_compat.py::test_doctor_names_a_compat_file_grok_also_runs",
+    },
     ("claude_code", "repo_root_token"): {
         "basis": "vendor-docs",
         "date": "2026-09-01",
@@ -138,6 +151,8 @@ def apply(agent, entry):
     """Fold this module's sourced records into one recounted entry, in place."""
     if agent in REPO_ROOT_TOKEN:
         entry["repo_root_token"] = REPO_ROOT_TOKEN[agent]
+    if agent in ALSO_READS:
+        entry["also_reads"] = list(ALSO_READS[agent])
     if agent in TRUST_HINT:
         entry["needs_trust"] = True
         entry["trust_hint"] = TRUST_HINT[agent]

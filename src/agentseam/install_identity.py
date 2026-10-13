@@ -102,3 +102,8 @@ def installed(
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         return _installed_toml(mod, path, owner, content_mode, fragment)
     return _installed_json(path, owner, content_mode, fragment)
+
+
+def owns(path, owner="agentseam"):
+    """True when the JSON config at `path` carries an entry with OUR marker."""
+    return _installed_json(path, owner, content_mode=False, fragment=None)
