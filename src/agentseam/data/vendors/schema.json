@@ -268,6 +268,11 @@
             "events": {"$ref": "#/$defs/stringList"}
           }
         },
+        "watch_list_events": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/canonicalEvent"},
+          "description": "canonical events whose matcher the vendor reads as a '|'-separated list of literal file names to watch, starting no watcher without one (claude_code's FileChanged). install wires them only when given that list (`watch=`), writes it as the matcher, and otherwise leaves them out and says why."
+        },
         "also_wires": {
           "type": "object",
           "description": "canonical event -> a second wire event name also wired whenever that canonical event is (windsurf's pre_mcp_tool_use beside pre_run_command). Event wiring, not an entry field, which is why it does not live in entry_extra.",

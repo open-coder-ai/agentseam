@@ -53,7 +53,15 @@ TRUST_HINT = {
 #:   (code.claude.com/docs/en/hooks, read 2026-10-13): PostToolUse carries `tool_response`,
 #:   PostToolUseFailure carries `error`. No live capture covers either event, and the
 #:   `tool_output` the chain read alone before is attested by no source.
+#: - claude_code hook_entry: the wrapper is the row's live run (2026-09-07); watch_list_events is
+#:   the vendor's hooks reference (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13),
+#:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("claude_code", "hook_entry"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_install_watch.py::test_file_changed_is_not_wired_without_a_watch_list",
+    },
     ("claude_code", "fields"): {
         "basis": "vendor-docs",
         "date": "2026-10-13",

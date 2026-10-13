@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 
 from . import adapters
 from . import install_hook_dir as hook_dir
@@ -11,6 +12,7 @@ from .install_config import (
     END,
     MARKER,
     ConfigUnreadableError,
+    apply_watch,
     check_wireable,
     dump,
     fail_closed_kwarg,
@@ -20,6 +22,7 @@ from .install_config import (
     remove_block,
     resolve,
     strip,
+    unwatched,
     write_block,
 )
 from .install_identity import installed
@@ -32,10 +35,15 @@ def config_path(agent, repo_root=".", owner="agentseam"):
     return resolve(adapters.get(agent), repo_root, owner)
 
 
-def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None):
+def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None, watch=None):
     """Wire `command` for `events` into `agent`'s config. Returns the path written."""
     mod = adapters.get(agent)
     check_wireable(mod, agent, events)
+    events, why = unwatched(mod, agent, events, watch)
+    if why and not events:
+        raise ValueError(why)
+    if why:
+        warnings.warn(why, UserWarning, stacklevel=2)
     extra = fail_closed_kwarg(mod, fail_closed)
     path = resolve(mod, repo_root, owner)
     if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
@@ -45,7 +53,7 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
         write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
     existing = strip(load(path), owner)
-    fragment = mark(mod.hook_config(events, command, matcher=matcher, **extra), owner)
+    fragment = mark(apply_watch(mod, mod.hook_config(events, command, matcher=matcher, **extra), watch), owner)
     dump(path, merge(existing, fragment))
     return path
 

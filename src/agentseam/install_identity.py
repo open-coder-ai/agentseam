@@ -11,12 +11,14 @@ from .install_config import (
     END,
     MARKER,
     ConfigUnreadableError,
+    apply_watch,
     block_bounds,
     check_wireable,
     fail_closed_kwarg,
     load,
     mark,
     resolve,
+    unwatched,
 )
 
 
@@ -80,7 +82,9 @@ def _installed_json(path, owner, content_mode, fragment):
     return all(item in actual_items for item in expected_items)
 
 
-def installed(agent, repo_root=".", owner="agentseam", events=None, command=None, matcher=None, fail_closed=None):
+def installed(
+    agent, repo_root=".", owner="agentseam", events=None, command=None, matcher=None, fail_closed=None, watch=None
+):
     """True when our witness is present in this agent's config."""
     mod = adapters.get(agent)
     path = resolve(mod, repo_root, owner)
@@ -90,8 +94,9 @@ def installed(agent, repo_root=".", owner="agentseam", events=None, command=None
     fragment = None
     if content_mode:
         check_wireable(mod, agent, events)
+        events = unwatched(mod, agent, events, watch)[0]
         extra = fail_closed_kwarg(mod, fail_closed)
-        fragment = mod.hook_config(events, command, matcher=matcher, **extra)
+        fragment = apply_watch(mod, mod.hook_config(events, command, matcher=matcher, **extra), watch)
     if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
         return hook_dir.installed(path, mod.REVERSE_EVENT_MAP.values(), owner, fragment)
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
