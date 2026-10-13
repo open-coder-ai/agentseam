@@ -92,7 +92,8 @@
     "output": [
       "tool_output",
       "tool_response",
-      "toolResult.textResultForLlm"
+      "toolResult.textResultForLlm",
+      "tool_result.text_result_for_llm"
     ],
     "path": [
       "tool_input.filePath",
