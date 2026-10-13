@@ -2,6 +2,7 @@
 """Capture golden wire fixtures: today's adapters' real (payload -> stdout, exit) output.
 
     python3 tools/capture_fixtures.py
+    python3 tools/capture_fixtures.py --check   # exit 1 if any fixture differs from source
 
 Writes `tests/fixtures/golden/<agent>.json`, one file per agent, driven by running the
 actual adapters through `agentseam.handle()` -- never transcribed by hand. This is the
@@ -82,16 +83,47 @@ def capture(agent):
     }
 
 
-def main():
+def render(agent):
+    """The exact bytes of one agent's fixture file."""
+    return json.dumps(capture(agent), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+
+def fixture_path(agent, fixture_dir=FIXTURE_DIR):
+    return os.path.join(fixture_dir, "%s.json" % agent)
+
+
+def drifted(fixture_dir=FIXTURE_DIR):
+    """Agents whose committed fixture is not what a capture from today's source writes."""
+    stale = []
+    for agent in sorted(adapters.ADAPTERS):
+        try:
+            with open(fixture_path(agent, fixture_dir), encoding="utf-8", newline="") as fh:
+                current = fh.read()
+        except FileNotFoundError:
+            current = None
+        if current != render(agent):
+            stale.append(agent)
+    return stale
+
+
+def main(argv=None):
+    args = sys.argv[1:] if argv is None else argv
+    if args not in ([], ["--check"]):
+        print("usage: capture_fixtures.py [--check]", file=sys.stderr)
+        return 2
+    if args == ["--check"]:
+        stale = drifted()
+        for agent in stale:
+            print("drift: %s" % fixture_path(agent))
+        return 1 if stale else 0
     os.makedirs(FIXTURE_DIR, exist_ok=True)
     for agent in sorted(adapters.ADAPTERS):
-        data = capture(agent)
-        path = os.path.join(FIXTURE_DIR, "%s.json" % agent)
-        with open(path, "w", encoding="utf-8") as fh:
-            json.dump(data, fh, indent=2, sort_keys=True, ensure_ascii=False)
-            fh.write("\n")
-        print("wrote %s (%d events x %d outcomes)" % (path, len(data["events"]), len(OUTCOMES)))
+        path = fixture_path(agent)
+        with open(path, "w", encoding="utf-8", newline="") as fh:
+            fh.write(render(agent))
+        print("wrote %s (%d events x %d outcomes)" % (path, len(SCENARIOS[agent]), len(OUTCOMES)))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

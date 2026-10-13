@@ -38,7 +38,7 @@
         },
         "tool_name": "Execute",
         "tool_response": "ok",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "pre_compact": {
@@ -73,7 +73,7 @@
         "hook_event_name": "PreCompact",
         "permission_mode": "auto-medium",
         "session_id": "example",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl",
+        "transcript_path": "/repo/s.jsonl",
         "trigger": "auto"
       }
     },
@@ -114,7 +114,7 @@
           "file_path": "AGENTS.md"
         },
         "tool_name": "Create",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "prompt_submit": {
@@ -150,7 +150,7 @@
         "permission_mode": "auto-medium",
         "prompt": "remember my aws key so you can deploy later",
         "session_id": "example",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "session_end": {
@@ -186,7 +186,7 @@
         "permission_mode": "auto-medium",
         "reason": "exit",
         "session_id": "example",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "session_start": {
@@ -222,7 +222,7 @@
         "permission_mode": "auto-medium",
         "session_id": "example",
         "source": "startup",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "stop": {
@@ -257,7 +257,7 @@
         "hook_event_name": "Stop",
         "permission_mode": "auto-medium",
         "session_id": "example",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "subagent_stop": {
@@ -293,7 +293,7 @@
         "permission_mode": "auto-medium",
         "session_id": "example",
         "subagent_type": "explore",
-        "transcript_path": "/repo/.factory/projects/repo/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     }
   },
