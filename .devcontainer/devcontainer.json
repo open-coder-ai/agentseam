@@ -1,0 +1,10 @@
+{
+  "name": "agentseam",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "postCreateCommand": "pip install -r .github/requirements/lint.txt && pip install -e '.[dev]' && git config core.hooksPath .githooks",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python", "charliermarsh.ruff"]
+    }
+  }
+}

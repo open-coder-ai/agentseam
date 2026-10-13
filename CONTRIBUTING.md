@@ -200,7 +200,8 @@ change under Apache-2.0.
 git commit -s -m "feat(adapters): add gemini-cli adapter"
 ```
 
-CI checks every commit on a PR. Forgot one?
+CI checks every commit on a PR, and with `core.hooksPath` set (see Local checks) the
+`.githooks/commit-msg` hook rejects an unsigned commit before it leaves your machine. Forgot one?
 
 ```bash
 git commit --amend -s --no-edit && git push --force-with-lease

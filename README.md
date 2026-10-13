@@ -1,6 +1,6 @@
 <div align="center">
 
-<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/cover-agentseam.png" alt="agentseam wordmark and mark on a dusk-blue background." width="100%"></p>
+<p><img src="https://raw.githubusercontent.com/open-coder-ai/chock/main/docs/assets/readme/cover-agentseam.png" alt="agentseam: one handler API over every coding agent's hooks, instruction files, plugins and config, with a verified matrix of what each agent can actually enforce." width="100%"></p>
 
 </div>
 
@@ -13,6 +13,10 @@ Open-source guardrails for AI coding agents: rules the agent reads, checks that 
 [![CI](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml/badge.svg)](https://github.com/open-coder-ai/agentseam/actions/workflows/ci.yml) [![PyPI](https://img.shields.io/pypi/v/agentseam)](https://pypi.org/project/agentseam/) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-coder-ai/agentseam/badge)](https://scorecard.dev/viewer/?uri=github.com/open-coder-ai/agentseam) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 agentseam is a stdlib-only Python library and CLI that turns every coding agent's own hook system into one normalized event and one `Decision`, and records, per agent and per lifecycle event, what that agent can really do with it. Write a guard once and `agentseam install` wires it into the agent's own config. When an agent cannot enforce something, agentseam says so instead of installing a hook that silently does nothing. Free and open source (Apache-2.0).
+
+```bash
+pip install agentseam   # Python 3.9+, no dependencies; see Quick start below
+```
 
 ## Application security for the code your agents write
 
@@ -280,21 +284,35 @@ Tiers: `commit` is a git hook or CI gate that exits non-zero. `in-agent` is the 
 
 ## FAQ for people and agents
 
-**Does agentseam use an LLM?** No. It makes no model call and imports no networking module in `src/agentseam`.
+### Does agentseam use an LLM?
 
-**Does my code leave my machine?** agentseam adds no new place your code goes: handlers run locally in the
+No. It makes no model call and imports no networking module in `src/agentseam`.
+
+### Does my code leave my machine?
+
+agentseam adds no new place your code goes: handlers run locally in the
 hook process. The agent still sends its context to its own model provider.
 
-**Which agents does it work with?** 27 are in the matrix, 17 of them with a hook adapter; see Supported agents.
+### Which agents does it work with?
 
-**How do I install it, through the repo or through plugins?** `pip install agentseam` for the library. For
+27 are in the matrix, 17 of them with a hook adapter; see Supported agents.
+
+### How do I install it, through the repo or through plugins?
+
+`pip install agentseam` for the library. For
 guardrails, see Install above: the repository route (commit and CI) or the five plugin repos (in-agent).
 
-**What does it cost?** Free and open source (Apache-2.0). A check costs no tokens; a refusal adds one short reason to the agent's context.
+### What does it cost?
 
-**Does it replace SAST or code review?** No. It catches known classes in the agent's turn; review, SAST and testing still run.
+Free and open source (Apache-2.0). A check costs no tokens; a refusal adds one short reason to the agent's context.
 
-**Which OWASP and CWE items does it cover?** agentseam maps none itself. The catalog's OWASP mappings are
+### Does it replace SAST or code review?
+
+No. It catches known classes in the agent's turn; review, SAST and testing still run.
+
+### Which OWASP and CWE items does it cover?
+
+agentseam maps none itself. The catalog's OWASP mappings are
 partial and labelled so; see chock-catalog `docs/coverage.md`.
 
 ## For tools and agents
