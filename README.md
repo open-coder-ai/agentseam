@@ -160,7 +160,7 @@ to a silent pass-through.
 | Antigravity | block + rewrite at PreToolUse via the documented [`overwrite`](https://antigravity.google/docs/hooks) (read from docs, not run), and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-10-13 |
 | Kimi Code CLI | block on 3 of its 20 events (fail-open) | `~/.kimi-code/config.toml` | vendor-docs · 2026-08-26 |
 | Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` | vendor-docs · 2026-08-26 |
-| Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
+| Tabnine CLI | block on 6 of its 11 events, incl. post-tool; rewrite at pre-tool per the docs, not live-run (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
 | goose | block at PreToolUse (fail mode configurable) and Stop (fail-open) | `.agents/plugins/agentseam/hooks/hooks.json` | vendor-docs · 2026-10-11 |
 | OpenHands | block at PreToolUse, UserPromptSubmit and Stop (fail-open) | `.openhands/hooks.json` | vendor-docs · 2026-10-11 |
 | Factory Droid | block at PreToolUse, UserPromptSubmit and Stop (fail-open); ask and rewrite degrade to a block | `.factory/hooks.json` | vendor-docs · 2026-10-11 |

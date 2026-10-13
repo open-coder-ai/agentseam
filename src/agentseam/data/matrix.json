@@ -1170,7 +1170,7 @@
       },
       "pre_tool": {
         "block": true,
-        "rewrite": false,
+        "rewrite": true,
         "fail_mode": "open",
         "evidence": {
           "block": {
@@ -1181,9 +1181,9 @@
           },
           "rewrite": {
             "basis": "vendor-docs",
-            "date": "2026-08-26",
+            "date": "2026-10-13",
             "version": "CLI",
-            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+            "method": "docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks/event-reference, BeforeTool: hookSpecificOutput.tool_input \"Replaces the model's arguments before execution. Must include all required tool parameters\"; emitted whole, never live-run."
           },
           "fail_mode": {
             "basis": "vendor-docs",
@@ -1269,7 +1269,7 @@
         }
       }
     },
-    "notes": "Eleven events, six of which can block -- including AfterTool, which most agents treat as observation only. A deny there cannot undo the call: it \"Hides the real tool output\" and its reason \"replaces the result sent to the model\", and the retry-on-deny is AfterAgent's, not AfterTool's (docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks/event-reference, read 2026-10-13). Event names are Gemini CLI's exactly; the only documented separator is `timestamp` in Tabnine's base schema, which identifies Tabnine but cannot exclude Gemini, so detect() declines these payloads and the agent must be named explicitly. Fails OPEN unusually broadly: any exit code other than 0 or 2 proceeds, AND stdout that is not valid JSON is treated as a systemMessage and the action is ALLOWED -- so a chatty or crashed hook is a permitted action. Rewrite is advertised in the vendor overview, and the event reference read 2026-10-13 documents BeforeTool's hookSpecificOutput.tool_input as replacing the model's arguments; the adapter does not emit it yet, so no rewrite is claimed. The decision words are documented: \"allow\" or \"deny\" (alias \"block\"), docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks, read 2026-10-13."
+    "notes": "Eleven events, six of which can block -- including AfterTool, which most agents treat as observation only. A deny there cannot undo the call: it \"Hides the real tool output\" and its reason \"replaces the result sent to the model\", and the retry-on-deny is AfterAgent's, not AfterTool's (docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks/event-reference, read 2026-10-13). Event names are Gemini CLI's exactly; the only documented separator is `timestamp` in Tabnine's base schema, which identifies Tabnine but cannot exclude Gemini, so detect() declines these payloads and the agent must be named explicitly. Fails OPEN unusually broadly: any exit code other than 0 or 2 proceeds, AND stdout that is not valid JSON is treated as a systemMessage and the action is ALLOWED -- so a chatty or crashed hook is a permitted action. Rewrite is advertised in the vendor overview, and the event reference read 2026-10-13 documents BeforeTool's hookSpecificOutput.tool_input as replacing the model's arguments (\"Must include all required tool parameters\"), so a transform at BeforeTool is emitted there, whole; a transform with no replacement input blocks. The claim rests on the docs alone: not tested against a live Tabnine, not witnessed. The decision words are documented: \"allow\" or \"deny\" (alias \"block\"), docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks, read 2026-10-13."
   },
   "vscode_copilot": {
     "display": "GitHub Copilot (VS Code agent mode / CLI)",
