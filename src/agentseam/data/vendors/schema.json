@@ -33,6 +33,10 @@
       "$ref": "#/$defs/stringList",
       "description": "repo-relative hook configs of OTHER agents that this agent also loads and runs (grok reads Claude Code's and Cursor's). Opt-in and primary-sourced; travels with an evidence.also_reads record. `doctor` names any of them carrying agentseam entries, which an uninstall of this agent leaves in place."
     },
+    "legacy_config_paths": {
+      "$ref": "#/$defs/stringList",
+      "description": "repo-relative hook configs this agent read before config_path and still reads as a fallback (windsurf's .windsurf/hooks.json, read only while .devin/hooks.json defines no hooks). Opt-in and primary-sourced; travels with an evidence.legacy_config_paths record. `install` strips agentseam entries from them and refuses when one holds the user's own hooks that config_path would switch off; `uninstall` cleans them."
+    },
     "repo_root_token": {
       "type": "string",
       "minLength": 1,
@@ -299,6 +303,7 @@
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
         "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
         "also_reads": {"$ref": "#/$defs/evidenceRecord"},
+        "legacy_config_paths": {"$ref": "#/$defs/evidenceRecord"},
         "repo_root_token": {"$ref": "#/$defs/evidenceRecord"},
         "trust_hint": {"$ref": "#/$defs/evidenceRecord"}
       },

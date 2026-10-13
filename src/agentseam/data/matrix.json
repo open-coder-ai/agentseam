@@ -2261,7 +2261,7 @@
   "windsurf": {
     "display": "Windsurf (Cascade)",
     "tier": "block",
-    "config": ".windsurf/hooks.json",
+    "config": ".devin/hooks.json",
     "verified": {
       "basis": "third-party-install",
       "version": "hooks.json schema as shipped 2026-08",

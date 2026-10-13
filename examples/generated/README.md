@@ -31,7 +31,7 @@ without notice. Verify against your own installation before relying on any of it
 | [OpenHands](openhands.md) | 6 | best-effort | yes | no | `vendor-docs` | `.openhands/hooks.json` |
 | [Tabnine CLI](tabnine.md) | 7 | best-effort | yes | no | `vendor-docs` | `.tabnine/agent/settings.json` |
 | [GitHub Copilot (VS Code agent mode / CLI)](vscode_copilot.md) | 7 | best-effort | yes | yes | `live-run-partial` | `.github/hooks/*.json` |
-| [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.windsurf/hooks.json` |
+| [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.devin/hooks.json` |
 
 Agents with no page are not omissions. Aider and Zed expose no hook surface at all,
 and Replit and Copilot have no adapter here yet -- `agentseam agents` lists

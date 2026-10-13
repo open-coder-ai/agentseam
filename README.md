@@ -154,7 +154,7 @@ to a silent pass-through.
 | Cursor | block + rewrite (all tools, fail-open by default); `stop` returns a follow-up message | `.cursor/hooks.json` | live-run-partial · 2026-09-23 |
 | Gemini CLI | block + rewrite (fail-open); Google is sunsetting it for consumer tiers in favor of Antigravity CLI | `.gemini/settings.json` | vendor-source · 2026-08-28 |
 | OpenAI Codex CLI | block + rewrite (fail-open) | `.codex/hooks.json` | live-run-partial · 2026-08-28 |
-| Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
+| Windsurf | block via exit code only; no file-write event | `.devin/hooks.json` | third-party-install · 2026-08-26 |
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` | vendor-docs · 2026-08-26 |
 | Grok CLI (xAI Grok Build) | block on PreToolUse only (fail-open); the row predates Grok Build 1.0.13 and needs a live run | `.grok/hooks/agentseam.json` | vendor-docs · 2026-08-26 |
 | Antigravity | block + rewrite at PreToolUse via the documented [`overwrite`](https://antigravity.google/docs/hooks) (read from docs, not run), and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-10-13 |
