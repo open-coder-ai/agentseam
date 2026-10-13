@@ -53,10 +53,19 @@ TRUST_HINT = {
 #:   (code.claude.com/docs/en/hooks, read 2026-10-13): PostToolUse carries `tool_response`,
 #:   PostToolUseFailure carries `error`. No live capture covers either event, and the
 #:   `tool_output` the chain read alone before is attested by no source.
+#: - devin fields: the output chain is the vendor's lifecycle-hooks reference
+#:   (docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks, PostToolUse, read 2026-10-13):
+#:   `tool_response` is an object with `success`, `output` and `error` (string or null). The
+#:   `tool_output` the chain read before is attested by no Devin source, and no live run covers it.
 #: - claude_code hook_entry: the wrapper is the row's live run (2026-09-07); watch_list_events is
 #:   the vendor's hooks reference (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13),
 #:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("devin", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_devin.py::test_post_tool_output_is_read_from_the_documented_tool_response",
+    },
     ("claude_code", "hook_entry"): {
         "basis": "vendor-docs",
         "date": "2026-10-13",

@@ -6,7 +6,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from payloads import CC_BASH, DV_PERMISSION, DV_PRE_TOOL, DV_PROMPT, DV_SESSION_START, DV_WRITE  # noqa: E402
+from payloads import (  # noqa: E402
+    CC_BASH,
+    DV_PERMISSION,
+    DV_POST_TOOL,
+    DV_PRE_TOOL,
+    DV_PROMPT,
+    DV_SESSION_START,
+    DV_WRITE,
+)
 
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
@@ -120,3 +128,19 @@ def test_a_degraded_rewrite_names_the_event_it_could_not_modify():
     text, _, _, _ = A.handle(payload, lambda _e: Decision.rewrite({"prompt": "clean"}, "sanitized"))
     reason = json.loads(text)["reason"]
     assert "tool call" not in reason and "at UserPromptSubmit" in reason
+
+
+def test_post_tool_output_is_read_from_the_documented_tool_response():
+    """raw[5].findings[7]: parse() read `tool_output`, which no Devin source names, so output was None."""
+    mod = A.adapters.get("devin")
+    assert mod.parse(DV_POST_TOOL).output == "12 passed"
+    failed = dict(DV_POST_TOOL, tool_response={"success": False, "output": "", "error": "exit status 1"})
+    assert mod.parse(failed).output == "exit status 1"
+
+
+def test_a_permission_request_deny_is_the_documented_top_level_block():
+    """raw[5].findings[1]: the docs' output contract is a top-level decision, approve or block, and their
+    PermissionRequest example answers {"decision": "approve"} (docs.devin.ai hooks, read 2026-10-13)."""
+    text, code, event, _ = A.handle(DV_PERMISSION, deny_all)
+    assert event.event == A.PRE_TOOL
+    assert json.loads(text) == {"decision": "block", "reason": "test-deny"} and code == 0

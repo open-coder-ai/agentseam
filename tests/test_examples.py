@@ -57,10 +57,17 @@ def test_each_payload_parses_to_the_event_it_is_filed_under(agent, event):
     assert A.adapters.get(agent).parse(SCENARIOS[agent][event]).event == event
 
 
+#: Payloads the vendor sends byte-identical to another's, so its own adapter cannot claim them.
+#: devin/session_start: prompt_id is "absent for events that fire before the first user prompt
+#: (e.g. SessionStart)" (docs.devin.ai/cli/extensibility/hooks/overview, read 2026-10-13).
+NOT_CLAIMED_BY_ITS_OWN = {("devin", "session_start")}
+
+
 @pytest.mark.parametrize("agent,event", PAIRS)
 def test_each_payload_is_claimed_by_its_own_adapter(agent, event):
     """Necessary for the page to be about the agent it names."""
-    assert A.adapters.get(agent).claims(SCENARIOS[agent][event])
+    claimed = A.adapters.get(agent).claims(SCENARIOS[agent][event])
+    assert claimed != ((agent, event) in NOT_CLAIMED_BY_ITS_OWN)
 
 
 @pytest.mark.parametrize("agent,event", PAIRS)
@@ -110,6 +117,7 @@ def test_the_index_says_the_pages_are_not_observations(generated):
 
 
 KNOWN_AMBIGUOUS = {
+    ("devin", "session_start"),
     ("gemini_cli", "session_start"),
     ("gemini_cli", "session_end"),
     ("tabnine", "session_start"),

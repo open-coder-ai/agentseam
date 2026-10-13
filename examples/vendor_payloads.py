@@ -239,10 +239,23 @@ def _factory_droid(event, vendor_event, base):
     return raw
 
 
+def _devin(event, vendor_event, base):
+    """docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks (read 2026-10-13): no `prompt_id` before the
+    first prompt (SessionStart), and PostToolUse's result is `tool_response` {success, output, error}."""
+    if event == SESSION_START:
+        base = {k: v for k, v in base.items() if k != "prompt_id"}
+    raw = _claude_shaped("devin", event, vendor_event, base)
+    if event == POST_TOOL:
+        raw.pop("tool_output")
+        raw["tool_response"] = {"success": True, "output": "ok", "error": None}
+    return raw
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
 SPECIAL = {
     "antigravity": _antigravity,
     "cline": cline,
+    "devin": _devin,
     "factory_droid": _factory_droid,
     "goose": goose,
     "mistral_vibe": mistral_vibe,
