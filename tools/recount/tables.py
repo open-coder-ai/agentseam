@@ -220,9 +220,18 @@ def family(agent):
     return _FAMILY[agent]
 
 
+#: Where a shape-inferred vendor does name its event. windsurf: docs.devin.ai/desktop/
+#: cascade/hooks (read 2026-10-13), the common input's "agent_action_name | string | The
+#: hook event name"; hook_event_name is what the 2026-08-26 third-party install sent.
+_SHAPE_EVENT_KEYS = {"windsurf": ["agent_action_name", "hook_event_name"]}
+
+
 def claims(agent):
     if agent in _SHAPE_INFERRED:
-        return {"mode": "shape_inferred"}
+        out = {"mode": "shape_inferred"}
+        if agent in _SHAPE_EVENT_KEYS:
+            out["event_key"] = list(_SHAPE_EVENT_KEYS[agent])
+        return out
     return dict(_CLAIMS[agent])
 
 

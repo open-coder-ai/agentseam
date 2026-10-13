@@ -29,6 +29,10 @@
       "minLength": 1,
       "description": "what the user does in the agent to trust a project hook, where needs_trust is true and a primary source says how (codex_cli's /hooks). Printed by `agentseam install` and `doctor`; travels with an evidence.trust_hint record."
     },
+    "also_reads": {
+      "$ref": "#/$defs/stringList",
+      "description": "repo-relative hook configs of OTHER agents that this agent also loads and runs (grok reads Claude Code's and Cursor's). Opt-in and primary-sourced; travels with an evidence.also_reads record. `doctor` names any of them carrying agentseam entries, which an uninstall of this agent leaves in place."
+    },
     "repo_root_token": {
       "type": "string",
       "minLength": 1,
@@ -294,6 +298,7 @@
         "verdicts": {"$ref": "#/$defs/evidenceRecord"},
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
         "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
+        "also_reads": {"$ref": "#/$defs/evidenceRecord"},
         "repo_root_token": {"$ref": "#/$defs/evidenceRecord"},
         "trust_hint": {"$ref": "#/$defs/evidenceRecord"}
       },

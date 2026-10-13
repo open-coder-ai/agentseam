@@ -128,7 +128,7 @@ agentseam install all "python3 my_handler.py" --events pre_tool --repo .
 ```
 
 That one handler now runs in Claude Code, Cursor, VS Code Copilot, Codex, Gemini CLI,
-Windsurf and eight more. The install output tells you which agents get *best-effort*
+Windsurf and eleven more (17 `wired` lines from this block at `0738359`). The install output tells you which agents get *best-effort*
 blocking, which get the stronger *enforceable* gate (Cursor, today), and which do not
 appear in the output at all because agentseam has nothing to wire there (aider, Zed and
 every `unadapted` row). Nothing here is emulated: `install` writes real per-agent config files, the same

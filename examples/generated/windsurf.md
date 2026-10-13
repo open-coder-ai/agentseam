@@ -24,7 +24,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 | hook config | `.windsurf/hooks.json` |
 | evidence | `third-party-install` — a real working installation (.windsurf/hooks.json + hook scripts) in PaloAltoNetworks/prisma-airs-integrations; vendor docs unreachable from this network |
 
-Exit code 2 is the ONLY block signal: no stdout decision protocol, no machine-readable reason, no rewrite. Critically there is NO file-write event -- prompt, terminal and MCP hooks only -- so a write to a memory file is invisible to a hook on this agent. Fail mode is undocumented, so blocking rates best-effort rather than enforced.
+Exit code 2 is the ONLY block signal: no stdout decision protocol, no machine-readable reason, no rewrite. Critically there is NO file-write event -- prompt, terminal and MCP hooks only -- so a write to a memory file is invisible to a hook on this agent. Fail mode is undocumented, so blocking rates best-effort rather than enforced. Payloads name their event in agent_action_name and carry the command, prompt and MCP fields inside tool_info (docs.devin.ai/desktop/cascade/hooks, read 2026-10-13, where the product is now Devin Desktop); the event is inferred from shape only when no name is present. The workspace file install writes, .windsurf/hooks.json, is now the legacy location: the same page says it is used only when .devin/hooks.json is absent or defines no hooks, so a repo whose .devin/hooks.json defines hooks does not run the agentseam ones.
 
 ## What `agentseam install` writes
 

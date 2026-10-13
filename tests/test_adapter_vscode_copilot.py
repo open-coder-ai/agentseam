@@ -122,6 +122,24 @@ def test_post_tool_output_is_read_from_tool_response():
     assert mod.parse(raw).output == "secret"
 
 
+def test_copilot_vs_code_compatible_post_tool_output_is_read_from_tool_result():
+    """docs.github.com/en/copilot/reference/hooks-reference (read 2026-10-13), "VS Code
+    compatible input": PostToolUse carries tool_result.text_result_for_llm."""
+    raw = {
+        "hook_event_name": "PostToolUse",
+        "session_id": "s",
+        "timestamp": "2026-10-13T00:00:00Z",
+        "cwd": "/r",
+        "tool_name": "bash",
+        "tool_input": {"command": "ls"},
+        "tool_result": {"result_type": "success", "text_result_for_llm": "a.txt"},
+    }
+    assert A.adapters.detect(raw) == "vscode_copilot"
+    event = A.adapters.get("vscode_copilot").parse(raw)
+    assert event.event == A.POST_TOOL
+    assert event.output == "a.txt"
+
+
 def test_windows_gets_a_powershell_callable_command():
     """hookExecutor.ts's getShellCommand spawns"""
     entry = A.adapters.get("vscode_copilot").hook_config([A.PRE_TOOL], '"C:\\py.exe" "g.py"')["hooks"]["PreToolUse"][0]

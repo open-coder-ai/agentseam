@@ -1,6 +1,10 @@
 {
   "agent": "windsurf",
   "claims": {
+    "event_key": [
+      "agent_action_name",
+      "hook_event_name"
+    ],
     "mode": "shape_inferred"
   },
   "config_format": "json",
@@ -15,9 +19,9 @@
   },
   "evidence": {
     "claims": {
-      "basis": "third-party-install",
-      "date": "2026-08-26",
-      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+      "basis": "vendor-docs",
+      "date": "2026-10-13",
+      "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event"
     },
     "config_path": {
       "basis": "third-party-install",
@@ -35,9 +39,9 @@
       "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
     },
     "fields": {
-      "basis": "third-party-install",
-      "date": "2026-08-26",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "basis": "vendor-docs",
+      "date": "2026-10-13",
+      "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event"
     },
     "hook_entry": {
       "basis": "third-party-install",
@@ -61,9 +65,11 @@
       "tool_info.command_line"
     ],
     "cwd": [
+      "tool_info.cwd",
       "cwd"
     ],
     "output": [
+      "tool_info.mcp_result",
       "output",
       "result"
     ],
@@ -72,6 +78,7 @@
       "tool_info.path"
     ],
     "prompt": [
+      "tool_info.user_prompt",
       "query",
       "prompt"
     ],

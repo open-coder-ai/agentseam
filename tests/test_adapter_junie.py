@@ -87,6 +87,18 @@ def test_permission_request_is_answered_explicitly_because_silence_approves():
     assert json.loads(A.handle(raw, lambda e: Decision.deny("no"), agent="junie")[0])["decision"] == "block"
 
 
+@pytest.mark.parametrize(
+    "decision", [Decision.escalate("confirm"), Decision.transform({"command": "ls -a"}, "redacted")]
+)
+def test_permission_request_blocks_what_it_cannot_ask_or_rewrite(decision):
+    """junie-cli-hooks.html (read 2026-10-13): exit 0 "without a blocking decision
+    automatically approves"; PermissionRequest documents no ask and no updatedInput."""
+    raw = _pre(hook_event_name="PermissionRequest")
+    text, code, _e, _d = A.handle(raw, lambda e: decision, agent="junie")
+    assert json.loads(text)["decision"] == "block"
+    assert code == 0
+
+
 def test_permission_request_is_not_bundled_into_a_pre_tool_install():
     """PermissionRequest approves by default; PreToolUse denies by default. Both map to"""
     mod = A.adapters.get("junie")

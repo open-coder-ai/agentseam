@@ -189,9 +189,12 @@ def test_repo_root_token_travels_with_its_own_evidence(agent):
 # ---------------------------------------------------------------------------------------
 
 
-def test_vocabulary_basis_is_unverified_only_for_tabnine():
+def test_no_vendor_vocabulary_is_left_unverified():
+    """Tabnine's was the last (recount/gates.py cites the docs read 2026-10-13); its words
+    are the documented allow and deny."""
     unverified = {a for a in AGENTS if VENDOR_CONFIG[a]["verdicts"]["vocabulary_basis"] == "unverified"}
-    assert unverified == {"tabnine"}
+    assert unverified == set()
+    assert VENDOR_CONFIG["tabnine"]["verdicts"]["vocabulary"] == ("allow", "deny")
 
 
 # ---------------------------------------------------------------------------------------

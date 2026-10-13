@@ -162,13 +162,14 @@ def test_claude_code_pre_tool_now_asserts_the_witnessed_fields(results):
     assert rows[0]["asserted"] == "open"
 
 
-def test_the_reference_disagrees_with_the_witnessed_unknown_verb_reading():
+def test_the_reference_is_docs_silent_beside_the_witnessed_unknown_verb_reading():
     """The one trial reference and reality most plausibly differ on (task 6): the reference
-    refuses to guess, the real agent was observed letting an unrecognised verb through."""
+    refuses to guess, the real agent was observed letting an unrecognised verb through. The
+    docs' silence is named, not counted against the live-run claim."""
     r = experiment.run_trial(AGENT, "unknown")
     assert r["measured"] == {"unknown_verb_means": "undocumented"}
     rows = experiment_report.diff_against_matrix([r])
-    assert rows[0]["status"] == "DISAGREES"
+    assert rows[0]["status"] == "docs-silent"
     assert rows[0]["asserted"] == "allow"
 
 

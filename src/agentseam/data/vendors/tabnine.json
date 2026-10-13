@@ -60,8 +60,8 @@
     },
     "verdicts": {
       "basis": "vendor-docs",
-      "date": "2026-08-26",
-      "test": "tests/test_golden_fixtures.py::test_wire_output_matches_the_frozen_fixture"
+      "date": "2026-10-13",
+      "test": "tests/test_vendor_config.py::test_no_vendor_vocabulary_is_left_unverified"
     }
   },
   "family": "flat_decision",
@@ -144,7 +144,7 @@
       "allow",
       "deny"
     ],
-    "vocabulary_basis": "unverified",
+    "vocabulary_basis": "verified",
     "words": {
       "allow": "allow",
       "block": "deny"

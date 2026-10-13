@@ -1,5 +1,10 @@
 {
   "agent": "grok",
+  "also_reads": [
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    ".cursor/hooks.json"
+  ],
   "claims": {
     "accept_any_name_when": "event_keys_are_twins",
     "accept_markers": [
@@ -36,6 +41,11 @@
     "UserPromptSubmit": "prompt_submit"
   },
   "evidence": {
+    "also_reads": {
+      "basis": "vendor-source",
+      "date": "2026-10-13",
+      "test": "tests/test_doctor_compat.py::test_doctor_names_a_compat_file_grok_also_runs"
+    },
     "claims": {
       "basis": "vendor-source",
       "date": "2026-10-13",

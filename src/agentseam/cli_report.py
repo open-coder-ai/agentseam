@@ -8,9 +8,10 @@ that only prints is safe to run anywhere, and mixing the two made that hard to s
 from __future__ import annotations
 
 import json
+import os
 from datetime import date
 
-from . import adapters, recordings
+from . import adapters, install_identity, recordings
 from . import install as install_mod
 from . import staleness as staleness_mod
 from . import tier_table as tier_table_mod
@@ -75,6 +76,14 @@ def trust_note(agent):
     return "not live until trusted: %s" % how
 
 
+def compat_notes(agent, repo):
+    """Other agents' configs this agent also runs, where they carry agentseam entries."""
+    mod = adapters.get(agent)
+    for rel in getattr(mod, "ALSO_READS", ()):
+        if install_identity.owns(os.path.join(repo, rel)):
+            yield "also runs the agentseam hooks in %s; `uninstall %s` leaves them" % (rel, agent)
+
+
 def _cmd_doctor(args):
     """Report what is actually wired here, and how stale each capability claim is."""
     today = date.today()
@@ -100,6 +109,8 @@ def _cmd_doctor(args):
         )
         note = trust_note(name) if wired else None
         if note:
+            print("%-16s %s" % ("", note))
+        for note in compat_notes(name, args.repo):
             print("%-16s %s" % ("", note))
     return rc
 
