@@ -134,6 +134,11 @@ EVIDENCE = {
         "date": "2026-08-28",
         "test": "tests/test_vendor_lookups.py::test_shell_tools_are_recorded_only_where_established",
     },
+    ("tabnine", "verdicts"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_vendor_config.py::test_no_vendor_vocabulary_is_left_unverified",
+    },
     ("grok", "also_reads"): {
         "basis": "vendor-source",
         "date": "2026-10-13",

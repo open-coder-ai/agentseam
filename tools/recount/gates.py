@@ -192,11 +192,13 @@ def _gates(agent, mod):
 
 
 def _vocabulary_basis(agent):
-    """Tabnine's DECISION_VOCABULARY rests on nothing recorded (allow_semantics.py's own
-    comment: "the only such entry here"); every other vendor's is cross-checked against a
-    read source. Re-homes test_the_unverified_vocabulary_is_still_only_tabnine's intent
-    (dialect-families.md §5) as a fact about this config rather than a source-file grep."""
-    return "unverified" if agent == "tabnine" else "verified"
+    """Every vendor's DECISION_VOCABULARY is now cross-checked against a read source.
+
+    Tabnine was the last: docs.tabnine.com/main/getting-started/tabnine-cli/features/hooks
+    (read 2026-10-13) gives `decision` as "allow" or "deny" (alias "block"), the two words
+    its gates speak. The schema keeps "unverified" for a vendor added without that read.
+    """
+    return "verified"
 
 
 def verdicts(agent, mod):
