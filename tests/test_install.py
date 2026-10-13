@@ -62,7 +62,7 @@ def test_every_agent_with_a_surface_can_be_wired(tmp_path):
 def test_the_marker_never_lands_on_a_top_level_container(tmp_path):
     """Codex CLI < 0.143.0 rejects its whole hooks file over one unexpected top-level key"""
     for agent in sorted(adapters.ADAPTERS):
-        if getattr(adapters.get(agent), "CONFIG_FORMAT", "json") == "toml":
+        if getattr(adapters.get(agent), "CONFIG_FORMAT", "json") in ("toml", "hook_dir"):
             continue
         path = Path(I.install(agent, ["pre_tool"], "handler", str(tmp_path / agent)))
         body = json.loads(path.read_text())

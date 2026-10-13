@@ -11,14 +11,19 @@ from ._family import bind
 #: branching are beyond what the flat config may carry (§3.1).
 _CONFIG_DRIVEN = (
     "antigravity",
+    "cline",
     "claude_code",
     "codex_cli",
     "cursor",
     "devin",
+    "factory_droid",
     "gemini_cli",
+    "goose",
     "grok",
     "junie",
     "kimi_code",
+    "mistral_vibe",
+    "openhands",
     "tabnine",
     "windsurf",
 )

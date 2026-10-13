@@ -44,6 +44,8 @@ def _classify_grammar(stdout, exit_code):
         return "G4"
     if "followup_message" in body:
         return "G6"
+    if body.get("cancel") is True:
+        return "G7"
     if "hookSpecificOutput" in body:
         inner = body["hookSpecificOutput"]
         if not isinstance(inner, dict):
@@ -71,6 +73,9 @@ def _classify_transform_grammar(stdout):
     inner = body.get("hookSpecificOutput")
     if isinstance(inner, dict) and "tool_input" in inner:
         return "hook_specific_tool_input"
+    snake = body.get("hook_specific_output")
+    if isinstance(snake, dict) and "tool_input" in snake:
+        return "hook_output_snake_tool_input"
     if isinstance(inner, dict) and "updatedInput" in inner and inner.get("updatedInput") is not None:
         return "hook_specific_updated_input"
     if "updatedInput" in body and body.get("updatedInput") is not None:
@@ -126,7 +131,12 @@ _EXTRA_GATE_NAMES = {
     # windsurf's REVERSE_EVENT_MAP emits pre_run_command for pre_tool, so D1's fixture
     # never exercises its second, equally blocking pre_tool wire name.
     "windsurf": ("pre_mcp_tool_use",),
+    # Cline's CLI/SDK names the PreToolUse file's event tool_call in the payload.
+    "cline": ("tool_call",),
 }
+
+#: The payload key a swapped wire name goes under, where it is not hook_event_name.
+_EVENT_KEY = {"cline": "hookName"}
 
 
 def _extra_gates(agent, canonical_source_event):
@@ -141,7 +151,7 @@ def _extra_gates(agent, canonical_source_event):
     factories = dict(OUTCOMES)
     out = {}
     for name in names:
-        payload = dict(base_payload, hook_event_name=name)
+        payload = dict(base_payload, **{_EVENT_KEY.get(agent, "hook_event_name"): name})
 
         def _speak(outcome):
             text, code, _e, _d = A.handle(payload, lambda _e, f=factories[outcome]: f(), agent=agent)
@@ -188,7 +198,7 @@ def _vocabulary_basis(agent):
 
 
 def verdicts(agent, mod):
-    from .tables import verdict_dialect
+    from .dialects import verdict_dialect
 
     gates, transform_grammar, empty_object = _gates(agent, mod)
     out = {

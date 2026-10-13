@@ -42,7 +42,13 @@ _PROBE_PAYLOAD = {
 def _drive(agent, vendor_event):
     """respond() to a bare ALLOW at one vendor event name."""
     mod = adapters.get(agent)
-    raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, hookEventName=vendor_event, client_type=agent)
+    raw = dict(
+        _PROBE_PAYLOAD,
+        hook_event_name=vendor_event,
+        hookEventName=vendor_event,
+        hookName=vendor_event,
+        client_type=agent,
+    )
     return mod.respond(Decision.allow(), mod.parse(raw))
 
 
@@ -131,7 +137,13 @@ def test_vouch_speaks_the_same_word_allow_withholds(agent):
         allow_text, _ = _drive(agent, vendor_event)
         assert not allow_text.strip(), "bare allow must still be silent at %s/%s" % (agent, vendor_event)
         mod = adapters.get(agent)
-        raw = dict(_PROBE_PAYLOAD, hook_event_name=vendor_event, hookEventName=vendor_event, client_type=agent)
+        raw = dict(
+            _PROBE_PAYLOAD,
+            hook_event_name=vendor_event,
+            hookEventName=vendor_event,
+            hookName=vendor_event,
+            client_type=agent,
+        )
         vouch_text, code = mod.respond(Decision.vouch("trusted"), mod.parse(raw))
         assert vouch_text.strip(), "%s/%s: vouch must speak where allow_semantics trusts it" % (agent, vendor_event)
         assert code == 0

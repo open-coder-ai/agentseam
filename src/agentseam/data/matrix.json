@@ -1730,7 +1730,7 @@
         }
       }
     },
-    "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN -- timeouts, crashes and malformed output are recorded and the call proceeds. Payload fields are camelCase (hookEventName, toolName) while event values stay PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust (/hooks-trust or --trust) before they run, so a written config is not yet a live one."
+    "notes": "PreToolUse is the ONLY blocking event; everywhere else stdout is ignored. No rewrite: the vocabulary is {decision: deny, reason} and nothing more. Fails OPEN -- timeouts, crashes and malformed output are recorded and the call proceeds. Payload fields are camelCase (hookEventName, toolName) while event values stay PascalCase, which is what separates it from Claude Code, Codex and VS Code Copilot. Reads .claude/settings.json and .cursor/hooks.json too. Project hooks need trust (/hooks-trust or --trust) before they run, so a written config is not yet a live one. Grok Build (2026-10-11): this row IS xAI's Grok Build (the grok binary, https://github.com/xai-org/grok-build), not a separate product; its hooks page https://docs.x.ai/build/features/hooks (last updated 2026-07-02) matches this row's contract, xAI names no rename, and grok_build therefore gets no row of its own. The row predates Grok Build 1.0.13 and is stale against the vendor's newer user guide (https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/10-hooks.md, read 2026-10-11 against changelog v1.0.50 of 2026-10-06, https://x.ai/changelog/build): hookEventName now carries snake_case values (pre_tool_use) beside a hook_event_name key with the PascalCase name, payloads add timestamp, permissionMode, promptId and toolUseId, tool names are grok's own (run_terminal_command, search_replace), PreToolUse also takes ask, defer and hookSpecificOutput.updatedInput, and UserPromptSubmit, Stop and SubagentStop accept decision: block. Measured 2026-10-11: a payload shaped like the guide's example was claimed by vscode_copilot, not grok. Since value-based detection (D1) it detects as grok and parses to pre_tool: hookEventName being the snake_case twin of hook_event_name is what separates it, and grok's adapter reads the event from hook_event_name, so the {decision: deny, reason} answer this row records reaches a current build's PreToolUse. Not confirmed on a live build, and not widened here: grok's own tool names (run_terminal_command, search_replace) are in no tool list, so shell and write policies do not see those calls as shell or write; ask, defer and updatedInput stay unclaimed; PostToolUse output arrives as toolResult, which the adapter does not read. The capabilities above are left as recorded until a live run settles the shape. Instruction files reach it through AGENTS.md (D2a, 2026-10-11): xAI's project-rules page (https://docs.x.ai/build/features/project-rules, titled AGENTS.md, last updated 2026-07-04, read 2026-10-11) says Grok Build reads AGENTS.md, Agents.md, AGENT.md, CLAUDE.md, Claude.md and CLAUDE.local.md in every directory from the repo root down, plus .grok/rules/*.md; the .grok/GROK.md file agentseam used to write came from the community superagent-ai/grok-cli and is not on that list. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/188"
   },
   "antigravity": {
     "display": "Antigravity",
@@ -2008,7 +2008,8 @@
         }
       }
     },
-    "notes": "Top-level `decision: allow|deny|ask` + `reason` (not nested); rewrite merges via hookSpecificOutput.tool_input; exit 2 also blocks. Write tools are write_file/replace. Fail mode is not documented as closed, so pre_tool is rated best-effort rather than enforced. Source (read from a clone, 2026-08-28) corrected two things the hooks reference alone had settled wrongly. `ask` IS honoured, at BeforeTool only: hook-utils routes isAskDecision() to PolicyDecision.ASK_USER and calls resolveConfirmation with forcedDecision:'ask_user', which prompts even where the user's own policy rule would have auto-allowed -- a stronger ask than most vendors here can express, and this adapter was degrading it to a deny. At BeforeAgent/AfterAgent only isBlockingDecision() is consulted, so an ask there is inert and the degradation is right. Conversely `allow` is read NOWHERE: nothing in the tree tests for it and hookAggregator synthesises it when no hook objected, so unlike VS Code's permissionDecision:allow it cannot skip a confirmation."
+    "notes": "Top-level `decision: allow|deny|ask` + `reason` (not nested); rewrite merges via hookSpecificOutput.tool_input; exit 2 also blocks. Write tools are write_file/replace. Fail mode is not documented as closed, so pre_tool is rated best-effort rather than enforced. Source (read from a clone, 2026-08-28) corrected two things the hooks reference alone had settled wrongly. `ask` IS honoured, at BeforeTool only: hook-utils routes isAskDecision() to PolicyDecision.ASK_USER and calls resolveConfirmation with forcedDecision:'ask_user', which prompts even where the user's own policy rule would have auto-allowed -- a stronger ask than most vendors here can express, and this adapter was degrading it to a deny. At BeforeAgent/AfterAgent only isBlockingDecision() is consulted, so an ask there is inert and the degradation is right. Conversely `allow` is read NOWHERE: nothing in the tree tests for it and hookAggregator synthesises it when no hook objected, so unlike VS Code's permissionDecision:allow it cannot skip a confirmation. Superseded (consumer tiers): Google's own post 'An important update: Transitioning Gemini CLI to Antigravity CLI' (https://developers.googleblog.com/an-important-update-transitioning-gemini-cli-to-antigravity-cli/, 2026-05-19) announces 'the sunsetting of Gemini CLI in favor of Antigravity CLI' and says Gemini CLI stops serving Google AI Pro, Ultra and free Code Assist users on 2026-06-18, while enterprise access 'remains unchanged'. The CLI still ships (npm @google/gemini-cli 0.63.0, 2026-10-06, not npm-deprecated), so this row stays for paid and enterprise users; new work should target the antigravity row.",
+    "superseded_by": "antigravity"
   },
   "codex_cli": {
     "display": "OpenAI Codex CLI",
@@ -2567,12 +2568,12 @@
     "config": null,
     "verified": {
       "basis": "vendor-docs",
-      "version": "2026-08",
-      "date": "2026-08-26",
-      "method": "docs + open extensibility issues"
+      "version": "Zed v1.23.2, the GitHub latest release on 2026-10-11 (released 2026-10-07)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11: the AI docs index https://zed.dev/docs/llms.txt (no hooks page), https://zed.dev/docs/ai/tool-permissions (agent.tool_permissions: default confirm|allow|deny and always_allow, always_deny, always_confirm Rust-regex lists, always_deny highest; v0.224.0 and later), https://zed.dev/docs/ai/external-agents.md (external agents speak ACP and own their tools), https://zed.dev/docs/ai/instructions.md (.rules first, then AGENTS.md among others) and https://agentclientprotocol.com/protocol/v1/tool-calls (the agent MAY call session/request_permission); a search of zed-industries/zed for PreToolUse found nothing, and https://github.com/zed-industries/zed/issues/52688 (tool-use hooks) was converted to discussion #53120 on 2026-04-04 without a change."
     },
     "events": {},
-    "notes": "No user hooks. Only declarative agent.tool_permissions rules. No deny path for an external handler — say so rather than stretch."
+    "notes": "No user hooks. Zed documents no command-hook surface for its agent (https://zed.dev/docs/llms.txt has no hooks page; issue #52688 asking for tool-use hooks was converted to a discussion without being built). Its only policy surface is the declarative agent.tool_permissions in settings.json: a per-tool default of confirm, allow or deny plus always_allow, always_deny and always_confirm regex lists (https://zed.dev/docs/ai/tool-permissions). External agents connect over ACP, where the agent MAY ask the client for permission; that is a protocol the agent drives, not a hook an external handler can rely on. No deny path for an external handler, so say so rather than stretch. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/186"
   },
   "aider": {
     "display": "Aider",
@@ -2586,5 +2587,903 @@
     },
     "events": {},
     "notes": "No lifecycle hooks. Only --lint-cmd/--test-cmd post-edit steps. Observation possible via git hooks; no interception."
+  },
+  "opencode": {
+    "display": "OpenCode",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "opencode-ai 1.18.35 (v1) and @opencode/cli 2.0.26 (v2), the npm latest of each on 2026-10-11",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs and config schema on 2026-10-11: https://opencode.ai/docs/plugins/ (v1), https://opencode.ai/v2/docs/plugins, https://opencode.ai/v2/docs/build/plugins and https://opencode.ai/v2/docs/config (v2), and https://opencode.ai/config.json. The one interception surface documented is an in-process JavaScript/TypeScript plugin API: v1 plugins return a 'tool.execute.before' hook that can throw to stop a tool call, v2 plugins register ctx.tool.hook('execute.before'). Both load from .opencode/plugins/ or the config's plugin array. The config schema's top-level object is additionalProperties: false and has no key that runs an external command on a lifecycle event."
+    },
+    "events": {},
+    "notes": "Unadapted, not none: OpenCode has a real interception surface, but it is an in-process JS/TS plugin API (tool.execute.before), not a command hook that hands a JSON payload to an external process. Every agentseam adapter speaks a command-hook dialect, and the org keeps in-process plugin APIs on watch for now, so nothing here gates OpenCode's tool calls. A plugin shim that calls an agentseam handler would be a new feature, not an adapter. Instruction files still reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/174"
+  },
+  "kilo_code": {
+    "display": "Kilo Code",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "@kilocode/cli 7.8.8, the npm latest on 2026-10-11; the docs page says it applies to the current VS Code extension and CLI",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs and config schema on 2026-10-11: https://kilo.ai/docs/automate/extending/plugins, https://kilo.ai/articles/claude-code-to-kilo-code-migration-guide and https://app.kilo.ai/config.json. The one interception surface documented is an in-process JavaScript/TypeScript plugin API, which the plugins page calls behaviourally identical to OpenCode's: a 'tool.execute.before' hook that can throw to block, loaded from .kilo/plugin/ (legacy .kilocode/plugin/) or the config's plugin array. The migration guide maps Claude Code's PreToolUse to that plugin hook rather than to a command hook. No config key that runs an external command on a lifecycle event was found in the schema. The vendor issue asking for one (Kilo-Org/kilocode#7859) was closed in a bulk close of legacy-extension issues, with no statement that command hooks exist."
+    },
+    "events": {},
+    "notes": "Unadapted, not none: Kilo Code has a real interception surface, but it is the OpenCode-derived in-process JS/TS plugin API (tool.execute.before), not a command hook that hands a JSON payload to an external process. Every agentseam adapter speaks a command-hook dialect, and the org keeps in-process plugin APIs on watch for now, so nothing here gates Kilo Code's tool calls. Instruction files still reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/175"
+  },
+  "goose": {
+    "display": "goose",
+    "tier": "block",
+    "config": ".agents/plugins/agentseam/hooks/hooks.json",
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11: https://goose-docs.ai/docs/guides/context-engineering/hooks/ and https://goose-docs.ai/docs/guides/context-engineering/plugins/, against the v1.54.0 release (https://github.com/aaif-goose/goose/releases/tag/v1.54.0). Hooks follow the Open Plugins hooks specification and live in a plugin's hooks/hooks.json, discovered from <project>/.agents/plugins/<name>/ or ~/.agents/plugins/<name>/; a hook-only plugin needs no manifest. Each command runs under sh -c with a JSON payload on stdin naming the event under `event`. Only PreToolUse and Stop can block: exit 2 (reason from stderr) or {\"decision\":\"block\",\"reason\":...} on stdout; exit 0 with empty stdout allows. A hook failure (spawn error, timeout, undecodable or unrecognised output) is logged and the call proceeds unless the PreToolUse action sets on_failure: block; Stop stays fail-open even then. No field to modify a tool call and no ask/confirm decision is documented."
+    },
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "configurable",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "tool_failure": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_end": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "file_changed": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "goose v1.54.0, the latest GitHub release on 2026-10-11 (released 2026-10-08)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "PreToolUse and Stop are the only events that can block; a block from any other event is ignored. The verdict is the flat {decision: block, reason} body, and a bare allow is silence. No rewrite and no ask: a transform or escalate degrades to a block, never to a silent pass. Fail mode is configurable and only at PreToolUse: a failed hook is fail-open by default, and on_failure: block makes it fail closed -- agentseam's install writes on_failure: block on every hook entry it writes (goose reads it at PreToolUse only). Stop stays fail-open whatever on_failure says, and goose caps consecutive Stop blocks (GOOSE_STOP_HOOK_BLOCK_CAP). stdout is the decision channel, so a handler that prints a log line to stdout reads as no decision. The event name rides under `event`, not hook_event_name, which is what separates goose's payloads from every other adapter's. PreToolUseResult, BeforeReadFile, BeforeShellExecution and AfterShellExecution are observation-only and parse as unknown; AfterFileEdit is wired as file_changed. SubagentStart/SubagentStop are not emitted. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/177"
+  },
+  "cline": {
+    "display": "Cline",
+    "tier": "block",
+    "config": ".clinerules/hooks",
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own hook documentation on 2026-10-11: .clinerules/hooks/README.md in https://github.com/cline/cline (the hooks reference the old docs.cline.bot/features/hooks pages now redirect away from: executables with no extension named exactly after the event -- TaskStart, TaskResume, TaskCancel, TaskComplete, UserPromptSubmit, PreToolUse, PostToolUse, PreCompact -- in the workspace's .clinerules/hooks/ or the global ~/Documents/Cline/Hooks/, a shebang required, executable on Unix, Windows not supported; stdin carries clineVersion, hookName, timestamp, taskId, workspaceRoots and userId plus one per-event object such as preToolUse {toolName, parameters}; stdout answers {cancel, contextModification, errorMessage}, where cancel true blocks and false or omitted continues; the hook cannot modify the tool's parameters; any hook cancelling blocks; tool hooks run blocking everywhere, 30 s in the extension and up to 120 s in the CLI/SDK), https://cline.bot/blog/cline-v3-36-hooks (the same contract; enable hooks under Features in Cline's settings; macOS and Linux only) and https://docs.cline.bot/getting-started/config (.cline/hooks/ and the older .clinerules/hooks/ in a project). Cross-checked on 2026-10-11 against the vendor's source at that commit: the SDK/CLI hook runner (sdk/packages/core/src/hooks/hook-file-hooks.ts) maps the file PreToolUse to its own event tool_call and sends that name as hookName, alongside a raw tool_call {id, name, input} and the documented preToolUse; cancel true at tool_call throws a controlled stop before the tool runs; a timeout, invalid JSON or a failed hook command is logged and skipped (fail-open); prompt_submit hooks run detached and \"cannot cancel or inject context\", and TaskStart/TaskResume run fire-and-forget unless the host opts into blocking. The VS Code extension (apps/vscode/src/sdk/hooks-adapter.ts) runs the same files through its HookFactory, which sends hookName PreToolUse and treats exit 0 with no JSON as continue; a hook error is logged and the tool proceeds; TaskResume, TaskError, SessionShutdown and PreCompact are not wired there. preToolUse.parameters carries every non-string argument as JSON text (run_commands' commands list arrives as a JSON string). Current tools: run_commands {commands}, editor {path, old_text, new_text}, apply_patch {input}, read_files; the extension's message translator also names execute_command, write_to_file and replace_in_file."
+    },
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "cline CLI 3.0.70 (the npm latest on 2026-10-11) and VS Code extension 4.1.23, both read at cline/cline main c3a40572 (committed 2026-10-10)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2b): Cline runs one executable per event from .clinerules/hooks/, named exactly after the event, and reads {\"cancel\": true, \"errorMessage\"} on stdout as a block. agentseam speaks that cancel object (grammar G7) at PreToolUse only, the one event whose cancel is read before the tool runs on both hosts. The two hosts name the same file differently in the payload: the VS Code extension sends hookName PreToolUse, the CLI/SDK sends its own event name tool_call; both are mapped, and every payload carries clineVersion, which no other vendor sends. Fail-open on both hosts: a hook that times out, crashes or prints something other than JSON is logged and the tool runs. Escalate and transform degrade to a block: hooks cannot ask the user, and the documented contract says a hook cannot modify the tool's parameters. UserPromptSubmit and TaskStart are detect only: the CLI runs them detached, so their cancel is never read there. PostToolUse is detect only: its cancel stops the task after the tool already ran. run_commands' command list arrives as JSON text in preToolUse.parameters and is read as one command per line; apply_patch's target path lives inside the patch text and is not extracted. Install writes .clinerules/hooks/<Event> with a #!/bin/sh shebang and the executable bit, read by both hosts (.cline/hooks/ is read by the CLI/SDK only), and refuses to overwrite a hook file it did not write: Cline runs one file per event name per directory. Hooks must be enabled in the VS Code extension's settings, and run on macOS and Linux only. Tool calls executed inside a provider's own agent loop (Claude Code, Codex as providers) never reach the hook pipeline, per the maintainers on cline/cline#13277. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/178"
+  },
+  "roo_code": {
+    "display": "Roo Code",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "Roo Code 3.54.0, the final release (2026-05-15); the extension was shut down and its repository archived that day",
+      "date": "2026-10-11",
+      "method": "read the vendor's archived docs on 2026-10-11 (https://docs.roocode.com now redirects to https://roocodeinc.github.io/Roo-Code/): the home page states 'The Roo Code Extension was shut down on May 15th' and points users to Cline and the community fork Zoo Code; the docs sitemap (https://roocodeinc.github.io/Roo-Code/sitemap.xml) has no hooks page, /features/hooks returns 404, and the experimental-features page lists none. https://github.com/RooCodeInc/Roo-Code is archived (read-only) since 2026-05-15 at v3.54.0. One user report against 3.47.0 (RooCodeInc/Roo-Code#10834) describes PreToolUse and PostToolUse hooks in the code (ToolHookUtils.runPreToolUseIfEnabled); that surface is not in the final docs and was not verified here. https://roocodeinc.github.io/Roo-Code/features/custom-instructions documents AGENTS.md loading (roo-cline.useAgentRules, default true)."
+    },
+    "events": {},
+    "notes": "Unadapted, not none, and no longer maintained: the extension was shut down on 2026-05-15 at 3.54.0. Its final docs document no hook surface; a user report against 3.47.0 (RooCodeInc/Roo-Code#10834) describes undocumented PreToolUse/PostToolUse hooks in the code, so this row records not-found rather than absent. No adapter is built for an archived agent on an undocumented surface. Instruction files still reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/179"
+  },
+  "openhands": {
+    "display": "OpenHands",
+    "tier": "block",
+    "config": ".openhands/hooks.json",
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs and SDK source on 2026-10-11: https://docs.openhands.dev/openhands/usage/customization/hooks (hooks are configured per repository in .openhands/hooks.json, active automatically in Cloud, CLI and local GUI; the Claude Code format with PascalCase event keys and the {\"hooks\": {...}} wrapper is accepted; events PreToolUse, PostToolUse, UserPromptSubmit, Stop, SessionStart, SessionEnd, of which PreToolUse, UserPromptSubmit and Stop can block; the payload on stdin names the event under event_type, with tool_name, tool_input, session_id and working_dir; exit 0 proceeds, exit 2 blocks, any other code is an error and the operation proceeds; stdout {\"decision\": \"deny\", \"reason\"} blocks) and https://docs.openhands.dev/sdk/guides/hooks ('Only exit code 2 blocks'). The shell tool is terminal (hooks page: 'terminal vs Bash'); the file tool is file_editor, whose action fields (command, path, file_text, old_str, new_str) were read from https://github.com/OpenHands/software-agent-sdk/blob/v1.54.0/openhands-tools/openhands/tools/file_editor/definition.py. The SDK source (openhands/sdk/hooks/executor.py, types.py) parses only decision allow|deny and continue:false, has no updatedInput and no ask (ASK is commented out as future work), and a timeout does not block."
+    },
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_end": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "OpenHands v1.26.0 (released 2026-10-08) and its agent SDK v1.54.0 (released 2026-10-09, which runs the hooks), the latest releases on 2026-10-11",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "PreToolUse, UserPromptSubmit and Stop can block; a block at Stop keeps the conversation going. The verdict is the flat {decision: deny, reason} body, and a bare allow is silence (exit 0). No rewrite and no ask: a transform or escalate degrades to a block, never to a silent pass. Fail-open: the docs say any exit code other than 0 and 2 is an error and the operation proceeds. The event name rides under event_type, not hook_event_name, which is what separates OpenHands payloads from every other adapter's. The cwd is working_dir. Known limit: file_editor's own sub-command (view, create, str_replace, insert, undo_edit) arrives in tool_input.command, the same key as terminal's shell command, so Event.command carries it for file_editor calls; a shell policy should check event.tool. The docs document only the project file; a user-level ~/.openhands/hooks.json exists in the SDK source, and a project file shadows it rather than merging. The standalone OpenHands-CLI repository says it is no longer actively maintained; the hooks docs still list the CLI. Instruction files reach it through AGENTS.md (https://docs.openhands.dev/overview/skills). Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/181"
+  },
+  "amp": {
+    "display": "Amp",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "@ampcode/cli 0.0.1791676897-g77c125, the npm latest on 2026-10-11 (published 2026-10-11); @sourcegraph/amp is now an alias for it",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11: https://ampcode.com/docs/cli/settings (modified 2026-09-28) and the settings schema https://ampcode.com/cli-settings.schema.json list no hooks key; https://ampcode.com/docs/customize/plugins (modified 2026-10-06) documents an in-process TypeScript plugin API (.amp/plugins/*.ts, ~/.config/amp/plugins/) with events session.start, agent.start, tool.call, tool.result and agent.end, where a tool.call handler returns allow, reject-and-continue, modify, synthesize or error; https://ampcode.com/notes/permissions (modified 2026-08-05) documents the legacy permission rule action delegate, which runs a helper on $PATH with the tool parameters on stdin and the tool name in $AGENT_TOOL_NAME and reads exit 0 allow, 1 ask, 2 reject; https://ampcode.com/news/neo (2026-05-06) says the old permissions system now runs as a built-in plugin loaded only when settings already opt into permissions, and that Amp no longer asks before running tools by default; https://ampcode.com/docs/customize/agents-md (modified 2026-09-25) documents AGENTS.md."
+    },
+    "events": {},
+    "notes": "Unadapted, not none: Amp's hook surface is an in-process TypeScript plugin API (tool.call can reject or modify a call), which no agentseam family speaks and which the plan keeps on watch. The one external-process decision point is the legacy permission rule action delegate: an exit-code helper (0 allow, 1 ask, 2 reject) that receives only the tool's parameters and $AGENT_TOOL_NAME, no event name, runs only when the user's settings already opt into the old permissions system, and has no documented timeout or failure behaviour; it is not a lifecycle hook surface and is not claimed as one. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/182"
+  },
+  "kiro": {
+    "display": "Kiro",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "Kiro IDE 1.2.56 (2026-10-08) and Kiro CLI 2.29.0 (2026-10-09), the latest changelog entries on 2026-10-11",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11 (pages updated 2026-10-10): https://kiro.dev/docs/hooks/ (command hooks live as standalone files .kiro/hooks/<id>.json shaped {\"version\": \"v1\", \"hooks\": [{name, trigger, matcher, action: {type: command, command}, timeout}]}, and CLI V3 also reads ~/.kiro/hooks/; the command receives session context as JSON on stdin), https://kiro.dev/docs/hooks/types/ and https://kiro.dev/docs/hooks/actions.md (payload keys hook_event_name, cwd, session_id, tool_name, tool_input; CLI: exit 0 allows, exit 2 blocks PreToolUse and PreTaskExec, other codes warn and proceed, and a CLI UserPromptSubmit hook cannot block; IDE: any non-zero exit blocks Pre Tool Use; the CLI tab gives timeout_ms with a 30 s default while the field reference gives timeout in seconds with a 60 s default), https://kiro.dev/docs/cli/v3/hooks-migration.md (trigger table and the CLI 2.x camelCase aliases), https://kiro.dev/docs/custom-agents/configuration-reference.md (profile-scoped hooks fire only for that agent) and https://kiro.dev/docs/steering.md (AGENTS.md is always included). Changelogs: https://kiro.dev/changelog/ide/ and https://kiro.dev/changelog/cli/."
+    },
+    "events": {},
+    "notes": "Unadapted, not none: Kiro has a real command-hook surface, but its dialect is one no agentseam family speaks. The config is a versioned list of named hooks with a trigger and an action object, which no install wrapper writes; the verdict is an exit code only, and the IDE and CLI read it differently (IDE: any non-zero exit blocks Pre Tool Use; CLI: only exit 2 blocks, other codes fail open); and the payload is Claude-shaped (hook_event_name, cwd, session_id, tool_name, tool_input) with no key that separates it from a Claude Code payload. Building it means a new family module, which is a core change outside a vendor-config batch. Value-based detection (D1) now declines a Kiro payload naming an MCP tool as mcp_<server>_<tool> (Claude Code spells it mcp__<server>__<tool>) or a tool alias Claude Code never sends (fs_read, fsRead, fs_write, fsWrite, execute_bash, execute_cmd, use_aws; kiro.dev/docs/reference/built-in-tools, updated 2026-10-10), so it detects as no agent. One naming a V3 primary tool (read, write, shell), or carrying no tool (SessionStart, UserPromptSubmit, Stop), has nothing that separates it and is still recognised as Claude Code, whose deny is a JSON body with exit 0; Kiro reads only the exit code, so that deny would not block. Kiro is not a supported target: do not wire agentseam into it by hand. D2a (2026-10-11) re-checked this and kept the row unadapted: D1's detection covers only part of Kiro's documented events (the alias and mcp_<server>_<tool> tool calls), not the V3 primary-tool or tool-less payloads, and an adapter cannot claim those without making Claude Code payloads ambiguous; the exit-code-only verdict and the versioned hook file would also need a new family. The docs also disagree on the timeout field (timeout in seconds, default 60, vs timeout_ms, default 30,000). Built-in tools are execute_bash (execute_pwsh on Windows) and fs_write, fs_append, str_replace, delete_file. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/183"
+  },
+  "factory_droid": {
+    "display": "Factory Droid",
+    "tier": "block",
+    "config": ".factory/hooks.json",
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11 (docs.factory.ai now redirects to docs.factory.com): https://docs.factory.com/harness/hooks (project hooks in .factory/hooks.json and user hooks in ~/.factory/hooks.json, keyed directly by event name with no hooks wrapper, each a list of {matcher, commandRegex, hooks: [{type: command, command, timeout}]}; events PreToolUse, PostToolUse, UserPromptSubmit, Notification, Stop, SubagentStop, PreCompact, SessionStart, SessionEnd; the stdin payload carries session_id, transcript_path, cwd, permission_mode (off, spec, auto-low, auto-medium, auto-high), hook_event_name, tool_name and tool_input; tools include Execute, Edit, Create and ApplyPatch; exit 2 blocks PreToolUse, hookSpecificOutput.permissionDecision takes allow, deny or ask with updatedInput, and decision: block applies at PostToolUse, UserPromptSubmit and Stop; any other non-zero exit is a non-blocking error and Droid continues; $FACTORY_PROJECT_DIR names the project root), https://docs.factory.com/harness/agents-md (AGENTS.md, with CLAUDE.md as a compatible name) and https://docs.factory.com/changelog/release-notes. Cross-checked on 2026-10-11 against droid 0.238.0's own shipped bundle (npm @factory/cli-linux-x64@0.238.0, the strings of bin/droid): every hook input it builds sets permission_mode through one mapping that returns only off, spec, auto-low, auto-medium or auto-high (normal and any unknown mode become off); PreToolUse acts on hookSpecificOutput.permissionDecision deny (and exit 2) as a block, but ask only logs and falls through to the normal permission flow, and allow merges updatedInput into the original input ({...input, ...updatedInput}) rather than replacing it; tool inputs are Execute {command, summary, timeout}, Create {file_path, content}, Edit {file_path, old_str, new_str, change_all}, MultiEdit {file_path, changes: [{old_str, new_str}]} and ApplyPatch {input: the patch text}."
+    },
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "prompt_submit": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_start": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "session_end": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "pre_compact": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "subagent_stop": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "droid 0.238.0, the npm latest on 2026-10-11 (published 2026-10-10); the changelog's latest entry is CLI v0.237.0 (2026-10-09)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2a): Droid's hooks speak the Claude Code dialect, and its payload carries the same keys as a Claude Code payload, including transcript_path and permission_mode, the markers agentseam uses to recognise Claude Code. A value separates them: every Droid payload carries permission_mode with one of Droid's own values (off, spec, auto-low, auto-medium, auto-high), which Claude Code never sends, so claude_code declines such a payload and factory_droid claims it (claims.accept_values). If a Droid build ever sent a Claude Code permission_mode value, the payload would read as claude_code again, whose deny Droid also honours. A deny is hookSpecificOutput.permissionDecision: deny at PreToolUse and decision: block at UserPromptSubmit and Stop. Escalate and transform degrade to a block: Droid's documented ask does not force a prompt in 0.238.0 (it falls through to the autonomy level's normal permission flow, which may auto-approve), and updatedInput is merged into the original input rather than replacing it, so a transform cannot remove a field. Shell policies see Execute; write policies see Create, Edit, MultiEdit and ApplyPatch, whose patch text is read as content but whose target path lives inside the patch and is not extracted. Install writes .factory/hooks.json keyed directly by event name, the documented project file; Droid snapshots hooks at startup, so a new hook applies to the next session. Fail mode is documented only for non-2 exits (fail-open); timeout and malformed-output behaviour are not documented. The Notification event is not mapped. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/184"
+  },
+  "mistral_vibe": {
+    "display": "Mistral Vibe",
+    "tier": "block+rewrite",
+    "config": ".vibe/hooks.toml",
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own docs on 2026-10-11: https://docs.mistral.ai/vibe/code/cli/hooks (no page date shown; the same text is the README's Hooks section at v2.26.1) documents command hooks as [[hooks]] TOML tables in ./.vibe/hooks.toml (project-level, loaded first, trusted folders only) and ~/.vibe/hooks.toml (user-level), each {name, type, match, command, timeout, strict, description}, where type is one of pre_tool, post_tool or post_agent and the project entry wins on a duplicate name; the stdin payload carries session_id, parent_session_id, transcript_path, cwd and hook_event_name (the snake_case type), plus tool_name, tool_call_id and tool_input at pre_tool and tool_status, tool_output, tool_output_text, tool_error and duration_ms at post_tool; a verdict is exit 0 plus stdout JSON {decision: allow|deny, reason, system_message, hook_specific_output}, where deny makes reason the tool error the model sees and hook_specific_output.tool_input replaces the arguments at pre_tool; a non-zero exit, a timeout (default 60 s) or a spawn failure is a hook failure, which warns and proceeds unless strict = true turns it into a denial at pre_tool; pre_tool fires before the user permission prompt and the first deny short-circuits the rest. Cross-checked against the 2.26.1 sdist (vibe/core/hooks/models.py HookType; _pre_tool.py on_strict_failure). The README documents AGENTS.md (trusted folders only), per-tool permission always|never|ask under [tools.<name>] in config.toml, and an ACP server, vibe-acp. Cross-checked on 2026-10-11 against the 2.26.1 sdist: vibe/core/hooks/config.py reads [[hooks]] tables as HookConfig {name, type, command, match, timeout, strict, description} and drops a second table with an already-seen name (\"Duplicate hook name\"), project file first; models.py rejects match on post_agent; _pre_tool.py matches a tool hook with no match as \"*\"; the built-in tool names are bash, powershell and git_bash (shell) and write_file {file_path, content} and edit {file_path, old_string, new_string, replace_all} (vibe/core/tools/builtins). Re-read on 2026-10-11 for V-1: hook_specific_output.tool_input is documented as a full replacement of the model's arguments at pre_tool, and strict = true as turning a tool hook's parse and runtime failures into denials at pre_tool; HookConfig (2.26.1) rejects strict on post_agent."
+    },
+    "events": {
+      "pre_tool": {
+        "block": true,
+        "rewrite": true,
+        "fail_mode": "configurable",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "vendor-docs, read 2026-10-11 (V-1): docs.mistral.ai/vibe/code/cli/hooks says a pre_tool hook can return hook_specific_output.tool_input (object), a \"full replacement of the model's arguments\", re-validated against the tool's schema (a validation failure becomes a synthesized denial), and that the rewritten arguments are what the permission prompt displays and what the tool runs with. Cross-checked against the 2.26.1 sdist: vibe/core/hooks/_pre_tool.py replaces the invocation's tool_input with the returned object."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "vendor-docs, read 2026-10-11 (V-1): the same page documents strict (tool hooks only): \"When true, parse and runtime failures become denials (pre_tool)\", and lists non-conforming stdout, a non-zero exit, a timeout and a spawn failure as hook failures, which warn by default. Configurable, off by default: agentseam writes strict = true on its pre_tool rule only when install(..., fail_closed=True) is asked for. Cross-checked against the 2.26.1 sdist: HookConfig.strict defaults to False and is rejected on post_agent; _pre_tool.py on_strict_failure denies the call."
+          }
+        }
+      },
+      "stop": {
+        "block": true,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      },
+      "post_tool": {
+        "block": false,
+        "rewrite": false,
+        "fail_mode": "open",
+        "evidence": {
+          "block": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "rewrite": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          },
+          "fail_mode": {
+            "basis": "vendor-docs",
+            "date": "2026-10-11",
+            "version": "mistral-vibe 2.26.1, the PyPI latest on 2026-10-11 (uploaded 2026-10-09; git tag v2.26.1)",
+            "method": "row-level vendor-docs: see this row's own verified.method for the full account."
+          }
+        }
+      }
+    },
+    "notes": "Adapted (D2a): Vibe's payload is unambiguous (its snake_case hook types pre_tool, post_tool and post_agent are mapped by no other adapter, so the event name alone separates it), and its verdict is the flat_decision family's {decision: deny, reason}. A deny at pre_tool refuses the call and its reason becomes the tool error; at post_agent (the stop-like event) it asks the agent to retry, capped by Vibe at 3 retries per hook per user turn. Install writes [[hooks]] tables in Vibe's own keys: name (agentseam-<type>-<CRC-32 of the command>, unique because Vibe drops a duplicate name across files), type, match (\"*\" when no matcher is given, since the docs call it required at tool hooks) and command. Escalate degrades to a block: no hook verdict prompts. A transform at pre_tool is written as hook_specific_output.tool_input, which Vibe documents as a full replacement of the tool's arguments, re-validated against the tool's schema (a replacement that fails validation is denied); at post_agent a transform degrades to a block. Fail mode is configurable at pre_tool: open by default (a non-zero exit, timeout or malformed stdout warns and proceeds) and closed with strict = true, which install writes on its pre_tool rule only when called with fail_closed=True (`agentseam tier-table --fail-closed` reads that install). post_agent stays fail-open: Vibe rejects strict there. Project hooks load only in trusted folders, so a written config is not yet a live one. There is no prompt-submit or session event. Vibe also speaks ACP (vibe-acp), a client-agent protocol, not a hook surface; it is not claimed as one. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/187"
+  },
+  "deepseek_harness": {
+    "display": "DeepSeek Harness (dsh)",
+    "tier": "unadapted",
+    "config": null,
+    "verified": {
+      "basis": "vendor-docs",
+      "version": "@deepseek-ai/dsh 0.2.1-alpha.2 (npm dist-tag alpha, published 2026-10-09; git tag dsh-v0.2.1-alpha.2); npm latest is 0.2.0-rc.2 (2026-09-29)",
+      "date": "2026-10-11",
+      "method": "read the vendor's own in-repo docs at tag dsh-v0.2.1-alpha.2 on 2026-10-11 (https://github.com/deepseek-ai/deepseek-harness; product page https://www.deepseek.com/en/harness/): the harness has no command-hook surface of its own; packages/experimental/README.md says experimental capabilities ship switched off and carry no product-support commitment; packages/experimental/hooks-claude-code/README.md (@deepseek-ai/dsh-hooks-claude-code) runs an existing Claude Code hooks.json or settings file named by the plugin's configPath, at SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop, SubagentStart and SubagentStop, with a payload of session_id, transcript_path (always the empty string), cwd and hook_event_name plus tool_name, tool_input and tool_use_id; packages/experimental/hook-protocol/README.md and src/codec.ts: exit 2 blocks with stderr as the reason, hookSpecificOutput.permissionDecision allow|deny|ask is honoured with deny > ask > allow, every other exit code is a non-blocking failure (fail-open), the default timeout is 600,000 ms, and only type: command handlers run; hooks-claude-code/src/index.ts logs updatedInput as 'not yet honored (ignored)'; packages/experimental/hooks-codex runs a Codex hooks.json the same way; packages/context/agent-instructions/README.md (AGENTS.md-compatible files, on by default in dsh-base); packages/acp/acp/README.md (an automation-only ACP server); packages/fs/tool-fs/README.md (tools read, write and edit). Security: CVE-2026-82533 (https://www.cve.org/CVERecord?id=CVE-2026-82533, CNA VulnCheck, published 2026-09-08) and https://www.ox.security/blog/cve-2026-82533-deepseek-harness-ai-agent-sandbox-escape/ (2026-09-08)."
+    },
+    "events": {},
+    "notes": "Unadapted, not none: DeepSeek Harness has no hook surface of its own. Its documented command hooks are two experimental bridge plugins, switched off by default, that replay an existing Claude Code or Codex hooks.json. Through the Claude Code bridge the payload is Claude-shaped and carries transcript_path (always empty), one of the markers agentseam uses to recognise Claude Code, so detect() reads a dsh payload as claude_code (measured 2026-10-11) and no dsh adapter could claim it without a value-based probe, which is a core change. In that case a deny is honoured, because the bridge reads hookSpecificOutput.permissionDecision, but a transform is not: the bridge logs updatedInput as ignored and runs the original input, which is the silent pass the one rule forbids. dsh's own tools are lowercase read, write and edit, which are not in Claude Code's tool lists, so write policies would not see those calls as writes. Fail mode is open (any exit but 2 proceeds). dsh is not a supported target: do not point its bridge at an agentseam-installed .claude/settings.json and treat the result as a gate. Security caveat: CVE-2026-82533 (CNA VulnCheck, published 2026-09-08, CVSS 4.0 9.4): before 0.1.2-alpha.1, the loopback control API at 127.0.0.1:3080 trusted a client-supplied loopback Host header instead of the real connection origin, so a sandboxed tool process could call it to switch itself to danger-full-access with approvals off; fixed in 0.1.2-alpha.1. dsh also speaks ACP (dsh-acp), a client-agent protocol, not a hook surface. Instruction files reach it through AGENTS.md. Evidence wanted (to test or overturn this row): https://github.com/open-coder-ai/agentseam/issues/189"
   }
 }

@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 
 from . import adapters
+from . import install_hook_dir as hook_dir
 from .install_config import (
     BEGIN,
     END,
@@ -91,6 +92,8 @@ def installed(agent, repo_root=".", owner="agentseam", events=None, command=None
         check_wireable(mod, agent, events)
         extra = fail_closed_kwarg(mod, fail_closed)
         fragment = mod.hook_config(events, command, matcher=matcher, **extra)
+    if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
+        return hook_dir.installed(path, mod.REVERSE_EVENT_MAP.values(), owner, fragment)
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         return _installed_toml(mod, path, owner, content_mode, fragment)
     return _installed_json(path, owner, content_mode, fragment)

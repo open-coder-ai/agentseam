@@ -33,6 +33,11 @@
       "date": "2026-08-28",
       "note": "Source (google-gemini/gemini-cli @ main, read from a clone 2026-08-28): nothing in the tree tests for 'allow'. Only isBlockingDecision() (block|deny) and isAskDecision() (ask) are ever consulted, and hookAggregator SYNTHESISES decision:'allow' itself when no hook blocked or asked. The word cannot skip a confirmation here the way VS Code's can, so the documented reply is kept."
     },
+    "goose": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented verbatim (goose-docs.ai hooks guide, read 2026-10-11): \"Exit 0 with empty stdout allows.\" {\"decision\":\"allow\"} with exit 0 also allows, but nothing documents it meaning more than a plain allow, so silence is spoken. A stray log line on stdout reads as no decision, which is a hook failure, not an allow."
+    },
     "grok": {
       "bare_allow": "silent",
       "note": "There is no allow verb to speak: the vocabulary is {decision: deny, reason} and nothing more, and exit 0 is how a hook says it has no objection."
@@ -60,6 +65,26 @@
     "windsurf": {
       "bare_allow": "silent",
       "note": "Exit-code-only protocol -- 2 blocks a pre_* hook and everything else allows. stdout carries no decision, so there is no word to say."
+    },
+    "openhands": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented verbatim (docs.openhands.dev hooks page, read 2026-10-11): exit \"0 - Success. The operation proceeds normally.\" {\"decision\":\"allow\"} also exists, but nothing documents it meaning more than a plain allow, so silence is spoken. Non-JSON stdout is ignored by the SDK (executor.py), so a stray log line on stdout is not a decision."
+    },
+    "factory_droid": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented (docs.factory.com/harness/hooks, read 2026-10-11): exit 0 is success and the call continues through Droid's normal permission flow. An explicit permissionDecision allow \"can bypass the normal permission prompt\" (droid 0.238.0 records it as allow-bypass), so it is never spoken for a plain allow; vouch is not spoken either and degrades to silence."
+    },
+    "mistral_vibe": {
+      "bare_allow": "silent",
+      "basis": "vendor-docs",
+      "note": "Documented verbatim (docs.mistral.ai/vibe/code/cli/hooks, read 2026-10-11): \"Exit 0, empty stdout: Passthrough.\" decision defaults to allow and nothing documents an explicit allow meaning more, so silence is spoken. Non-conforming stdout is a hook failure (a warning, or a denial under strict = true), so a stray log line on stdout is not an allow."
+    },
+    "cline": {
+      "bare_allow": "inert",
+      "basis": "vendor-docs",
+      "note": "Documented (.clinerules/hooks/README.md in cline/cline, read 2026-10-11): every hook returns {\"cancel\": boolean}, and cancel false or omitted lets execution continue. Both hosts read false exactly as an absent field (the SDK's parseHookControl and the extension's HookFactory, same date), and an empty stdout with exit 0 also continues, so the documented {\"cancel\": false} is spoken and cannot skip any approval Cline would otherwise ask for."
     }
   },
   "vouch_notes": {

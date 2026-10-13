@@ -9,7 +9,7 @@
       "hook_event_name"
     ],
     "mode": "marker",
-    "notes": "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real Claude Code payload may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27).",
+    "notes": "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real Claude Code payload may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27). A value Claude Code never sends beats every marker key, looks_like_claude_code's included (value-based detection, D1): permission_mode values off, spec, auto-low, auto-medium and auto-high are Factory Droid's (docs.factory.com/harness/hooks, read 2026-10-11); tool_name values fs_read, fsRead, fs_write, fsWrite, execute_bash, execute_cmd and use_aws (kiro.dev/docs/reference/built-in-tools, updated 2026-10-10), and an MCP tool spelled mcp_<server>_<tool> rather than Claude's mcp__<server>__<tool> (kiro.dev/docs/hooks/types, updated 2026-10-10), are Kiro's. Kiro's V3 primary names (read, write, shell) and its tool-less events carry nothing Claude Code does not, so those still read as claude_code. factory_droid claims Droid's payloads on those same permission_mode values (accept_values, D2a); Kiro has no adapter, so its separable payloads detect as no agent rather than as claude_code.",
     "reject_markers": [
       "turn_id",
       "project_path",
@@ -18,6 +18,27 @@
     "reject_markers_unless_probe": {
       "looks_like_claude_code": [
         "prompt_id"
+      ]
+    },
+    "reject_probes": [
+      "names_a_single_underscore_mcp_tool"
+    ],
+    "reject_values": {
+      "permission_mode": [
+        "off",
+        "spec",
+        "auto-low",
+        "auto-medium",
+        "auto-high"
+      ],
+      "tool_name": [
+        "fs_read",
+        "fsRead",
+        "fs_write",
+        "fsWrite",
+        "execute_bash",
+        "execute_cmd",
+        "use_aws"
       ]
     }
   },

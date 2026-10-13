@@ -42,13 +42,24 @@ def _rejected_by_markers(c, raw):
     for marker in c.get("reject_markers", ()):
         if marker in raw:
             return True
+    for key, values in c.get("reject_values", {}).items():
+        if key in raw and raw[key] in values:
+            return True
     for probe, markers in c.get("reject_markers_unless_probe", {}).items():
         if any(marker in raw for marker in markers) and not PROBES[probe](raw):
             return True
     return any(PROBES[probe](raw) for probe in c.get("reject_probes", ()))
 
 
+def _accepted_by_values(c, raw):
+    """True unless the entry names accepted values and the payload carries none of them."""
+    values = c.get("accept_values")
+    return not values or any(key in raw and raw[key] in allowed for key, allowed in values.items())
+
+
 def _accepted_by_markers(c, raw, name):
+    if not _accepted_by_values(c, raw):
+        return False
     accept = c.get("accept_markers", ())
     if not accept or any(marker in raw for marker in accept):
         return True
@@ -91,12 +102,26 @@ def _segment(node, part):
     return node.get(part) if isinstance(node, dict) else None
 
 
+def _list_at(node, path):
+    """The list under `path`, decoding the JSON text Cline sends in a list's place."""
+    items = _walk(node, path)
+    if isinstance(items, str) and items.lstrip()[:1] == "[":
+        try:
+            items = _json.loads(items)
+        except (ValueError, RecursionError):
+            return None
+    return items if isinstance(items, (list, tuple)) else None
+
+
 def _walk(node, path):
-    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[0]` indexes."""
+    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[]` its strings, `a[0]` indexes."""
+    if path.endswith("[]"):
+        joined = "\n".join(item for item in _list_at(node, path[:-2]) or () if isinstance(item, str))
+        return joined or None
     if "[]." in path:
         head, sub = path.split("[].", 1)
-        items = _walk(node, head)
-        if not isinstance(items, (list, tuple)):
+        items = _list_at(node, head)
+        if items is None:
             return None
         joined = "\n".join(str(item.get(sub, "")) for item in items if isinstance(item, dict))
         return joined or None
@@ -131,7 +156,7 @@ def _tool_input_raw(cfg, raw):
     if not isinstance(raw, dict):
         return None
     for key in cfg["fields"].get("tool_input", ("tool_input",)):
-        value = raw.get(key)
+        value = _walk(raw, key)
         if value is not None:
             return value
     return None

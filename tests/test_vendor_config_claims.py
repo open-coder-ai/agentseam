@@ -63,6 +63,23 @@ def test_accept_names_are_accepted_unconditionally(agent):
         assert mod.claims({"hook_event_name": name}), "%s: accept_name %r was not claimed" % (agent, name)
 
 
+def _passes_looks_like_claude_code(payload, marker):
+    from agentseam.adapters._probes import OBSERVED_MARKERS
+
+    return dict(payload, **{OBSERVED_MARKERS[0]: "/t.jsonl"})
+
+
+def _passes_event_keys_agree(payload, marker):
+    return dict(payload, **{marker: payload["hookEventName"]})
+
+
+#: How each conditional probe is made to pass on an otherwise probe-failing payload.
+_PROBE_PASSERS = {
+    "looks_like_claude_code": _passes_looks_like_claude_code,
+    "event_keys_agree": _passes_event_keys_agree,
+}
+
+
 @pytest.mark.parametrize("agent", MARKER_AGENTS)
 def test_reject_markers_unless_probe_reject_exactly_when_the_probe_fails(agent):
     """The conditional marker rejects a probe-failing payload and spares a probe-passing one."""
@@ -76,8 +93,19 @@ def test_reject_markers_unless_probe_reject_exactly_when_the_probe_fails(agent):
         for marker in markers:
             mutated = dict(stripped, **{marker: "probe-value"})
             assert not mod.claims(mutated), "%s: %r did not reject a probe-failing payload" % (agent, marker)
-            mutated[OBSERVED_MARKERS[0]] = "/t.jsonl"
+            mutated = _PROBE_PASSERS[probe](mutated, marker)
+            assert PROBES[probe](mutated), "%s: the passer did not pass %s" % (agent, probe)
             assert mod.claims(mutated), "%s: %r rejected a probe-passing payload" % (agent, marker)
+
+
+@pytest.mark.parametrize("agent", MARKER_AGENTS)
+def test_reject_values_actually_reject(agent):
+    """Setting a declared reject value on a real claimed payload must turn claims() False."""
+    mod = adapters.get(agent)
+    payload = _sample_payload(agent)
+    for key, values in VENDOR_CONFIG[agent]["claims"].get("reject_values", {}).items():
+        for value in values:
+            assert not mod.claims(dict(payload, **{key: value})), "%s: %s=%r did not reject" % (agent, key, value)
 
 
 @pytest.mark.parametrize("agent", MARKER_AGENTS)

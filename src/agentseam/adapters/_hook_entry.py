@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import zlib as _zlib
+
 from ..contract import POST_TOOL, PRE_TOOL, TOOL_FAILURE
 from ._hook_json import hj_reverse
 from ._windows import powershell_command
@@ -27,16 +29,39 @@ def _hook_dict(cfg, command):
     return entry
 
 
+def _flat_list_rule(hook_entry, ev, name, command, matcher):
+    """One `[[hooks]]` rule, under the vendor's own key names where `rule_keys` renames them."""
+    rule = {"event": name, "command": command}
+    if hook_entry["matcher"] and ev in _MATCHER_EVENTS:
+        matcher = matcher or hook_entry.get("default_match")
+        if matcher:
+            rule["matcher"] = matcher
+    if "rule_name_prefix" in hook_entry:
+        # Vibe dedupes [[hooks]] by name across files; the command's checksum keeps two owners' rules apart.
+        rule["name"] = "%s%s-%08x" % (hook_entry["rule_name_prefix"], name, _zlib.crc32(command.encode("utf-8")))
+    keys = hook_entry.get("rule_keys", {})
+    return {keys.get(key, key): value for key, value in rule.items()}
+
+
 def _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher):
     rules = []
     for ev in canonical_events:
         name = reverse.get(ev)
-        if not name:
-            continue
-        rule = {"event": name, "command": command}
-        if matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
-            rule["matcher"] = matcher
-        rules.append(rule)
+        if name:
+            rules.append(_flat_list_rule(hook_entry, ev, name, command, matcher))
+    return rules
+
+
+def _flag_fail_closed(hook_entry, reverse, rules):
+    """Set the entry's opt-in fail-closed flag on the rules at its `fail_closed_rule` events."""
+    opt_in = hook_entry.get("fail_closed_rule")
+    if not opt_in:
+        return rules
+    event_key = hook_entry.get("rule_keys", {}).get("event", "event")
+    wires = {reverse[ev] for ev in opt_in["events"] if ev in reverse}
+    for rule in rules:
+        if rule[event_key] in wires:
+            rule[opt_in["key"]] = True
     return rules
 
 
@@ -68,6 +93,11 @@ def _flat_entries_wrapper(hook_entry, reverse, canonical_events, command):
     return {"hooks": hooks}
 
 
+def _hook_dir_wrapper(reverse, canonical_events, command):
+    """File name -> command: one executable per event, named exactly as the wire event (cline)."""
+    return {reverse[ev]: command for ev in canonical_events if reverse.get(ev)}
+
+
 def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
     hook_entry = cfg["hook_entry"]
     hooks = {}
@@ -84,21 +114,27 @@ def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
     return hooks if hook_entry.get("bare") else {"hooks": hooks}
 
 
-def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=True):
+def hook_entry_config(cfg, canonical_events, command, matcher=None, *, fail_closed=None):
     """The vendor's hooks-config fragment wiring `command` for these canonical events.
 
-    `fail_closed` is read only by the `cursor` wrapper, whose gates fail open unless the
-    entry says otherwise; a False installs an observer, not a gate.
+    `fail_closed` is read by the `cursor` wrapper, whose gates fail open unless the entry
+    says otherwise (None means True there; a False installs an observer, not a gate), and
+    by a `flat_list` entry's `fail_closed_rule`, which None leaves off: an opt-in.
     """
     hook_entry = cfg["hook_entry"]
     reverse = hj_reverse(cfg)
     wrapper = hook_entry["wrapper"]
     if wrapper == "flat_list":
-        return _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher)
+        rules = _flat_list_wrapper(hook_entry, reverse, canonical_events, command, matcher)
+        return _flag_fail_closed(hook_entry, reverse, rules) if fail_closed else rules
     if wrapper == "cursor":
-        return _cursor_wrapper(cfg, reverse, canonical_events, command, fail_closed=fail_closed)
+        return _cursor_wrapper(
+            cfg, reverse, canonical_events, command, fail_closed=True if fail_closed is None else fail_closed
+        )
     if wrapper == "flat_entries":
         return _flat_entries_wrapper(hook_entry, reverse, canonical_events, command)
+    if wrapper == "hook_dir":
+        return _hook_dir_wrapper(reverse, canonical_events, command)
     return _default_wrapper(cfg, reverse, canonical_events, command, matcher)
 
 
@@ -114,17 +150,23 @@ def _toml_char(ch):
 
 
 def _toml_value(value):
-    if isinstance(value, int) and not isinstance(value, bool):
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
         return str(value)
     return '"%s"' % "".join(_toml_char(ch) for ch in str(value))
 
 
+#: Kimi Code's four fields, and Mistral Vibe's name/type/match spelling of the same rule plus its strict flag.
+_TOML_RULE_KEYS = ("name", "event", "type", "matcher", "match", "command", "timeout", "strict")
+
+
 def render_config(rules):
-    """Emit `[[hooks]]` tables. Only the four documented fields, in a documented order."""
+    """Emit `[[hooks]]` tables. Only the documented fields, in a documented order."""
     blocks = []
     for rule in rules:
         lines = ["[[hooks]]"]
-        for key in ("event", "matcher", "command", "timeout"):
+        for key in _TOML_RULE_KEYS:
             if rule.get(key) is not None:
                 lines.append("%s = %s" % (key, _toml_value(rule[key])))
         blocks.append("\n".join(lines))

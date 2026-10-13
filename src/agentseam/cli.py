@@ -188,6 +188,9 @@ def _main(argv=None):
 
     t = sub.add_parser("tier-table", help="the enforcement table, derived from the matrix")
     t.add_argument("--event", default=PRE_TOOL, help="gate to report on (default: %s)" % PRE_TOOL)
+    t.add_argument(
+        "--fail-closed", action="store_true", help="read the table for an install made with fail_closed=True"
+    )
     t.set_defaults(fn=cmd_tier_table)
 
     d = sub.add_parser("doctor", help="what is wired here; flag stale capability claims")

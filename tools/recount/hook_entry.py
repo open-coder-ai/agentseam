@@ -10,6 +10,18 @@ _EXTRA = {
     "windsurf": {"also_wires": {"pre_tool": "pre_mcp_tool_use"}},
     "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
     "tabnine": {"entry_extra": {"name": "agentseam"}},
+    # goose reads on_failure at PreToolUse only and ignores it elsewhere; "block" makes a
+    # failed hook deny instead of being skipped (goose-docs.ai hooks guide, read 2026-10-11).
+    "goose": {"entry_extra": {"on_failure": "block"}},
+    # Vibe reads [[hooks]] {name, type, match, command}: same rule, its own key names.
+    "mistral_vibe": {
+        "rule_keys": {"event": "type", "matcher": "match"},
+        "rule_name_prefix": "agentseam-",
+        "default_match": "*",
+        # strict = true only when install is called with fail_closed=True, and only at
+        # pre_tool: HookConfig rejects it on post_agent (mistral-vibe 2.26.1 models.py).
+        "fail_closed_rule": {"key": "strict", "events": ("pre_tool",)},
+    },
     "vscode_copilot": {
         "entry_extra": {
             "bash": "the command as given",
@@ -23,7 +35,9 @@ _EXTRA = {
 def _classify(agent, no_matcher, with_matcher):
     matcher_effective = no_matcher != with_matcher
     if isinstance(no_matcher, list):
-        return {"wrapper": "flat_list", "matcher": matcher_effective}
+        return dict({"wrapper": "flat_list", "matcher": matcher_effective}, **_EXTRA.get(agent, {}))
+    if all(isinstance(value, str) for value in no_matcher.values()):
+        return {"wrapper": "hook_dir", "matcher": matcher_effective}
     if "version" in no_matcher and "hooks" in no_matcher:
         return {"wrapper": "cursor", "matcher": matcher_effective}
     bare = False

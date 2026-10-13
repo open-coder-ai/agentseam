@@ -12,6 +12,11 @@
     "id": "aider-chat",
     "note": "The pip-installable CLI; the project publishes every release here."
   },
+  "amp": {
+    "kind": "npm",
+    "id": "@ampcode/cli",
+    "note": "@sourcegraph/amp is now an alias. Resolved on 2026-10-11 to 0.0.1791676897-g77c125."
+  },
   "antigravity": {
     "kind": null,
     "note": "IDE download, no public release feed found. Manual check."
@@ -20,6 +25,11 @@
     "kind": "npm",
     "id": "@anthropic-ai/claude-code",
     "note": "The reference row. Drift here matters most: every other adapter was shaped against it."
+  },
+  "cline": {
+    "kind": "npm",
+    "id": "cline",
+    "note": "The Cline CLI. Resolved on 2026-10-11 to 3.0.70. The VS Code extension is marketplace-only; its hook thread (cline/cline#13277) was read against 4.1.9 and 4.1.10."
   },
   "codex_cli": {
     "kind": "npm",
@@ -34,29 +44,73 @@
     "kind": null,
     "note": "IDE download with no public feed. `cursor-agent` exists on npm but has NOT been shown to share the IDE's hook config path -- tracking it would evidence a different binary than this row describes."
   },
+  "deepseek_harness": {
+    "kind": "npm",
+    "id": "@deepseek-ai/dsh",
+    "note": "Resolved on 2026-10-11: dist-tag latest 0.2.0-rc.2 (2026-09-29), alpha 0.2.1-alpha.2 (2026-10-09). The npm name deepseek-harness is a third-party reservation, not the vendor's. CVE-2026-82533 is fixed from 0.1.2-alpha.1."
+  },
   "devin": {
     "kind": null,
     "note": "Hosted. There is no version to pin; the vendor can change behaviour under a row without any observable release."
   },
+  "factory_droid": {
+    "kind": "npm",
+    "id": "droid",
+    "note": "Resolved on 2026-10-11 to 0.238.0 (published 2026-10-10); @factory/cli publishes the same version."
+  },
   "gemini_cli": {
     "kind": "npm",
-    "id": "@google/gemini-cli"
+    "id": "@google/gemini-cli",
+    "note": "Resolved on 2026-10-11 to 0.63.0 (2026-10-06). Google is sunsetting it for consumer tiers in favor of Antigravity CLI (2026-05-19 post); enterprise access continues."
+  },
+  "goose": {
+    "kind": "github_releases",
+    "id": "aaif-goose/goose",
+    "note": "goose moved from block/goose to the Agentic AI Foundation. Resolved on 2026-10-11 to v1.54.0."
   },
   "grok": {
     "kind": null,
-    "note": "No confirmed release feed. Manual check."
+    "note": "Grok Build (xAI, xai-org/grok-build). No GitHub releases are published; manual check against https://x.ai/changelog/build (v1.0.50, 2026-10-06, read 2026-10-11)."
   },
   "junie": {
     "kind": null,
     "note": "JetBrains plugin marketplace. Feed exists but is not yet wired here."
   },
+  "kilo_code": {
+    "kind": "npm",
+    "id": "@kilocode/cli",
+    "note": "The Kilo CLI. Resolved on 2026-10-11 to 7.8.8. The VS Code extension is marketplace-only; the docs read say they apply to both."
+  },
   "kimi_code": {
     "kind": null,
     "note": "No confirmed release feed. Manual check."
   },
+  "kiro": {
+    "kind": null,
+    "note": "No machine-readable feed confirmed; manual check against https://kiro.dev/changelog/ide/ (1.2.56, 2026-10-08) and https://kiro.dev/changelog/cli/ (2.29.0, 2026-10-09)."
+  },
+  "mistral_vibe": {
+    "kind": "pypi",
+    "id": "mistral-vibe",
+    "note": "Resolved on 2026-10-11 to 2.26.1 (uploaded 2026-10-09; git tag v2.26.1)."
+  },
+  "opencode": {
+    "kind": "npm",
+    "id": "@opencode/cli",
+    "note": "OpenCode v2. Resolved on 2026-10-11 to 2.0.26. The v1 line still publishes as opencode-ai (1.18.35 on 2026-10-11); this row was read against both."
+  },
+  "openhands": {
+    "kind": "pypi",
+    "id": "openhands-sdk",
+    "note": "The agent SDK runs the hooks. Resolved on 2026-10-11 to 1.54.0 (uploaded 2026-10-09). The OpenHands app (GitHub OpenHands/OpenHands) was at v1.26.0 (2026-10-08)."
+  },
   "replit": {
     "kind": null,
     "note": "Hosted; see devin."
+  },
+  "roo_code": {
+    "kind": null,
+    "note": "Shut down on 2026-05-15; RooCodeInc/Roo-Code is archived at v3.54.0, so there is no further release to track."
   },
   "tabnine": {
     "kind": null,
@@ -72,6 +126,7 @@
   },
   "zed": {
     "kind": "github_releases",
-    "id": "zed-industries/zed"
+    "id": "zed-industries/zed",
+    "note": "Resolved on 2026-10-11 to v1.23.2 (released 2026-10-07)."
   }
 }

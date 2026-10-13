@@ -48,7 +48,7 @@ def dump(path, data):
     _write_text(path, json.dumps(data, indent=2) + "\n")
 
 
-def _read_text(path):
+def read_text(path):
     """The file as text, decoded as the UTF-8 both config formats are specified in -- never
     as the platform locale, which on Windows is a code page that cannot hold it."""
     try:
@@ -157,7 +157,7 @@ def _newline_of(text):
 def write_block(path, body, owner):
     """Replace our block, or append one. Everything outside it is left byte-for-byte, and the
     block takes the file's own line endings so a Windows-authored file stays one kind."""
-    text = _read_text(path) if os.path.exists(path) else ""
+    text = read_text(path) if os.path.exists(path) else ""
     nl = _newline_of(text)
     block = ("%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)).replace("\n", nl)
     bounds = block_bounds(text, owner)
@@ -169,7 +169,7 @@ def write_block(path, body, owner):
 
 
 def remove_block(path, owner):
-    text = _read_text(path)
+    text = read_text(path)
     bounds = block_bounds(text, owner)
     if not bounds:
         return False

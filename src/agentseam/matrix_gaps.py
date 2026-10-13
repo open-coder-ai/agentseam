@@ -29,8 +29,7 @@ GAPS = {
         "config": None,
         "verified": EVIDENCE["zed"],
         "events": {},
-        "notes": "No user hooks. Only declarative agent.tool_permissions rules. "
-        "No deny path for an external handler — say so rather than stretch.",
+        "notes": NOTES["zed"],
     },
     "aider": {
         "display": "Aider",

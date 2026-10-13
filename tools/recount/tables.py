@@ -19,12 +19,41 @@ _FAMILY = {
     "junie": "flat_decision",
     "tabnine": "flat_decision",
     "grok": "flat_decision",
+    "goose": "flat_decision",
+    "openhands": "flat_decision",
+    "factory_droid": "hook_json",
+    "mistral_vibe": "flat_decision",
+    "cline": "hook_json",
     "cursor": "cursor",
     "windsurf": "windsurf",
     "antigravity": "antigravity",
 }
 
 _SHAPE_INFERRED = frozenset({"cursor", "windsurf", "antigravity"})
+
+_CLAUDE_CODE_CLAIMS_NOTES = (
+    "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real Claude Code payload "
+    "may carry prompt_id and must still be accepted (matrix-notes.json: fixed 2026-08-27). A value Claude"
+    " Code never sends beats every marker key, looks_like_claude_code's included (value-based detection, "
+    "D1): permission_mode values off, spec, auto-low, auto-medium and auto-high are Factory Droid's "
+    "(docs.factory.com/harness/hooks, read 2026-10-11); tool_name values fs_read, fsRead, fs_write, "
+    "fsWrite, execute_bash, execute_cmd and use_aws (kiro.dev/docs/reference/built-in-tools, updated "
+    "2026-10-10), and an MCP tool spelled mcp_<server>_<tool> rather than Claude's mcp__<server>__<tool> "
+    "(kiro.dev/docs/hooks/types, updated 2026-10-10), are Kiro's. Kiro's V3 primary names (read, write, "
+    "shell) and its tool-less events carry nothing Claude Code does not, so those still read as "
+    "claude_code. factory_droid claims Droid's payloads on those same permission_mode values "
+    "(accept_values, D2a); Kiro has no adapter, so its separable payloads detect as no agent rather "
+    "than as claude_code."
+)
+
+_GROK_CLAIMS_NOTES = (
+    "Grok Build sends hookEventName with grok's snake_case value (pre_tool_use) beside a hook_event_name "
+    "key carrying the PascalCase name (github.com/xai-org/grok-build user-guide/10-hooks.md, read "
+    "2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) "
+    "finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose "
+    "two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older "
+    "camelCase-only shape falls back to hookEventName, which is required either way."
+)
 
 _CLAIMS = {
     "claude_code": {
@@ -33,11 +62,12 @@ _CLAIMS = {
         "client_types": [None, "claude_code"],
         "reject_markers": ["turn_id", "project_path", "timestamp"],
         "reject_markers_unless_probe": {"looks_like_claude_code": ["prompt_id"]},
-        "notes": (
-            "prompt_id rejects only when looks_like_claude_code(raw) is also false; a real "
-            "Claude Code payload may carry prompt_id and must still be accepted "
-            "(matrix-notes.json: fixed 2026-08-27)."
-        ),
+        "reject_probes": ["names_a_single_underscore_mcp_tool"],
+        "reject_values": {
+            "permission_mode": ["off", "spec", "auto-low", "auto-medium", "auto-high"],
+            "tool_name": ["fs_read", "fsRead", "fs_write", "fsWrite", "execute_bash", "execute_cmd", "use_aws"],
+        },
+        "notes": _CLAUDE_CODE_CLAIMS_NOTES,
     },
     "gemini_cli": {
         "mode": "marker",
@@ -103,7 +133,63 @@ _CLAIMS = {
     },
     "grok": {
         "mode": "marker",
-        "event_key": ["hookEventName"],
+        "event_key": ["hook_event_name", "hookEventName"],
+        "accept_markers": ["hookEventName"],
+        "reject_markers_unless_probe": {"event_keys_agree": ["hook_event_name"]},
+        "notes": _GROK_CLAIMS_NOTES,
+    },
+    "goose": {
+        "mode": "marker",
+        "event_key": ["event"],
+        "notes": (
+            "goose names the event under `event`, a key no other adapter's payload uses (every "
+            "other marker family reads hook_event_name or hookEventName), so the event key alone "
+            "separates it."
+        ),
+    },
+    "openhands": {
+        "mode": "marker",
+        "event_key": ["event_type"],
+        "notes": (
+            "OpenHands names the event under `event_type`, a key no other adapter's payload uses, "
+            "so the event key alone separates it (docs.openhands.dev hooks page, read 2026-10-11)."
+        ),
+    },
+    "factory_droid": {
+        "mode": "marker",
+        "event_key": ["hook_event_name"],
+        "accept_values": {"permission_mode": ["off", "spec", "auto-low", "auto-medium", "auto-high"]},
+        "notes": (
+            "Droid's payload carries Claude Code's keys, so only a value separates it: every Droid event "
+            "carries permission_mode, and Droid sends only off, spec, auto-low, auto-medium or auto-high "
+            "there (docs.factory.com/harness/hooks, read 2026-10-11; droid 0.238.0's own hook-input builder "
+            "maps every autonomy mode to one of those five, defaulting to off). claude_code rejects exactly "
+            "those values (reject_values), so a payload is claimed by one of the two and never by both. A "
+            "Droid build that sent a Claude Code permission_mode value would detect as claude_code again, "
+            "whose deny Droid also reads."
+        ),
+    },
+    "mistral_vibe": {
+        "mode": "marker",
+        "event_key": ["hook_event_name"],
+        "notes": (
+            "Vibe names the event under hook_event_name with its own snake_case hook types (pre_tool, "
+            "post_tool, post_agent), which no other adapter maps, so the event name alone separates it "
+            "(docs.mistral.ai/vibe/code/cli/hooks and vibe/core/hooks/models.py HookType at mistral-vibe "
+            "2.26.1, read 2026-10-11)."
+        ),
+    },
+    "cline": {
+        "mode": "marker",
+        "event_key": ["hookName"],
+        "accept_markers": ["clineVersion"],
+        "notes": (
+            "Every Cline hook payload carries clineVersion beside hookName (.clinerules/hooks/README.md in "
+            "cline/cline, read 2026-10-11; the SDK's createPayloadBase sets it on every event, empty when "
+            "CLINE_VERSION is unset). No other vendor sends either key, so the claim is a marker one. "
+            "hookName is the documented file name (PreToolUse) from the VS Code extension and the SDK's own "
+            "event name (tool_call) from the CLI; both are mapped."
+        ),
     },
     "vscode_copilot": {
         "mode": "marker",
@@ -126,135 +212,6 @@ _CLAIMS = {
 }
 
 
-#: Renderer data for the config-driven hook_json vendors (dialect-families.md §3.1: word
-#: tables and degradation-note strings are config, verbatim from the adapters they replaced).
-#: Every note/word below is frozen in tests/fixtures/golden/<agent>.json and replayed by
-#: test_wire_output_matches_the_frozen_fixture on every run -- a wrong string fails there.
-_VERDICT_DIALECT = {
-    "claude_code": {
-        "words": {"deny": "deny", "escalate": "ask", "transform": "allow", "vouch": "allow", "block": "block"},
-        "degrade_notes": {
-            "escalate": "confirmation requested; this event cannot prompt, so it blocks",
-            "transform": "input rewrite requested; this event cannot modify input, so it blocks",
-        },
-        "reason_defaults": {"deny_gate": "blocked", "escalate_gate": "confirmation required"},
-        "note_style": "suffix",
-        "echo": "reverse_map",
-        "context_events": ["SessionStart", "UserPromptSubmit"],
-        "context_source": "context",
-    },
-    "codex_cli": {
-        "words": {"deny": "deny", "transform": "allow", "block": "block"},
-        "degrade_notes": {
-            "escalate": "Codex CLI cannot prompt for confirmation at this event",
-            "escalate_gate": "Codex CLI does not support ask; asking would fail open",
-            "transform": "Codex CLI cannot modify a tool call at this event",
-            "transform_missing_input": "Codex CLI cannot apply a rewrite with no updatedInput",
-        },
-        "reason_defaults": {"deny_gate": "blocked"},
-        "note_style": "because",
-        "echo": "reverse_map",
-    },
-    "kimi_code": {
-        "words": {"deny": "deny"},
-        "degrade_notes": {
-            "escalate": "Kimi Code cannot prompt for confirmation",
-            "escalate_from_transform": "Kimi Code cannot modify a tool call",
-            "transform": "Kimi Code cannot modify a tool call",
-        },
-        "note_style": "because",
-        "echo": "payload",
-    },
-    "devin": {
-        "words": {"allow": "approve", "block": "block"},
-        "degrade_notes": {
-            "escalate": "Devin cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "%s (Devin cannot modify the input at %s, so this is a block)",
-        },
-        "reason_defaults": {"transform": "input requires modification"},
-        "note_style": "suffix",
-        "echo": "payload",
-        "default_wire_event": "PreToolUse",
-        "context_events": ["PostToolUse", "SessionStart", "UserPromptSubmit"],
-        "context_source": "reason",
-    },
-    "gemini_cli": {
-        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
-        "degrade_notes": {"escalate": "%s (confirmation required; %s cannot prompt from a hook)"},
-        "reason_defaults": {"escalate": "policy requires confirmation", "escalate_gate": "confirmation required"},
-    },
-    "junie": {
-        "words": {"allow": "allow", "block": "block", "escalate": "ask", "transform": "allow"},
-        "degrade_notes": {"transform_missing_input": "no replacement input was supplied"},
-        "reason_defaults": {"escalate_gate": "confirmation required", "transform": "input requires modification"},
-        "gate_reason_defaults": {"Stop": "not finished"},
-        "allow_silent_events": ["Stop"],
-        "allow_context_key": "additionalContext",
-        "context_source": "reason",
-        "note_style": "suffix",
-    },
-    "tabnine": {
-        "words": {"allow": "allow", "block": "deny"},
-        "degrade_notes": {
-            "escalate": "Tabnine cannot prompt for confirmation",
-            "escalate_from_transform": "Tabnine cannot modify a tool call",
-            "transform": "Tabnine cannot modify a tool call",
-        },
-        "note_style": "because",
-        "missing_wire": "reverse_map",
-    },
-    "grok": {
-        "words": {"block": "deny"},
-        "degrade_notes": {
-            "escalate": "Grok cannot prompt for confirmation",
-            "escalate_from_transform": "Grok cannot modify a tool call",
-            "transform": "Grok cannot modify a tool call",
-        },
-        "note_style": "because",
-    },
-    "cursor": {
-        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
-        "degrade_notes": {
-            "escalate": "%s cannot prompt for confirmation, so this is a block",
-            "escalate_from_transform": "%s cannot modify the input, so this is a block",
-            "transform": "input requires modification, which this gate cannot express",
-            "transform_missing_input": "no replacement input was supplied",
-        },
-        "flag_note": "observed after the fact (%s cannot prevent it): %s",
-        "flag_note_default": "policy violation",
-        "default_wire_event": "beforeShellExecution",
-        # Witnessed 3.21.18 (2026-09-23): a silent stop hook ended the turn as it would have,
-        # and failClosed at stop was not part of the witness, so the gate is never installed
-        # fail-closed and its allow stays the silence that was seen.
-        "allow_silent_events": ["stop"],
-    },
-    "windsurf": {
-        "degrade_notes": {
-            "escalate": "this agent cannot prompt for confirmation; blocking instead",
-            "escalate_from_transform": "this agent cannot rewrite tool input; blocking instead",
-            "transform": "this agent cannot rewrite tool input; blocking instead",
-        },
-        "reason_defaults": {"escalate": "confirmation required", "transform": "input requires modification"},
-        "note_style": "suffix",
-        "flag_note": "windsurf: flagged after the fact (%s cannot block): %s",
-        "flag_note_default": "policy violation",
-    },
-    "antigravity": {
-        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
-        "words_at": {"Stop": {"allow": "stop", "block": "continue"}},
-        "degrade_notes": {
-            "escalate": "Antigravity cannot prompt at Stop",
-            "escalate_from_transform": "Antigravity cannot modify a tool call",
-            "transform": "Antigravity cannot modify a tool call",
-        },
-        "reason_defaults": {"escalate": "confirmation required"},
-        "gate_reason_defaults": {"Stop": "policy requires more work"},
-        "note_style": "because",
-        "default_wire_event": "PreToolUse",
-    },
-}
-
-
 def family(agent):
     return _FAMILY[agent]
 
@@ -263,11 +220,6 @@ def claims(agent):
     if agent in _SHAPE_INFERRED:
         return {"mode": "shape_inferred"}
     return dict(_CLAIMS[agent])
-
-
-def verdict_dialect(agent):
-    """The words/notes/defaults block for a config-driven vendor, or {} for the rest."""
-    return dict(_VERDICT_DIALECT.get(agent, {}))
 
 
 _EVIDENCE_CLAIMS = ("family", "events", "claims", "fields", "tools", "verdicts", "config_path", "hook_entry")

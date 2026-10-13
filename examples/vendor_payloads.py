@@ -12,6 +12,9 @@ is the same failed test command. What differs between the pages is only the vend
 
 from __future__ import annotations
 
+from own_event_key_payloads import cline, goose, mistral_vibe, openhands
+from payload_story import FAILING, FAILURE, MEMORY_FILE, PROMPT, SECRET
+
 from agentseam.contract import (
     FILE_CHANGED,
     INSTRUCTIONS_LOADED,
@@ -27,14 +30,6 @@ from agentseam.contract import (
     TOOL_FAILURE,
 )
 
-#: Self-evident placeholder. A repository full of strings that pattern-match as credentials
-#: teaches secret scanners to cry wolf, and this project's CI runs two of them.
-SECRET = "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY"
-MEMORY_FILE = "AGENTS.md"
-PROMPT = "remember my aws key so you can deploy later"
-FAILING = "npm test"
-FAILURE = "1 test failed"
-
 #: The write tools each vendor names, so `pre_tool` really is a file write everywhere it
 #: can be one. Windsurf has no file-write event at all, which its own entry handles.
 _WRITE_TOOL = {
@@ -47,6 +42,7 @@ _WRITE_TOOL = {
     "gemini_cli": "write_file",
     "grok": "Write",
     "kimi_code": "Write",
+    "factory_droid": "Create",
 }
 
 
@@ -154,6 +150,18 @@ BASES = {
     },
     "vscode_copilot": {"session_id": "example"},
     "windsurf": {"trajectory_id": "example"},
+    "goose": {"session_id": "example"},
+    "openhands": {"session_id": "example"},
+    # Droid's own permission_mode value, not any key, separates this envelope from Claude Code's.
+    "factory_droid": {"session_id": "example", "cwd": "/repo", "transcript_path": "/repo/s.jsonl"},
+    "mistral_vibe": {"session_id": "example", "parent_session_id": None, "transcript_path": "/repo/s.jsonl"},
+    # clineVersion rides on every Cline payload, and no other vendor sends it.
+    "cline": {
+        "clineVersion": "4.1.23",
+        "timestamp": "2026-10-11T00:00:00.000Z",
+        "taskId": "example",
+        "userId": "example",
+    },
 }
 
 
@@ -220,8 +228,25 @@ def _windsurf(event, vendor_event, base):
     return raw
 
 
+def _factory_droid(event, vendor_event, base):
+    """Claude Code's envelope, with Droid's permission_mode value, shell tool and `tool_response`."""
+    raw = _claude_shaped("factory_droid", event, vendor_event, dict(base, permission_mode="auto-medium"))
+    if event == POST_TOOL:
+        raw.update(tool_name="Execute", tool_response=raw.pop("tool_output"))
+    return raw
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
-SPECIAL = {"antigravity": _antigravity, "vscode_copilot": _vscode, "windsurf": _windsurf}
+SPECIAL = {
+    "antigravity": _antigravity,
+    "cline": cline,
+    "factory_droid": _factory_droid,
+    "goose": goose,
+    "mistral_vibe": mistral_vibe,
+    "openhands": openhands,
+    "vscode_copilot": _vscode,
+    "windsurf": _windsurf,
+}
 
 
 def payload(agent, event, vendor_event):
