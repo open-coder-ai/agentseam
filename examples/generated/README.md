@@ -29,9 +29,9 @@ without notice. Verify against your own installation before relying on any of it
 | [Kimi Code CLI](kimi_code.md) | 10 | best-effort | yes | no | `vendor-docs` | `~/.kimi-code/config.toml` |
 | [Mistral Vibe](mistral_vibe.md) | 3 | best-effort | yes | yes | `vendor-docs` | `.vibe/hooks.toml` |
 | [OpenHands](openhands.md) | 6 | best-effort | yes | no | `vendor-docs` | `.openhands/hooks.json` |
-| [Tabnine CLI](tabnine.md) | 7 | best-effort | yes | no | `vendor-docs` | `.tabnine/agent/settings.json` |
+| [Tabnine CLI](tabnine.md) | 7 | best-effort | yes | yes | `vendor-docs` | `.tabnine/agent/settings.json` |
 | [GitHub Copilot (VS Code agent mode / CLI)](vscode_copilot.md) | 7 | best-effort | yes | yes | `live-run-partial` | `.github/hooks/*.json` |
-| [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.windsurf/hooks.json` |
+| [Windsurf (Cascade)](windsurf.md) | 4 | best-effort | yes | no | `third-party-install` | `.devin/hooks.json` |
 
 Agents with no page are not omissions. Aider and Zed expose no hook surface at all,
 and Replit and Copilot have no adapter here yet -- `agentseam agents` lists

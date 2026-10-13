@@ -62,21 +62,32 @@ def test_respond_answers_a_hand_built_event_not_just_a_parsed_one():
     assert mod.respond(Decision.deny("x"), unknown) == ("", 0)
 
 
-def test_ask_and_rewrite_both_deny_and_name_the_real_cause():
+def test_ask_denies_and_names_the_real_cause():
     ask = json.loads(A.handle(_at(A.PRE_TOOL), lambda e: Decision.ask("check first"), agent="tabnine")[0])
     assert ask["decision"] == "deny" and "cannot prompt" in ask["reason"]
 
-    rewrite = json.loads(
-        A.handle(_at(A.PRE_TOOL), lambda e: Decision.rewrite({"content": "x"}, "redact"), agent="tabnine")[0]
-    )
-    assert rewrite["decision"] == "deny"
-    assert "redact" in rewrite["reason"] and "cannot modify" in rewrite["reason"]
+
+def test_a_before_tool_transform_replaces_the_tool_input_whole():
+    """event-reference BeforeTool (read 2026-10-13): hookSpecificOutput.tool_input replaces the arguments."""
+    whole = {"file_path": "a.env", "content": "KEY=<redacted>"}
+    text, code, _e, _d = A.handle(_at(A.PRE_TOOL), lambda e: Decision.transform(whole, "redact"), agent="tabnine")
+    assert (json.loads(text), code) == ({"hookSpecificOutput": {"tool_input": whole}}, 0)
+    assert A.can_rewrite("tabnine", A.PRE_TOOL)
+    assert A.MATRIX["tabnine"]["events"]["pre_tool"]["evidence"]["rewrite"]["basis"] == "vendor-docs"
 
 
-def test_no_rewrite_is_claimed_even_though_the_vendor_advertises_one():
-    """The overview says "rewrite tool arguments"; the field carrying it was not in the"""
-    assert not A.can_rewrite("tabnine", A.PRE_TOOL)
-    assert "advertised" in A.MATRIX["tabnine"]["notes"]
+def test_a_transform_with_no_input_blocks_rather_than_replacing_the_call_with_nothing():
+    """Tabnine validates the complete object, so `tool_input: null` is not a no-op to send."""
+    text, code, _e, _d = A.handle(_at(A.PRE_TOOL), lambda e: Decision.transform(None, "redact"), agent="tabnine")
+    body = json.loads(text)
+    assert code == 0 and body["decision"] == "deny" and "no replacement input" in body["reason"]
+
+
+def test_a_transform_where_tabnine_cannot_rewrite_still_blocks():
+    """AfterTool can hide the output, never rewrite the call: the transform degrades to a block."""
+    assert not A.can_rewrite("tabnine", A.POST_TOOL)
+    body = json.loads(A.handle(_at(A.POST_TOOL), lambda e: Decision.transform({"x": 1}, "r"), agent="tabnine")[0])
+    assert body["decision"] == "deny"
 
 
 def test_the_notes_record_how_broadly_it_fails_open():

@@ -234,3 +234,12 @@ def check_wireable(mod, agent, events):
             "%s has no hook for: %s (it can be wired for: %s)"
             % (agent, ", ".join(sorted(unwireable)), ", ".join(sorted(mod.REVERSE_EVENT_MAP)))
         )
+
+
+def check_matcher(mod, agent, matcher):
+    """Raise ValueError when `matcher` is given for an agent whose hook config has no matcher."""
+    if matcher and not getattr(mod, "CONFIG", {}).get("hook_entry", {}).get("matcher"):
+        raise ValueError(
+            "%s has no tool matcher, so --matcher %r would be dropped and the hook would run on every tool"
+            % (agent, matcher)
+        )

@@ -114,7 +114,8 @@
     "degrade_notes": {
       "escalate": "Tabnine cannot prompt for confirmation",
       "escalate_from_transform": "Tabnine cannot modify a tool call",
-      "transform": "Tabnine cannot modify a tool call"
+      "transform": "Tabnine cannot modify a tool call",
+      "transform_missing_input": "no replacement input was supplied"
     },
     "gates": {
       "AfterAgent": {
@@ -135,11 +136,12 @@
       "BeforeTool": {
         "grammar": "G1",
         "honours_escalate": false,
-        "honours_transform": false
+        "honours_transform": true
       }
     },
     "missing_wire": "reverse_map",
     "note_style": "because",
+    "transform_grammar": "hook_specific_tool_input",
     "vocabulary": [
       "allow",
       "deny"

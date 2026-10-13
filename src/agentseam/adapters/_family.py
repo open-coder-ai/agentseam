@@ -26,6 +26,7 @@ class ConfigAdapter:
         self.NEEDS_TRUST = cfg["needs_trust"]
         self.TRUST_HINT = cfg.get("trust_hint")
         self.ALSO_READS = tuple(cfg.get("also_reads", ()))
+        self.LEGACY_CONFIG_PATHS = tuple(cfg.get("legacy_config_paths", ()))
         self.BLOCKING_EVENTS = tuple(cfg["verdicts"]["answer_events"])
         for attr, key in (("WRITE_TOOLS", "write"), ("SHELL_TOOLS", "shell"), ("MEMORY_TOOLS", "memory")):
             if cfg["tools"].get(key):

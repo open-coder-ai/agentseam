@@ -21,6 +21,12 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: (event, command, url, matcher) (discovery.rs:233), so only an identical hook runs once.
 ALSO_READS = {"grok": [".claude/settings.json", ".claude/settings.local.json", ".cursor/hooks.json"]}
 
+#: Repo hook configs this agent read before its current `config_path`, and still reads as a
+#: fallback. windsurf: docs.devin.ai/desktop/cascade/hooks (read 2026-10-13), Workspace-Level --
+#: ".devin/hooks.json in your workspace root (the legacy .windsurf/hooks.json is used only when
+#: .devin/hooks.json is absent or defines no hooks)". `uninstall` cleans these too.
+LEGACY_CONFIG_PATHS = {"windsurf": [".windsurf/hooks.json"]}
+
 #: Project hooks that run only once the user trusts them, and how the user does that.
 #: codex_cli: learn.chatgpt.com/docs/hooks (read 2026-09-27) -- "Project-local hooks load
 #: only when the project `.codex/` layer is trusted"; `/hooks` reviews and trusts them, and
@@ -149,6 +155,16 @@ EVIDENCE = {
         "date": "2026-10-13",
         "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event",
     },
+    ("windsurf", "config_path"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_install_legacy.py::test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file",
+    },
+    ("windsurf", "legacy_config_paths"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_install_legacy.py::test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file",
+    },
     ("grok", "also_reads"): {
         "basis": "vendor-source",
         "date": "2026-10-13",
@@ -168,6 +184,8 @@ def apply(agent, entry):
         entry["repo_root_token"] = REPO_ROOT_TOKEN[agent]
     if agent in ALSO_READS:
         entry["also_reads"] = list(ALSO_READS[agent])
+    if agent in LEGACY_CONFIG_PATHS:
+        entry["legacy_config_paths"] = list(LEGACY_CONFIG_PATHS[agent])
     if agent in TRUST_HINT:
         entry["needs_trust"] = True
         entry["trust_hint"] = TRUST_HINT[agent]

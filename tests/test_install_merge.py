@@ -35,6 +35,14 @@ def test_a_tool_matcher_is_written_only_at_tool_events(tmp_path):
     assert "matcher" not in hooks["SessionStart"][0]
 
 
+@pytest.mark.parametrize("agent", ["cursor", "windsurf", "cline", "vscode_copilot"])
+def test_a_matcher_on_an_agent_with_none_raises_naming_the_agent(tmp_path, agent):
+    """Dropping it would run the hook on every tool; Cursor's Shell would never match a `Bash`."""
+    with pytest.raises(ValueError, match="%s has no tool matcher" % agent):
+        I.install(agent, ["pre_tool"], "g", str(tmp_path), matcher="Bash")
+    assert not any(tmp_path.rglob("*.json"))
+
+
 def test_uninstall_prunes_the_event_lists_it_emptied_and_keeps_the_users_own(tmp_path):
     _write(tmp_path, {"hooks": {"Notification": []}, "model": "opus"})
     I.install("claude_code", ["pre_tool", "stop"], "g", str(tmp_path))

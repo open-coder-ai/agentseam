@@ -8,7 +8,7 @@
     "mode": "shape_inferred"
   },
   "config_format": "json",
-  "config_path": ".windsurf/hooks.json",
+  "config_path": ".devin/hooks.json",
   "display": "Windsurf (Cascade)",
   "events": {
     "post_cascade_response": "stop",
@@ -24,9 +24,9 @@
       "test": "tests/test_adapter_windsurf.py::test_the_documented_payloads_parse_by_their_named_event"
     },
     "config_path": {
-      "basis": "third-party-install",
-      "date": "2026-08-26",
-      "test": "tests/test_vendor_config.py::test_config_path_agrees_with_matrix"
+      "basis": "vendor-docs",
+      "date": "2026-10-13",
+      "test": "tests/test_install_legacy.py::test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file"
     },
     "events": {
       "basis": "third-party-install",
@@ -47,6 +47,11 @@
       "basis": "third-party-install",
       "date": "2026-08-26",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+    },
+    "legacy_config_paths": {
+      "basis": "vendor-docs",
+      "date": "2026-10-13",
+      "test": "tests/test_install_legacy.py::test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file"
     },
     "tools": {
       "basis": "third-party-install",
@@ -93,6 +98,9 @@
     "matcher": false,
     "wrapper": "flat_entries"
   },
+  "legacy_config_paths": [
+    ".windsurf/hooks.json"
+  ],
   "needs_trust": false,
   "tools": {},
   "verdicts": {

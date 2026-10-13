@@ -79,6 +79,7 @@ _VERDICT_DIALECT = {
             "escalate": "Tabnine cannot prompt for confirmation",
             "escalate_from_transform": "Tabnine cannot modify a tool call",
             "transform": "Tabnine cannot modify a tool call",
+            "transform_missing_input": "no replacement input was supplied",
         },
         "note_style": "because",
         "missing_wire": "reverse_map",
