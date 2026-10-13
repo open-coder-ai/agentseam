@@ -18,7 +18,6 @@ from payloads import (  # noqa: E402
 import agentseam as A  # noqa: E402
 from agentseam import Decision  # noqa: E402
 
-
 #: docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks (read 2026-10-13): PostToolUse carries
 #: tool_response, "Object with success (boolean), output (string), and error (string or null)".
 DV_POST_TOOL = {
