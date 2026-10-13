@@ -227,3 +227,37 @@ def test_powershell_is_a_shell_tool_and_its_command_is_parsed():
     guard = lambda e: Decision.deny("no shell") if e.tool in A.adapters.shell_tools("claude_code") else None  # noqa: E731
     text, _code, _event, _decision = A.handle(CC_POWERSHELL, guard)
     assert json.loads(text)["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+#: Claude Code's hooks reference (code.claude.com/docs/en/hooks, read 2026-10-13): PostToolUse
+#: input carries "both `tool_input` ... and `tool_response`, the result it returned";
+#: PostToolUseFailure carries no tool_response, and "`error` | String describing what went wrong".
+CC_POST_DOCS = {
+    "session_id": "s1",
+    "hook_event_name": "PostToolUse",
+    "tool_name": "Write",
+    "tool_input": {"file_path": "/path/to/file.txt", "content": "file content"},
+    "tool_response": {"filePath": "/path/to/file.txt", "success": True},
+    "tool_use_id": "toolu_01ABC123",
+}
+CC_FAILURE_DOCS = {
+    "session_id": "s1",
+    "hook_event_name": "PostToolUseFailure",
+    "tool_name": "Bash",
+    "tool_input": {"command": "npm test"},
+    "tool_use_id": "toolu_01ABC123",
+    "error": "Exit code 1\nError: Cannot find module 'express'",
+    "is_interrupt": False,
+}
+
+
+def test_post_tool_output_is_read_from_the_documented_tool_response():
+    """A policy reading event.output after a tool ran saw None on every real PostToolUse."""
+    ev = A.adapters.get("claude_code").parse(CC_POST_DOCS)
+    assert ev.event == A.POST_TOOL
+    assert json.loads(ev.output) == {"filePath": "/path/to/file.txt", "success": True}
+
+
+def test_tool_failure_output_is_the_documented_error_text():
+    ev = A.adapters.get("claude_code").parse(CC_FAILURE_DOCS)
+    assert (ev.event, ev.output) == (A.TOOL_FAILURE, "Exit code 1\nError: Cannot find module 'express'")
