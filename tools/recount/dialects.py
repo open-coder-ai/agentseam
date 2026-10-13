@@ -156,6 +156,10 @@ _VERDICT_DIALECT = {
         },
         "flag_note": "observed after the fact (%s cannot prevent it): %s",
         "flag_note_default": "policy violation",
+        # cursor.com/docs/hooks (read 2026-10-13): additional_context is an output field at
+        # postToolUse and postToolUseFailure only; afterShellExecution and afterMCPExecution
+        # document no output, so a flag there is silence rather than an unread key.
+        "flag_events": ["postToolUse", "postToolUseFailure"],
         "default_wire_event": "beforeShellExecution",
         # Witnessed 3.21.18 (2026-09-23): a silent stop hook ended the turn as it would have,
         # and failClosed at stop was not part of the witness, so the gate is never installed

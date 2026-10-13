@@ -185,3 +185,43 @@ def test_a_prompt_gate_refusal_says_why_the_outcome_changed_shape():
     payload = json.loads(text)
     assert payload["continue"] is False
     assert payload["user_message"] == "sanitized (beforeSubmitPrompt cannot modify the input, so this is a block)"
+
+
+#: cursor.com/docs/hooks (read 2026-10-13): postToolUse and postToolUseFailure each list an
+#: `additional_context` output field; afterShellExecution and afterMCPExecution document
+#: input fields only, so nothing a hook prints there reaches the agent.
+CU_AFTER_SHELL = {
+    "conversation_id": "c1",
+    "generation_id": "g1",
+    "hook_event_name": "afterShellExecution",
+    "command": "npm test",
+    "output": "1 test failed",
+    "duration": 1234,
+    "sandbox": False,
+}
+CU_AFTER_MCP = {
+    "conversation_id": "c1",
+    "generation_id": "g1",
+    "hook_event_name": "afterMCPExecution",
+    "tool_name": "query",
+    "tool_input": "{}",
+    "mcp_server_name": "db",
+    "result_json": "{}",
+    "duration": 1234,
+}
+
+
+def test_post_hoc_events_without_an_output_field_stay_silent():
+    """A flag printed where Cursor documents no output field reached nobody, while the
+    consumer believed it had been raised as context."""
+    for raw in (CU_AFTER_SHELL, CU_AFTER_MCP):
+        text, code, event, _ = A.handle(raw, deny_all)
+        assert event.event == A.POST_TOOL
+        assert (text, code) == ("", 0), raw["hook_event_name"]
+
+
+def test_post_tool_use_still_flags_as_additional_context():
+    raw = dict(CU_PRE_TOOL, hook_event_name="postToolUse", tool_output="ok")
+    text, _, event, _ = A.handle(raw, deny_all)
+    assert event.event == A.POST_TOOL
+    assert "cannot prevent it" in json.loads(text)["additional_context"]

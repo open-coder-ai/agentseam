@@ -89,7 +89,7 @@ def _wire_of(cfg, event):
 
 def _flag_payload(v, decision, name):
     """POST_TOOL/TOOL_FAILURE: a flag can only be raised as additional context, never blocked."""
-    if decision.outcome not in (DENY, ESCALATE):
+    if decision.outcome not in (DENY, ESCALATE) or name not in v["flag_events"]:
         return "", 0
     note = v["flag_note"] % (name, decision.reason or v["flag_note_default"])
     return _json.dumps({"additional_context": note}), 0

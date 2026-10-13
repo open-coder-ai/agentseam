@@ -49,7 +49,16 @@ TRUST_HINT = {
 #:   read 2026-09-27: on by default on Windows, "receive the tool's command string in
 #:   tool_input.command, with the same fields as the Bash tool"; match `Bash|PowerShell`),
 #:   not yet seen live, so the claim as a whole now rests on the docs.
+#: - claude_code fields: the output chain is the vendor's hooks reference
+#:   (code.claude.com/docs/en/hooks, read 2026-10-13): PostToolUse carries `tool_response`,
+#:   PostToolUseFailure carries `error`. No live capture covers either event, and the
+#:   `tool_output` the chain read alone before is attested by no source.
 EVIDENCE = {
+    ("claude_code", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_claude_code.py::test_post_tool_output_is_read_from_the_documented_tool_response",
+    },
     ("cline", "trust_hint"): {
         "basis": "vendor-docs",
         "date": "2026-10-11",
