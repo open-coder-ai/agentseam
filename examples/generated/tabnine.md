@@ -37,8 +37,10 @@ One handler wired for every hook this agent supports.
   "hooks": {
     "AfterAgent": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -48,8 +50,10 @@ One handler wired for every hook this agent supports.
     ],
     "AfterTool": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -59,8 +63,10 @@ One handler wired for every hook this agent supports.
     ],
     "BeforeAgent": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -70,8 +76,10 @@ One handler wired for every hook this agent supports.
     ],
     "BeforeTool": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -81,8 +89,10 @@ One handler wired for every hook this agent supports.
     ],
     "PreCompress": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -92,8 +102,10 @@ One handler wired for every hook this agent supports.
     ],
     "SessionEnd": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"
@@ -103,8 +115,10 @@ One handler wired for every hook this agent supports.
     ],
     "SessionStart": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "name": "agentseam",
             "type": "command"

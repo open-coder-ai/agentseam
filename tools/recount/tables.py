@@ -52,7 +52,10 @@ _GROK_CLAIMS_NOTES = (
     "2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) "
     "finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose "
     "two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older "
-    "camelCase-only shape falls back to hookEventName, which is required either way."
+    "camelCase-only shape falls back to hookEventName, which is required either way. Grok Build writes "
+    "that twin pair for every event (xai-org/grok-build@2bdd1d6 crates/codegen/xai-grok-hooks/src/event.rs, "
+    "to_hook_json), so an event name grok has no mapping for is still claimed when the pair is twins "
+    "(event_keys_are_twins) and parses as unknown; the camelCase-only shape carries no such proof."
 )
 
 _CLAIMS = {
@@ -136,6 +139,7 @@ _CLAIMS = {
         "event_key": ["hook_event_name", "hookEventName"],
         "accept_markers": ["hookEventName"],
         "reject_markers_unless_probe": {"event_keys_agree": ["hook_event_name"]},
+        "accept_any_name_when": "event_keys_are_twins",
         "notes": _GROK_CLAIMS_NOTES,
     },
     "goose": {

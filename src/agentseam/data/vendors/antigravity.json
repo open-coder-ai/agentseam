@@ -99,8 +99,9 @@
     "default_wire_event": "PreToolUse",
     "degrade_notes": {
       "escalate": "Antigravity cannot prompt at Stop",
-      "escalate_from_transform": "Antigravity cannot modify a tool call",
-      "transform": "Antigravity cannot modify a tool call"
+      "escalate_from_transform": "Antigravity can modify tool arguments only at PreToolUse",
+      "transform": "Antigravity can modify tool arguments only at PreToolUse",
+      "transform_missing_input": "no replacement arguments were supplied"
     },
     "empty_object_events": [
       "PostToolUse"
@@ -112,7 +113,7 @@
       "PreToolUse": {
         "grammar": "G1",
         "honours_escalate": true,
-        "honours_transform": false
+        "honours_transform": true
       },
       "Stop": {
         "grammar": "G1",
@@ -124,9 +125,11 @@
     "reason_defaults": {
       "escalate": "confirmation required"
     },
+    "transform_grammar": "top_level_overwrite",
     "vocabulary": [
       "allow",
       "ask",
+      "auto_approve",
       "continue",
       "deny",
       "deny_unless_prior_grant",
@@ -137,7 +140,8 @@
     "words": {
       "allow": "allow",
       "block": "deny",
-      "escalate": "ask"
+      "escalate": "ask",
+      "transform": "allow"
     },
     "words_at": {
       "Stop": {

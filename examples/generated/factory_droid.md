@@ -36,8 +36,10 @@ One handler wired for every hook this agent supports.
 {
   "PostToolUse": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -46,8 +48,10 @@ One handler wired for every hook this agent supports.
   ],
   "PreCompact": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -56,8 +60,10 @@ One handler wired for every hook this agent supports.
   ],
   "PreToolUse": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -66,8 +72,10 @@ One handler wired for every hook this agent supports.
   ],
   "SessionEnd": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -76,8 +84,10 @@ One handler wired for every hook this agent supports.
   ],
   "SessionStart": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -86,8 +96,10 @@ One handler wired for every hook this agent supports.
   ],
   "Stop": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -96,8 +108,10 @@ One handler wired for every hook this agent supports.
   ],
   "SubagentStop": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -106,8 +120,10 @@ One handler wired for every hook this agent supports.
   ],
   "UserPromptSubmit": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }

@@ -80,6 +80,8 @@ def _classify_transform_grammar(stdout):
         return "hook_specific_updated_input"
     if "updatedInput" in body and body.get("updatedInput") is not None:
         return "top_level_updated_input"
+    if "overwrite" in body and body.get("overwrite") is not None:
+        return "top_level_overwrite"
     if "updated_input" in body:
         return "permission_updated_input"
     return None

@@ -86,9 +86,9 @@
       "test": "tests/test_adapter_claude_code.py::test_post_tool_output_is_read_from_the_documented_tool_response"
     },
     "hook_entry": {
-      "basis": "live-run",
-      "date": "2026-09-07",
-      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+      "basis": "vendor-docs",
+      "date": "2026-10-13",
+      "test": "tests/test_install_watch.py::test_file_changed_is_not_wired_without_a_watch_list"
     },
     "repo_root_token": {
       "basis": "vendor-docs",
@@ -147,6 +147,9 @@
   },
   "hook_entry": {
     "matcher": true,
+    "watch_list_events": [
+      "file_changed"
+    ],
     "wrapper": "hooks_map"
   },
   "needs_trust": false,

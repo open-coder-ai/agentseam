@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import textwrap
+import warnings
 
 from . import __version__, adapters, probe
 from . import install as install_mod
@@ -16,6 +17,7 @@ from . import packaging as packaging_mod
 from . import permissions as permissions_mod
 from .cli_report import _cmd_doctor, _cmd_matrix, cmd_tier_table, trust_note
 from .contract import EVENTS, PRE_TOOL
+from .install_config import unwatched
 from .matrix import MATRIX, enforcement_level
 
 
@@ -35,17 +37,22 @@ def _cmd_install(args):
     targets = sorted(adapters.ADAPTERS) if args.agent == "all" else [args.agent]
     skipped = 0
     for agent in targets:
-        lvl = ", ".join("%s=%s" % (e, enforcement_level(agent, e)) for e in events)
         try:
-            path = install_mod.install(agent, events, args.command, args.repo, matcher=args.matcher)
+            wired, why = unwatched(adapters.get(agent), agent, events, args.watch)
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")  # `why` is printed below, once
+                path = install_mod.install(
+                    agent, events, args.command, args.repo, matcher=args.matcher, watch=args.watch
+                )
         except (ValueError, install_mod.ConfigUnreadableError) as exc:
             print("skipped %-14s %s" % (agent, exc), file=sys.stderr)
             skipped += 1
             continue
+        lvl = ", ".join("%s=%s" % (e, enforcement_level(agent, e)) for e in wired)
         print("wired %-16s -> %s   [%s]" % (agent, path, lvl))
-        note = trust_note(agent)
-        if note:
-            print("      %-16s %s" % ("", note))
+        for note in (why, trust_note(agent)):
+            if note:
+                print("      %-16s %s" % ("", note))
     return 1 if skipped else 0
 
 
@@ -203,6 +210,7 @@ def _main(argv=None):
     i.add_argument("command", help="command the agent should run for each event")
     i.add_argument("--events", nargs="*", help="canonical events (default: pre_tool)")
     i.add_argument("--matcher", help="vendor tool matcher, e.g. 'Write|Edit'")
+    i.add_argument("--watch", action="append", metavar="FILE", help="a file name file_changed watches (repeatable)")
     i.add_argument("--repo", default=".")
     i.set_defaults(fn=_cmd_install)
 

@@ -60,7 +60,7 @@ assert [name for name, _make, _why in DECISIONS] == [
 #: What each basis means for someone deciding how far to trust a page.
 
 
-from install_render import install_body  # noqa: E402
+from install_render import install_section  # noqa: E402
 from provenance import BASIS_CAVEAT, _provenance  # noqa: E402,F401
 
 
@@ -175,8 +175,7 @@ def _page(agent):
     add("## What `agentseam install` writes\n")
     add("One handler wired for every hook this agent supports.\n")
     add("`%s`\n" % mod.CONFIG_PATH)
-    config = mod.hook_config(list(scenarios), "python3 guard.py")
-    add(install_body(mod, config))
+    add(install_section(mod, list(scenarios), "python3 guard.py"))
 
     add("\n## Every hook, one at a time\n")
     add(

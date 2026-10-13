@@ -193,6 +193,39 @@ def fail_closed_kwarg(mod, fail_closed):
     return {}
 
 
+def _watch_list_events(mod):
+    return getattr(mod, "CONFIG", {}).get("hook_entry", {}).get("watch_list_events", ())
+
+
+def unwatched(mod, agent, events, watch):
+    """`(events to wire, why the rest are not)`: an event whose matcher is the vendor's watch
+    list of literal file names can never fire with no list, so it is left out, never claimed."""
+    if watch:
+        bad = [name for name in watch if not isinstance(name, str) or not name or "|" in name]
+        if bad:
+            raise ValueError("watch names literal files, one per item, without '|': %r" % (bad,))
+        return list(events), None
+    left_out = [e for e in events if e in _watch_list_events(mod)]
+    if not left_out:
+        return list(events), None
+    why = (
+        "%s not wired for %s: it watches only the literal file names its matcher lists, and starts no "
+        "watcher without one; pass watch=[...] (--watch FILE) to wire it" % (", ".join(left_out), agent)
+    )
+    return [e for e in events if e not in left_out], why
+
+
+def apply_watch(mod, fragment, watch):
+    """Write the watch list as the matcher of each watch-list event's entry, '|'-joined."""
+    if not watch:
+        return fragment
+    table = fragment.get("hooks", fragment)
+    for ev in _watch_list_events(mod):
+        for entry in table.get(mod.REVERSE_EVENT_MAP.get(ev), ()):
+            entry["matcher"] = "|".join(watch)
+    return fragment
+
+
 def check_wireable(mod, agent, events):
     """Raise ValueError naming exactly what `agent` cannot be wired for, or do nothing."""
     unwireable = [e for e in events if e not in getattr(mod, "REVERSE_EVENT_MAP", {})]

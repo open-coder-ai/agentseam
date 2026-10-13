@@ -20,6 +20,10 @@ from ._payload import _wire_name
 _ESCALATE_FROM_TRANSFORM = "escalate_from_transform"
 _TRANSFORM_MISSING_INPUT = "transform_missing_input"
 
+#: Transform grammars that put the replacement input beside a top-level decision word, and the key
+#: they put it under. Antigravity's `overwrite` is merged into toolCall.args, shallow, top level.
+_TOP_LEVEL_INPUT_KEY = {"top_level_updated_input": "updatedInput", "top_level_overwrite": "overwrite"}
+
 
 def hj_reverse(cfg):
     """Canonical event -> wire name: the naive inverse, then the entry's pinned overrides.
@@ -117,8 +121,9 @@ def _g1_transform(v, decision, name, words):
         return None
     if v.get("transform_grammar") == "hook_output_snake_tool_input":
         return _json.dumps({"hook_specific_output": {"tool_input": decision.updated_input}}), 0
-    if v.get("transform_grammar") == "top_level_updated_input":
-        out = {"decision": words.get("transform", "allow"), "updatedInput": decision.updated_input}
+    if v.get("transform_grammar") in _TOP_LEVEL_INPUT_KEY:
+        key = _TOP_LEVEL_INPUT_KEY[v["transform_grammar"]]
+        out = {"decision": words.get("transform", "allow"), key: decision.updated_input}
         if decision.reason:
             out["reason"] = decision.reason
         return _json.dumps(out), 0

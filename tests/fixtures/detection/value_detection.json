@@ -221,7 +221,7 @@
       "pre_tool": "devin",
       "prompt_submit": "devin",
       "session_end": "devin",
-      "session_start": "devin",
+      "session_start": null,
       "stop": "devin"
     },
     "factory_droid": {

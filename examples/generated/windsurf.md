@@ -37,26 +37,31 @@ One handler wired for every hook this agent supports.
   "hooks": {
     "post_cascade_response": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "post_mcp_tool_use": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "pre_mcp_tool_use": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "pre_run_command": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "pre_user_prompt": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ]

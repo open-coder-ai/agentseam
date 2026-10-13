@@ -177,13 +177,20 @@ _VERDICT_DIALECT = {
         "flag_note": "windsurf: flagged after the fact (%s cannot block): %s",
         "flag_note_default": "policy violation",
     },
+    # antigravity.google/docs/hooks (read 2026-10-13): PreToolUse answers a required `decision`
+    # (allow, auto_approve, deny, ask, force_ask, deny_unless_prior_grant) and an optional
+    # `overwrite` object "merged (shallow top-level merge) into toolCall.args before execution";
+    # Stop's `decision: "continue"` keeps the agent going and any other value allows the stop.
+    # A transform is allow + overwrite: allow delegates to the next hook or the default policy,
+    # where auto_approve would also skip the user's prompt.
     "antigravity": {
-        "words": {"allow": "allow", "block": "deny", "escalate": "ask"},
+        "words": {"allow": "allow", "block": "deny", "escalate": "ask", "transform": "allow"},
         "words_at": {"Stop": {"allow": "stop", "block": "continue"}},
         "degrade_notes": {
             "escalate": "Antigravity cannot prompt at Stop",
-            "escalate_from_transform": "Antigravity cannot modify a tool call",
-            "transform": "Antigravity cannot modify a tool call",
+            "escalate_from_transform": "Antigravity can modify tool arguments only at PreToolUse",
+            "transform": "Antigravity can modify tool arguments only at PreToolUse",
+            "transform_missing_input": "no replacement arguments were supplied",
         },
         "reason_defaults": {"escalate": "confirmation required"},
         "gate_reason_defaults": {"Stop": "policy requires more work"},

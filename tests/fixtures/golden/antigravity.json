@@ -60,11 +60,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"redacted (Antigravity cannot modify a tool call)\"}"
+          "stdout": "{\"decision\": \"allow\", \"overwrite\": {\"content\": \"safe\"}, \"reason\": \"redacted\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (Antigravity cannot modify a tool call)\"}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change (no replacement arguments were supplied)\"}"
         },
         "vouch": {
           "exit": 0,
@@ -103,11 +103,11 @@
         },
         "rewrite": {
           "exit": 0,
-          "stdout": "{\"decision\": \"continue\", \"reason\": \"redacted (Antigravity cannot modify a tool call)\"}"
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"redacted (Antigravity can modify tool arguments only at PreToolUse)\"}"
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"decision\": \"continue\", \"reason\": \"needs change (Antigravity cannot modify a tool call)\"}"
+          "stdout": "{\"decision\": \"continue\", \"reason\": \"needs change (Antigravity can modify tool arguments only at PreToolUse)\"}"
         },
         "vouch": {
           "exit": 0,

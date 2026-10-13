@@ -69,9 +69,17 @@ def _accepted_by_markers(c, raw, name):
     )
 
 
+def _accepts_any_name(c, raw, name):
+    """An unmapped name is claimed once the payload self-identifies: always, or when a named probe says so."""
+    if not isinstance(name, str):
+        return False
+    probe = c.get("accept_any_name_when")
+    return bool(c.get("accept_any_name")) or (probe is not None and PROBES[probe](raw))
+
+
 def _disqualified(cfg, c, raw, name):
     """Every reason an entry declines a payload once its wire event name is known."""
-    if name not in cfg["events"] and not (c.get("accept_any_name") and isinstance(name, str)):
+    if name not in cfg["events"] and not _accepts_any_name(c, raw, name):
         return True
     if "client_types" in c and raw.get("client_type") not in c["client_types"]:
         return True

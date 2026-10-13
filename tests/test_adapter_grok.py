@@ -88,3 +88,29 @@ def test_a_post_compact_payload_is_still_claimed_so_the_moment_is_not_lost():
     """Unmapping relabels the event; it must not blind a caller to the payload."""
     mod = A.adapters.get("grok")
     assert mod.claims({"hookEventName": "PostCompact", "sessionId": "s"})
+
+
+def test_tool_failure_also_wires_permission_denied():
+    """raw[6].findings[0]: PermissionDenied parses as tool_failure, but hook_config never subscribed to it.
+    docs.x.ai/build/features/hooks (read 2026-10-13): it fires when "the permission system denies a tool call"."""
+    hooks = A.adapters.get("grok").hook_config([A.TOOL_FAILURE, A.STOP], "guard.py", matcher="Bash")["hooks"]
+    assert sorted(hooks) == ["PermissionDenied", "PostToolUseFailure", "Stop"]
+    assert hooks["PermissionDenied"] == hooks["PostToolUseFailure"]
+    assert hooks["PermissionDenied"][0]["matcher"] == "Bash"
+
+
+def test_a_new_grok_event_is_claimed_and_parsed_as_unknown():
+    """raw[6].findings[2]: a Grok event with no mapping reached no adapter. Grok Build writes the
+    snake_case/PascalCase twin pair for every event (grok-build@2bdd1d6 event.rs, to_hook_json)."""
+    raw = {"hookEventName": "turn_started", "hook_event_name": "TurnStarted", "sessionId": "s", "workspaceRoot": "/r"}
+    assert A.adapters.detect(raw) == "grok"
+    assert A.adapters.get("grok").parse(raw).event == A.UNKNOWN
+
+
+def test_an_unmapped_name_without_the_twin_pair_is_not_claimed():
+    """The same text under both keys, or the camelCase key alone, proves nothing about grok."""
+    same = {"hookEventName": "TurnStarted", "hook_event_name": "TurnStarted", "sessionId": "s"}
+    camel_only = {"hookEventName": "TurnStarted", "sessionId": "s"}
+    kimi_style = {"hookEventName": "turnStarted", "hook_event_name": "TurnStarted", "session_id": "s"}
+    for raw in (same, camel_only, kimi_style):
+        assert not A.adapters.get("grok").claims(raw), raw

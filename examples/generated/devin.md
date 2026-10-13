@@ -36,8 +36,10 @@ One handler wired for every hook this agent supports.
 {
   "PostToolUse": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -46,8 +48,10 @@ One handler wired for every hook this agent supports.
   ],
   "PreToolUse": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -56,8 +60,10 @@ One handler wired for every hook this agent supports.
   ],
   "SessionEnd": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -66,8 +72,10 @@ One handler wired for every hook this agent supports.
   ],
   "SessionStart": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -76,8 +84,10 @@ One handler wired for every hook this agent supports.
   ],
   "Stop": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -86,8 +96,10 @@ One handler wired for every hook this agent supports.
   ],
   "UserPromptSubmit": [
     {
+      "_agentseam": "agentseam",
       "hooks": [
         {
+          "_agentseam": "agentseam",
           "command": "python3 guard.py",
           "type": "command"
         }
@@ -106,12 +118,15 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
+> Also claimed by **claude_code, gemini_cli**, so `detect()` declines this payload and the agent has
+> to be named: `handle(raw, handler, agent="devin")`. Guessing between adapters
+> that answer differently is worse than declining.
+
 The agent sends:
 
 ```json
 {
   "hook_event_name": "SessionStart",
-  "prompt_id": "turn-1",
   "session_id": "example",
   "source": "startup"
 }
@@ -284,7 +299,11 @@ The agent sends:
     "command": "npm test"
   },
   "tool_name": "Bash",
-  "tool_output": "ok"
+  "tool_response": {
+    "error": null,
+    "output": "ok",
+    "success": true
+  }
 }
 ```
 

@@ -54,8 +54,8 @@
     },
     "fields": {
       "basis": "vendor-docs",
-      "date": "2026-08-26",
-      "test": "tests/test_vendor_config.py::test_entries_match_recount"
+      "date": "2026-10-13",
+      "test": "tests/test_adapter_devin.py::test_post_tool_output_is_read_from_the_documented_tool_response"
     },
     "hook_entry": {
       "basis": "vendor-docs",
@@ -86,7 +86,8 @@
       "cwd"
     ],
     "output": [
-      "tool_output"
+      "tool_response.error",
+      "tool_response.output"
     ],
     "path": [
       "tool_input.file_path",

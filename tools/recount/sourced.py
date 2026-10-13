@@ -53,7 +53,39 @@ TRUST_HINT = {
 #:   (code.claude.com/docs/en/hooks, read 2026-10-13): PostToolUse carries `tool_response`,
 #:   PostToolUseFailure carries `error`. No live capture covers either event, and the
 #:   `tool_output` the chain read alone before is attested by no source.
+#: - devin fields: the output chain is the vendor's lifecycle-hooks reference
+#:   (docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks, PostToolUse, read 2026-10-13):
+#:   `tool_response` is an object with `success`, `output` and `error` (string or null). The
+#:   `tool_output` the chain read before is attested by no Devin source, and no live run covers it.
+#: - grok hook_entry: the wrapper is the row's docs read (2026-08-26); also_wires PermissionDenied is
+#:   docs.x.ai/build/features/hooks (read 2026-10-13: "The permission system denies a tool call").
+#: - grok claims: the twin-key self-identification is the vendor's source, xai-org/grok-build@2bdd1d6
+#:   (crates/codegen/xai-grok-hooks/src/event.rs, to_hook_json writes hook_event_name beside the
+#:   camelCase hookEventName for every event), read 2026-10-13.
+#: - claude_code hook_entry: the wrapper is the row's live run (2026-09-07); watch_list_events is
+#:   the vendor's hooks reference (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13),
+#:   not yet seen live, so the claim as a whole now rests on the docs.
 EVIDENCE = {
+    ("grok", "hook_entry"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_grok.py::test_tool_failure_also_wires_permission_denied",
+    },
+    ("grok", "claims"): {
+        "basis": "vendor-source",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_grok.py::test_a_new_grok_event_is_claimed_and_parsed_as_unknown",
+    },
+    ("devin", "fields"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_adapter_devin.py::test_post_tool_output_is_read_from_the_documented_tool_response",
+    },
+    ("claude_code", "hook_entry"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-13",
+        "test": "tests/test_install_watch.py::test_file_changed_is_not_wired_without_a_watch_list",
+    },
     ("claude_code", "fields"): {
         "basis": "vendor-docs",
         "date": "2026-10-13",

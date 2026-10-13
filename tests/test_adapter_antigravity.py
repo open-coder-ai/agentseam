@@ -48,12 +48,21 @@ def test_ask_is_honoured_here_unlike_most_agents():
     assert json.loads(text) == {"decision": "ask", "reason": "confirm this"}
 
 
-def test_a_degraded_rewrite_denies_rather_than_prompting():
+def test_transform_emits_the_documented_overwrite():
+    """antigravity.google/docs/hooks (read 2026-10-13): PreToolUse's `overwrite` is "merged (shallow
+    top-level merge) into toolCall.args before execution", beside the required `decision`."""
+    assert A.can_transform("antigravity", A.PRE_TOOL)
+    text, code, _, _ = A.handle(AG_PRE_TOOL, lambda e: Decision.transform({"CommandLine": "npm test -- --ci"}, "ci"))
+    assert code == 0
+    assert json.loads(text) == {"decision": "allow", "overwrite": {"CommandLine": "npm test -- --ci"}, "reason": "ci"}
+
+
+def test_a_transform_without_replacement_arguments_denies_rather_than_prompting():
     """Prompting would offer the user the *unmodified* call -- the thing the handler rejected."""
-    text, _, _, _ = A.handle(AG_PRE_TOOL, lambda e: Decision.rewrite({"CommandLine": "true"}, "redact it"))
+    text, _, _, _ = A.handle(AG_PRE_TOOL, lambda e: Decision.transform(None, "redact it"))
     body = json.loads(text)
     assert body["decision"] == "deny"
-    assert "redact it" in body["reason"] and "cannot modify" in body["reason"]
+    assert "redact it" in body["reason"] and "no replacement arguments" in body["reason"]
 
 
 def test_post_tool_use_is_told_apart_by_its_error_field_and_returns_empty():
@@ -85,7 +94,7 @@ def test_stop_names_why_ask_or_rewrite_became_continue():
 
     rewrite = json.loads(A.handle(AG_STOP, lambda e: Decision.rewrite({"x": "y"}, "needs change"))[0])
     assert rewrite["decision"] == "continue"
-    assert "needs change" in rewrite["reason"] and "cannot modify" in rewrite["reason"]
+    assert "needs change" in rewrite["reason"] and "only at PreToolUse" in rewrite["reason"]
 
 
 def test_invocation_events_are_unmapped_because_they_are_indistinguishable():
@@ -108,6 +117,7 @@ def test_hook_config_owns_one_named_group():
 def test_antigravity_blocks_but_we_do_not_claim_it_fails_closed():
     """The documentation does not state a fail mode, so the weaker claim is recorded."""
     assert A.can_block("antigravity", A.PRE_TOOL)
-    assert not A.can_rewrite("antigravity", A.PRE_TOOL)
+    assert not A.can_transform("antigravity", A.STOP)
+    assert A.MATRIX["antigravity"]["events"]["pre_tool"]["evidence"]["rewrite"]["basis"] == "vendor-docs"
     assert A.enforcement_level("antigravity", A.PRE_TOOL) == "best-effort"
     assert "not documented" in A.MATRIX["antigravity"]["notes"]

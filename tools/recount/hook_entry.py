@@ -8,6 +8,15 @@ _EXTRA = {
     # Event wiring, not an entry field: pre_mcp_tool_use is wired BESIDE pre_run_command
     # whenever pre_tool is (windsurf.py:106-107), so it must not be copied into entries.
     "windsurf": {"also_wires": {"pre_tool": "pre_mcp_tool_use"}},
+    # FileChanged's matcher is the watch list itself: "each segment is registered as a literal
+    # filename", and "Claude Code starts the watcher only when something names a file to watch"
+    # (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13).
+    "claude_code": {"watch_list_events": ["file_changed"]},
+    # PermissionDenied fires "when the permission system denies a tool call" and parses as
+    # tool_failure, so it is wired beside PostToolUseFailure (docs.x.ai/build/features/hooks, read
+    # 2026-10-13). StopFailure ("ends with an API error") is an API failure, not the turn end a
+    # stop handler is installed for, and PostCompact parses as unknown, so neither is wired.
+    "grok": {"also_wires": {"tool_failure": "PermissionDenied"}},
     "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
     "tabnine": {"entry_extra": {"name": "agentseam"}},
     # goose reads on_failure at PreToolUse only and ignores it elsewhere; "block" makes a

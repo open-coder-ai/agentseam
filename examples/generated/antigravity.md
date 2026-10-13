@@ -17,14 +17,14 @@ block is produced by running agentseam, so it is what this agent actually gets.
 
 | | |
 |---|---|
-| tier | `block` |
+| tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
-| can block / transform | yes / no |
+| can block / transform | yes / yes |
 | hooks covered | 3 |
 | hook config | `.agents/hooks.json` |
 | evidence | `vendor-docs` — vendor hooks documentation read directly (per-event schemas and decision vocabulary) |
 
-Richest decision vocabulary here -- allow, deny, ask, force_ask and deny_unless_prior_grant -- but no rewrite, since permissionOverrides widens permissions rather than changing arguments. The payload carries NO event name, so the event is inferred from shape, and PreToolUse/PostToolUse differ only by an `error` field documented as empty rather than absent; ties go to PreToolUse because the opposite guess would skip the gate. PreInvocation and PostInvocation have identical payloads and are unmapped. Fail mode is not documented, so the weaker claim (open) is recorded rather than a guess in our own favour.
+Richest decision vocabulary here -- allow, auto_approve, deny, ask, force_ask and deny_unless_prior_grant (https://antigravity.google/docs/hooks, read 2026-10-13). PreToolUse can rewrite: its documented `overwrite` object is merged into toolCall.args (shallow, top level) before the tool runs, so a transform is {"decision": "allow", "overwrite": ...} -- a key the replacement input leaves out is kept, not removed. permissionOverrides only widens permissions and is not used. Stop's `decision: "continue"` keeps the agent going; any other value allows the stop. All of this is read from the docs, not run. The payload carries NO event name, so the event is inferred from shape, and PreToolUse/PostToolUse differ only by an `error` field documented as empty rather than absent; ties go to PreToolUse because the opposite guess would skip the gate. PreInvocation and PostInvocation have identical payloads and are unmapped. Fail mode is not documented, so the weaker claim (open) is recorded rather than a guess in our own favour.
 
 ## What `agentseam install` writes
 
@@ -37,8 +37,10 @@ One handler wired for every hook this agent supports.
   "agentseam": {
     "PostToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -47,8 +49,10 @@ One handler wired for every hook this agent supports.
     ],
     "PreToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -57,8 +61,10 @@ One handler wired for every hook this agent supports.
     ],
     "Stop": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -135,10 +141,8 @@ Exit code: `0`
 
 **`Decision.transform()`** — the handler wants the input changed
 
-> reduced to `escalate`: this agent cannot transform
-
 ```json
-{"decision": "deny", "reason": "redacting the secret (Antigravity cannot modify a tool call)"}
+{"decision": "allow", "overwrite": {"content": "AWS_SECRET_ACCESS_KEY=<redacted>"}, "reason": "redacting the secret"}
 ```
 
 Exit code: `0`
