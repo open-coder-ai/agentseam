@@ -34,7 +34,7 @@
         "hook_event_name": "post_tool",
         "parent_session_id": null,
         "session_id": "example",
-        "tool_call_id": "call-2",
+        "tool_call_id": "c2",
         "tool_error": "1 test failed",
         "tool_input": {
           "command": "npm test"
@@ -43,7 +43,7 @@
         "tool_output": null,
         "tool_output_text": "1 test failed",
         "tool_status": "failure",
-        "transcript_path": "/repo/.vibe/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "pre_tool": {
@@ -78,13 +78,13 @@
         "hook_event_name": "pre_tool",
         "parent_session_id": null,
         "session_id": "example",
-        "tool_call_id": "call-1",
+        "tool_call_id": "c1",
         "tool_input": {
           "content": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
           "file_path": "AGENTS.md"
         },
         "tool_name": "write_file",
-        "transcript_path": "/repo/.vibe/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     },
     "stop": {
@@ -119,7 +119,7 @@
         "hook_event_name": "post_agent",
         "parent_session_id": null,
         "session_id": "example",
-        "transcript_path": "/repo/.vibe/session.jsonl"
+        "transcript_path": "/repo/s.jsonl"
       }
     }
   },
