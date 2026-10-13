@@ -32,6 +32,12 @@
         "conversation_id": "example",
         "cursor_version": "1.7.2",
         "cwd": "/repo",
+        "edits": [
+          {
+            "new_string": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+            "old_string": ""
+          }
+        ],
         "file_path": "AGENTS.md",
         "generation_id": "gen-1",
         "hook_event_name": "afterFileEdit",
