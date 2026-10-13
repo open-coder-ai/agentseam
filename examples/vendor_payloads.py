@@ -96,6 +96,9 @@ def _claude_shaped(agent, event, vendor_event, base, camel=False):
         raw["content"] = "Prefer pnpm. Tests live beside source."
     elif event == FILE_CHANGED:
         raw["file_path"] = MEMORY_FILE
+        if agent == "cursor":
+            # cursor.com/docs/hooks: afterFileEdit's input is {file_path, edits: [{old_string, new_string}]}.
+            raw["edits"] = [{"old_string": "", "new_string": SECRET}]
     return raw
 
 

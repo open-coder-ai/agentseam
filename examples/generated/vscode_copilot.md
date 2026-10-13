@@ -37,6 +37,7 @@ One handler wired for every hook this agent supports.
   "hooks": {
     "PostToolUse": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -46,6 +47,7 @@ One handler wired for every hook this agent supports.
     ],
     "PreToolUse": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -55,6 +57,7 @@ One handler wired for every hook this agent supports.
     ],
     "SessionStart": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -64,6 +67,7 @@ One handler wired for every hook this agent supports.
     ],
     "Stop": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -73,6 +77,7 @@ One handler wired for every hook this agent supports.
     ],
     "SubagentStart": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -82,6 +87,7 @@ One handler wired for every hook this agent supports.
     ],
     "SubagentStop": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
@@ -91,6 +97,7 @@ One handler wired for every hook this agent supports.
     ],
     "UserPromptSubmit": [
       {
+        "_agentseam": "agentseam",
         "bash": "python3 guard.py",
         "command": "python3 guard.py",
         "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",

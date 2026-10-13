@@ -37,58 +37,69 @@ One handler wired for every hook this agent supports.
   "hooks": {
     "afterFileEdit": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "beforeSubmitPrompt": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py",
         "failClosed": true
       }
     ],
     "postToolUse": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "postToolUseFailure": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "preCompact": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "preToolUse": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py",
         "failClosed": true
       }
     ],
     "sessionEnd": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "sessionStart": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "stop": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "subagentStart": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ],
     "subagentStop": [
       {
+        "_agentseam": "agentseam",
         "command": "python3 guard.py"
       }
     ]
@@ -527,6 +538,12 @@ The agent sends:
   "conversation_id": "example",
   "cursor_version": "1.7.2",
   "cwd": "/repo",
+  "edits": [
+    {
+      "new_string": "AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-KEY",
+      "old_string": ""
+    }
+  ],
   "file_path": "AGENTS.md",
   "generation_id": "gen-1",
   "hook_event_name": "afterFileEdit",
@@ -543,6 +560,7 @@ which normalizes to:
 event    = file_changed
 tool     = afterFileEdit
 path     = AGENTS.md
+content  = AWS_SECRET_ACCESS_KEY=EXAMPLE-PLACEHOLDER-NOT-A-
 ```
 
 A `Decision.deny()` here produces:

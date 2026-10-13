@@ -4,11 +4,22 @@ from __future__ import annotations
 
 import json
 
+from agentseam.install_config import mark, unwatched
 from agentseam.install_hook_dir import script
 
 
 def _fence(text, lang=""):
     return "```%s\n%s\n```" % (lang, text.rstrip("\n"))
+
+
+def install_section(mod, events, command):
+    """What `install` writes for these events: the events it leaves out dropped and named, and
+    a JSON config's entries carrying the ownership marker exactly as `install` puts it."""
+    events, left_out = unwatched(mod, mod.AGENT, events, None)
+    config = mod.hook_config(events, command)
+    if getattr(mod, "CONFIG_FORMAT", "json") == "json":
+        config = mark(config, "agentseam")
+    return install_body(mod, config) + ("\n\n%s.\n" % left_out if left_out else "")
 
 
 def install_body(mod, config):

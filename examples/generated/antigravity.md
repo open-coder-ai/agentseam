@@ -37,8 +37,10 @@ One handler wired for every hook this agent supports.
   "agentseam": {
     "PostToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -47,8 +49,10 @@ One handler wired for every hook this agent supports.
     ],
     "PreToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -57,8 +61,10 @@ One handler wired for every hook this agent supports.
     ],
     "Stop": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }

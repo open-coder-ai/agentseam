@@ -35,20 +35,12 @@ One handler wired for every hook this agent supports.
 ```json
 {
   "hooks": {
-    "FileChanged": [
-      {
-        "hooks": [
-          {
-            "command": "python3 guard.py",
-            "type": "command"
-          }
-        ]
-      }
-    ],
     "InstructionsLoaded": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -57,8 +49,10 @@ One handler wired for every hook this agent supports.
     ],
     "PostToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -67,8 +61,10 @@ One handler wired for every hook this agent supports.
     ],
     "PostToolUseFailure": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -77,8 +73,10 @@ One handler wired for every hook this agent supports.
     ],
     "PreCompact": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -87,8 +85,10 @@ One handler wired for every hook this agent supports.
     ],
     "PreToolUse": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -97,8 +97,10 @@ One handler wired for every hook this agent supports.
     ],
     "SessionEnd": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -107,8 +109,10 @@ One handler wired for every hook this agent supports.
     ],
     "SessionStart": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -117,8 +121,10 @@ One handler wired for every hook this agent supports.
     ],
     "Stop": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -127,8 +133,10 @@ One handler wired for every hook this agent supports.
     ],
     "SubagentStart": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -137,8 +145,10 @@ One handler wired for every hook this agent supports.
     ],
     "SubagentStop": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -147,8 +157,10 @@ One handler wired for every hook this agent supports.
     ],
     "UserPromptSubmit": [
       {
+        "_agentseam": "agentseam",
         "hooks": [
           {
+            "_agentseam": "agentseam",
             "command": "python3 guard.py",
             "type": "command"
           }
@@ -158,6 +170,9 @@ One handler wired for every hook this agent supports.
   }
 }
 ```
+
+file_changed not wired for claude_code: it watches only the literal file names its matcher lists, and starts no watcher without one; pass watch=[...] (--watch FILE) to wire it.
+
 
 ## Every hook, one at a time
 
