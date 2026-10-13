@@ -137,6 +137,10 @@
       "transform": "input requires modification, which this gate cannot express",
       "transform_missing_input": "no replacement input was supplied"
     },
+    "flag_events": [
+      "postToolUse",
+      "postToolUseFailure"
+    ],
     "flag_note": "observed after the fact (%s cannot prevent it): %s",
     "flag_note_default": "policy violation",
     "gates": {

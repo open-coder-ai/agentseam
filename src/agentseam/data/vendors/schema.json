@@ -197,6 +197,10 @@
           "minLength": 1,
           "description": "top-level key a G1 allow body carries context_source's value under, when the decision is a plain allow with one (junie's additionalContext)."
         },
+        "flag_events": {
+          "$ref": "#/$defs/stringList",
+          "description": "cursor family: the post-hoc wire events whose output schema documents additional_context; a flag at any other post-hoc event is silent, since nothing printed there reaches the agent."
+        },
         "allow_silent_events": {
           "$ref": "#/$defs/stringList",
           "description": "vendor wire event names whose gate answers refusals but keeps every allow silent (junie's Stop)."
