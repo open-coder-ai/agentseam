@@ -1,6 +1,7 @@
 {
   "agent": "grok",
   "claims": {
+    "accept_any_name_when": "event_keys_are_twins",
     "accept_markers": [
       "hookEventName"
     ],
@@ -9,7 +10,7 @@
       "hookEventName"
     ],
     "mode": "marker",
-    "notes": "Grok Build sends hookEventName with grok's snake_case value (pre_tool_use) beside a hook_event_name key carrying the PascalCase name (github.com/xai-org/grok-build user-guide/10-hooks.md, read 2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older camelCase-only shape falls back to hookEventName, which is required either way.",
+    "notes": "Grok Build sends hookEventName with grok's snake_case value (pre_tool_use) beside a hook_event_name key carrying the PascalCase name (github.com/xai-org/grok-build user-guide/10-hooks.md, read 2026-10-11 against v1.0.50), so hook_event_name is read first, but only when event_keys_agree(raw) finds hookEventName naming the same event (its snake_case twin, or the same text); a payload whose two keys disagree is not grok's (Kimi Code sends both, with a camelCase hookEventName). The older camelCase-only shape falls back to hookEventName, which is required either way. Grok Build writes that twin pair for every event (xai-org/grok-build@2bdd1d6 crates/codegen/xai-grok-hooks/src/event.rs, to_hook_json), so an event name grok has no mapping for is still claimed when the pair is twins (event_keys_are_twins) and parses as unknown; the camelCase-only shape carries no such proof.",
     "reject_markers_unless_probe": {
       "event_keys_agree": [
         "hook_event_name"
@@ -36,9 +37,9 @@
   },
   "evidence": {
     "claims": {
-      "basis": "vendor-docs",
-      "date": "2026-08-26",
-      "test": "tests/test_examples.py::test_each_payload_is_claimed_by_its_own_adapter"
+      "basis": "vendor-source",
+      "date": "2026-10-13",
+      "test": "tests/test_adapter_grok.py::test_a_new_grok_event_is_claimed_and_parsed_as_unknown"
     },
     "config_path": {
       "basis": "vendor-docs",
@@ -62,8 +63,8 @@
     },
     "hook_entry": {
       "basis": "vendor-docs",
-      "date": "2026-08-26",
-      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+      "date": "2026-10-13",
+      "test": "tests/test_adapter_grok.py::test_tool_failure_also_wires_permission_denied"
     },
     "tools": {
       "basis": "vendor-docs",
@@ -110,6 +111,9 @@
     ]
   },
   "hook_entry": {
+    "also_wires": {
+      "tool_failure": "PermissionDenied"
+    },
     "matcher": true,
     "wrapper": "hooks_map"
   },

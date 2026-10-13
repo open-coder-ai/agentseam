@@ -275,7 +275,7 @@
         },
         "also_wires": {
           "type": "object",
-          "description": "canonical event -> a second wire event name also wired whenever that canonical event is (windsurf's pre_mcp_tool_use beside pre_run_command). Event wiring, not an entry field, which is why it does not live in entry_extra.",
+          "description": "canonical event -> a second wire event name also wired whenever that canonical event is (windsurf's pre_mcp_tool_use beside pre_run_command; grok's PermissionDenied beside PostToolUseFailure). Event wiring, not an entry field, which is why it does not live in entry_extra.",
           "additionalProperties": {"type": "string", "minLength": 1}
         }
       }
@@ -353,6 +353,10 @@
         "accept_any_name": {
           "type": "boolean",
           "description": "claim an event name absent from `events` once the payload has positively self-identified, so vendor drift reaches the caller as an UNKNOWN Event rather than as no adapter at all. Valid only where `client_types` cannot be null; pinned by tests/test_adapter_kimi_code.py."
+        },
+        "accept_any_name_when": {
+          "type": "string",
+          "description": "a named probe (see reject_probes) under which an event name absent from `events` is claimed, as accept_any_name does unconditionally: the payload's own self-identification for that event (grok's event_keys_are_twins, the snake_case/PascalCase key pair Grok Build writes for every event)."
         },
         "accept_when_all": {
           "type": "object",

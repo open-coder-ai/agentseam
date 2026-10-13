@@ -12,6 +12,11 @@ _EXTRA = {
     # filename", and "Claude Code starts the watcher only when something names a file to watch"
     # (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13).
     "claude_code": {"watch_list_events": ["file_changed"]},
+    # PermissionDenied fires "when the permission system denies a tool call" and parses as
+    # tool_failure, so it is wired beside PostToolUseFailure (docs.x.ai/build/features/hooks, read
+    # 2026-10-13). StopFailure ("ends with an API error") is an API failure, not the turn end a
+    # stop handler is installed for, and PostCompact parses as unknown, so neither is wired.
+    "grok": {"also_wires": {"tool_failure": "PermissionDenied"}},
     "codex_cli": {"entry_extra": {"commandWindows": "powershell wrapper (_windows.py)"}},
     "tabnine": {"entry_extra": {"name": "agentseam"}},
     # goose reads on_failure at PreToolUse only and ignores it elsewhere; "block" makes a

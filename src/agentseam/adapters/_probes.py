@@ -38,8 +38,16 @@ def event_keys_agree(raw):
     return snake == pascal or (snake.islower() and snake.replace("_", "") == pascal.lower())
 
 
+def event_keys_are_twins(raw):
+    """True when hookEventName is hook_event_name's snake_case twin, never the same text: Grok Build
+    writes both for every event (grok-build crates/codegen/xai-grok-hooks/src/event.rs, to_hook_json)."""
+    snake = raw.get("hookEventName") if isinstance(raw, dict) else None
+    return event_keys_agree(raw) and snake != raw.get("hook_event_name")
+
+
 PROBES = {
     "looks_like_claude_code": looks_like_claude_code,
     "names_a_single_underscore_mcp_tool": names_a_single_underscore_mcp_tool,
     "event_keys_agree": event_keys_agree,
+    "event_keys_are_twins": event_keys_are_twins,
 }

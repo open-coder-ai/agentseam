@@ -35,6 +35,18 @@ One handler wired for every hook this agent supports.
 ```json
 {
   "hooks": {
+    "PermissionDenied": [
+      {
+        "_agentseam": "agentseam",
+        "hooks": [
+          {
+            "_agentseam": "agentseam",
+            "command": "python3 guard.py",
+            "type": "command"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "_agentseam": "agentseam",

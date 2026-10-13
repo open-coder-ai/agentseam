@@ -170,7 +170,7 @@ def _engine_modules(cfg):
     """The engine modules this entry's data can reach, in splice order."""
     modules = []
     claims_cfg = cfg["claims"]
-    if claims_cfg.get("reject_probes") or claims_cfg.get("reject_markers_unless_probe"):
+    if any(claims_cfg.get(key) for key in ("reject_probes", "reject_markers_unless_probe", "accept_any_name_when")):
         modules.append("_probes")
     if any(key in ("commandWindows", "windows") for key in cfg["hook_entry"].get("entry_extra", {})):
         modules.append("_windows")
