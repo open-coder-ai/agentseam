@@ -157,7 +157,7 @@ to a silent pass-through.
 | Windsurf | block via exit code only; no file-write event | `.windsurf/hooks.json` | third-party-install · 2026-08-26 |
 | Devin | block + rewrite (fail-open) | `.devin/hooks.v1.json` | vendor-docs · 2026-08-26 |
 | Grok CLI (xAI Grok Build) | block on PreToolUse only (fail-open); the row predates Grok Build 1.0.13 and needs a live run | `.grok/hooks/agentseam.json` | vendor-docs · 2026-08-26 |
-| Antigravity | block, and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-08-26 |
+| Antigravity | block + rewrite at PreToolUse via the documented [`overwrite`](https://antigravity.google/docs/hooks) (read from docs, not run), and can refuse to let the agent stop (fail-open) | `.agents/hooks.json` | vendor-docs · 2026-10-13 |
 | Kimi Code CLI | block on 3 of its 20 events (fail-open) | `~/.kimi-code/config.toml` | vendor-docs · 2026-08-26 |
 | Junie CLI | block + ask + rewrite, all native (fail-open) | `~/.junie/config.json` | vendor-docs · 2026-08-26 |
 | Tabnine CLI | block on 6 of its 11 events, incl. post-tool (fail-open) | `.tabnine/agent/settings.json` | vendor-docs · 2026-08-26 |
