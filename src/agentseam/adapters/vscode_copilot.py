@@ -125,11 +125,10 @@ def is_cli_native(raw):
 
 def _cli_output(raw):
     """Copilot's result object: camelCase, or its VS Code compatible snake_case twin."""
-    result = raw.get(_CLI_RESULT)
+    result = raw.get(_CLI_RESULT) or raw.get("tool_result")
     if isinstance(result, dict):
-        return result.get("textResultForLlm")
-    result = raw.get("tool_result")
-    return result.get("text_result_for_llm") if isinstance(result, dict) else None
+        return result.get("textResultForLlm") or result.get("text_result_for_llm")
+    return None
 
 
 def _implied_name(raw):
