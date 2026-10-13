@@ -11,7 +11,14 @@ from __future__ import annotations
 import sys
 from datetime import date
 
-from .. import contract, evidence_report, matrix, matrix_terms
+from .. import contract, evidence_report, matrix, matrix_evidence, matrix_terms
+
+#: What the reference driver measures where the documentation is silent (experiment.py).
+UNDOCUMENTED = "undocumented"
+
+#: Claim bases a documentation-silent reading cannot contradict: each was read from the
+#: vendor's source or watched on a running agent, which is more than the docs say.
+_OUTRANKS_DOCS = (matrix_terms.BASIS_LIVE, matrix_terms.BASIS_LIVE_PARTIAL, matrix_terms.BASIS_SOURCE)
 
 #: Measured field -> the matrix cell key it corresponds to, derived from the cell's own
 #: vocabulary (matrix_terms.CLAIM_FIELDS) rather than a hand-maintained partial table --
@@ -34,9 +41,11 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
     does not carry (`silence_means` on a row that has never measured it) is `unasserted`,
     not a disagreement -- absence is not a claim (task 3, 2026-09-07). A field the matrix
     has no home for at all (`baseline_ok`, a run-health check, not a vendor claim) is
-    `unrecorded`.
+    `unrecorded`. The reference's `undocumented` against a claim read from source or
+    watched live is `docs-silent`: silence in the docs is no evidence against either.
     """
-    cell = matrix.capability(results[0]["agent"], results[0].get("event", event))
+    agent, event = results[0]["agent"], results[0].get("event", event)
+    cell = matrix.capability(agent, event)
     rows = []
     for r in results:
         ((field, measured),) = r["measured"].items()
@@ -48,8 +57,15 @@ def diff_against_matrix(results, event=contract.PRE_TOOL):
         else:
             claimed = cell[key]
             status = "agrees" if claimed == measured else "DISAGREES"
+            if measured == UNDOCUMENTED and _outranks_docs(agent, event, key):
+                status = "docs-silent"
         rows.append({"trial": r["trial"], "field": field, "measured": measured, "asserted": claimed, "status": status})
     return rows
+
+
+def _outranks_docs(agent, event, key):
+    row = matrix.MATRIX.get(agent)
+    return bool(row) and matrix_evidence.claim_basis(row, event, key) in _OUTRANKS_DOCS
 
 
 def as_report(results, *, version=None, reporter=None, notes=None, today=None):
@@ -118,6 +134,10 @@ def render(results, *, agent, event, driver):
     print()
     for r in results:
         print("  %-10s %s" % (r["trial"], r["reading"]))
+    if any(d["status"] == "docs-silent" for d in diff_against_matrix(results)):
+        print(
+            "\ndocs-silent: the documentation does not say; the matrix's claim rests on a vendor-source or live-run record."
+        )
     if disagreements:
         print("\n%d disagreement(s): the matrix and this agent do not match." % disagreements)
     # Non-zero on disagreement, or the verb reports a mismatch and still tells its caller it
