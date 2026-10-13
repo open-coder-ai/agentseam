@@ -13,6 +13,7 @@ from .install_config import (
     MARKER,
     ConfigUnreadableError,
     apply_watch,
+    check_matcher,
     check_wireable,
     dump,
     fail_closed_kwarg,
@@ -39,6 +40,7 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     """Wire `command` for `events` into `agent`'s config. Returns the path written."""
     mod = adapters.get(agent)
     check_wireable(mod, agent, events)
+    check_matcher(mod, agent, matcher)
     events, why = unwatched(mod, agent, events, watch)
     if why and not events:
         raise ValueError(why)
