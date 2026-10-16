@@ -280,7 +280,7 @@ code review, your SAST suite or a penetration test; it refuses known classes whi
 
 ## Guardrails, not guarantees
 
-Tiers: `commit` is a git hook or CI gate that exits non-zero. `in-agent` is the agent's pre-tool hook: best-effort, and it fails open. `advisory` is rule text the agent reads. No agent reaches `enforced` today: 0 of 192 matrix cells are graded enforced. OWASP mappings are partial: 10 of 10 Agentic risks have a policy, 7 have a slice refused at commit, none is fully covered. The engine is frozen at the commit above. Chock does not stop every attack: it closes common, known entry points before they ship.
+Tiers: `commit` is a git hook or CI gate that exits non-zero. `in-agent` is the agent's pre-tool hook: best-effort, and it fails open. `advisory` is rule text the agent reads. No agent reaches `enforced` today: 0 of 324 matrix cells are graded enforced. OWASP mappings are partial: 10 of 10 Agentic risks have a policy, 7 have a slice refused at commit, none is fully covered. The engine is frozen at the commit above. Chock does not stop every attack: it closes common, known entry points before they ship.
 
 ## FAQ for people and agents
 
