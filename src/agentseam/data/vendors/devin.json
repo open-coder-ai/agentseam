@@ -62,6 +62,11 @@
       "date": "2026-08-26",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -107,6 +112,15 @@
     "bare": true,
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "partial",
+    "hooks": "unknown",
+    "how": "devin plugins install --local ./dir or a repo (sign-in needed); falls back to .claude-plugin/plugin.json when no .devin-plugin/plugin.json",
+    "loads": "yes",
+    "notes": "the docs promise only a root hooks.json; plugin hooks are best effort and fail open; exit 2 and a top-level decision block, HSO permissionDecision undocumented",
+    "payload": "Claude-shaped snake_case, Devin tool names (exec)",
+    "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {},

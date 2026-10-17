@@ -64,6 +64,11 @@
       "date": "2026-10-11",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-10-11",
@@ -130,6 +135,14 @@
   "hook_entry": {
     "matcher": false,
     "wrapper": "hook_dir"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "n/a",
+    "hooks": "n/a",
+    "how": "n/a; two package lanes only (Agent Plugins root plugin.json, Cline JS/TS modules)",
+    "loads": "no",
+    "payload": "n/a",
+    "source": "cline/cline@a42df8c sdk/packages/shared/src/storage/paths.ts (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": true,
   "tools": {

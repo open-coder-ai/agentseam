@@ -76,6 +76,11 @@
       "date": "2026-10-13",
       "test": "tests/test_adapter_grok.py::test_tool_failure_also_wires_permission_denied"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_grok_carries_the_witness_and_no_other_agent_does"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -126,6 +131,16 @@
     },
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "yes",
+    "hooks": "yes",
+    "how": "scans ~/.claude/plugins/*/ (user, auto-trusted) and .claude/plugins/*/ (project, needs trust), plus installed_plugins.json; grok plugin install <dir> --trust; manifest fallback .claude-plugin/plugin.json; off until enabled",
+    "loads": "yes",
+    "notes": "hooks run when enabled and trusted; HSO deny and exit 2 block, other failures fail open",
+    "payload": "grok's camelCase envelope with additive Claude snake_case aliases; camelCase authoritative; grok tool names (run_terminal_command)",
+    "source": "xai-org/grok-build@2bdd1d6 crates/codegen/xai-grok-agent/src/plugins/discovery.rs, docs/user-guide/10-hooks.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+    "witnessed": "guard and gate refusal: Grok Build 1.0.62 on Windows 11, 2026-10-17; guard and gate refused with the plugin installed by Claude Code, gate refused with it installed by grok plugin install <dir> --trust (org-plan witness/results/witness-grok-claude-plugin-2026-10-17.md at 25b9d9d)"
   },
   "needs_trust": true,
   "tools": {},

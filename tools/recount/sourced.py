@@ -6,6 +6,9 @@ replays them and `tests/test_vendor_config.py` pins the pairing rules.
 
 from __future__ import annotations
 
+import json
+import os
+
 #: The vendor's own token for the repository/project root, usable inside a hook command.
 #: claude_code: code.claude.com/docs/en/hooks ("Reference scripts by path", read
 #: 2026-09-01) -- ${CLAUDE_PROJECT_DIR} is "the project root where the session started",
@@ -20,6 +23,15 @@ REPO_ROOT_TOKEN = {"claude_code": "${CLAUDE_PROJECT_DIR}"}
 #: and user-guide/10-hooks.md:77 says these are scanned by default. Its dedup key is
 #: (event, command, url, matcher) (discovery.rs:233), so only an identical hook runs once.
 ALSO_READS = {"grok": [".claude/settings.json", ".claude/settings.local.json", ".cursor/hooks.json"]}
+
+#: Whether each agent loads a Claude Code plugin, transcribed from org-plan
+#: discovery/2026-10-17-claude-plugin-compat.md (CC-1, read 2026-10-17); unknown and partial
+#: rows stay so. Grok alone adds the owner's witness run (witness/results at org-plan 25b9d9d).
+with open(os.path.join(os.path.dirname(__file__), "claude_plugins.json"), encoding="utf-8") as _fh:
+    LOADS_CLAUDE_PLUGINS = json.load(_fh)
+_CLAUDE_PLUGINS_READ = "2026-10-17"
+_CLAUDE_PLUGINS_TEST = "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+_CLAUDE_PLUGINS_WITNESS_TEST = "tests/test_claude_plugins.py::test_grok_carries_the_witness_and_no_other_agent_does"
 
 #: Repo hook configs this agent read before its current `config_path`, and still reads as a
 #: fallback. windsurf: docs.devin.ai/desktop/cascade/hooks (read 2026-10-13), Workspace-Level --
@@ -200,6 +212,11 @@ def apply(agent, entry):
     if agent in TRUST_HINT:
         entry["needs_trust"] = True
         entry["trust_hint"] = TRUST_HINT[agent]
+    if agent in LOADS_CLAUDE_PLUGINS:
+        row = LOADS_CLAUDE_PLUGINS[agent]
+        entry["loads_claude_plugins"] = dict(row["entry"])
+        test = _CLAUDE_PLUGINS_WITNESS_TEST if "witnessed" in row["entry"] else _CLAUDE_PLUGINS_TEST
+        entry["evidence"]["loads_claude_plugins"] = {"basis": row["basis"], "date": _CLAUDE_PLUGINS_READ, "test": test}
     for (owner, claim), record in EVIDENCE.items():
         if owner == agent:
             entry["evidence"][claim] = dict(record)

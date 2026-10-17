@@ -53,6 +53,11 @@
       "date": "2026-10-13",
       "test": "tests/test_install_legacy.py::test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "third-party-install",
       "date": "2026-08-26",
@@ -101,6 +106,15 @@
   "legacy_config_paths": [
     ".windsurf/hooks.json"
   ],
+  "loads_claude_plugins": {
+    "deny_reply": "unknown",
+    "hooks": "unknown",
+    "how": "no plugin system documented",
+    "loads": "unknown",
+    "notes": "own hooks (not a Claude plugin): exit 2 only, recorded partial by CC-1",
+    "payload": "own (agent_action_name, tool_info)",
+    "source": "https://docs.devin.ai/desktop/cascade/hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+  },
   "needs_trust": false,
   "tools": {},
   "verdicts": {

@@ -63,6 +63,11 @@
       "date": "2026-08-26",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -109,6 +114,15 @@
   "hook_entry": {
     "matcher": true,
     "wrapper": "flat_list"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "n/a",
+    "hooks": "n/a",
+    "how": "n/a; manifest is kimi.plugin.json or .kimi-plugin/plugin.json only",
+    "loads": "no",
+    "notes": "own hooks are Claude-shaped snake_case and honour HSO and exit 2",
+    "payload": "n/a",
+    "source": "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins.html (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {},

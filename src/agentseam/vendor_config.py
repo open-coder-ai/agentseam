@@ -17,4 +17,10 @@ SCHEMA = load("vendors/schema.json")
 
 VENDOR_CONFIG = {agent: load("vendors/%s.json" % agent) for agent in sorted(ADAPTERS)}
 
-__all__ = ["SCHEMA", "VENDOR_CONFIG"]
+
+def loads_claude_plugins(agent):
+    """The recorded `loads_claude_plugins` row for `agent`, or None where none is recorded."""
+    return VENDOR_CONFIG.get(agent, {}).get("loads_claude_plugins")
+
+
+__all__ = ["SCHEMA", "VENDOR_CONFIG", "loads_claude_plugins"]

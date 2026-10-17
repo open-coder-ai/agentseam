@@ -38,6 +38,11 @@
       "date": "2026-10-17",
       "test": "tests/test_adapter_antigravity.py::test_hook_config_lists_stop_handlers_bare_as_documented"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -91,6 +96,15 @@
     "group": "agentseam",
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "n/a",
+    "hooks": "n/a",
+    "how": "n/a; needs a root plugin.json in its own schema (additionalProperties: false)",
+    "loads": "no",
+    "notes": "own hooks (not a Claude plugin) reply with a top-level decision, which CC-1 records as not honouring Claude's deny",
+    "payload": "own (camelCase toolCall)",
+    "source": "https://antigravity.google/docs/plugins (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {},

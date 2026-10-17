@@ -57,6 +57,11 @@
       "date": "2026-09-23",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "live-run-partial",
       "date": "2026-09-23",
@@ -109,6 +114,15 @@
   "hook_entry": {
     "matcher": false,
     "wrapper": "cursor"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "unknown",
+    "hooks": "unknown",
+    "how": "n/a for the documented formats (.cursor-plugin/plugin.json and a root plugin.json); unknown via the Third-Party Plugins toggle",
+    "loads": "unknown",
+    "notes": "recorded no for the documented plugin formats and unknown via the Third-Party Plugins toggle, so unknown overall; Claude Code settings hooks (not plugins) run by default, event and tool names mapped (Bash to Shell), HSO and exit 2 honoured",
+    "payload": "unknown",
+    "source": "https://cursor.com/docs/reference/plugins, https://cursor.com/docs/reference/third-party-hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {

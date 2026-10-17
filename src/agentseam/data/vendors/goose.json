@@ -55,6 +55,11 @@
       "date": "2026-10-11",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-10-11",
@@ -100,6 +105,15 @@
     },
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "partial",
+    "hooks": "yes",
+    "how": "place the folder in .agents/plugins/<name>/ or ~/.agents/plugins/<name>/ (loads by layout; .claude-plugin/plugin.json is not a goose manifest); no ~/.claude/plugins, no Claude marketplace",
+    "loads": "partial",
+    "notes": "hooks/hooks.json runs; exit 2 or {\"decision\":\"block\"} blocks; HSO is not parsed",
+    "payload": "own: key event, not hook_event_name; goose tool names (developer__shell)",
+    "source": "block/goose@bfcc6ee crates/goose/src/plugins/formats/open_plugins.rs, crates/goose/src/hooks/mod.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {
