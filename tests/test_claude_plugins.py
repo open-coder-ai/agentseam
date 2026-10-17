@@ -14,7 +14,31 @@ from validate_vendor_config import validate  # noqa: E402
 from agentseam.vendor_config import SCHEMA, VENDOR_CONFIG, loads_claude_plugins  # noqa: E402
 
 FIELD = "loads_claude_plugins"
-WITNESS_FILE = "witness/results/witness-grok-claude-plugin-2026-10-17.md"
+#: agent -> what its witness note must name: the run, the result file and the org-plan commit.
+WITNESSES = {
+    "grok": (
+        "guard",
+        "gate",
+        "refus",
+        "Grok Build 1.0.62",
+        "2026-10-17",
+        "witness/results/witness-grok-claude-plugin-2026-10-17.md",
+        "25b9d9d",
+    ),
+    "vscode_copilot": (
+        "Copilot CLI only, not VS Code",
+        "guard",
+        "gate",
+        "refused by preToolUse deny",
+        "Copilot CLI 1.0.98",
+        "Windows 11",
+        "2026-10-17",
+        "copilot plugin install <dir>",
+        "deprecated",
+        "witness/results/witness-copilot-cli-claude-plugin-2026-10-17.md",
+        "6516f57",
+    ),
+}
 
 #: (loads, hooks, deny_reply) per agent, as org-plan discovery/2026-10-17-claude-plugin-compat.md records them.
 DISCOVERY_ROWS = {
@@ -49,15 +73,16 @@ def test_each_entry_records_the_discovery_row():
         assert record["date"] == "2026-10-17", agent
 
 
-def test_grok_carries_the_witness_and_no_other_agent_does():
+def test_only_the_witnessed_agents_carry_a_witness():
     witnessed = {agent for agent, entry in VENDOR_CONFIG.items() if "witnessed" in entry[FIELD]}
-    assert witnessed == {"grok"}
-    note = VENDOR_CONFIG["grok"][FIELD]["witnessed"]
-    for needle in ("guard", "gate", "refus", "Grok Build 1.0.62", "2026-10-17", WITNESS_FILE, "25b9d9d"):
-        assert needle in note, needle
-    record = VENDOR_CONFIG["grok"]["evidence"][FIELD]
-    assert record["basis"] == "vendor-source"
-    assert record["test"].endswith("::test_grok_carries_the_witness_and_no_other_agent_does")
+    assert witnessed == set(WITNESSES)
+    for agent, needles in WITNESSES.items():
+        note = VENDOR_CONFIG[agent][FIELD]["witnessed"]
+        for needle in needles:
+            assert needle in note, (agent, needle)
+        record = VENDOR_CONFIG[agent]["evidence"][FIELD]
+        assert record["basis"] == "vendor-source", agent
+        assert record["test"].endswith("::test_only_the_witnessed_agents_carry_a_witness"), agent
 
 
 def test_a_no_or_unknown_load_never_reports_a_hook_or_deny_verdict():
@@ -74,7 +99,8 @@ def test_vscode_copilot_also_records_the_copilot_cli_row():
         "Copilot CLI",
         "copilot plugin install",
         ".claude-plugin/plugin.json",
-        "nested hookSpecificOutput unknown",
+        "nested hookSpecificOutput unknown from the docs",
+        "settled by the Copilot CLI 1.0.98 witness for a shell command and a file write",
     ):
         assert needle in row["notes"], needle
     assert "github/docs@dae83f7d" in row["source"]

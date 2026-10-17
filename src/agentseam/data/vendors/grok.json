@@ -79,7 +79,7 @@
     "loads_claude_plugins": {
       "basis": "vendor-source",
       "date": "2026-10-17",
-      "test": "tests/test_claude_plugins.py::test_grok_carries_the_witness_and_no_other_agent_does"
+      "test": "tests/test_claude_plugins.py::test_only_the_witnessed_agents_carry_a_witness"
     },
     "tools": {
       "basis": "vendor-docs",
