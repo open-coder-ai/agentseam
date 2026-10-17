@@ -26,12 +26,13 @@ ALSO_READS = {"grok": [".claude/settings.json", ".claude/settings.local.json", "
 
 #: Whether each agent loads a Claude Code plugin, transcribed from org-plan
 #: discovery/2026-10-17-claude-plugin-compat.md (CC-1, read 2026-10-17); unknown and partial
-#: rows stay so. Grok alone adds the owner's witness run (witness/results at org-plan 25b9d9d).
+#: rows stay so. Grok (org-plan 25b9d9d) and vscode_copilot's Copilot CLI (org-plan 6516f57) add
+#: the owner's witness runs, from witness/results.
 with open(os.path.join(os.path.dirname(__file__), "claude_plugins.json"), encoding="utf-8") as _fh:
     LOADS_CLAUDE_PLUGINS = json.load(_fh)
 _CLAUDE_PLUGINS_READ = "2026-10-17"
 _CLAUDE_PLUGINS_TEST = "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
-_CLAUDE_PLUGINS_WITNESS_TEST = "tests/test_claude_plugins.py::test_grok_carries_the_witness_and_no_other_agent_does"
+_CLAUDE_PLUGINS_WITNESS_TEST = "tests/test_claude_plugins.py::test_only_the_witnessed_agents_carry_a_witness"
 
 #: Repo hook configs this agent read before its current `config_path`, and still reads as a
 #: fallback. windsurf: docs.devin.ai/desktop/cascade/hooks (read 2026-10-13), Workspace-Level --
