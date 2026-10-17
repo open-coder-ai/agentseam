@@ -143,7 +143,8 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ]
+            ],
+            "matcher": "*"
           }
         ],
         "PreToolUse": [
@@ -153,17 +154,14 @@
                 "command": "python3 guard.py",
                 "type": "command"
               }
-            ]
+            ],
+            "matcher": "*"
           }
         ],
         "Stop": [
           {
-            "hooks": [
-              {
-                "command": "python3 guard.py",
-                "type": "command"
-              }
-            ]
+            "command": "python3 guard.py",
+            "type": "command"
           }
         ]
       }
@@ -195,12 +193,8 @@
           ],
           "Stop": [
             {
-              "hooks": [
-                {
-                  "command": "python3 guard.py",
-                  "type": "command"
-                }
-              ]
+              "command": "python3 guard.py",
+              "type": "command"
             }
           ]
         }

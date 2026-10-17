@@ -264,7 +264,11 @@
         "default_match": {
           "type": "string",
           "minLength": 1,
-          "description": "flat_list only: the matcher written at a tool event when the caller passes none (mistral_vibe documents match as required for pre_tool and post_tool)."
+          "description": "flat_list and hooks_map: the matcher written at a tool event when the caller passes none (mistral_vibe documents match as required for pre_tool and post_tool; antigravity documents \"*\" as matching all tools and shows a matcher on every tool-event group)."
+        },
+        "flat_events": {
+          "$ref": "#/$defs/stringList",
+          "description": "hooks_map only: wire events whose handlers sit directly in the event's list, with no {matcher, hooks} group around them (antigravity's matcher-ignored events, Stop among them)."
         },
         "fail_closed_rule": {
           "type": "object",

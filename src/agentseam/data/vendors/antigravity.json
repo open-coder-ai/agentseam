@@ -35,8 +35,8 @@
     },
     "hook_entry": {
       "basis": "vendor-docs",
-      "date": "2026-08-26",
-      "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
+      "date": "2026-10-17",
+      "test": "tests/test_adapter_antigravity.py::test_hook_config_lists_stop_handlers_bare_as_documented"
     },
     "tools": {
       "basis": "vendor-docs",
@@ -84,6 +84,10 @@
     ]
   },
   "hook_entry": {
+    "default_match": "*",
+    "flat_events": [
+      "Stop"
+    ],
     "group": "agentseam",
     "matcher": true,
     "wrapper": "hooks_map"

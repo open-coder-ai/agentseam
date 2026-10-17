@@ -108,9 +108,13 @@ def _default_wrapper(cfg, reverse, canonical_events, command, matcher):
         for wire in (name, hook_entry.get("also_wires", {}).get(ev)):
             if not wire:
                 continue
+            if wire in hook_entry.get("flat_events", ()):
+                hooks.setdefault(wire, []).append(_hook_dict(cfg, command))
+                continue
             entry = {"hooks": [_hook_dict(cfg, command)]}
-            if matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
-                entry["matcher"] = matcher
+            wire_matcher = matcher or hook_entry.get("default_match")
+            if wire_matcher and hook_entry["matcher"] and ev in _MATCHER_EVENTS:
+                entry["matcher"] = wire_matcher
             hooks.setdefault(wire, []).append(entry)
     if hook_entry.get("group"):
         return {hook_entry["group"]: hooks}

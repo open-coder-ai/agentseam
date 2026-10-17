@@ -79,7 +79,18 @@ TRUST_HINT = {
 #: - claude_code hook_entry: the wrapper is the row's live run (2026-09-07); watch_list_events is
 #:   the vendor's hooks reference (code.claude.com/docs/en/hooks, FileChanged, read 2026-10-13),
 #:   not yet seen live, so the claim as a whole now rests on the docs.
+#: - antigravity hook_entry: antigravity.google/docs/hooks (read 2026-10-17), "The `hooks.json` file
+#:   maps hook names to their event configurations"; its example gives tool events {matcher, hooks}
+#:   groups and the matcher-ignored events (SessionStart, PreInvocation) bare {type, command} handlers,
+#:   and the events table marks Stop "N/A (matcher ignored)"; "`\"\"` or `\"*\"`: Match all tools".
+#:   Observed, not witnessed: a maintainer's Antigravity IDE log (2026-10-17)
+#:   rejected the grouped Stop entry, `invalid hook "agentseam": command hook must specify 'command'`.
 EVIDENCE = {
+    ("antigravity", "hook_entry"): {
+        "basis": "vendor-docs",
+        "date": "2026-10-17",
+        "test": "tests/test_adapter_antigravity.py::test_hook_config_lists_stop_handlers_bare_as_documented",
+    },
     ("grok", "hook_entry"): {
         "basis": "vendor-docs",
         "date": "2026-10-13",

@@ -57,9 +57,16 @@ def _classify(agent, no_matcher, with_matcher):
         keys = [k for k in no_matcher if isinstance(no_matcher[k], dict)]
         group, table = (keys[0], no_matcher[keys[0]]) if len(keys) == 1 else (None, no_matcher)
         bare = group is None
-    sample = next(iter(table.values()))[0]
-    wrapper = "hooks_map" if "hooks" in sample else "flat_entries"
+    grouped = {wire: "hooks" in entries[0] for wire, entries in table.items()}
+    wrapper = "hooks_map" if any(grouped.values()) else "flat_entries"
     out = {"wrapper": wrapper, "matcher": matcher_effective}
+    if wrapper == "hooks_map" and not all(grouped.values()):
+        # antigravity: matcher-ignored events list their handlers bare, with no {matcher, hooks} group
+        out["flat_events"] = sorted(wire for wire, has_group in grouped.items() if not has_group)
+    defaults = {entries[0]["matcher"] for entries in table.values() if "matcher" in entries[0]}
+    if wrapper == "hooks_map" and defaults:
+        # the matcher hook_config() writes when the caller passes none
+        (out["default_match"],) = defaults
     if bare:
         out["bare"] = True
     if group:
