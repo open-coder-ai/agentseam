@@ -114,6 +114,15 @@ def test_hook_config_owns_one_named_group():
     assert entry["hooks"][0] == {"type": "command", "command": "guard.py"}
 
 
+def test_hook_config_lists_stop_handlers_bare_as_documented():
+    """Matcher-ignored events take bare handlers; a {hooks} group there lacks `command` and is rejected."""
+    mod = A.adapters.get("antigravity")
+    config = mod.hook_config([A.PRE_TOOL, A.POST_TOOL, A.STOP], "guard.py")["agentseam"]
+    assert config["Stop"] == [{"type": "command", "command": "guard.py"}]
+    for wire in ("PreToolUse", "PostToolUse"):
+        assert config[wire] == [{"matcher": "*", "hooks": [{"type": "command", "command": "guard.py"}]}]
+
+
 def test_antigravity_blocks_but_we_do_not_claim_it_fails_closed():
     """The documentation does not state a fail mode, so the weaker claim is recorded."""
     assert A.can_block("antigravity", A.PRE_TOOL)
