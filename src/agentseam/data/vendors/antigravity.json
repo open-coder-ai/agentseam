@@ -98,11 +98,11 @@
     "wrapper": "hooks_map"
   },
   "loads_claude_plugins": {
-    "deny_reply": "no",
+    "deny_reply": "n/a",
     "hooks": "n/a",
     "how": "n/a; needs a root plugin.json in its own schema (additionalProperties: false)",
     "loads": "no",
-    "notes": "own hooks reply with a top-level decision",
+    "notes": "own hooks (not a Claude plugin) reply with a top-level decision, which CC-1 records as not honouring Claude's deny",
     "payload": "own (camelCase toolCall)",
     "source": "https://antigravity.google/docs/plugins (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },

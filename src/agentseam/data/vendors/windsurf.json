@@ -107,11 +107,11 @@
     ".windsurf/hooks.json"
   ],
   "loads_claude_plugins": {
-    "deny_reply": "partial",
+    "deny_reply": "unknown",
     "hooks": "unknown",
     "how": "no plugin system documented",
     "loads": "unknown",
-    "notes": "own hooks: exit 2 only",
+    "notes": "own hooks (not a Claude plugin): exit 2 only, recorded partial by CC-1",
     "payload": "own (agent_action_name, tool_info)",
     "source": "https://docs.devin.ai/desktop/cascade/hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },

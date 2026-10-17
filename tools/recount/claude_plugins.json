@@ -2,11 +2,11 @@
   "antigravity": {
     "basis": "vendor-docs",
     "entry": {
-      "deny_reply": "no",
+      "deny_reply": "n/a",
       "hooks": "n/a",
       "how": "n/a; needs a root plugin.json in its own schema (additionalProperties: false)",
       "loads": "no",
-      "notes": "own hooks reply with a top-level decision",
+      "notes": "own hooks (not a Claude plugin) reply with a top-level decision, which CC-1 records as not honouring Claude's deny",
       "payload": "own (camelCase toolCall)",
       "source": "https://antigravity.google/docs/plugins (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
     }
@@ -85,11 +85,11 @@
   "gemini_cli": {
     "basis": "vendor-source",
     "entry": {
-      "deny_reply": "partial",
+      "deny_reply": "n/a",
       "hooks": "n/a",
       "how": "n/a; extensions need gemini-extension.json",
       "loads": "no",
-      "notes": "own hooks: exit 2 and a top-level decision; a one-shot gemini hooks migrate --from-claude exists",
+      "notes": "own hooks (not a Claude plugin): exit 2 and a top-level decision, recorded partial by CC-1; a one-shot gemini hooks migrate --from-claude exists",
       "payload": "own events (BeforeTool), snake_case keys",
       "source": "google-gemini/gemini-cli@ed96fae docs/extensions/reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
     }
@@ -170,11 +170,11 @@
   "tabnine": {
     "basis": "vendor-docs",
     "entry": {
-      "deny_reply": "partial",
+      "deny_reply": "unknown",
       "hooks": "unknown",
       "how": "tabnine extensions install <src> translates if necessary; Claude never named",
       "loads": "unknown",
-      "notes": "own hooks: exit 2 and decision: deny; the CLI is in maintenance mode until 2026-12-31",
+      "notes": "own hooks (not a Claude plugin): exit 2 and decision: deny, recorded partial by CC-1; the CLI is in maintenance mode until 2026-12-31",
       "payload": "own event names (BeforeTool)",
       "source": "https://docs.tabnine.com/main/getting-started/tabnine-cli/features/extensions (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
     }
@@ -186,19 +186,19 @@
       "hooks": "yes",
       "how": "Claude-format plugin by manifest location, from a marketplace (.claude-plugin/marketplace.json, anthropics/claude-code accepted) or chat.pluginLocations; needs chat.plugins.enabled",
       "loads": "yes",
-      "notes": "the Local harness ignores matchers, so every nested command for the event runs; HSO deny and exit 2 block",
+      "notes": "VS Code: the Local harness ignores matchers, so every nested command for the event runs; HSO deny and exit 2 block. Copilot CLI (chock's copilot client builds for this entry): loads yes via copilot plugin install <mkt entry | OWNER/REPO | git URL | ./path> or --plugin-dir, legacy manifest includes .claude-plugin/plugin.json, copilot plugin marketplace add anthropics/claude-code; hooks yes (hooks.json or hooks/hooks.json); payload Claude Code for PascalCase events (Claude tool names, e.g. Bash), Copilot camelCase otherwise; deny partial: exit 2 denies, flat permissionDecision documented, nested hookSpecificOutput unknown (closed source)",
       "payload": "Claude-shaped snake_case, but VS Code's own Local tool names",
-      "source": "microsoft/vscode-docs@ef0ca127 docs/agents/reference/agent-plugin-reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+      "source": "microsoft/vscode-docs@ef0ca127 docs/agents/reference/agent-plugin-reference.md; Copilot CLI: github/docs@dae83f7d content/copilot/reference/copilot-cli-reference/cli-plugin-reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
     }
   },
   "windsurf": {
     "basis": "vendor-docs",
     "entry": {
-      "deny_reply": "partial",
+      "deny_reply": "unknown",
       "hooks": "unknown",
       "how": "no plugin system documented",
       "loads": "unknown",
-      "notes": "own hooks: exit 2 only",
+      "notes": "own hooks (not a Claude plugin): exit 2 only, recorded partial by CC-1",
       "payload": "own (agent_action_name, tool_info)",
       "source": "https://docs.devin.ai/desktop/cascade/hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
     }

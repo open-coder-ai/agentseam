@@ -18,23 +18,23 @@ WITNESS_FILE = "witness/results/witness-grok-claude-plugin-2026-10-17.md"
 
 #: (loads, hooks, deny_reply) per agent, as org-plan discovery/2026-10-17-claude-plugin-compat.md records them.
 DISCOVERY_ROWS = {
-    "antigravity": ("no", "n/a", "no"),
+    "antigravity": ("no", "n/a", "n/a"),
     "claude_code": ("yes", "yes", "yes"),
     "cline": ("no", "n/a", "n/a"),
     "codex_cli": ("yes", "yes", "yes"),
     "cursor": ("unknown", "unknown", "unknown"),
     "devin": ("yes", "unknown", "partial"),
     "factory_droid": ("yes", "yes", "yes"),
-    "gemini_cli": ("no", "n/a", "partial"),
+    "gemini_cli": ("no", "n/a", "n/a"),
     "goose": ("partial", "yes", "partial"),
     "grok": ("yes", "yes", "yes"),
     "junie": ("yes", "yes", "partial"),
     "kimi_code": ("no", "n/a", "n/a"),
     "mistral_vibe": ("yes", "unknown", "unknown"),
     "openhands": ("yes", "yes", "partial"),
-    "tabnine": ("unknown", "unknown", "partial"),
+    "tabnine": ("unknown", "unknown", "unknown"),
     "vscode_copilot": ("yes", "yes", "yes"),
-    "windsurf": ("unknown", "unknown", "partial"),
+    "windsurf": ("unknown", "unknown", "unknown"),
 }
 
 
@@ -58,6 +58,26 @@ def test_grok_carries_the_witness_and_no_other_agent_does():
     record = VENDOR_CONFIG["grok"]["evidence"][FIELD]
     assert record["basis"] == "vendor-source"
     assert record["test"].endswith("::test_grok_carries_the_witness_and_no_other_agent_does")
+
+
+def test_a_no_or_unknown_load_never_reports_a_hook_or_deny_verdict():
+    implied = {"no": "n/a", "unknown": "unknown"}
+    for agent, entry in VENDOR_CONFIG.items():
+        row = entry[FIELD]
+        if row["loads"] in implied:
+            assert (row["hooks"], row["deny_reply"]) == (implied[row["loads"]],) * 2, agent
+
+
+def test_vscode_copilot_also_records_the_copilot_cli_row():
+    row = VENDOR_CONFIG["vscode_copilot"][FIELD]
+    for needle in (
+        "Copilot CLI",
+        "copilot plugin install",
+        ".claude-plugin/plugin.json",
+        "nested hookSpecificOutput unknown",
+    ):
+        assert needle in row["notes"], needle
+    assert "github/docs@dae83f7d" in row["source"]
 
 
 def test_the_field_travels_with_its_own_evidence():
