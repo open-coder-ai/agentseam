@@ -36,9 +36,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      # The tape drives the real CLI; install the tree being rendered.
+      # The tape drives the real CLI; install the tree being rendered. --no-deps because
+      # the package declares none, so nothing unverified is resolved (same as ci.yml).
       - name: Install agentseam
-        run: pip install .
+        run: pip install --no-deps -e .
 
       - name: Render tape
         uses: charmbracelet/vhs-action@f6d7db07a432fcd3b06772628d36a57f96d95dcf  # v2
@@ -67,7 +68,7 @@ jobs:
           python-version: "3.12"
 
       - name: Install agentseam
-        run: pip install .
+        run: pip install --no-deps -e .
 
       # The tape's hidden setup runs from /work/demo with HOME=/work/user, so the
       # frames show a fixed, neutral path instead of a runner-specific scratch dir.

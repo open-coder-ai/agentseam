@@ -28,10 +28,11 @@ jobs:
         with:
           python-version: "3.12"
 
-      # `pip install .` first so the block's own `pip install agentseam` is
+      # Install the tree first so the block's own `pip install agentseam` is
       # satisfied by the tree being tested instead of fetching a different release.
+      # --no-deps because the package declares none (same as ci.yml).
       - name: Install agentseam
-        run: pip install .
+        run: pip install --no-deps -e .
 
       - name: Check docs/quickstart.sh matches the README
         run: |
