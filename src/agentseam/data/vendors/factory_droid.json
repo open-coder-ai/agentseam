@@ -60,6 +60,11 @@
       "date": "2026-10-11",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-10-11",
@@ -105,6 +110,15 @@
     "bare": true,
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "yes",
+    "hooks": "yes",
+    "how": "via a marketplace only: droid plugin marketplace add <path|repo> then droid plugin install p@m --scope user|project; .claude-plugin/ translated to .factory-plugin/ on cache copy; a bare plugin dir is rejected",
+    "loads": "yes",
+    "notes": "hooks run when enabled; a Claude Bash matcher may not match Droid's tool names (unmeasured); exit 2 and HSO deny both block",
+    "payload": "Claude Code snake_case, Droid tool names (Execute, Create)",
+    "source": "https://docs.factory.com/harness/plugins.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {

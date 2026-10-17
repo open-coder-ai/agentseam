@@ -46,6 +46,11 @@
       "date": "2026-10-11",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-10-11",
@@ -101,6 +106,15 @@
     },
     "rule_name_prefix": "agentseam-",
     "wrapper": "flat_list"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "unknown",
+    "hooks": "unknown",
+    "how": "detected and adapted: auto-discovery under ~/.vibe/plugins/ or .vibe/plugins/ (trusted folder); no install command",
+    "loads": "yes",
+    "notes": "the adapter reads hooks/hooks.json into HookProtocol.CLAUDE_CODE definitions, but no executor for them was found, and the vendor's two skill docs contradict each other",
+    "payload": "unknown",
+    "source": "mistralai/mistral-vibe@4ae5c59 vibe/core/plugins/_claude.py (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": true,
   "tools": {

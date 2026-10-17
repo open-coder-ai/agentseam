@@ -64,6 +64,11 @@
       "date": "2026-09-28",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-09-01",
@@ -137,6 +142,15 @@
     },
     "matcher": false,
     "wrapper": "flat_entries"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "yes",
+    "hooks": "yes",
+    "how": "Claude-format plugin by manifest location, from a marketplace (.claude-plugin/marketplace.json, anthropics/claude-code accepted) or chat.pluginLocations; needs chat.plugins.enabled",
+    "loads": "yes",
+    "notes": "the Local harness ignores matchers, so every nested command for the event runs; HSO deny and exit 2 block",
+    "payload": "Claude-shaped snake_case, but VS Code's own Local tool names",
+    "source": "microsoft/vscode-docs@ef0ca127 docs/agents/reference/agent-plugin-reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {

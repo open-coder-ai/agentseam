@@ -1,0 +1,206 @@
+{
+  "antigravity": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "no",
+      "hooks": "n/a",
+      "how": "n/a; needs a root plugin.json in its own schema (additionalProperties: false)",
+      "loads": "no",
+      "notes": "own hooks reply with a top-level decision",
+      "payload": "own (camelCase toolCall)",
+      "source": "https://antigravity.google/docs/plugins (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "claude_code": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "yes",
+      "hooks": "yes",
+      "how": "native: marketplace install into ~/.claude/plugins/cache/<mkt>/<plugin>/<ver>/; --plugin-dir loads in place",
+      "loads": "yes",
+      "notes": "hooks run when the plugin is enabled; HSO deny and exit 2 both block",
+      "payload": "Claude Code",
+      "source": "https://code.claude.com/docs/en/plugins/loading.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "cline": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "n/a",
+      "hooks": "n/a",
+      "how": "n/a; two package lanes only (Agent Plugins root plugin.json, Cline JS/TS modules)",
+      "loads": "no",
+      "payload": "n/a",
+      "source": "cline/cline@a42df8c sdk/packages/shared/src/storage/paths.ts (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "codex_cli": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "yes",
+      "hooks": "yes",
+      "how": "manifest lookup .codex-plugin/, then .claude-plugin/plugin.json; marketplace .claude-plugin/marketplace.json; codex plugin marketplace add <path> then codex plugin add P@M; no bare-folder install",
+      "loads": "yes",
+      "notes": "hooks from the manifest's hooks, else hooks/hooks.json; per-hook trust state unmeasured; an HSO deny needs a non-empty permissionDecisionReason and exit 2 needs non-empty stderr; Sync handlers only",
+      "payload": "Claude Code snake_case, Codex tool names",
+      "source": "openai/codex@ce0323f codex-rs/exec-server-protocol/src/protocol.rs, codex-rs/core-plugins/src/loader.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "cursor": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "unknown",
+      "hooks": "unknown",
+      "how": "n/a for the documented formats (.cursor-plugin/plugin.json and a root plugin.json); unknown via the Third-Party Plugins toggle",
+      "loads": "unknown",
+      "notes": "recorded no for the documented plugin formats and unknown via the Third-Party Plugins toggle, so unknown overall; Claude Code settings hooks (not plugins) run by default, event and tool names mapped (Bash to Shell), HSO and exit 2 honoured",
+      "payload": "unknown",
+      "source": "https://cursor.com/docs/reference/plugins, https://cursor.com/docs/reference/third-party-hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "devin": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "unknown",
+      "how": "devin plugins install --local ./dir or a repo (sign-in needed); falls back to .claude-plugin/plugin.json when no .devin-plugin/plugin.json",
+      "loads": "yes",
+      "notes": "the docs promise only a root hooks.json; plugin hooks are best effort and fail open; exit 2 and a top-level decision block, HSO permissionDecision undocumented",
+      "payload": "Claude-shaped snake_case, Devin tool names (exec)",
+      "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "factory_droid": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "yes",
+      "hooks": "yes",
+      "how": "via a marketplace only: droid plugin marketplace add <path|repo> then droid plugin install p@m --scope user|project; .claude-plugin/ translated to .factory-plugin/ on cache copy; a bare plugin dir is rejected",
+      "loads": "yes",
+      "notes": "hooks run when enabled; a Claude Bash matcher may not match Droid's tool names (unmeasured); exit 2 and HSO deny both block",
+      "payload": "Claude Code snake_case, Droid tool names (Execute, Create)",
+      "source": "https://docs.factory.com/harness/plugins.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "gemini_cli": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "n/a",
+      "how": "n/a; extensions need gemini-extension.json",
+      "loads": "no",
+      "notes": "own hooks: exit 2 and a top-level decision; a one-shot gemini hooks migrate --from-claude exists",
+      "payload": "own events (BeforeTool), snake_case keys",
+      "source": "google-gemini/gemini-cli@ed96fae docs/extensions/reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "goose": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "yes",
+      "how": "place the folder in .agents/plugins/<name>/ or ~/.agents/plugins/<name>/ (loads by layout; .claude-plugin/plugin.json is not a goose manifest); no ~/.claude/plugins, no Claude marketplace",
+      "loads": "partial",
+      "notes": "hooks/hooks.json runs; exit 2 or {\"decision\":\"block\"} blocks; HSO is not parsed",
+      "payload": "own: key event, not hook_event_name; goose tool names (developer__shell)",
+      "source": "block/goose@bfcc6ee crates/goose/src/plugins/formats/open_plugins.rs, crates/goose/src/hooks/mod.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "grok": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "yes",
+      "hooks": "yes",
+      "how": "scans ~/.claude/plugins/*/ (user, auto-trusted) and .claude/plugins/*/ (project, needs trust), plus installed_plugins.json; grok plugin install <dir> --trust; manifest fallback .claude-plugin/plugin.json; off until enabled",
+      "loads": "yes",
+      "notes": "hooks run when enabled and trusted; HSO deny and exit 2 block, other failures fail open",
+      "payload": "grok's camelCase envelope with additive Claude snake_case aliases; camelCase authoritative; grok tool names (run_terminal_command)",
+      "source": "xai-org/grok-build@2bdd1d6 crates/codegen/xai-grok-agent/src/plugins/discovery.rs, docs/user-guide/10-hooks.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+      "witnessed": "guard and gate refusal: Grok Build 1.0.62 on Windows 11, 2026-10-17; guard and gate refused with the plugin installed by Claude Code, gate refused with it installed by grok plugin install <dir> --trust (org-plan witness/results/witness-grok-claude-plugin-2026-10-17.md at 25b9d9d)"
+    }
+  },
+  "junie": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "yes",
+      "how": "through a Claude-format marketplace: /extensions marketplace add with a .claude-plugin/marketplace.json index; interactive install; cached in ~/.junie/extensions/",
+      "loads": "yes",
+      "notes": "per-extension manifest undocumented; hooks are Early Access; exit 2 and a top-level decision block, HSO not documented as blocking",
+      "payload": "Claude Code (hook_event_name, tool_name: \"Bash\")",
+      "source": "https://junie.jetbrains.com/docs/junie-cli-extensions.html (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "kimi_code": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "n/a",
+      "hooks": "n/a",
+      "how": "n/a; manifest is kimi.plugin.json or .kimi-plugin/plugin.json only",
+      "loads": "no",
+      "notes": "own hooks are Claude-shaped snake_case and honour HSO and exit 2",
+      "payload": "n/a",
+      "source": "https://www.kimi.com/code/docs/en/kimi-code-cli/customization/plugins.html (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "mistral_vibe": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "unknown",
+      "hooks": "unknown",
+      "how": "detected and adapted: auto-discovery under ~/.vibe/plugins/ or .vibe/plugins/ (trusted folder); no install command",
+      "loads": "yes",
+      "notes": "the adapter reads hooks/hooks.json into HookProtocol.CLAUDE_CODE definitions, but no executor for them was found, and the vendor's two skill docs contradict each other",
+      "payload": "unknown",
+      "source": "mistralai/mistral-vibe@4ae5c59 vibe/core/plugins/_claude.py (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "openhands": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "yes",
+      "how": "openhands --plugin /path; .claude-plugin/ is a supported metadata dir; marketplaces from .claude-plugin/marketplace.json",
+      "loads": "yes",
+      "notes": "hooks/hooks.json runs; exit 2 and a top-level decision: deny block; HSO is not parsed",
+      "payload": "mixed: snake_case tool_name/tool_input, but event key event_type (not hook_event_name); OpenHands tool names",
+      "source": "https://docs.openhands.dev/overview/plugins; OpenHands/software-agent-sdk@5966c78 openhands-sdk/openhands/sdk/hooks/types.py (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "tabnine": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "unknown",
+      "how": "tabnine extensions install <src> translates if necessary; Claude never named",
+      "loads": "unknown",
+      "notes": "own hooks: exit 2 and decision: deny; the CLI is in maintenance mode until 2026-12-31",
+      "payload": "own event names (BeforeTool)",
+      "source": "https://docs.tabnine.com/main/getting-started/tabnine-cli/features/extensions (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "vscode_copilot": {
+    "basis": "vendor-source",
+    "entry": {
+      "deny_reply": "yes",
+      "hooks": "yes",
+      "how": "Claude-format plugin by manifest location, from a marketplace (.claude-plugin/marketplace.json, anthropics/claude-code accepted) or chat.pluginLocations; needs chat.plugins.enabled",
+      "loads": "yes",
+      "notes": "the Local harness ignores matchers, so every nested command for the event runs; HSO deny and exit 2 block",
+      "payload": "Claude-shaped snake_case, but VS Code's own Local tool names",
+      "source": "microsoft/vscode-docs@ef0ca127 docs/agents/reference/agent-plugin-reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  },
+  "windsurf": {
+    "basis": "vendor-docs",
+    "entry": {
+      "deny_reply": "partial",
+      "hooks": "unknown",
+      "how": "no plugin system documented",
+      "loads": "unknown",
+      "notes": "own hooks: exit 2 only",
+      "payload": "own (agent_action_name, tool_info)",
+      "source": "https://docs.devin.ai/desktop/cascade/hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    }
+  }
+}

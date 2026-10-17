@@ -90,6 +90,11 @@
       "date": "2026-10-13",
       "test": "tests/test_install_watch.py::test_file_changed_is_not_wired_without_a_watch_list"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "repo_root_token": {
       "basis": "vendor-docs",
       "date": "2026-09-01",
@@ -151,6 +156,15 @@
       "file_changed"
     ],
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "yes",
+    "hooks": "yes",
+    "how": "native: marketplace install into ~/.claude/plugins/cache/<mkt>/<plugin>/<ver>/; --plugin-dir loads in place",
+    "loads": "yes",
+    "notes": "hooks run when the plugin is enabled; HSO deny and exit 2 both block",
+    "payload": "Claude Code",
+    "source": "https://code.claude.com/docs/en/plugins/loading.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "repo_root_token": "${CLAUDE_PROJECT_DIR}",

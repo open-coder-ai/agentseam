@@ -51,6 +51,11 @@
       "date": "2026-08-26",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -98,6 +103,15 @@
   "hook_entry": {
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "partial",
+    "hooks": "yes",
+    "how": "through a Claude-format marketplace: /extensions marketplace add with a .claude-plugin/marketplace.json index; interactive install; cached in ~/.junie/extensions/",
+    "loads": "yes",
+    "notes": "per-extension manifest undocumented; hooks are Early Access; exit 2 and a top-level decision block, HSO not documented as blocking",
+    "payload": "Claude Code (hook_event_name, tool_name: \"Bash\")",
+    "source": "https://junie.jetbrains.com/docs/junie-cli-extensions.html (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {},

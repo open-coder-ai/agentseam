@@ -65,6 +65,11 @@
       "date": "2026-08-28",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "live-run-partial",
       "date": "2026-08-28",
@@ -118,6 +123,15 @@
     },
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "yes",
+    "hooks": "yes",
+    "how": "manifest lookup .codex-plugin/, then .claude-plugin/plugin.json; marketplace .claude-plugin/marketplace.json; codex plugin marketplace add <path> then codex plugin add P@M; no bare-folder install",
+    "loads": "yes",
+    "notes": "hooks from the manifest's hooks, else hooks/hooks.json; per-hook trust state unmeasured; an HSO deny needs a non-empty permissionDecisionReason and exit 2 needs non-empty stderr; Sync handlers only",
+    "payload": "Claude Code snake_case, Codex tool names",
+    "source": "openai/codex@ce0323f codex-rs/exec-server-protocol/src/protocol.rs, codex-rs/core-plugins/src/loader.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": true,
   "tools": {

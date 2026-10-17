@@ -53,6 +53,11 @@
       "date": "2026-08-26",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-docs",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-docs",
       "date": "2026-08-26",
@@ -100,6 +105,15 @@
     },
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "partial",
+    "hooks": "unknown",
+    "how": "tabnine extensions install <src> translates if necessary; Claude never named",
+    "loads": "unknown",
+    "notes": "own hooks: exit 2 and decision: deny; the CLI is in maintenance mode until 2026-12-31",
+    "payload": "own event names (BeforeTool)",
+    "source": "https://docs.tabnine.com/main/getting-started/tabnine-cli/features/extensions (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {},

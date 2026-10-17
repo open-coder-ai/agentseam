@@ -33,6 +33,22 @@
       "$ref": "#/$defs/stringList",
       "description": "repo-relative hook configs of OTHER agents that this agent also loads and runs (grok reads Claude Code's and Cursor's). Opt-in and primary-sourced; travels with an evidence.also_reads record. `doctor` names any of them carrying agentseam entries, which an uninstall of this agent leaves in place."
     },
+    "loads_claude_plugins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["loads", "how", "hooks", "payload", "deny_reply", "source"],
+      "description": "whether this agent loads a Claude Code plugin (.claude-plugin/plugin.json, hooks/hooks.json), one row of org-plan discovery/2026-10-17-claude-plugin-compat.md transcribed: unknown stays unknown, partial stays partial. A fact, not a capability: nothing in the runtime reads it. Travels with an evidence.loads_claude_plugins record.",
+      "properties": {
+        "loads": {"enum": ["yes", "partial", "no", "unknown"]},
+        "how": {"type": "string", "minLength": 1, "description": "the install route, as recorded"},
+        "hooks": {"enum": ["yes", "no", "unknown", "n/a"], "description": "whether the plugin's hooks/hooks.json runs"},
+        "payload": {"type": "string", "minLength": 1, "description": "the dialect those hooks receive on stdin, as recorded"},
+        "deny_reply": {"enum": ["yes", "partial", "no", "unknown", "n/a"], "description": "whether Claude's deny (hookSpecificOutput.permissionDecision deny, or exit 2) is honoured"},
+        "notes": {"type": "string", "minLength": 1, "description": "the row's qualifiers on the cells above"},
+        "source": {"type": "string", "minLength": 1, "description": "the vendor docs or source the row rests on"},
+        "witnessed": {"type": "string", "minLength": 1, "description": "a witness run of the Claude Code plugin in this agent: what it showed and the result file it is recorded in. Absent means never witnessed."}
+      }
+    },
     "legacy_config_paths": {
       "$ref": "#/$defs/stringList",
       "description": "repo-relative hook configs this agent read before config_path and still reads as a fallback (windsurf's .windsurf/hooks.json, read only while .devin/hooks.json defines no hooks). Opt-in and primary-sourced; travels with an evidence.legacy_config_paths record. `install` strips agentseam entries from them and refuses when one holds the user's own hooks that config_path would switch off; `uninstall` cleans them."
@@ -307,6 +323,7 @@
         "config_path": {"$ref": "#/$defs/evidenceRecord"},
         "hook_entry": {"$ref": "#/$defs/evidenceRecord"},
         "also_reads": {"$ref": "#/$defs/evidenceRecord"},
+        "loads_claude_plugins": {"$ref": "#/$defs/evidenceRecord"},
         "legacy_config_paths": {"$ref": "#/$defs/evidenceRecord"},
         "repo_root_token": {"$ref": "#/$defs/evidenceRecord"},
         "trust_hint": {"$ref": "#/$defs/evidenceRecord"}

@@ -64,6 +64,11 @@
       "date": "2026-08-28",
       "test": "tests/test_golden_fixtures.py::test_hook_config_matches_the_frozen_fixture_on_both_matcher_paths"
     },
+    "loads_claude_plugins": {
+      "basis": "vendor-source",
+      "date": "2026-10-17",
+      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+    },
     "tools": {
       "basis": "vendor-source",
       "date": "2026-08-28",
@@ -112,6 +117,15 @@
   "hook_entry": {
     "matcher": true,
     "wrapper": "hooks_map"
+  },
+  "loads_claude_plugins": {
+    "deny_reply": "partial",
+    "hooks": "n/a",
+    "how": "n/a; extensions need gemini-extension.json",
+    "loads": "no",
+    "notes": "own hooks: exit 2 and a top-level decision; a one-shot gemini hooks migrate --from-claude exists",
+    "payload": "own events (BeforeTool), snake_case keys",
+    "source": "google-gemini/gemini-cli@ed96fae docs/extensions/reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
   },
   "needs_trust": false,
   "tools": {
