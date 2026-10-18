@@ -43,7 +43,8 @@
       "loads": "yes",
       "notes": "hooks from the manifest's hooks, else hooks/hooks.json; per-hook trust state unmeasured; an HSO deny needs a non-empty permissionDecisionReason and exit 2 needs non-empty stderr; Sync handlers only",
       "payload": "Claude Code snake_case, Codex tool names",
-      "source": "openai/codex@ce0323f codex-rs/exec-server-protocol/src/protocol.rs, codex-rs/core-plugins/src/loader.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+      "source": "openai/codex@ce0323f codex-rs/exec-server-protocol/src/protocol.rs, codex-rs/core-plugins/src/loader.rs (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+      "witnessed": "guard (shell command) and gate (file write) refused by PreToolUse deny with its reason; codex-cli 0.163.0 on Windows 11, 2026-10-17; plugin installed by codex plugin marketplace add <dir> then codex plugin add chock-witness@chock-local (org-plan witness/results/witness-codex-claude-plugin-2026-10-17.md at eb303f4)"
     }
   },
   "cursor": {

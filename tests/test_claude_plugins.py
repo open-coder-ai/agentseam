@@ -38,6 +38,18 @@ WITNESSES = {
         "witness/results/witness-copilot-cli-claude-plugin-2026-10-17.md",
         "6516f57",
     ),
+    "codex_cli": (
+        "guard",
+        "gate",
+        "refused by PreToolUse deny with its reason",
+        "codex-cli 0.163.0",
+        "Windows 11",
+        "2026-10-17",
+        "codex plugin marketplace add <dir>",
+        "codex plugin add chock-witness@chock-local",
+        "witness/results/witness-codex-claude-plugin-2026-10-17.md",
+        "eb303f4",
+    ),
 }
 
 #: (loads, hooks, deny_reply) per agent, as org-plan discovery/2026-10-17-claude-plugin-compat.md records them.

@@ -26,8 +26,8 @@ ALSO_READS = {"grok": [".claude/settings.json", ".claude/settings.local.json", "
 
 #: Whether each agent loads a Claude Code plugin, transcribed from org-plan
 #: discovery/2026-10-17-claude-plugin-compat.md (CC-1, read 2026-10-17); unknown and partial
-#: rows stay so. Grok (org-plan 25b9d9d) and vscode_copilot's Copilot CLI (org-plan 6516f57) add
-#: the owner's witness runs, from witness/results.
+#: rows stay so. Grok (org-plan 25b9d9d), vscode_copilot's Copilot CLI (org-plan 6516f57) and
+#: codex_cli (org-plan eb303f4) add the owner's witness runs, from witness/results.
 with open(os.path.join(os.path.dirname(__file__), "claude_plugins.json"), encoding="utf-8") as _fh:
     LOADS_CLAUDE_PLUGINS = json.load(_fh)
 _CLAUDE_PLUGINS_READ = "2026-10-17"
