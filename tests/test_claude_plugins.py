@@ -43,6 +43,14 @@ WITNESSES = {
         "deprecated",
         "witness/results/witness-copilot-cli-claude-plugin-2026-10-17.md",
         "6516f57",
+        "Copilot CLI marketplace route: guard",
+        "copilot plugin marketplace add <dir>",
+        "copilot plugin install chock-witness@chock-local",
+        "no deprecation warning",
+        'Marketplace "chock-local" already registered',
+        "uninstall only disables",
+        "witness/results/witness-copilot-cli-claude-plugin-marketplace-2026-10-18.md",
+        "423231e",
     ),
     "codex_cli": (
         "guard",
@@ -55,6 +63,19 @@ WITNESSES = {
         "codex plugin add chock-witness@chock-local",
         "witness/results/witness-codex-claude-plugin-2026-10-17.md",
         "eb303f4",
+    ),
+    "cursor": (
+        "hooks called, chock never ran, no verdict",
+        "every hook's output is (empty)",
+        "no refusal",
+        "unsettled",
+        "cause unmeasured",
+        "Cursor 3.25.9",
+        "Windows 11",
+        "2026-10-18",
+        "claude plugin enable chock-witness@chock-local",
+        "witness/results/witness-cursor-claude-plugin-2026-10-18.md",
+        "0938b50",
     ),
     "devin": (
         "turn-end gate only",
@@ -77,7 +98,7 @@ DISCOVERY_ROWS = {
     "claude_code": ("yes", "yes", "yes"),
     "cline": ("no", "n/a", "n/a"),
     "codex_cli": ("yes", "yes", "yes"),
-    "cursor": ("unknown", "unknown", "unknown"),
+    "cursor": ("yes", "yes", "unknown"),  # unknown in discovery; loads and hooks called settled by its witness
     "devin": ("yes", "partial", "partial"),  # hooks: unknown in discovery, settled partial by its witness
     "factory_droid": ("yes", "yes", "yes"),
     "gemini_cli": ("no", "n/a", "n/a"),
