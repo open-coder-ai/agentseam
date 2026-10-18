@@ -63,12 +63,13 @@
     "basis": "vendor-docs",
     "entry": {
       "deny_reply": "partial",
-      "hooks": "unknown",
+      "hooks": "partial",
       "how": "devin plugins install --local ./dir or a repo (sign-in needed); falls back to .claude-plugin/plugin.json when no .devin-plugin/plugin.json",
       "loads": "yes",
       "notes": "the docs promise only a root hooks.json; plugin hooks are best effort and fail open; exit 2 and a top-level decision block, HSO permissionDecision undocumented",
       "payload": "Claude-shaped snake_case, Devin tool names (exec)",
-      "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+      "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+      "witnessed": "turn-end gate only: session_start, the matcherless pre_tool hook and Stop ran, and the Stop gate's block (pin-github-actions) was honoured at turn end; the tool-name-matched PreToolUse groups (Bash|PowerShell, Write|Edit|MultiEdit|NotebookEdit) never fired, so the shell guard and the write gate did not run (git commit --no-verify ran, the workflow file was written); which tool names Devin's shell and write tools carry is unverified; Devin CLI v3000.11.92 on Windows 11, 2026-10-18; plugin installed by devin plugins install --local <dir> (org-plan witness/results/witness-devin-claude-plugin-2026-10-18.md at df71db6)"
     }
   },
   "factory_droid": {
@@ -190,7 +191,7 @@
       "notes": "VS Code: the Local harness ignores matchers, so every nested command for the event runs; HSO deny and exit 2 block. Copilot CLI (chock's copilot client builds for this entry): loads yes via copilot plugin install <mkt entry | OWNER/REPO | git URL | ./path> or --plugin-dir, legacy manifest includes .claude-plugin/plugin.json, copilot plugin marketplace add anthropics/claude-code; hooks yes (hooks.json or hooks/hooks.json); payload Claude Code for PascalCase events (Claude tool names, e.g. Bash), Copilot camelCase otherwise; deny partial: exit 2 denies, flat permissionDecision documented, nested hookSpecificOutput unknown from the docs (closed source), settled by the Copilot CLI 1.0.98 witness for a shell command and a file write (see witnessed)",
       "payload": "Claude-shaped snake_case, but VS Code's own Local tool names",
       "source": "microsoft/vscode-docs@ef0ca127 docs/agents/reference/agent-plugin-reference.md; Copilot CLI: github/docs@dae83f7d content/copilot/reference/copilot-cli-reference/cli-plugin-reference.md (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
-      "witnessed": "Copilot CLI only, not VS Code: guard (shell command) and gate (file write) refused by preToolUse deny; GitHub Copilot CLI 1.0.98 on Windows 11, 2026-10-17; plugin installed by copilot plugin install <dir> (a local path, which Copilot warns is deprecated) (org-plan witness/results/witness-copilot-cli-claude-plugin-2026-10-17.md at 6516f57)"
+      "witnessed": "VS Code Copilot agent on Windows 11, 2026-10-18, VS Code version unmeasured; plugin loaded by chat.plugins.enabled and chat.pluginLocations -> <dir>: in the Chat panel with the folder open, guard (shell command) and gate (file write, tool Edit) refused by preToolUse deny; in an Agents-window chat with no workspace the guard was refused (gate not tried); an Agents-window session bound to a repo (Copilot SDK) ran no hooks and refused nothing (org-plan witness/results/witness-vscode-claude-plugin-2026-10-18.md at 34272c0). Copilot CLI: guard (shell command) and gate (file write) refused by preToolUse deny; GitHub Copilot CLI 1.0.98 on Windows 11, 2026-10-17; plugin installed by copilot plugin install <dir> (a local path, which Copilot warns is deprecated) (org-plan witness/results/witness-copilot-cli-claude-plugin-2026-10-17.md at 6516f57)"
     }
   },
   "windsurf": {

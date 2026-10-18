@@ -41,7 +41,7 @@
       "properties": {
         "loads": {"enum": ["yes", "partial", "no", "unknown"]},
         "how": {"type": "string", "minLength": 1, "description": "the install route, as recorded"},
-        "hooks": {"enum": ["yes", "no", "unknown", "n/a"], "description": "whether the plugin's hooks/hooks.json runs"},
+        "hooks": {"enum": ["yes", "partial", "no", "unknown", "n/a"], "description": "whether the plugin's hooks/hooks.json runs; partial where a witness saw only some of its hooks run"},
         "payload": {"type": "string", "minLength": 1, "description": "the dialect those hooks receive on stdin, as recorded"},
         "deny_reply": {"enum": ["yes", "partial", "no", "unknown", "n/a"], "description": "whether Claude's deny (hookSpecificOutput.permissionDecision deny, or exit 2) is honoured"},
         "notes": {"type": "string", "minLength": 1, "description": "the row's qualifiers on the cells above"},
