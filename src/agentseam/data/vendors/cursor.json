@@ -60,7 +60,7 @@
     "loads_claude_plugins": {
       "basis": "vendor-docs",
       "date": "2026-10-17",
-      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+      "test": "tests/test_claude_plugins.py::test_only_the_witnessed_agents_carry_a_witness"
     },
     "tools": {
       "basis": "live-run-partial",
@@ -117,12 +117,13 @@
   },
   "loads_claude_plugins": {
     "deny_reply": "unknown",
-    "hooks": "unknown",
-    "how": "n/a for the documented formats (.cursor-plugin/plugin.json and a root plugin.json); unknown via the Third-Party Plugins toggle",
-    "loads": "unknown",
-    "notes": "recorded no for the documented plugin formats and unknown via the Third-Party Plugins toggle, so unknown overall; Claude Code settings hooks (not plugins) run by default, event and tool names mapped (Bash to Shell), HSO and exit 2 honoured",
-    "payload": "unknown",
-    "source": "https://cursor.com/docs/reference/plugins, https://cursor.com/docs/reference/third-party-hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    "hooks": "yes",
+    "how": "n/a for the documented formats (.cursor-plugin/plugin.json and a root plugin.json); via the Third-Party Plugins toggle (Include Third-Party Plugins, Skills, and Other Configs), Cursor imports a Claude Code plugin installed and enabled in Claude Code (claude plugin marketplace add <dir>, claude plugin install, claude plugin enable); disabled Claude plugins are not imported",
+    "loads": "yes",
+    "notes": "recorded no for the documented plugin formats and unknown via the Third-Party Plugins toggle; the toggle route settled as loads and hooks called by the 2026-10-18 witness, deny unknown (see witnessed); Claude Code settings hooks (not plugins) run by default, event and tool names mapped (Bash to Shell), HSO and exit 2 honoured",
+    "payload": "Cursor's own (hook_event_name preToolUse/stop/sessionStart; tool_name Shell, Write, Read, Grep), as witnessed",
+    "source": "https://cursor.com/docs/reference/plugins, https://cursor.com/docs/reference/third-party-hooks (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+    "witnessed": "hooks called, chock never ran, no verdict: Cursor imported the enabled Claude Code plugin (Customize -> Plugins listed chock-witness; Customize -> Hooks mapped its 8 hooks as preToolUse x5, stop x2, sessionStart x1) and its Execution Log shows every hook called with Cursor's own payload, but every hook's output is (empty) and chock logged no line from the session; the git commit --no-verify ran and the unpinned workflow write landed, so no refusal, and whether Cursor honours a Claude deny from an imported plugin is unsettled; cause unmeasured (the single-quoted hook command in Cursor's Windows hook shell, or CLAUDE_PLUGIN_ROOT unset); Cursor 3.25.9 (Execution Log) on Windows 11, 2026-10-18; plugin installed into Claude Code 2.1.302 by claude plugin marketplace add <dir>, claude plugin install chock-witness@chock-local and claude plugin enable chock-witness@chock-local (org-plan witness/results/witness-cursor-claude-plugin-2026-10-18.md at 0938b50)"
   },
   "needs_trust": false,
   "tools": {
