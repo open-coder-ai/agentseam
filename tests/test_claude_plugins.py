@@ -26,8 +26,14 @@ WITNESSES = {
         "25b9d9d",
     ),
     "vscode_copilot": (
-        "Copilot CLI only, not VS Code",
-        "guard",
+        "VS Code Copilot agent on Windows 11, 2026-10-18, VS Code version unmeasured",
+        "chat.pluginLocations",
+        "in the Chat panel with the folder open, guard (shell command) and gate (file write, tool Edit) refused",
+        "with no workspace the guard was refused (gate not tried)",
+        "bound to a repo (Copilot SDK) ran no hooks and refused nothing",
+        "witness/results/witness-vscode-claude-plugin-2026-10-18.md",
+        "34272c0",
+        "Copilot CLI: guard",
         "gate",
         "refused by preToolUse deny",
         "Copilot CLI 1.0.98",
@@ -50,6 +56,19 @@ WITNESSES = {
         "witness/results/witness-codex-claude-plugin-2026-10-17.md",
         "eb303f4",
     ),
+    "devin": (
+        "turn-end gate only",
+        "the matcherless pre_tool hook and Stop ran",
+        "honoured at turn end",
+        "never fired, so the shell guard and the write gate did not run",
+        "unverified",
+        "Devin CLI v3000.11.92",
+        "Windows 11",
+        "2026-10-18",
+        "devin plugins install --local <dir>",
+        "witness/results/witness-devin-claude-plugin-2026-10-18.md",
+        "df71db6",
+    ),
 }
 
 #: (loads, hooks, deny_reply) per agent, as org-plan discovery/2026-10-17-claude-plugin-compat.md records them.
@@ -59,7 +78,7 @@ DISCOVERY_ROWS = {
     "cline": ("no", "n/a", "n/a"),
     "codex_cli": ("yes", "yes", "yes"),
     "cursor": ("unknown", "unknown", "unknown"),
-    "devin": ("yes", "unknown", "partial"),
+    "devin": ("yes", "partial", "partial"),  # hooks: unknown in discovery, settled partial by its witness
     "factory_droid": ("yes", "yes", "yes"),
     "gemini_cli": ("no", "n/a", "n/a"),
     "goose": ("partial", "yes", "partial"),
@@ -93,7 +112,7 @@ def test_only_the_witnessed_agents_carry_a_witness():
         for needle in needles:
             assert needle in note, (agent, needle)
         record = VENDOR_CONFIG[agent]["evidence"][FIELD]
-        assert record["basis"] == "vendor-source", agent
+        assert record["basis"] in ("vendor-docs", "vendor-source"), agent
         assert record["test"].endswith("::test_only_the_witnessed_agents_carry_a_witness"), agent
 
 

@@ -65,7 +65,7 @@
     "loads_claude_plugins": {
       "basis": "vendor-docs",
       "date": "2026-10-17",
-      "test": "tests/test_claude_plugins.py::test_each_entry_records_the_discovery_row"
+      "test": "tests/test_claude_plugins.py::test_only_the_witnessed_agents_carry_a_witness"
     },
     "tools": {
       "basis": "vendor-docs",
@@ -115,12 +115,13 @@
   },
   "loads_claude_plugins": {
     "deny_reply": "partial",
-    "hooks": "unknown",
+    "hooks": "partial",
     "how": "devin plugins install --local ./dir or a repo (sign-in needed); falls back to .claude-plugin/plugin.json when no .devin-plugin/plugin.json",
     "loads": "yes",
     "notes": "the docs promise only a root hooks.json; plugin hooks are best effort and fail open; exit 2 and a top-level decision block, HSO permissionDecision undocumented",
     "payload": "Claude-shaped snake_case, Devin tool names (exec)",
-    "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)"
+    "source": "https://docs.devin.ai/cli/extensibility/plugins/overview (org-plan discovery/2026-10-17-claude-plugin-compat.md)",
+    "witnessed": "turn-end gate only: session_start, the matcherless pre_tool hook and Stop ran, and the Stop gate's block (pin-github-actions) was honoured at turn end; the tool-name-matched PreToolUse groups (Bash|PowerShell, Write|Edit|MultiEdit|NotebookEdit) never fired, so the shell guard and the write gate did not run (git commit --no-verify ran, the workflow file was written); which tool names Devin's shell and write tools carry is unverified; Devin CLI v3000.11.92 on Windows 11, 2026-10-18; plugin installed by devin plugins install --local <dir> (org-plan witness/results/witness-devin-claude-plugin-2026-10-18.md at df71db6)"
   },
   "needs_trust": false,
   "tools": {},
