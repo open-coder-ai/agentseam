@@ -34,21 +34,21 @@ One handler wired for every hook this agent supports.
 
 ```toml
 [[hooks]]
-name = "agentseam-pre_tool-19247793"
+name = "agentseam-pre_tool-e05460fb"
 type = "pre_tool"
 match = "*"
-command = "python3 guard.py"
+command = "python3 guard.py mistral_vibe"
 
 [[hooks]]
-name = "agentseam-post_tool-19247793"
+name = "agentseam-post_tool-e05460fb"
 type = "post_tool"
 match = "*"
-command = "python3 guard.py"
+command = "python3 guard.py mistral_vibe"
 
 [[hooks]]
-name = "agentseam-post_agent-19247793"
+name = "agentseam-post_agent-e05460fb"
 type = "post_agent"
-command = "python3 guard.py"
+command = "python3 guard.py mistral_vibe"
 ```
 
 ## Every hook, one at a time

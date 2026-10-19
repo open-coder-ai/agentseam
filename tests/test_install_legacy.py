@@ -27,7 +27,7 @@ def test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file(tmp_path):
     _write(tmp_path, _LEGACY, {"hooks": {"pre_run_command": [{"command": "old", "_agentseam": "agentseam"}]}})
     path = I.install("windsurf", ["pre_tool"], "g", str(tmp_path))
     assert path == str(tmp_path / _CURRENT)
-    assert _read(tmp_path, _CURRENT)["hooks"]["pre_run_command"][0]["command"] == "g"
+    assert _read(tmp_path, _CURRENT)["hooks"]["pre_run_command"][0]["command"] == "g windsurf"
     assert _read(tmp_path, _LEGACY) == {}
     assert I.uninstall("windsurf", str(tmp_path))
     assert _read(tmp_path, _CURRENT) == {}
@@ -47,7 +47,7 @@ def test_windsurf_wires_beside_the_users_own_devin_hooks_whatever_the_legacy_fil
     I.install("windsurf", ["pre_tool"], "g", str(tmp_path))
     hooks = _read(tmp_path, _CURRENT)["hooks"]
     assert hooks["pre_user_prompt"] == [{"command": "mine"}]
-    assert hooks["pre_run_command"][0]["command"] == "g"
+    assert hooks["pre_run_command"][0]["command"] == "g windsurf"
 
 
 def test_uninstall_cleans_a_legacy_install_when_the_current_file_is_absent(tmp_path):

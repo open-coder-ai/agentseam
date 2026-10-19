@@ -132,7 +132,7 @@ def test_install_writes_one_executable_per_event(tmp_path):
     assert sorted(p.name for p in Path(path).iterdir()) == ["PreToolUse", "TaskComplete"]
     text = (Path(path) / "PreToolUse").read_text(encoding="utf-8")
     assert text.splitlines()[0] == "#!/bin/sh"
-    assert "\nguard --strict\n" in text
+    assert "\nguard --strict cline\n" in text
     if os.name != "nt":
         assert os.stat(Path(path) / "PreToolUse").st_mode & 0o111 == 0o111
     assert I.installed("cline", str(tmp_path))

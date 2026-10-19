@@ -13,6 +13,7 @@ from .install_config import (
     MARKER,
     ConfigUnreadableError,
     apply_watch,
+    bind_agent,
     check_matcher,
     check_wireable,
     dump,
@@ -37,8 +38,9 @@ def config_path(agent, repo_root=".", owner="agentseam"):
 
 
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None, watch=None):
-    """Wire `command` for `events` into `agent`'s config. Returns the path written."""
+    """Wire `command` for `events` into `agent`'s config, bound to `agent`. Returns the path written."""
     mod = adapters.get(agent)
+    command = bind_agent(command, agent)
     check_wireable(mod, agent, events)
     check_matcher(mod, agent, matcher)
     events, why = unwatched(mod, agent, events, watch)

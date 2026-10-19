@@ -41,7 +41,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -54,7 +54,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -67,7 +67,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -80,7 +80,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -93,7 +93,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -106,7 +106,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -119,7 +119,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }
@@ -132,7 +132,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py goose",
             "on_failure": "block",
             "type": "command"
           }

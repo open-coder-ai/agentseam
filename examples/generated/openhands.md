@@ -41,7 +41,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]
@@ -53,7 +53,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]
@@ -65,7 +65,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]
@@ -77,7 +77,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]
@@ -89,7 +89,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]
@@ -101,7 +101,7 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
+            "command": "python3 guard.py openhands",
             "type": "command"
           }
         ]

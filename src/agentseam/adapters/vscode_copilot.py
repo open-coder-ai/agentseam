@@ -10,7 +10,6 @@ from ..contract import (
     PRE_TOOL,
     PROMPT_SUBMIT,
     REWRITE,
-    SESSION_END,
     SESSION_START,
     STOP,
     SUBAGENT_START,
@@ -20,28 +19,22 @@ from ..contract import (
     Event,
     tool_input_of,
 )
+from ._copilot_claims import (  # noqa: F401 (claims is this adapter's interface, defined
+    # with the rest of the identification side in _copilot_claims and re-exported here)
+    _CLI_ARGS,
+    _CLI_RESULT,
+    _CLI_STOP,
+    EVENT_KEYS,
+    EVENT_MAP,
+    MEMORY_TOOLS,
+    _name,
+    claims,
+    is_cli_native,
+)
 from ._windows import powershell_command
 
 AGENT = "vscode_copilot"
 
-EVENT_MAP = {
-    "PreToolUse": PRE_TOOL,
-    "PostToolUse": POST_TOOL,
-    "UserPromptSubmit": PROMPT_SUBMIT,
-    "SessionStart": SESSION_START,
-    "SubagentStart": SUBAGENT_START,
-    "SubagentStop": SUBAGENT_STOP,
-    "Stop": STOP,
-    "preToolUse": PRE_TOOL,
-    "postToolUse": POST_TOOL,
-    "userPromptSubmitted": PROMPT_SUBMIT,
-    "sessionStart": SESSION_START,
-    "sessionEnd": SESSION_END,
-    "subagentStop": SUBAGENT_STOP,
-    "agentStop": STOP,
-}
-
-MEMORY_TOOLS = ("memory", "copilot_memory")
 MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
 
 #: Copilot's hooks reference ("Tool names for hook matching", read 2026-09-01): runtime
@@ -49,78 +42,10 @@ MEMORY_WRITE_COMMANDS = ("create", "str_replace", "insert")
 SHELL_TOOLS = ("bash", "powershell", "Bash")
 
 
-_CODEX_MARKERS = ("turn_id", "permission_mode")
-
-_CURSOR_MARKERS = ("model", "cursor_version", "conversation_id", "generation_id", "workspace_roots")
-
-_CLAIMABLE = tuple(name for name in EVENT_MAP if name[:1].islower())
-
-_VSCODE_ENVELOPE = "timestamp"
-
-#: Copilot CLI's own camelCase input (docs.github.com/en/copilot/reference/hooks-configuration,
-#: read 2026-09-27): {sessionId, timestamp, cwd, toolName, toolArgs[, toolResult]} and no event
-#: name at all. `toolArgs` is documented as the parsed arguments; the JSON-string form earlier
-#: CLI builds sent is decoded too.
-_CLI_ARGS = "toolArgs"
-_CLI_RESULT = "toolResult"
-_CLI_KEYS = (_CLI_ARGS, "toolName", "sessionId")
-
-#: The camelCase `agentStop` payload (live capture, Windows, 2026-09-28): {sessionId, timestamp
-#: (epoch ms), cwd, transcriptPath, stopReason, stop_hook_active} and no event name either.
-_CLI_STOP = "stopReason"
-
-
-def _name(raw):
-    """The payload's own event name as text; None when it names none, UNKNOWN when the
-    value is not text (a list or object cannot be looked up, and would raise if tried)."""
-    if not isinstance(raw, dict):
-        return None
-    name = raw.get("hook_event_name") or raw.get("hookEventName")
-    if name is None or isinstance(name, str):
-        return name
-    return UNKNOWN
-
-
-def claims(raw):
-    """True for a payload from either product."""
-    if not isinstance(raw, dict) or _is_grok_build(raw):
-        return False
-    name = _name(raw)
-    if name in EVENT_MAP and _VSCODE_ENVELOPE in raw and "turn_id" not in raw:
-        return True
-    if any(k in raw for k in _CODEX_MARKERS + _CURSOR_MARKERS):
-        return False
-    if name in _CLAIMABLE:
-        return True
-    if name is None and (
-        _CLI_ARGS in raw or _CLI_STOP in raw or ("toolName" in raw and ("sessionId" in raw or _VSCODE_ENVELOPE in raw))
-    ):
-        # A CLI call may omit toolArgs; unclaimed, it would pass unseen as "unrecognized".
-        return True
-    ti = raw.get("tool_input")
-    return raw.get("tool_name") in MEMORY_TOOLS and isinstance(ti, dict) and "command" in ti
-
-
-def _is_grok_build(raw):
-    """Grok Build's envelope: hookEventName is hook_event_name's snake_case twin (pre_tool_use, PreToolUse)."""
-    snake, pascal = raw.get("hookEventName"), raw.get("hook_event_name")
-    return isinstance(pascal, str) and str(snake).islower() and str(snake).replace("_", "") == pascal.lower()
-
-
 def _tool_input(raw):
     """The tool's arguments: VS Code's `tool_input`, else the CLI's `toolArgs` (object or JSON text)."""
     ti = raw.get("tool_input")
     return tool_input_of(raw.get(_CLI_ARGS) if ti is None else ti)
-
-
-def is_cli_native(raw):
-    """True for Copilot CLI's camelCase payloads, which get its top-level permission answer."""
-    if not isinstance(raw, dict):
-        return False
-    name = _name(raw)
-    if name is None:
-        return any(k in raw for k in _CLI_KEYS)
-    return name in _CLAIMABLE
 
 
 def _cli_output(raw):

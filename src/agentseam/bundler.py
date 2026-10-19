@@ -22,6 +22,9 @@ SUPPORTED_AGENTS = tuple(sorted(adapters.ADAPTERS))
 #: splices the module itself, every other agent composes an engine + `VENDOR` entry.
 _DIALECT_MODULES = ("vscode_copilot",)
 
+#: The modules a dialect module imports beside `_windows` and `contract`, in splice order.
+_DIALECT_HELPERS = {"vscode_copilot": ("_probes", "_copilot_claims")}
+
 #: Families with their own engine module beside `_payload`/`_hook_json`; the F1/F2
 #: families bind the shared `hj_*` entry points instead.
 _SINGLETON_MODULES = {"cursor": "_cursor", "windsurf": "_windsurf", "antigravity": "_antigravity"}
@@ -238,6 +241,13 @@ def _dialect_bundle(agent):
             _strip_own_imports(_adapter_module_source("_windows"), hoisted),
         )
     )
+    for helper in _DIALECT_HELPERS[agent]:
+        body.append(
+            section(
+                "%s helper (used by the %s adapter)" % (helper, agent),
+                _strip_own_imports(_adapter_module_source(helper), hoisted),
+            )
+        )
     body.append(section("%s adapter" % agent, _strip_own_imports(_adapter_module_source(agent), hoisted)))
 
     sections = [render("header.py.tmpl", {"__AGENT__": agent, "__VERSION__": __version__})]

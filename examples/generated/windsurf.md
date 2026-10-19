@@ -38,31 +38,31 @@ One handler wired for every hook this agent supports.
     "post_cascade_response": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py windsurf"
       }
     ],
     "post_mcp_tool_use": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py windsurf"
       }
     ],
     "pre_mcp_tool_use": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py windsurf"
       }
     ],
     "pre_run_command": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py windsurf"
       }
     ],
     "pre_user_prompt": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py windsurf"
       }
     ]
   }
