@@ -4,13 +4,10 @@ from __future__ import annotations
 
 import os
 
-from .install_atomic import write_text
+from .install_atomic import umask_mode, write_text
 
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
-
-#: Instruction files are shared repo docs, not private config: a new one is world-readable like any checked-in file.
-_FILE_MODE = 0o644
 
 SHARED_FILE = "AGENTS.md"
 
@@ -139,7 +136,8 @@ def write(text, targets=None, repo_root=".", *, dry_run=False):
         results[rel] = "updated" if existing else "created"
         if dry_run:
             continue
-        write_text(full, updated, mode=_FILE_MODE)
+        # A shared repo doc keeps the umask default, not the private 0o600 of hook config.
+        write_text(full, updated, mode=umask_mode())
     return results
 
 

@@ -164,3 +164,16 @@ def test_a_cline_block_stored_with_crlf_still_counts_as_installed(tmp_path):
     hook = tmp_path / ".clinerules" / "hooks" / "PreToolUse"
     hook.write_bytes(hook.read_bytes().replace(b"\n", b"\r\n"))
     assert I.installed("cline", str(tmp_path), events=["pre_tool"], command="g")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits or umask")
+def test_a_new_instruction_file_gets_the_umask_default_and_an_existing_one_keeps_its_mode(tmp_path):
+    mask = os.umask(0o022)
+    try:
+        instructions.write("rules", ["codex_cli"], str(tmp_path))
+        assert (tmp_path / "AGENTS.md").stat().st_mode & 0o777 == 0o666 & ~0o022
+        (tmp_path / "AGENTS.md").chmod(0o640)
+        instructions.write("other rules", ["codex_cli"], str(tmp_path))
+        assert (tmp_path / "AGENTS.md").stat().st_mode & 0o777 == 0o640
+    finally:
+        os.umask(mask)
