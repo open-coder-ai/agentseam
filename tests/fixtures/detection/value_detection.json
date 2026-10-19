@@ -198,7 +198,7 @@
       "pre_tool": "codex_cli",
       "prompt_submit": "codex_cli",
       "session_end": "codex_cli",
-      "session_start": "codex_cli",
+      "session_start": null,
       "stop": "codex_cli",
       "subagent_start": "codex_cli",
       "subagent_stop": "codex_cli"
