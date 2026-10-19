@@ -172,6 +172,25 @@ jobs:
           agentseam matrix | head -3
           agentseam doctor --repo .
 
+  # Windows is billed at 2x, so the full matrix stays tag-only. A pull request still runs
+  # the three test files whose defects were Windows-only (paths, line endings, shell
+  # invocation): install, dispatch and capture-fixtures.
+  windows-targeted:
+    if: github.event_name == 'pull_request'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97  # v7
+        with:
+          python-version: "3.11"
+      - run: pip install --require-hashes -r .github/requirements/dev.txt
+      - run: pip install --no-deps -e .
+      - name: Install, dispatch and capture-fixtures tests
+        shell: bash
+        run: pytest -q tests/test_install*.py tests/test_dispatch.py tests/test_capture_fixtures.py tests/test_experiment_driver.py
+
   # The runtime path must stay importable with no third-party packages: adapters are
   # copied verbatim into other projects, so an accidental dependency breaks exactly
   # the consumers this library exists for. Cheaper to assert than to discover.

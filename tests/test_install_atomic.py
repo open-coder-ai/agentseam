@@ -155,3 +155,10 @@ def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
     old.chmod(0o644)
     install_atomic.write_text(str(old), '{"a": 1}')
     assert old.stat().st_mode & 0o777 == 0o644
+
+
+def test_a_cline_block_stored_with_crlf_still_counts_as_installed(tmp_path):
+    I.install("cline", ["pre_tool"], "g", str(tmp_path))
+    hook = tmp_path / ".clinerules" / "hooks" / "PreToolUse"
+    hook.write_bytes(hook.read_bytes().replace(b"\n", b"\r\n"))
+    assert I.installed("cline", str(tmp_path), events=["pre_tool"], command="g")
