@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 import stat
 
-from .install_config import BEGIN, END, ConfigUnreadableError, block_bounds, read_text, remove_block, write_block
+from .install_atomic import create_exclusive, write_text
+from .install_config import BEGIN, END, ConfigUnreadableError, block_bounds, read_text, render_block, strip_block
 
 #: Cline runs a hook file through its shebang line and requires one (.clinerules/hooks/README.md).
 SHEBANG = "#!/bin/sh"
@@ -51,17 +52,18 @@ def write(directory, fragment, owner):
                 "%s exists and carries no %s block; refusing to overwrite it (Cline runs one %s per hooks "
                 "directory)." % (path, owner, name)
             )
+    prepared = []
     for name, command in fragment.items():
         path = os.path.join(directory, name)
-        if os.path.exists(path):
-            write_block(path, command + "\n", owner)
+        exists = os.path.lexists(path)
+        text = render_block(path, command + "\n", owner) if exists else script(command, owner)
+        prepared.append((path, text, exists))
+    for path, text, exists in prepared:
+        # A file absent at the check is created exclusively: one planted since is refused, never written through.
+        if exists:
+            write_text(path, text)
         else:
-            os.makedirs(directory, exist_ok=True)
-            # O_EXCL: a file (or link) appearing since the check above fails here, never gets written through.
-            with os.fdopen(
-                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8", newline="\n"
-            ) as fh:
-                fh.write(script(command, owner))
+            create_exclusive(path, text, mode=0o600)
         os.chmod(path, os.stat(path).st_mode | _EXECUTABLE)
 
 
@@ -73,7 +75,7 @@ def remove(directory, names, owner):
         _refuse_link(path)
         if not _owned(path, owner):
             continue
-        remove_block(path, owner)
+        strip_block(path, owner)
         if _text(path).strip() in ("", SHEBANG):
             os.remove(path)
         changed = True
