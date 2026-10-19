@@ -95,7 +95,8 @@
     ],
     "content": [
       "tool_input.content",
-      "tool_input.new_string"
+      "tool_input.new_string",
+      "tool_input.new_str"
     ],
     "cwd": [
       "cwd"
@@ -106,6 +107,7 @@
     ],
     "path": [
       "tool_input.file_path",
+      "tool_input.absolute_path",
       "tool_input.path"
     ],
     "prompt": [
