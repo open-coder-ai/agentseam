@@ -10,9 +10,9 @@ language. agentseam normalizes them into one handler API, one decision type
 `ask` and `rewrite` remain as deprecated aliases of `escalate` and `transform`), and an
 explicit capability matrix that states what each agent can *actually* enforce — `enforced`,
 `best-effort`, `enforceable`, `detect`, or `none` — rather than assuming they are equivalent.
-The matrix (`src/agentseam/matrix.py`) covers 16 agents by 12 events: 192 cells, of which 101
-are `none`, 55 `detect`, 34 `best-effort`, 2 `enforceable` and 0 `enforced`. A matrix row is
-only claimed when a `verified: {version, date, method}` record backs it; 10 of the 16 agents
+The matrix (`src/agentseam/matrix.py`) covers 27 agents by 12 events: 324 cells, of which 203
+are `none`, 74 `detect`, 45 `best-effort`, 2 `enforceable` and 0 `enforced`. A matrix row is
+only claimed when a `verified: {version, date, method}` record backs it; 21 of the 27 agents
 rest on vendor documentation, 1 on a live run, 3 on a partial live run, 1 on the vendor's
 source and 1 on a third-party install, and each is marked as such.
 
