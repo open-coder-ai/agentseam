@@ -144,3 +144,14 @@ def test_cline_never_writes_through_a_link_planted_after_the_check(tmp_path, mon
     assert victim.read_text(encoding="utf-8") == "keep\n"
     assert os.path.islink(hooks / "PreToolUse")
     assert [n for n in os.listdir(hooks) if n.endswith(".tmp")] == []
+
+
+def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
+    fresh = tmp_path / "fresh.json"
+    install_atomic.write_text(str(fresh), "{}")
+    assert fresh.stat().st_mode & 0o777 == 0o600
+    old = tmp_path / "old.json"
+    old.write_text("{}", encoding="utf-8")
+    old.chmod(0o644)
+    install_atomic.write_text(str(old), '{"a": 1}')
+    assert old.stat().st_mode & 0o777 == 0o644

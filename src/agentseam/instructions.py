@@ -9,6 +9,9 @@ from .install_atomic import write_text
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
 
+#: Instruction files are shared repo docs, not private config: a new one is world-readable like any checked-in file.
+_FILE_MODE = 0o644
+
 SHARED_FILE = "AGENTS.md"
 
 INSTRUCTION_FILES = {
@@ -136,7 +139,7 @@ def write(text, targets=None, repo_root=".", *, dry_run=False):
         results[rel] = "updated" if existing else "created"
         if dry_run:
             continue
-        write_text(full, updated)
+        write_text(full, updated, mode=_FILE_MODE)
     return results
 
 

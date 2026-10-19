@@ -16,7 +16,7 @@ try:
 except ImportError:
     msvcrt = None
 
-_DEFAULT_MODE = 0o644
+_DEFAULT_MODE = 0o600
 _LOCK_WAIT_SECONDS = 30
 
 
@@ -24,7 +24,8 @@ def write_bytes(path, data, mode=None):
     """Replace `path` with `data` in one step; a failure leaves the old file and no temp file behind.
 
     A symlinked `path` is written through (its target is replaced, the link stays). The file keeps
-    its own permission bits; a new one gets `mode`, default 0o644.
+    its own permission bits; a new one gets `mode`, default 0o600 (a config carrying hook commands
+    has no reader but its owner).
     """
     target = os.path.realpath(path)
     parent = os.path.dirname(target) or "."
