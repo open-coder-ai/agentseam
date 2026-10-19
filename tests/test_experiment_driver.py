@@ -7,6 +7,8 @@ one a contributor writes by hand while following docs/coverage-gaps.md.
 
 from __future__ import annotations
 
+import subprocess
+
 import pytest
 
 from agentseam.probe import experiment_driver
@@ -46,6 +48,16 @@ def test_a_missing_agent_binary_is_refused_not_scored_as_a_config_fault(tmp_path
         experiment_driver.drive_real(
             "agentseam-no-such-agent-cli-xyz -p {prompt}", str(tmp_path), trigger="echo ok >> ACTION_RAN"
         )
+
+
+def test_cmd_exe_exit_1_with_not_recognized_is_a_missing_binary(tmp_path, monkeypatch):
+    """cmd.exe says "is not recognized" and exits 1, not 9009, for an unknown command in a compound line."""
+    fake = subprocess.CompletedProcess(
+        "x", 1, stdout="", stderr="'agent-cli' is not recognized as an internal or external command"
+    )
+    monkeypatch.setattr(experiment_driver._shell, "run_shell", lambda *_a, **_k: fake)
+    with pytest.raises(experiment_driver.DriverNotFoundError, match="binary not found"):
+        experiment_driver.drive_real("agent-cli -p {prompt}", str(tmp_path), trigger="echo ok")
 
 
 def test_the_reference_driver_refuses_an_agent_it_does_not_model():

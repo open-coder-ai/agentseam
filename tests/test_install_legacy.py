@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
@@ -26,7 +27,7 @@ def test_windsurf_wires_devin_hooks_json_and_cleans_the_legacy_file(tmp_path):
     """docs.devin.ai/desktop/cascade/hooks: .windsurf/hooks.json is read only while .devin/hooks.json defines none."""
     _write(tmp_path, _LEGACY, {"hooks": {"pre_run_command": [{"command": "old", "_agentseam": "agentseam"}]}})
     path = I.install("windsurf", ["pre_tool"], "g", str(tmp_path))
-    assert path == str(tmp_path / _CURRENT)
+    assert os.path.normpath(path) == os.path.normpath(str(tmp_path / _CURRENT))
     assert _read(tmp_path, _CURRENT)["hooks"]["pre_run_command"][0]["command"] == "g windsurf"
     assert _read(tmp_path, _LEGACY) == {}
     assert I.uninstall("windsurf", str(tmp_path))

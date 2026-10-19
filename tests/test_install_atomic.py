@@ -77,6 +77,7 @@ def test_failed_target_write_leaves_the_legacy_hook_intact(tmp_path, monkeypatch
     assert not (tmp_path / _CURRENT).exists()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits; chmod only toggles read-only")
 def test_write_keeps_mode_and_goes_through_a_symlink(tmp_path):
     real = tmp_path / "real.json"
     real.write_text("{}", encoding="utf-8")
@@ -146,6 +147,7 @@ def test_cline_never_writes_through_a_link_planted_after_the_check(tmp_path, mon
     assert [n for n in os.listdir(hooks) if n.endswith(".tmp")] == []
 
 
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits; chmod only toggles read-only")
 def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
     fresh = tmp_path / "fresh.json"
     install_atomic.write_text(str(fresh), "{}")
@@ -157,6 +159,14 @@ def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
     assert old.stat().st_mode & 0o777 == 0o644
 
 
+def test_a_cline_block_stored_with_crlf_still_counts_as_installed(tmp_path):
+    I.install("cline", ["pre_tool"], "g", str(tmp_path))
+    hook = tmp_path / ".clinerules" / "hooks" / "PreToolUse"
+    hook.write_bytes(hook.read_bytes().replace(b"\n", b"\r\n"))
+    assert I.installed("cline", str(tmp_path), events=["pre_tool"], command="g")
+
+
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits or umask")
 def test_a_new_instruction_file_gets_the_umask_default_and_an_existing_one_keeps_its_mode(tmp_path):
     mask = os.umask(0o022)
     try:

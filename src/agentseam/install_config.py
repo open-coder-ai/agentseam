@@ -192,7 +192,7 @@ def resolve(mod, repo_root, owner):
     """Where this agent's config lives. A `*` in the adapter's own CONFIG_PATH is the owner's
     slot; one in `repo_root` or the user's home is just a character in a directory name."""
     config = mod.CONFIG_PATH.replace("*", owner)
-    return os.path.expanduser(config) if config.startswith("~") else os.path.join(repo_root, config)
+    return os.path.normpath(os.path.expanduser(config) if config.startswith("~") else os.path.join(repo_root, config))
 
 
 def fail_closed_kwarg(mod, fail_closed):

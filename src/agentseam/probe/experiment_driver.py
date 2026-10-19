@@ -41,6 +41,12 @@ def _reject_quoted_prompt(command):
             )
 
 
+def _windows_not_recognized(proc):
+    """cmd.exe reports an unknown command as exit 1 with "is not recognized" on stderr, not 9009,
+    when the command sits inside a compound line."""
+    return proc.returncode == 1 and "is not recognized" in (proc.stderr or "")
+
+
 def drive_real(command, workspace, *, trigger):
     """Drive a real agent CLI in the scratch workspace.
 
@@ -64,7 +70,7 @@ def drive_real(command, workspace, *, trigger):
             "stdout": (exc.stdout or "")[-2000:],
             "stderr": (exc.stderr or "")[-2000:],
         }
-    if proc.returncode in _NOT_FOUND_EXITS:
+    if proc.returncode in _NOT_FOUND_EXITS or _windows_not_recognized(proc):
         raise DriverNotFoundError(
             "driver binary not found: the shell could not run %r (exit %d: %s). Install the "
             "agent CLI or put it on PATH; no hook was measured, so this is not a finding about "

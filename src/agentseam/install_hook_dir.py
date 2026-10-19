@@ -89,6 +89,6 @@ def installed(directory, names, owner, fragment=None):
     for name, command in fragment.items():
         text = _text(os.path.join(directory, name)) or ""
         bounds = block_bounds(text, owner)
-        if bounds is None or text[bounds[0] : bounds[1]] != block(command, owner):
+        if bounds is None or text[bounds[0] : bounds[1]].replace("\r\n", "\n") != block(command, owner):
             return False
     return bool(fragment)

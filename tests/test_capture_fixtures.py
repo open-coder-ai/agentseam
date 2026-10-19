@@ -35,11 +35,17 @@ def test_two_captures_in_one_process_are_identical(agent):
     assert C.render(agent) == C.render(agent)
 
 
+def _write_lf(path, text):
+    """Text-mode write_text would turn \\n into \\r\\n on Windows and make every fixture look drifted."""
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(text)
+
+
 def test_check_flags_a_drifted_and_a_missing_fixture(tmp_path):
     first, second, *rest = AGENTS
     for agent in rest:
-        Path(C.fixture_path(agent, tmp_path)).write_text(C.render(agent), encoding="utf-8")
-    Path(C.fixture_path(first, tmp_path)).write_text(C.render(first).replace("example", "drift"), encoding="utf-8")
+        _write_lf(C.fixture_path(agent, tmp_path), C.render(agent))
+    _write_lf(C.fixture_path(first, tmp_path), C.render(first).replace("example", "drift"))
     assert C.drifted(tmp_path) == [first, second]
 
 
