@@ -165,6 +165,10 @@ heading for a memory file, the same failing test, the same prompt.
 
 Enforcement: **detect**.
 
+> Also claimed by **claude_code**, so `detect()` declines this payload and the agent has
+> to be named: `handle(raw, handler, agent="codex_cli")`. Guessing between adapters
+> that answer differently is worse than declining.
+
 The agent sends:
 
 ```json
@@ -175,7 +179,7 @@ The agent sends:
   "permission_mode": "auto",
   "session_id": "example",
   "source": "startup",
-  "turn_id": "turn-1"
+  "transcript_path": "/repo/.codex/transcript.jsonl"
 }
 ```
 
