@@ -77,6 +77,7 @@ def test_failed_target_write_leaves_the_legacy_hook_intact(tmp_path, monkeypatch
     assert not (tmp_path / _CURRENT).exists()
 
 
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits; chmod only toggles read-only")
 def test_write_keeps_mode_and_goes_through_a_symlink(tmp_path):
     real = tmp_path / "real.json"
     real.write_text("{}", encoding="utf-8")
@@ -146,6 +147,7 @@ def test_cline_never_writes_through_a_link_planted_after_the_check(tmp_path, mon
     assert [n for n in os.listdir(hooks) if n.endswith(".tmp")] == []
 
 
+@pytest.mark.skipif(os.name == "nt", reason="NTFS has no POSIX permission bits; chmod only toggles read-only")
 def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
     fresh = tmp_path / "fresh.json"
     install_atomic.write_text(str(fresh), "{}")
