@@ -128,10 +128,27 @@ _CLAIMS = {
         "mode": "marker",
         "event_key": ["hook_event_name"],
         "accept_markers": ["timestamp"],
+        # The positive marks of the vendors whose SessionStart/SessionEnd grew a timestamp in the
+        # prerelease review (AS-1a) and were claimed here too; the same discipline as VS Code's
+        # envelope claim, and the same five Droid values claude_code rejects.
+        "reject_markers": [
+            "turn_id",
+            "project_path",
+            "prompt_id",
+            "client_type",
+            "conversation_id",
+            "generation_id",
+            "workspace_roots",
+            "cursor_version",
+        ],
+        "reject_values": {"permission_mode": ["off", "spec", "auto-low", "auto-medium", "auto-high"]},
         "notes": (
             "timestamp identifies Tabnine but cannot exclude Gemini CLI, which sends it too "
             "(tabnine.py notes); detect() declines when both could claim, and the agent must "
-            "be named explicitly."
+            "be named explicitly. A positive mark of another vendor beats the shared key: Codex's "
+            "turn_id, Junie's project_path, Devin's prompt_id, a client_type, Cursor's base-schema "
+            "keys and Droid's permission_mode values are rejected, so a SessionStart or SessionEnd "
+            "of theirs that grows a timestamp is not claimed here too (prerelease review, AS-1a)."
         ),
     },
     "grok": {

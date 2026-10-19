@@ -71,6 +71,27 @@ def test_a_timestamp_key_changes_no_gate_payloads_claimants(agent, event):
         assert after == before == [agent]
 
 
+#: Observation-event payloads that were one vendor's alone before `timestamp` is added. Left out:
+#: claude_code's and gemini_cli's (their entries reject the key by design, see above) and payloads
+#: already shared before (Devin's bare SessionStart carries no mark of its own).
+OBSERVATION_PAYLOADS = [
+    (agent, event)
+    for agent, events in sorted(SCENARIOS.items())
+    for event in sorted(events)
+    if event not in GATES
+    and agent not in TIMESTAMP_IS_SOMEONE_ELSES
+    and adapters.claimants(SCENARIOS[agent][event]) == [agent]
+]
+
+
+@pytest.mark.parametrize(("agent", "event"), OBSERVATION_PAYLOADS)
+def test_a_timestamp_key_does_not_hand_an_observation_payload_to_tabnine_too(agent, event):
+    """tabnine.json accepts `timestamp` alone, so it claimed Codex's, Junie's, Kimi's, Droid's and Devin's
+    SessionStart/SessionEnd the moment a timestamp appeared; its reject_markers now carry their marks."""
+    raw = SCENARIOS[agent][event]
+    assert adapters.claimants(dict(raw, **TIMESTAMP)) == [agent]
+
+
 def test_vscode_still_claims_every_payload_of_its_own():
     """SessionStart carries `model` (Cursor's marker too), which is why the envelope does not yield to it.
     Tabnine shares that one observation-only payload, as it did before (the generated page says so)."""
