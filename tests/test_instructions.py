@@ -111,3 +111,21 @@ def test_the_readme_arithmetic_cannot_drift():
     files_written = (1 if p["shared"] else 0) + len(p["per_agent"])
     assert agents_reached == len(I.INSTRUCTION_FILES) == 27
     assert files_written == 8
+
+
+def test_prose_mentioning_the_markers_is_untouched(tmp_path):
+    prose = "Wrap it in %s ... %s to manage it.\n" % (I.BEGIN, I.END)
+    assert I.render(prose, "rules").startswith(prose)
+    (tmp_path / "AGENTS.md").write_text(prose)
+    I.remove(["codex_cli"], str(tmp_path))
+    assert (tmp_path / "AGENTS.md").read_text() == prose
+
+
+def test_reversed_markers_are_refused_in_one_line(tmp_path):
+    (tmp_path / "AGENTS.md").write_text("%s\nx\n%s\n" % (I.END, I.BEGIN))
+    with pytest.raises(ValueError, match="before the begin marker"):
+        I.render((tmp_path / "AGENTS.md").read_text(), "t")
+    with pytest.raises(ValueError, match="AGENTS.md: "):
+        I.write("t", ["codex_cli"], str(tmp_path))
+    with pytest.raises(ValueError, match="AGENTS.md: "):
+        I.remove(["codex_cli"], str(tmp_path))
