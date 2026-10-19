@@ -1084,7 +1084,7 @@
   },
   "tabnine": {
     "display": "Tabnine CLI",
-    "tier": "block",
+    "tier": "block+rewrite",
     "config": ".tabnine/agent/settings.json",
     "verified": {
       "basis": "vendor-docs",

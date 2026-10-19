@@ -75,7 +75,7 @@
 
     "fields": {
       "type": "object",
-      "description": "canonical Event field -> ordered fallback chain of dotted vendor keys tried in `parse()`.",
+      "description": "canonical Event field -> ordered fallback chain of dotted vendor keys tried in `parse()`, most specific first. `path` and the other fields take the first key that holds a value; `command` and `content` join every distinct value the chain finds with a newline, so a guard sees each candidate and a benign key cannot shadow a dangerous one.",
       "additionalProperties": false,
       "properties": {
         "tool": {"$ref": "#/$defs/keyChain"},

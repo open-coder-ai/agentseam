@@ -117,11 +117,11 @@
       "tool_input.command"
     ],
     "content": [
+      "tool_input.edits[].new_string",
       "tool_input.content",
       "tool_input.new_string",
       "tool_input.new_source",
-      "content",
-      "tool_input.edits[].new_string"
+      "content"
     ],
     "cwd": [
       "cwd"
@@ -132,9 +132,9 @@
       "error"
     ],
     "path": [
+      "tool_input.notebook_path",
       "tool_input.file_path",
       "tool_input.path",
-      "tool_input.notebook_path",
       "file_path"
     ],
     "prompt": [

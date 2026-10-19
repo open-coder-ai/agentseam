@@ -117,6 +117,7 @@ def test_the_index_says_the_pages_are_not_observations(generated):
 
 
 KNOWN_AMBIGUOUS = {
+    ("codex_cli", "session_start"),
     ("devin", "session_start"),
     ("gemini_cli", "session_start"),
     ("gemini_cli", "session_end"),

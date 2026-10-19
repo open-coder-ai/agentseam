@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import os
+import re
 
 from .install_atomic import umask_mode, write_text
 
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
+
+_BEGIN_LINE = re.compile("^" + re.escape(BEGIN), re.MULTILINE)
+_END_LINE = re.compile("^" + re.escape(END), re.MULTILINE)
+
+_REVERSED = "the end marker comes before the begin marker; fix the file by hand"
 
 SHARED_FILE = "AGENTS.md"
 
@@ -101,13 +107,23 @@ def _managed_block(text, agent=None):
     return "%s\n%s%s\n%s" % (BEGIN, body, note, END)
 
 
+def _split(existing):
+    """(head, tail) around our block, or None when there is none; markers count only at a line start."""
+    begin = _BEGIN_LINE.search(existing)
+    end = _END_LINE.search(existing, begin.end()) if begin else None
+    if begin and end:
+        return existing[: begin.start()], existing[end.end() :]
+    if begin and _END_LINE.search(existing):
+        raise ValueError(_REVERSED)
+    return None
+
+
 def render(existing, text, agent=None):
     """Return `existing` with our managed block inserted or replaced."""
     block = _managed_block(text, agent)
-    if existing and BEGIN in existing and END in existing:
-        head, rest = existing.split(BEGIN, 1)
-        _, tail = rest.split(END, 1)
-        return head + block + tail
+    parts = _split(existing) if existing else None
+    if parts:
+        return parts[0] + block + parts[1]
     if not existing:
         return block + "\n"
     sep = "" if existing.endswith("\n\n") else ("\n" if existing.endswith("\n") else "\n\n")
@@ -129,7 +145,10 @@ def write(text, targets=None, repo_root=".", *, dry_run=False):
         if os.path.exists(full):
             with open(full, encoding="utf-8") as fh:
                 existing = fh.read()
-        updated = render(existing, text, agent)
+        try:
+            updated = render(existing, text, agent)
+        except ValueError as exc:
+            raise ValueError("%s: %s" % (rel, exc)) from exc
         if updated == existing:
             results[rel] = "unchanged"
             continue
@@ -155,10 +174,13 @@ def remove(targets=None, repo_root="."):
                 continue
             with open(full, encoding="utf-8") as fh:
                 existing = fh.read()
-            if BEGIN not in existing or END not in existing:
+            try:
+                parts = _split(existing)
+            except ValueError as exc:
+                raise ValueError("%s: %s" % (rel, exc)) from exc
+            if not parts:
                 continue
-            head, rest = existing.split(BEGIN, 1)
-            _, tail = rest.split(END, 1)
+            head, tail = parts
             cleaned = (head.rstrip("\n") + "\n" + tail.lstrip("\n")).strip() + "\n"
             write_text(full, "" if cleaned.strip() == "" else cleaned)
             removed[rel] = "cleaned"

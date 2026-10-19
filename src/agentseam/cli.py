@@ -34,6 +34,10 @@ def _cmd_install(args):
     if unknown:
         print("unknown event(s): %s" % ", ".join(unknown), file=sys.stderr)
         return 2
+    if args.agent != "all" and args.agent not in adapters.ADAPTERS:
+        have = ", ".join(sorted(adapters.ADAPTERS))
+        print("no adapter for %s; adapted agents are %s" % (args.agent, have), file=sys.stderr)
+        return 2
     targets = sorted(adapters.ADAPTERS) if args.agent == "all" else [args.agent]
     skipped = 0
     for agent in targets:
@@ -78,7 +82,7 @@ def _cmd_instructions(args):
         return 2
     try:
         results = instructions_mod.write(text, args.agents, args.repo, dry_run=args.dry_run)
-    except KeyError as exc:
+    except (KeyError, ValueError) as exc:
         print(str(exc), file=sys.stderr)
         return 2
     decided = instructions_mod.plan(args.agents, args.repo)
