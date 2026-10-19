@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import os
 
+from .install_atomic import write_text
+
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
 
@@ -134,11 +136,7 @@ def write(text, targets=None, repo_root=".", *, dry_run=False):
         results[rel] = "updated" if existing else "created"
         if dry_run:
             continue
-        parent = os.path.dirname(full)
-        if parent:
-            os.makedirs(parent, exist_ok=True)
-        with open(full, "w", encoding="utf-8") as fh:
-            fh.write(updated)
+        write_text(full, updated)
     return results
 
 
@@ -161,7 +159,6 @@ def remove(targets=None, repo_root="."):
             head, rest = existing.split(BEGIN, 1)
             _, tail = rest.split(END, 1)
             cleaned = (head.rstrip("\n") + "\n" + tail.lstrip("\n")).strip() + "\n"
-            with open(full, "w", encoding="utf-8") as fh:
-                fh.write("" if cleaned.strip() == "" else cleaned)
+            write_text(full, "" if cleaned.strip() == "" else cleaned)
             removed[rel] = "cleaned"
     return removed

@@ -32,15 +32,22 @@ def check_not_shadowing(mod, agent, path, repo_root, owner):
             )
 
 
-def clean(mod, repo_root, owner):
-    """Strip `owner`'s entries from every legacy file. Returns True when one changed."""
-    changed = False
+def prepare_clean(mod, repo_root, owner):
+    """`[(legacy path, its data without `owner`'s entries)]` for each legacy file that would change."""
+    out = []
     for legacy in _legacy_paths(mod, repo_root):
         if not os.path.exists(legacy):
             continue
         before = load(legacy)
         after = strip(before, owner)
         if after != before:
-            dump(legacy, after)
-            changed = True
-    return changed
+            out.append((legacy, after))
+    return out
+
+
+def clean(mod, repo_root, owner):
+    """Strip `owner`'s entries from every legacy file. Returns True when one changed."""
+    changes = prepare_clean(mod, repo_root, owner)
+    for legacy, after in changes:
+        dump(legacy, after)
+    return bool(changes)

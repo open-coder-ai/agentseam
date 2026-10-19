@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 import stat
 
-from .install_config import BEGIN, END, ConfigUnreadableError, block_bounds, read_text, remove_block, write_block
+from .install_atomic import write_text
+from .install_config import BEGIN, END, ConfigUnreadableError, block_bounds, read_text, remove_block, render_block
 
 #: Cline runs a hook file through its shebang line and requires one (.clinerules/hooks/README.md).
 SHEBANG = "#!/bin/sh"
@@ -51,17 +52,13 @@ def write(directory, fragment, owner):
                 "%s exists and carries no %s block; refusing to overwrite it (Cline runs one %s per hooks "
                 "directory)." % (path, owner, name)
             )
+    prepared = []
     for name, command in fragment.items():
         path = os.path.join(directory, name)
-        if os.path.exists(path):
-            write_block(path, command + "\n", owner)
-        else:
-            os.makedirs(directory, exist_ok=True)
-            # O_EXCL: a file (or link) appearing since the check above fails here, never gets written through.
-            with os.fdopen(
-                os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), "w", encoding="utf-8", newline="\n"
-            ) as fh:
-                fh.write(script(command, owner))
+        text = render_block(path, command + "\n", owner) if os.path.exists(path) else script(command, owner)
+        prepared.append((path, text))
+    for path, text in prepared:
+        write_text(path, text, mode=0o600)
         os.chmod(path, os.stat(path).st_mode | _EXECUTABLE)
 
 

@@ -6,6 +6,8 @@ import inspect
 import json
 import os
 
+from .install_atomic import write_text
+
 MARKER = "_agentseam"
 
 BEGIN = "# >>> agentseam >>>"
@@ -45,7 +47,7 @@ def load(path):
 
 def dump(path, data):
     """Keys in the file's own order: a re-sorted file is a diff of the user's that nobody asked for."""
-    _write_text(path, json.dumps(data, indent=2) + "\n")
+    write_text(path, json.dumps(data, indent=2) + "\n")
 
 
 def read_text(path):
@@ -58,17 +60,6 @@ def read_text(path):
         raise ConfigUnreadableError(
             "%s exists but is not UTF-8 text (%s); refusing to overwrite it." % (path, exc)
         ) from exc
-
-
-def _write_text(path, text):
-    """Encode first, then open: a text that cannot be encoded must fail with the file intact,
-    not after "w" has already truncated it to nothing."""
-    data = text.encode("utf-8")
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    with open(path, "wb") as fh:
-        fh.write(data)
 
 
 def mark(obj, owner):
@@ -154,18 +145,21 @@ def _newline_of(text):
     return "\r\n" if "\r\n" in text else "\n"
 
 
-def write_block(path, body, owner):
-    """Replace our block, or append one. Everything outside it is left byte-for-byte, and the
-    block takes the file's own line endings so a Windows-authored file stays one kind."""
+def render_block(path, body, owner):
+    """The text of `path` with our block replaced or appended. Everything outside it is left
+    byte-for-byte, and the block takes the file's own line endings so a Windows-authored file
+    stays one kind."""
     text = read_text(path) if os.path.exists(path) else ""
     nl = _newline_of(text)
     block = ("%s %s\n%s%s %s" % (BEGIN, owner, body, END, owner)).replace("\n", nl)
     bounds = block_bounds(text, owner)
     if bounds:
-        text = text[: bounds[0]] + block + text[bounds[1] :]
-    else:
-        text = (text.rstrip("\r\n") + nl + nl if text.strip() else "") + block + nl
-    _write_text(path, text)
+        return text[: bounds[0]] + block + text[bounds[1] :]
+    return (text.rstrip("\r\n") + nl + nl if text.strip() else "") + block + nl
+
+
+def write_block(path, body, owner, mode=None):
+    write_text(path, render_block(path, body, owner), mode)
 
 
 def remove_block(path, owner):
@@ -175,7 +169,7 @@ def remove_block(path, owner):
         return False
     nl = _newline_of(text)
     cleaned = (text[: bounds[0]].rstrip("\r\n") + nl + text[bounds[1] :].lstrip("\r\n")).strip("\r\n")
-    _write_text(path, cleaned + nl if cleaned else "")
+    write_text(path, cleaned + nl if cleaned else "")
     return True
 
 
