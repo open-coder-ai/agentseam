@@ -116,13 +116,16 @@
       "prompt"
     ],
     "session_id": [
-      "sessionId"
+      "sessionId",
+      "session_id"
     ],
     "tool": [
-      "toolName"
+      "toolName",
+      "tool_name"
     ],
     "tool_input": [
-      "toolInput"
+      "toolInput",
+      "tool_input"
     ]
   },
   "hook_entry": {

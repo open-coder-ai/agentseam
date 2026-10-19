@@ -44,6 +44,14 @@ __all__ = [
 ]
 
 
+def _check_name(name):
+    """Refuse a name that could leave the bundle root or break a path."""
+    if isinstance(name, str) and (
+        "/" in name or "\\" in name or ".." in name or any(ch < " " or ch == "\x7f" for ch in name)
+    ):
+        raise ValueError("unsafe name %r: no '/', '\\', '..' or control characters" % (name,))
+
+
 class Part:
     """One piece of a bundle: a kind, a name, and its body text."""
 
@@ -52,6 +60,7 @@ class Part:
     def __init__(self, kind, name, body, description=None, *, executable=False):
         if kind not in PARTS:
             raise ValueError("unknown part: %r" % (kind,))
+        _check_name(name)
         self.kind = kind
         self.name = name
         self.body = body
@@ -68,6 +77,7 @@ class Bundle:
     __slots__ = ("description", "name", "parts", "version")
 
     def __init__(self, name, version="0.1.0", description=None, parts=()):
+        _check_name(name)
         self.name = name
         self.version = version
         self.description = description

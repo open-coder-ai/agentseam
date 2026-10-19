@@ -122,10 +122,13 @@ def _list_at(node, path):
 
 
 def _walk(node, path):
-    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[]` its strings, `a[0]` indexes."""
+    """A dotted path off `node`; `a[].b` joins `b` over `a`'s dict items, `a[]` its strings (or a lone string), `a[0]` indexes."""
     if path.endswith("[]"):
-        joined = "\n".join(item for item in _list_at(node, path[:-2]) or () if isinstance(item, str))
-        return joined or None
+        items = _list_at(node, path[:-2])
+        if items is None:
+            lone = _walk(node, path[:-2])
+            return lone if isinstance(lone, str) and lone else None
+        return "\n".join(item for item in items if isinstance(item, str)) or None
     if "[]." in path:
         head, sub = path.split("[].", 1)
         items = _list_at(node, head)
@@ -147,13 +150,19 @@ def _lookup(raw, ti, key):
     return _walk(raw, key)
 
 
-def _field(raw, ti, chain):
-    value = None
-    for key in chain:
-        if value:
-            break
-        value = value or _lookup(raw, ti, key)
-    return value
+#: Fields a guard scans whole: every candidate the chain finds is joined, so none can shadow another.
+_JOINED_FIELDS = ("command", "content")
+
+
+def _field(raw, ti, chain, name=None):
+    if name not in _JOINED_FIELDS:
+        return next(filter(None, (_lookup(raw, ti, key) for key in chain)), None)
+    found = [v for v in (_lookup(raw, ti, key) for key in chain) if v]
+    if not found:
+        return None
+    if not all(isinstance(v, str) for v in found):
+        return found[0]
+    return "\n".join(dict.fromkeys(found))
 
 
 #: `fields` keys that steer the extraction rather than naming an Event field.
@@ -186,7 +195,7 @@ def hj_parse(cfg, raw, wire=None):
     marker families resolve it from the payload's own event key.
     """
     ti = tool_input_of(_tool_input_raw(cfg, raw))
-    fields = {name: _field(raw, ti, chain) for name, chain in cfg["fields"].items() if name not in _FIELD_META}
+    fields = {name: _field(raw, ti, chain, name) for name, chain in cfg["fields"].items() if name not in _FIELD_META}
     if cfg["fields"].get("content_only_for_write_tools") and fields.get("tool") not in cfg["tools"].get("write", ()):
         fields["content"] = None
     if isinstance(fields.get("output"), (dict, list)):
