@@ -197,8 +197,8 @@ def _engine_source(cfg, prefix, hoisted):
 def bundle_entry(cfg):
     """Render one vendor config entry as a self-contained, stdlib-only hook file.
 
-    Public so an entry not (yet) registered in `adapters` -- the thirteenth vendor --
-    bundles exactly the way the registered ones do.
+    Public so an entry not yet registered in `adapters` bundles the way the registered ones do;
+    with no MATRIX row either, its runtime claims no transform events and degrades vouch and warn.
     """
     agent = cfg["agent"]
     prefix = cfg["family"] if cfg["family"] in _SINGLETON_MODULES else "hj"

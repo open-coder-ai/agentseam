@@ -188,3 +188,10 @@ def test_install_says_how_to_trust_a_hook_the_agent_will_not_run_yet(tmp_path):
     assert "/hooks" in doctor.stdout
     plain = _run(["install", "claude_code", "python3 guard.py", "--repo", str(tmp_path)])
     assert "trusted" not in plain.stdout
+
+
+def test_install_of_an_unadapted_agent_is_a_message_not_a_traceback(tmp_path):
+    out = _run(["install", "nope", "h", "--repo", str(tmp_path)])
+    assert out.returncode == 2
+    assert "no adapter for nope; adapted agents are" in out.stderr
+    assert "Traceback" not in out.stderr
