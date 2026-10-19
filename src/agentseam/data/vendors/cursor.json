@@ -81,6 +81,7 @@
     ],
     "content": [
       "edits[].new_string",
+      "tool_input.edits[].new_string",
       "tool_input.content",
       "tool_input.new_string",
       "content"

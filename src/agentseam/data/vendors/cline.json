@@ -88,9 +88,8 @@
   "family": "hook_json",
   "fields": {
     "command": [
-      "tool_input.command",
       "tool_input.commands[]",
-      "tool_input.commands",
+      "tool_input.command",
       "tool_input.cmd"
     ],
     "content": [
