@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import pytest  # noqa: E402
 
 import agentseam as A  # noqa: E402
+from agentseam.matrix_terms import TIER_BLOCK, TIER_FULL, TIER_NONE, TIER_OBSERVE, TIER_UNADAPTED  # noqa: E402
 
 
 def test_every_row_carries_verification_provenance():
@@ -225,3 +226,20 @@ def test_every_basis_has_a_caveat_a_reader_can_understand():
     from agentseam.matrix import BASES
 
     assert sorted(BASIS_CAVEAT) == sorted(BASES)
+
+
+def _derived_tier(agent):
+    """The tier a row's cells earn: any rewriting cell is block+rewrite, else any blocking cell is block."""
+    cells = [A.capability(agent, e) for e in A.MATRIX[agent]["events"]]
+    if any(c["rewrite"] for c in cells):
+        return TIER_FULL
+    return TIER_BLOCK if any(c["block"] for c in cells) else TIER_OBSERVE
+
+
+def test_every_adapted_rows_tier_is_the_one_its_cells_earn():
+    stale = {
+        a: (row["tier"], _derived_tier(a))
+        for a, row in A.MATRIX.items()
+        if row["tier"] not in (TIER_NONE, TIER_UNADAPTED) and row["tier"] != _derived_tier(a)
+    }
+    assert not stale

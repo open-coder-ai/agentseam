@@ -9,6 +9,7 @@ instruction files, plugin packaging, and config
 repo: {root_readme: README.md, agent_rules: AGENTS.md}
 runtime: {stdlib_only: true, dependencies: none, reason: adapters_are_vendored_as_single_files}
 adapters: {one_module_per_agent, owns: [payload_parse, response_dialect, config_shape]}
+field_chains: {order: most_specific_first, path: first_present_value, command_and_content: every_present_value_joined_with_newline, reason: a_guard_must_see_what_the_tool_applies}
 matrix: {is: data, not: code; every_row_requires: [version, date, method]}
 claims: {never_exceed: capability_matrix; degrade: honestly}
 files: {max_lines: 300, remedy: split_by_activity}

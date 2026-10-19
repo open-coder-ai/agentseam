@@ -228,7 +228,7 @@
         "permission_mode": "auto",
         "session_id": "example",
         "source": "startup",
-        "turn_id": "turn-1"
+        "transcript_path": "/repo/.codex/transcript.jsonl"
       }
     },
     "stop": {

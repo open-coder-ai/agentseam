@@ -17,7 +17,7 @@ block is produced by running agentseam, so it is what this agent actually gets.
 
 | | |
 |---|---|
-| tier | `block` |
+| tier | `block+rewrite` |
 | enforcement at `pre_tool` | **best-effort** |
 | can block / transform | yes / yes |
 | hooks covered | 7 |

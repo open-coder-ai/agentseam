@@ -225,3 +225,11 @@ def test_devin_plan_renders_the_native_layout_and_drops_commands(bundle):
     assert "skills/secret-scan/SKILL.md" in result.files
     assert "agents/auditor.md" in result.files
     assert result.unrepresentable[0].reason == PART_LIMITS[("devin", COMMAND)]
+
+
+@pytest.mark.parametrize("name", ["a/b", "a\\b", "..", "x..y", "/abs", "a\nb", "a\x00b", "a\x7fb"])
+def test_part_and_bundle_refuse_an_unsafe_name(name):
+    with pytest.raises(ValueError, match="unsafe name"):
+        Part("skill", name, "body")
+    with pytest.raises(ValueError, match="unsafe name"):
+        Bundle(name)

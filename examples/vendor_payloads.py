@@ -251,10 +251,18 @@ def _devin(event, vendor_event, base):
     return raw
 
 
+def _codex_cli(event, vendor_event, base):
+    """Codex's SessionStart has `transcript_path` and no `turn_id`: no turn exists yet (live, 2026-08-28)."""
+    if event == SESSION_START:
+        base = dict({k: v for k, v in base.items() if k != "turn_id"}, transcript_path="/repo/.codex/transcript.jsonl")
+    return _claude_shaped("codex_cli", event, vendor_event, base)
+
+
 #: Vendors whose envelope is not Claude-shaped get their own builder.
 SPECIAL = {
     "antigravity": _antigravity,
     "cline": cline,
+    "codex_cli": _codex_cli,
     "devin": _devin,
     "factory_droid": _factory_droid,
     "goose": goose,
