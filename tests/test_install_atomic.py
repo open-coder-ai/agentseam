@@ -155,3 +155,15 @@ def test_a_new_file_is_private_and_an_existing_one_keeps_its_mode(tmp_path):
     old.chmod(0o644)
     install_atomic.write_text(str(old), '{"a": 1}')
     assert old.stat().st_mode & 0o777 == 0o644
+
+
+def test_a_new_instruction_file_gets_the_umask_default_and_an_existing_one_keeps_its_mode(tmp_path):
+    mask = os.umask(0o022)
+    try:
+        instructions.write("rules", ["codex_cli"], str(tmp_path))
+        assert (tmp_path / "AGENTS.md").stat().st_mode & 0o777 == 0o666 & ~0o022
+        (tmp_path / "AGENTS.md").chmod(0o640)
+        instructions.write("other rules", ["codex_cli"], str(tmp_path))
+        assert (tmp_path / "AGENTS.md").stat().st_mode & 0o777 == 0o640
+    finally:
+        os.umask(mask)

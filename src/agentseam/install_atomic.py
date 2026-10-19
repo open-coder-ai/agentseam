@@ -20,6 +20,13 @@ _DEFAULT_MODE = 0o600
 _LOCK_WAIT_SECONDS = 30
 
 
+def umask_mode():
+    """The mode a plain open() gives a new file under the process umask."""
+    mask = os.umask(0)
+    os.umask(mask)
+    return 0o666 & ~mask
+
+
 def write_bytes(path, data, mode=None):
     """Replace `path` with `data` in one step; a failure leaves the old file and no temp file behind.
 
