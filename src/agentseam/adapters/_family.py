@@ -19,6 +19,7 @@ class ConfigAdapter:
         self.CONFIG = cfg
         self.AGENT = cfg["agent"]
         self.EVENT_MAP = dict(cfg["events"])
+        self.EVENT_KEYS = tuple(cfg["claims"].get("event_key", ()))
         self.REVERSE_EVENT_MAP = hj_reverse(cfg)
         self.DECISION_VOCABULARY = frozenset(cfg["verdicts"]["vocabulary"])
         self.CONFIG_PATH = cfg["config_path"]

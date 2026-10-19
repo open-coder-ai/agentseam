@@ -39,10 +39,33 @@ def get(agent):
         raise KeyError("no adapter for agent %r (have: %s)" % (agent, ", ".join(sorted(ADAPTERS)))) from exc
 
 
+def claimants(raw):
+    """Every adapter that claims `raw`, in name order."""
+    return [name for name, mod in sorted(ADAPTERS.items()) if mod.claims(raw)]
+
+
 def detect(raw):
-    """Best-effort agent identification from a raw payload."""
-    claims = [name for name, mod in sorted(ADAPTERS.items()) if mod.claims(raw)]
+    """Best-effort agent identification from a raw payload: the one claimant, else None."""
+    claims = claimants(raw)
     return claims[0] if len(claims) == 1 else None
+
+
+def _names_an_event(raw):
+    """True when the payload spells an event name under a key some adapter reads one from."""
+    keys = {key for mod in ADAPTERS.values() for key in getattr(mod, "EVENT_KEYS", ())}
+    return isinstance(raw, dict) and any(isinstance(raw.get(key), str) for key in keys)
+
+
+def readers(raw):
+    """Whose reading of `raw`'s event counts when `detect()` declines: the claimants; else, when
+    the payload names its event, every adapter that maps names -- one that infers the event from
+    shape alone has no say over a payload it did not claim; else nobody, and the event is unknown."""
+    claims = claimants(raw)
+    if claims:
+        return claims
+    if not _names_an_event(raw):
+        return []
+    return [name for name, mod in sorted(ADAPTERS.items()) if mod.EVENT_MAP]
 
 
 def shell_tools(agent):

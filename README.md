@@ -137,6 +137,12 @@ entries agentseam itself wrote. Most land under `--repo`; two do not, because th
 them from the user's home directory: Junie's `~/.junie/config.json` and Kimi Code's
 `~/.kimi-code/config.toml`.
 
+Each hook is bound to its agent: the command `install` writes is `python3 my_handler.py claude_code`,
+and `run(handler)` reads that last argument (or `AGENTSEAM_AGENT`) and answers in that agent's dialect
+without guessing it from the payload. A hook wired by hand still falls back to detection, and a payload
+no adapter claims, or more than one does, is refused with exit 2 and a line on stderr at `pre_tool`,
+`prompt_submit` and `stop` rather than passed in silence.
+
 <p align="center"><img src="https://raw.githubusercontent.com/open-coder-ai/agentseam/main/docs/assets/demo.gif" width="760" alt="Terminal recording: agentseam install all wires one handler into every coding agent's own hook config in a single command. The output grades each agent honestly -- best-effort for eleven of them, the stronger enforceable gate for Cursor -- and says nothing at all for aider, Copilot CLI, Replit and Zed, which have no hook surface to wire."></p>
 
 ### Supported agents

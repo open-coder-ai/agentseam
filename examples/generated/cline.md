@@ -37,7 +37,7 @@ One handler wired for every hook this agent supports.
 ```sh
 #!/bin/sh
 # >>> agentseam >>> agentseam
-python3 guard.py
+python3 guard.py cline
 # <<< agentseam <<< agentseam
 ```
 
@@ -46,7 +46,7 @@ python3 guard.py
 ```sh
 #!/bin/sh
 # >>> agentseam >>> agentseam
-python3 guard.py
+python3 guard.py cline
 # <<< agentseam <<< agentseam
 ```
 
@@ -55,7 +55,7 @@ python3 guard.py
 ```sh
 #!/bin/sh
 # >>> agentseam >>> agentseam
-python3 guard.py
+python3 guard.py cline
 # <<< agentseam <<< agentseam
 ```
 
@@ -64,7 +64,7 @@ python3 guard.py
 ```sh
 #!/bin/sh
 # >>> agentseam >>> agentseam
-python3 guard.py
+python3 guard.py cline
 # <<< agentseam <<< agentseam
 ```
 
@@ -73,7 +73,7 @@ python3 guard.py
 ```sh
 #!/bin/sh
 # >>> agentseam >>> agentseam
-python3 guard.py
+python3 guard.py cline
 # <<< agentseam <<< agentseam
 ```
 

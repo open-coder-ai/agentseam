@@ -38,69 +38,69 @@ One handler wired for every hook this agent supports.
     "afterFileEdit": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "beforeSubmitPrompt": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py",
+        "command": "python3 guard.py cursor",
         "failClosed": true
       }
     ],
     "postToolUse": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "postToolUseFailure": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "preCompact": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "preToolUse": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py",
+        "command": "python3 guard.py cursor",
         "failClosed": true
       }
     ],
     "sessionEnd": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "sessionStart": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "stop": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "subagentStart": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ],
     "subagentStop": [
       {
         "_agentseam": "agentseam",
-        "command": "python3 guard.py"
+        "command": "python3 guard.py cursor"
       }
     ]
   },

@@ -38,71 +38,71 @@ One handler wired for every hook this agent supports.
     "PostToolUse": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "PreToolUse": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SessionStart": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "Stop": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SubagentStart": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "SubagentStop": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ],
     "UserPromptSubmit": [
       {
         "_agentseam": "agentseam",
-        "bash": "python3 guard.py",
-        "command": "python3 guard.py",
-        "powershell": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+        "bash": "python3 guard.py vscode_copilot",
+        "command": "python3 guard.py vscode_copilot",
+        "powershell": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
         "type": "command",
-        "windows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
+        "windows": "& python3 guard.py vscode_copilot; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
       }
     ]
   }

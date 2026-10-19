@@ -179,6 +179,14 @@ def remove_block(path, owner):
     return True
 
 
+def bind_agent(command, agent):
+    """`command` with `agent`'s name as its last argument -- what `dispatch.bound_agent()` reads,
+    so an installed hook answers in its agent's dialect without guessing it from the payload.
+    A command already ending in the name (tools/capture.py's probe) is left as it is."""
+    command = command.rstrip()
+    return command if command.split()[-1:] == [agent] else "%s %s" % (command, agent)
+
+
 def resolve(mod, repo_root, owner):
     """Where this agent's config lives. A `*` in the adapter's own CONFIG_PATH is the owner's
     slot; one in `repo_root` or the user's home is just a character in a directory name."""

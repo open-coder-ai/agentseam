@@ -41,8 +41,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -54,8 +54,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -67,8 +67,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -80,8 +80,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -93,8 +93,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -106,8 +106,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -119,8 +119,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -132,8 +132,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]
@@ -145,8 +145,8 @@ One handler wired for every hook this agent supports.
         "hooks": [
           {
             "_agentseam": "agentseam",
-            "command": "python3 guard.py",
-            "commandWindows": "& python3 guard.py; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
+            "command": "python3 guard.py codex_cli",
+            "commandWindows": "& python3 guard.py codex_cli; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE",
             "type": "command"
           }
         ]

@@ -11,7 +11,7 @@ import traceback
 
 from . import adapters
 from .allow_semantics import VOUCH_SPEAKS, WARN_SPEAKS
-from .contract import TRANSFORM, UNKNOWN, VOUCH, WARN, Decision
+from .contract import PRE_TOOL, PROMPT_SUBMIT, STOP, TRANSFORM, UNKNOWN, VOUCH, WARN, Decision
 from .matrix import capability
 
 
@@ -27,6 +27,21 @@ HANDLER_TRACEBACK = "handler_traceback"
 #: Exit code when the dispatcher itself fails on a payload it did decode -- the blocking-error
 #: code on every host that has one, with nothing on stdout for the host to misread as a verdict.
 DISPATCH_FAILURE_EXIT = 2
+
+#: How an installed hook knows its agent without guessing: `install` writes the agent's name as
+#: the last argument of the hook command, and a wrapper may set this variable instead.
+AGENT_ENV = "AGENTSEAM_AGENT"
+
+#: Events where a host reads the hook's silence as a verdict. A payload nobody (or more than one
+#: adapter) claims cannot be answered in dialect, so here it is refused rather than passed.
+VERDICT_EVENTS = (PRE_TOOL, PROMPT_SUBMIT, STOP)
+
+UNRECOGNIZED = "unrecognized payload"
+#: Evidence keys on that refusal: who claimed the payload, and the one line `run()` reports.
+CLAIMANTS = "claimants"
+DISPATCH_NOTE = "dispatch_note"
+
+_BIND_HINT = "bind the agent: reinstall with `agentseam install`, or call run(handler, agent=...)"
 
 
 def _coerce(result):
@@ -117,11 +132,42 @@ def degrade(decision, event, agent=None):
     return decision
 
 
+def bound_agent(argv=None, environ=None):
+    """The agent `install` bound this hook to, or None for a hook wired by hand.
+
+    AGENT_ENV wins; else the command's last argument, when it names an adapter. Either way the
+    payload's own markers are never consulted: `detect()` is the fallback, not the authority.
+    """
+    env = (os.environ if environ is None else environ).get(AGENT_ENV)
+    if env in adapters.ADAPTERS:
+        return env
+    args = sys.argv if argv is None else argv
+    last = args[-1] if len(args) > 1 else None
+    return last if last in adapters.ADAPTERS else None
+
+
+def _unrecognized(raw):
+    """No adapter, or more than one, claims `raw`.
+
+    Silent at an observation-only event; a refusal where the host would read silence as a
+    verdict. Which event it is, no adapter can say with authority, so it is read the way each
+    claimant parses it -- the way any name-mapping adapter does, when none claims a named one.
+    """
+    claimants = adapters.claimants(raw)
+    gates = sorted({adapters.get(name).parse(raw).event for name in adapters.readers(raw)} & set(VERDICT_EVENTS))
+    if not gates:
+        return "", 0, None, Decision.allow(UNRECOGNIZED)
+    who = ", ".join(claimants) if claimants else "no adapter"
+    note = "agentseam: refusing a %s payload claimed by %s (exactly one is needed); %s\n" % (gates[0], who, _BIND_HINT)
+    evidence = {CLAIMANTS: claimants, DISPATCH_NOTE: note}
+    return "", DISPATCH_FAILURE_EXIT, None, Decision.deny(UNRECOGNIZED, evidence=evidence)
+
+
 def handle(raw, handler, agent=None):
     """Pure core: raw payload + handler -> (stdout_text, exit_code, event, decision)."""
     name = agent or adapters.detect(raw)
     if not name:
-        return "", 0, None, Decision.allow("unrecognized payload")
+        return _unrecognized(raw)
     mod = adapters.get(name)
     event = mod.parse(raw)
     if event.event == UNKNOWN:
@@ -167,6 +213,7 @@ def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A0
     # sys.exit's name on purpose; every caller and the bundled runtime.py.tmpl's main() already
     # speak `exit=` as a keyword, so renaming it would be the breaking change, not keeping it)
     """Read one payload from stdin, dispatch, emit the vendor response, exit."""
+    agent = agent or bound_agent()
     stream = stdin or sys.stdin
     out = stdout or sys.stdout
     try:
@@ -186,7 +233,7 @@ def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A0
         text, code = "", DISPATCH_FAILURE_EXIT
     else:
         evidence = decision.evidence if isinstance(decision.evidence, dict) else {}
-        _report(evidence.get(HANDLER_TRACEBACK) or "")
+        _report(evidence.get(HANDLER_TRACEBACK) or evidence.get(DISPATCH_NOTE) or "")
     if text:
         _emit(out, text)
     if exit:

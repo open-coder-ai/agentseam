@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from agentseam import adapters  # noqa: E402
-from agentseam.adapters import vscode_copilot  # noqa: E402
+from agentseam.adapters import _copilot_claims  # noqa: E402
 from agentseam.adapters._probes import PROBES  # noqa: E402
 
 FIXTURES = json.loads((ROOT / "tests" / "fixtures" / "detection" / "value_detection.json").read_text(encoding="utf-8"))
@@ -68,10 +68,11 @@ def test_every_golden_fixture_is_pinned():
         ("pre_tool_use", None, False),
     ],
 )
-def test_vscode_copilot_and_the_grok_probe_agree_on_the_snake_case_twin(snake, pascal, twin):
-    """vscode_copilot keeps its own copy (the dialect bundle carries no probe module); the two must agree."""
+def test_vscode_copilot_declines_grok_builds_snake_case_twin_by_the_probe_itself(snake, pascal, twin):
+    """One copy, not two that must agree: the dialect bundle splices `_probes` in beside the claims module."""
     raw = {k: v for k, v in (("hookEventName", snake), ("hook_event_name", pascal)) if v is not None}
-    assert vscode_copilot._is_grok_build(raw) is twin
+    assert _copilot_claims._is_grok_build is PROBES["event_keys_are_twins"]
+    assert _copilot_claims._is_grok_build(raw) is twin
     if twin:
         assert PROBES["event_keys_agree"](raw)
 

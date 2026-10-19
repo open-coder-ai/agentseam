@@ -18,7 +18,7 @@ def test_install_creates_config(tmp_path):
     data = json.loads(Path(path).read_text())
     entry = data["hooks"]["PreToolUse"][0]
     assert entry["matcher"] == "Write|Edit"
-    assert entry["hooks"][0]["command"] == "python3 h.py"
+    assert entry["hooks"][0]["command"] == "python3 h.py claude_code"
     assert I.installed("claude_code", str(tmp_path))
 
 
@@ -75,7 +75,7 @@ def test_codex_cli_install_round_trips_without_a_top_level_marker(tmp_path):
     body = json.loads(path.read_text())
     assert I.MARKER not in body
     entry = body["hooks"]["PreToolUse"][0]
-    assert entry["hooks"][0]["command"] == "guard.py"
+    assert entry["hooks"][0]["command"] == "guard.py codex_cli"
     assert I.installed("codex_cli", root)
 
     assert I.uninstall("codex_cli", root) is True
@@ -114,7 +114,7 @@ def test_cursor_install_writes_the_generic_gate_with_fail_closed(tmp_path):
     path = Path(I.install("cursor", ["pre_tool"], "guard.py", repo_root=root))
     body = json.loads(path.read_text())
     entry = body["hooks"]["preToolUse"][0]
-    assert entry["command"] == "guard.py"
+    assert entry["command"] == "guard.py cursor"
     assert entry["failClosed"] is True
     assert I.uninstall("cursor", root) is True
 
@@ -201,7 +201,7 @@ def test_uninstalling_one_owner_leaves_another_owners_mark_intact(tmp_path):
 
     install_mod.uninstall("cursor", repo_root=str(tmp_path), owner="team-a")
     entries = json.loads((tmp_path / ".cursor" / "hooks.json").read_text())["hooks"]["preToolUse"]
-    assert [e["command"] for e in entries] == ["guard-B"], entries
+    assert [e["command"] for e in entries] == ["guard-B cursor"], entries
     assert install_mod.installed("cursor", repo_root=str(tmp_path), owner="team-b")
 
 
@@ -251,6 +251,7 @@ def test_vscode_copilot_entries_carry_a_shell_key_for_every_shell(tmp_path):
     command = '"C:\\Python314\\python.exe" "C:\\repo\\hook.py"'
     path = I.install("vscode_copilot", ["pre_tool", "stop"], command, str(tmp_path))
     hooks = json.loads(Path(path).read_text())["hooks"]
+    command += " vscode_copilot"
     powershell = "& " + command + "; if ($null -eq $LASTEXITCODE) { exit 2 }; exit $LASTEXITCODE"
     for name in ("PreToolUse", "Stop"):
         (entry,) = hooks[name]

@@ -12,6 +12,7 @@ from .install_config import (
     MARKER,
     ConfigUnreadableError,
     apply_watch,
+    bind_agent,
     block_bounds,
     check_wireable,
     fail_closed_kwarg,
@@ -96,6 +97,7 @@ def installed(
         check_wireable(mod, agent, events)
         events = unwatched(mod, agent, events, watch)[0]
         extra = fail_closed_kwarg(mod, fail_closed)
+        command = bind_agent(command, agent)
         fragment = apply_watch(mod, mod.hook_config(events, command, matcher=matcher, **extra), watch)
     if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
         return hook_dir.installed(path, mod.REVERSE_EVENT_MAP.values(), owner, fragment)

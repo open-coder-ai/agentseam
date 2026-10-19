@@ -35,43 +35,43 @@ One handler wired for every hook this agent supports.
 ```toml
 [[hooks]]
 event = "SessionStart"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "SessionEnd"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "UserPromptSubmit"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "PreToolUse"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "PostToolUse"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "PostToolUseFailure"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "PreCompact"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "Stop"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "SubagentStart"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 
 [[hooks]]
 event = "SubagentStop"
-command = "python3 guard.py"
+command = "python3 guard.py kimi_code"
 ```
 
 ## Every hook, one at a time
