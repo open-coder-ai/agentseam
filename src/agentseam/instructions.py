@@ -100,6 +100,8 @@ def plan(targets=None, repo_root="."):  # noqa: ARG001 (repo_root mirrors discov
 
 
 def _managed_block(text, agent=None):
+    if _BEGIN_LINE.search(text) or _END_LINE.search(text):
+        raise ValueError("instruction text may not contain a line-start agentseam begin or end marker")
     body = text.rstrip()
     note = ""
     if agent and INSTRUCTION_FILES.get(agent, {}).get("imports"):
