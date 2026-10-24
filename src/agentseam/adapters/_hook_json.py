@@ -115,11 +115,10 @@ def _g1_allow(v, decision, wire, name, words):
 
 def _g1_transform(v, decision, name, words):
     """None when the transform isn't representable here; `_g1` falls through to the block path."""
-    missing_blocks = decision.updated_input is None and _TRANSFORM_MISSING_INPUT in v.get("degrade_notes", {})
-    if v.get("transform_grammar") == "hook_specific_tool_input" and not missing_blocks:
-        return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
     if decision.updated_input is None:
         return None
+    if v.get("transform_grammar") == "hook_specific_tool_input":
+        return _json.dumps({"hookSpecificOutput": {"tool_input": decision.updated_input}}), 0
     if v.get("transform_grammar") == "hook_output_snake_tool_input":
         return _json.dumps({"hook_specific_output": {"tool_input": decision.updated_input}}), 0
     if v.get("transform_grammar") in _TOP_LEVEL_INPUT_KEY:
@@ -177,7 +176,7 @@ def _g2(v, gate, decision, name):
     elif (
         decision.outcome == TRANSFORM
         and gate["honours_transform"]
-        and not (decision.updated_input is None and _TRANSFORM_MISSING_INPUT in v.get("degrade_notes", {}))
+        and decision.updated_input is not None
     ):
         out["permissionDecision"] = words.get("transform", "allow")
         out["updatedInput"] = decision.updated_input
