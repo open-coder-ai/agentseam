@@ -93,7 +93,7 @@
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"hookSpecificOutput\": {\"tool_input\": null}}"
+          "stdout": "{\"decision\": \"deny\", \"reason\": \"needs change\"}"
         },
         "vouch": {
           "exit": 0,

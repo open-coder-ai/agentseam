@@ -15,6 +15,7 @@ from .install_config import (
     ConfigUnreadableError,
     apply_watch,
     bind_agent,
+    check_line_safe,
     check_matcher,
     check_wireable,
     dump,
@@ -41,6 +42,7 @@ def config_path(agent, repo_root=".", owner="agentseam"):
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None, watch=None):
     """Wire `command` for `events` into `agent`'s config, bound to `agent`. Returns the path written."""
     mod = adapters.get(agent)
+    check_line_safe(command=command, owner=owner)
     command = bind_agent(command, agent)
     check_wireable(mod, agent, events)
     check_matcher(mod, agent, matcher)
@@ -57,10 +59,10 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
-    install_legacy.check_not_shadowing(mod, agent, path, repo_root, owner)
-    legacy = install_legacy.prepare_clean(mod, repo_root, owner)
     fragment = mark(apply_watch(mod, mod.hook_config(events, command, matcher=matcher, **extra), watch), owner)
     with locked(path):
+        install_legacy.check_not_shadowing(mod, agent, path, repo_root, owner)
+        legacy = install_legacy.prepare_clean(mod, repo_root, owner)
         dump(path, merge(strip(load(path), owner), fragment))
     for legacy_path, after in legacy:
         dump(legacy_path, after)

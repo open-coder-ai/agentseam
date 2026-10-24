@@ -13,6 +13,7 @@ END = "<!-- agentseam:end -->"
 _BEGIN_LINE = re.compile("^" + re.escape(BEGIN), re.MULTILINE)
 _END_LINE = re.compile("^" + re.escape(END), re.MULTILINE)
 
+_MARKER_IN_TEXT = "instruction text may not contain a line-start agentseam begin or end marker"
 _REVERSED = "the end marker comes before the begin marker; fix the file by hand"
 
 SHARED_FILE = "AGENTS.md"
@@ -100,6 +101,8 @@ def plan(targets=None, repo_root="."):  # noqa: ARG001 (repo_root mirrors discov
 
 
 def _managed_block(text, agent=None):
+    if _BEGIN_LINE.search(text) or _END_LINE.search(text):
+        raise ValueError(_MARKER_IN_TEXT)
     body = text.rstrip()
     note = ""
     if agent and INSTRUCTION_FILES.get(agent, {}).get("imports"):

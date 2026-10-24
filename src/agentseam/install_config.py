@@ -180,6 +180,13 @@ def remove_block(path, owner):
         return strip_block(path, owner)
 
 
+def check_line_safe(**fields):
+    """Raise ValueError when a value placed raw between block markers could forge or end one."""
+    for name, value in fields.items():
+        if any(ch in value for ch in "\r\n") or BEGIN in value or END in value:
+            raise ValueError("%s may not contain a line break or agentseam marker text: %r" % (name, value))
+
+
 def bind_agent(command, agent):
     """`command` with `agent`'s name as its last argument -- what `dispatch.bound_agent()` reads,
     so an installed hook answers in its agent's dialect without guessing it from the payload.

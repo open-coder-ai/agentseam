@@ -153,11 +153,14 @@ def _pre_tool_out(decision, event):
     elif decision.outcome == ASK:
         out["permissionDecision"] = "ask"
         out[_PERMISSION_DECISION_REASON] = decision.reason or "confirmation required"
-    elif decision.outcome == REWRITE:
+    elif decision.outcome == REWRITE and decision.updated_input is not None:
         out["permissionDecision"] = "allow"
         out["updatedInput"] = decision.updated_input
         if decision.reason:
             out[_PERMISSION_DECISION_REASON] = decision.reason
+    elif decision.outcome == REWRITE:
+        out["permissionDecision"] = "deny"
+        out[_PERMISSION_DECISION_REASON] = (decision.reason or "blocked") + " (no replacement input was supplied)"
     return out
 
 
