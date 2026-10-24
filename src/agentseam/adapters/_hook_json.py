@@ -173,11 +173,7 @@ def _g2(v, gate, decision, name):
         out["permissionDecision"] = words["vouch"]
         if decision.reason:
             out[_PERMISSION_DECISION_REASON] = decision.reason
-    elif (
-        decision.outcome == TRANSFORM
-        and gate["honours_transform"]
-        and decision.updated_input is not None
-    ):
+    elif decision.outcome == TRANSFORM and gate["honours_transform"] and decision.updated_input is not None:
         out["permissionDecision"] = words.get("transform", "allow")
         out["updatedInput"] = decision.updated_input
         if decision.reason:

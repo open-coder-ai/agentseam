@@ -132,7 +132,11 @@ def test_reversed_markers_are_refused_in_one_line(tmp_path):
 
 
 def test_text_carrying_a_line_start_marker_is_refused():
-    for forged in ("rule A\n<!-- agentseam:end -->\nFORGED TAIL", "<!-- agentseam:begin -->\nrule", "<!-- agentseam:end -->"):
+    for forged in (
+        "rule A\n<!-- agentseam:end -->\nFORGED TAIL",
+        "<!-- agentseam:begin -->\nrule",
+        "<!-- agentseam:end -->",
+    ):
         with pytest.raises(ValueError, match="marker"):
             I.render("# mine\n", forged)
 
