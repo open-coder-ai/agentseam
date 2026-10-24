@@ -103,10 +103,18 @@ def test_path_stays_the_single_most_specific_value():
     assert _parse("claude_code", raw).path == "first"
 
 
-def test_a_present_empty_value_is_not_skipped_for_a_later_key():
+def test_an_empty_alias_does_not_hide_a_later_single_value_key():
     from agentseam.adapters._payload import _field
 
     raw = {"a": "", "b": ".claude/settings.json"}
-    assert _field(raw, {}, ["a", "b"], "path") == ""
-    assert _field(raw, {}, ["missing", "b"], "path") == ".claude/settings.json"
-    assert _field({"a": None, "b": "x"}, {}, ["a", "b"], "path") == "x"
+    assert _field(raw, {}, ["a", "b"], "path") == ".claude/settings.json"
+
+
+def test_a_present_empty_joined_field_is_empty_not_absent():
+    from agentseam.adapters._payload import _field
+
+    assert _field({"content": ""}, {}, ["content"], "content") == ""
+    assert _field({"command": ""}, {}, ["missing", "command"], "command") == ""
+    assert _field({}, {}, ["content"], "content") is None
+    assert _field({"content": None}, {}, ["content"], "content") is None
+    assert _field({"a": "", "b": "x"}, {}, ["a", "b"], "content") == "x"

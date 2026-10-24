@@ -156,10 +156,11 @@ _JOINED_FIELDS = ("command", "content")
 
 def _field(raw, ti, chain, name=None):
     if name not in _JOINED_FIELDS:
-        return next((v for v in (_lookup(raw, ti, key) for key in chain) if v is not None), None)
-    found = [v for v in (_lookup(raw, ti, key) for key in chain) if v]
+        return next(filter(None, (_lookup(raw, ti, key) for key in chain)), None)
+    values = [_lookup(raw, ti, key) for key in chain]
+    found = [v for v in values if v]
     if not found:
-        return None
+        return next((v for v in values if v is not None), None)
     if not all(isinstance(v, str) for v in found):
         return found[0]
     return "\n".join(dict.fromkeys(found))
