@@ -156,7 +156,7 @@ _JOINED_FIELDS = ("command", "content")
 
 def _field(raw, ti, chain, name=None):
     if name not in _JOINED_FIELDS:
-        return next(filter(None, (_lookup(raw, ti, key) for key in chain)), None)
+        return next((v for v in (_lookup(raw, ti, key) for key in chain) if v is not None), None)
     found = [v for v in (_lookup(raw, ti, key) for key in chain) if v]
     if not found:
         return None

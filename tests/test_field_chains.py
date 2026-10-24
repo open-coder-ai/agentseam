@@ -101,3 +101,12 @@ def test_path_stays_the_single_most_specific_value():
         "tool_input": {"file_path": "first", "path": "second"},
     }
     assert _parse("claude_code", raw).path == "first"
+
+
+def test_a_present_empty_value_is_not_skipped_for_a_later_key():
+    from agentseam.adapters._payload import _field
+
+    raw = {"a": "", "b": ".claude/settings.json"}
+    assert _field(raw, {}, ["a", "b"], "path") == ""
+    assert _field(raw, {}, ["missing", "b"], "path") == ".claude/settings.json"
+    assert _field({"a": None, "b": "x"}, {}, ["a", "b"], "path") == "x"
