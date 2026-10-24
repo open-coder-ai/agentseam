@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import copy
 import re
 import sys
 from pathlib import Path
@@ -103,7 +104,7 @@ def test_exactly_one_family_engine_and_one_vendor_literal_per_bundle(agent):
     engines = re.findall(r"^# (\S+) family engine", src, flags=re.MULTILINE)
     assert engines == [adapters.get(agent).CONFIG["family"]]
     assert _top_level_names(ast.parse(src)).count("VENDOR") == 1
-    assert 'AGENT = "%s"' % agent in src
+    assert "AGENT = %r" % agent in src
 
 
 def test_the_dialect_module_bundle_has_no_engine_and_no_vendor_literal():
@@ -182,3 +183,14 @@ def test_function_local_imports_are_left_alone():
         if isinstance(node, ast.Import)
     ]
     assert local, "expected at least one function-local import to have survived hoisting"
+
+
+_EVIL_NAMES = ['x"; import os; os.system("echo PWNED") #', "x\nimport os", "", "1x", "a-b", "a b"]
+
+
+@pytest.mark.parametrize("field", ["agent", "family"])
+@pytest.mark.parametrize("bad", _EVIL_NAMES)
+def test_bundle_entry_refuses_a_name_that_is_not_an_identifier(field, bad):
+    entry = dict(copy.deepcopy(adapters.get("claude_code").CONFIG), **{field: bad})
+    with pytest.raises(ValueError, match=field):
+        bundler.bundle_entry(entry)

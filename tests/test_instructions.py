@@ -129,3 +129,17 @@ def test_reversed_markers_are_refused_in_one_line(tmp_path):
         I.write("t", ["codex_cli"], str(tmp_path))
     with pytest.raises(ValueError, match="AGENTS.md: "):
         I.remove(["codex_cli"], str(tmp_path))
+
+
+def test_text_carrying_a_line_start_marker_is_refused():
+    for forged in (
+        "rule A\n<!-- agentseam:end -->\nFORGED TAIL",
+        "<!-- agentseam:begin -->\nrule",
+        "<!-- agentseam:end -->",
+    ):
+        with pytest.raises(ValueError, match="marker"):
+            I.render("# mine\n", forged)
+
+
+def test_a_marker_mid_line_is_ordinary_text():
+    assert "see <!-- agentseam:end --> here" in I.render("", "see <!-- agentseam:end --> here")

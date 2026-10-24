@@ -7,7 +7,7 @@ from importlib import resources
 #: Template file -> the tokens `render()` callers supply. tests/test_bundler_templates.py
 #: pins this table against the files: every token supplied, none orphaned.
 TEMPLATE_TOKENS = {
-    "binding.py.tmpl": ("__AGENT__", "__PREFIX__", "__VENDOR__"),
+    "binding.py.tmpl": ("__AGENT_REPR__", "__PREFIX__", "__VENDOR__"),
     "header.py.tmpl": ("__AGENT__", "__VERSION__"),
     "runtime.py.tmpl": (
         "__AGENT_REPR__",

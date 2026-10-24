@@ -170,7 +170,7 @@
         },
         "rewrite-without-input": {
           "exit": 0,
-          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"allow\", \"updatedInput\": null, \"permissionDecisionReason\": \"needs change\"}}"
+          "stdout": "{\"hookSpecificOutput\": {\"hookEventName\": \"PreToolUse\", \"permissionDecision\": \"deny\", \"permissionDecisionReason\": \"needs change (input rewrite requested; this event cannot modify input, so it blocks)\"}}"
         },
         "vouch": {
           "exit": 0,

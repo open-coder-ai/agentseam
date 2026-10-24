@@ -275,3 +275,14 @@ def test_other_vendors_gain_no_powershell_or_bash_key(tmp_path):
         text = Path(I.install(agent, ["pre_tool"], "python3 h.py", str(tmp_path))).read_text()
         assert '"powershell"' not in text
         assert '"bash"' not in text
+
+
+@pytest.mark.parametrize("field", ["command", "owner"])
+@pytest.mark.parametrize("bad", ["a\nb", "a\rb", "x # >>> agentseam >>> y", "x # <<< agentseam <<< y"])
+@pytest.mark.parametrize("agent", ["claude_code", "mistral_vibe", "cline"])
+def test_install_refuses_line_breaks_and_marker_text_in_command_and_owner(tmp_path, agent, bad, field):
+    kwargs = {"command": "python3 hook.py", "owner": "agentseam"}
+    kwargs[field] = bad
+    with pytest.raises(ValueError, match=field):
+        I.install(agent, ["pre_tool"], kwargs["command"], str(tmp_path), owner=kwargs["owner"])
+    assert not any(p.is_file() for p in tmp_path.rglob("*"))

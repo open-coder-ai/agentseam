@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import os
+import re
 
 from . import __version__, adapters
 from .allow_semantics import VOUCH_NOTES, VOUCH_SPEAKS, WARN_SPEAKS
@@ -194,6 +195,9 @@ def _engine_source(cfg, prefix, hoisted):
     return _extract_with_deps(combined, entry_points, skip)
 
 
+_IDENTIFIER = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
 def bundle_entry(cfg):
     """Render one vendor config entry as a self-contained, stdlib-only hook file.
 
@@ -201,6 +205,9 @@ def bundle_entry(cfg):
     with no MATRIX row either, its runtime claims no transform events and degrades vouch and warn.
     """
     agent = cfg["agent"]
+    for field in ("agent", "family"):
+        if not _IDENTIFIER.fullmatch(str(cfg[field])):
+            raise ValueError("cfg[%r] must be a Python identifier, got %r" % (field, cfg[field]))
     prefix = cfg["family"] if cfg["family"] in _SINGLETON_MODULES else "hj"
     hoisted = set(_RUNTIME_IMPORTS)
 
@@ -216,7 +223,7 @@ def bundle_entry(cfg):
     body.append(
         section(
             "%s vendor config + engine binding" % agent,
-            render("binding.py.tmpl", {"__AGENT__": agent, "__PREFIX__": prefix, "__VENDOR__": repr(cfg)}),
+            render("binding.py.tmpl", {"__AGENT_REPR__": repr(agent), "__PREFIX__": prefix, "__VENDOR__": repr(cfg)}),
         )
     )
 
