@@ -177,3 +177,26 @@ def test_a_new_instruction_file_gets_the_umask_default_and_an_existing_one_keeps
         assert (tmp_path / "AGENTS.md").stat().st_mode & 0o777 == 0o640
     finally:
         os.umask(mask)
+
+
+def test_the_shadow_check_and_legacy_scan_read_the_config_under_its_lock(tmp_path, monkeypatch):
+    held, seen = [], {}
+
+    class Lock:
+        def __enter__(self):
+            held.append(True)
+
+        def __exit__(self, *exc):
+            held.pop()
+
+    monkeypatch.setattr(I, "locked", lambda _path: Lock())
+    for name in ("check_not_shadowing", "prepare_clean"):
+        real = getattr(I.install_legacy, name)
+
+        def spy(*args, _real=real, _name=name):
+            seen[_name] = bool(held)
+            return _real(*args)
+
+        monkeypatch.setattr(I.install_legacy, name, spy)
+    I.install("claude_code", ["pre_tool"], "guard", str(tmp_path))
+    assert seen == {"check_not_shadowing": True, "prepare_clean": True}

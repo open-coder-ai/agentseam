@@ -57,10 +57,10 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
     if getattr(mod, "CONFIG_FORMAT", "json") == "toml":
         write_block(path, mod.render_config(mod.hook_config(events, command, matcher=matcher, **extra)), owner)
         return path
-    install_legacy.check_not_shadowing(mod, agent, path, repo_root, owner)
-    legacy = install_legacy.prepare_clean(mod, repo_root, owner)
     fragment = mark(apply_watch(mod, mod.hook_config(events, command, matcher=matcher, **extra), watch), owner)
     with locked(path):
+        install_legacy.check_not_shadowing(mod, agent, path, repo_root, owner)
+        legacy = install_legacy.prepare_clean(mod, repo_root, owner)
         dump(path, merge(strip(load(path), owner), fragment))
     for legacy_path, after in legacy:
         dump(legacy_path, after)
