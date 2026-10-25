@@ -47,7 +47,16 @@ _SEPARATORS = ("/", "\\", "@", "\n", " ")
 _TOOL_NAME_KEYS = frozenset({"tool_name", "toolName", "name", "mcp_server_name"})
 MAX_TOOL_NAME_LEN = 128
 
-TOOL_INPUT_KEYS = frozenset({"tool_input", "toolInput", "tool_args", "toolArgs", "arguments", "input", "params"})
+TOOL_INPUT_KEYS = frozenset(
+    {"tool_input", "toolInput", "tool_args", "toolArgs", "arguments", "input", "params", "parameters"}
+)
+
+#: What the tool returned: file contents and command output, so as private as the arguments are.
+TOOL_OUTPUT_KEYS = frozenset(
+    {"tool_response", "tool_output", "toolResult", "tool_result", "output", "result", "mcp_result"}
+)
+
+_SCHEMA_KEY_LEN = 48
 
 
 def _is_enumlike(value, key=None):
@@ -80,21 +89,46 @@ def _embedded_json(value):
     return parsed if isinstance(parsed, (dict, list)) else None
 
 
-def redact(value, key=None, *, in_tool_input=False):
-    """Shape-only copy of `value`. Never returns any string the caller passed in."""
+def _is_schema_key(key):
+    """A key shaped like a field name (an identifier), not like data used as a key (a host, an email, an id)."""
+    return isinstance(key, str) and len(key) <= _SCHEMA_KEY_LEN and key.isidentifier()
+
+
+def redact(value, key=None, *, in_tool_input=False, in_output=False, in_embedded=False):
+    """Shape-only copy of `value`. Never returns any string the caller passed in.
+
+    Inside what a tool returned, or JSON text found in a string, a dict key that is not shaped
+    like a field name is data and is replaced by its position.
+    """
     if isinstance(value, dict):
-        return {k: redact(v, key=k, in_tool_input=in_tool_input or k in TOOL_INPUT_KEYS) for k, v in value.items()}
+        keep_all = not (in_output or in_embedded)
+        return {
+            (k if keep_all or _is_schema_key(k) else "<key:%d>" % i): redact(
+                v,
+                key=k,
+                in_tool_input=in_tool_input or k in TOOL_INPUT_KEYS,
+                in_output=in_output or k in TOOL_OUTPUT_KEYS,
+                in_embedded=in_embedded,
+            )
+            for i, (k, v) in enumerate(value.items())
+        }
     inner = _embedded_json(value)
     if inner is not None:
-        return {"<json-string>": redact(inner, key=key, in_tool_input=in_tool_input)}
+        return {
+            "<json-string>": redact(
+                inner, key=key, in_tool_input=in_tool_input, in_output=in_output, in_embedded=not in_tool_input
+            )
+        }
     if isinstance(value, list):
-        shaped = [redact(v, in_tool_input=in_tool_input) for v in value[:2]]
+        shaped = [
+            redact(v, in_tool_input=in_tool_input, in_output=in_output, in_embedded=in_embedded) for v in value[:2]
+        ]
         if len(value) > 2:
             shaped.append("<...%d more>" % (len(value) - 2))
         return shaped
     if isinstance(value, bool) or isinstance(value, (int, float)) or value is None:
         return value
-    if not in_tool_input and key in STRUCTURAL_KEYS and _is_enumlike(value, key=key):
+    if not (in_tool_input or in_output) and key in STRUCTURAL_KEYS and _is_enumlike(value, key=key):
         return value
     return _type_of(value)
 

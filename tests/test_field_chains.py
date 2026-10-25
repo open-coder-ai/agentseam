@@ -3,6 +3,8 @@
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import agentseam as A  # noqa: E402
@@ -118,3 +120,45 @@ def test_a_present_empty_joined_field_is_empty_not_absent():
     assert _field({}, {}, ["content"], "content") is None
     assert _field({"content": None}, {}, ["content"], "content") is None
     assert _field({"a": "", "b": "x"}, {}, ["a", "b"], "content") == "x"
+
+
+def test_a_non_string_candidate_does_not_hide_the_others():
+    for agent, tool, ti in (
+        ("gemini_cli", "replace", {"file_path": "d.sh", "content": "echo ok", "new_string": DANGER, "new_str": 1}),
+        ("claude_code", "Edit", {"file_path": "d.sh", "content": "echo ok", "new_string": DANGER, "new_source": 1}),
+    ):
+        raw = {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": ti}
+        assert DANGER in _parse(agent, raw).content, agent
+
+
+def test_a_non_string_command_candidate_does_not_hide_the_others():
+    raw = {
+        "hookName": "tool_call",
+        "tool_call": {"id": "c", "name": "run_commands", "input": {"commands": "ls", "cmd": 1, "command": DANGER}},
+    }
+    assert DANGER in _parse("cline", raw).command
+
+
+def _copilot(ti, tool="Edit"):
+    return {"hook_event_name": "PreToolUse", "tool_name": tool, "tool_input": ti}
+
+
+def test_copilot_content_joins_every_candidate():
+    ti = {"path": "build.sh", "old_str": "x", "new_str": DANGER, "content": "echo ok"}
+    assert _parse("vscode_copilot", _copilot(ti)).content == f"echo ok\n{DANGER}"
+
+
+def test_copilot_memory_content_joins_every_candidate():
+    ti = {"command": "insert", "path": "/memories/a.md", "file_text": "note", "insert_text": DANGER}
+    assert _parse("vscode_copilot", _copilot(ti, tool="memory")).content == f"note\n{DANGER}"
+
+
+def test_copilot_paths_that_disagree_are_refused():
+    ti = {"path": ".github/workflows/ci.yml", "file_text": "x", "filePath": "notes.md"}
+    with pytest.raises(A.contract.ConflictingToolInputError):
+        _parse("vscode_copilot", _copilot(ti, tool="Write"))
+
+
+def test_copilot_paths_that_agree_are_read():
+    ti = {"path": "a.txt", "file_path": "a.txt", "file_text": "x"}
+    assert _parse("vscode_copilot", _copilot(ti, tool="Write")).path == "a.txt"

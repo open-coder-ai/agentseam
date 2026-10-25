@@ -173,6 +173,10 @@ def degraded_from(decision):
     return (decision.evidence or {}).get("degraded_from")
 
 
+class UndecodableToolInputError(ValueError):
+    """The tool's arguments arrived as text this process cannot decode: refused, not read as empty."""
+
+
 def tool_input_of(raw):
     """The tool's arguments as a dict, decoding the JSON-string form some vendors send."""
     if isinstance(raw, dict):
@@ -180,10 +184,33 @@ def tool_input_of(raw):
     if isinstance(raw, str) and raw.lstrip()[:1] == "{":
         try:
             parsed = _json.loads(raw)
-        except (ValueError, RecursionError):
-            # JSONDecodeError is a ValueError; a string nested past the interpreter's
-            # limit raises RecursionError instead, and neither is an input to crash on.
-            return {}
+        except (ValueError, RecursionError, MemoryError) as exc:
+            # Whatever the host's own parser made of it, an input we cannot read is one no
+            # policy can judge: the dispatcher answers the raise with its refusal.
+            raise UndecodableToolInputError(type(exc).__name__) from None
         if isinstance(parsed, dict):
             return parsed
     return {}
+
+
+class ConflictingToolInputError(ValueError):
+    """Two keys that name the tool's target disagree: no single path can be judged."""
+
+
+def text_of(value):
+    """A candidate field value as text: strings as they are, anything else as its JSON form."""
+    return value if isinstance(value, str) else _json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+
+
+def joined_text(values):
+    """Every distinct truthy candidate as text, newline-joined; None when there is none."""
+    found = dict.fromkeys(text_of(v) for v in values if v)
+    return "\n".join(found) or None
+
+
+def single_target(values):
+    """The one value the candidates agree on, None when absent; a disagreement raises."""
+    found = list(dict.fromkeys(text_of(v) for v in values if v))
+    if len(found) > 1:
+        raise ConflictingToolInputError("the tool input names %d different targets" % len(found))
+    return found[0] if found else None

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json as _json
 
-from ..contract import UNKNOWN, Event, tool_input_of
+from ..contract import UNKNOWN, Event, joined_text, tool_input_of
 from ._probes import PROBES
 
 #: What an event key resolves to when it holds something other than text (a list, an object,
@@ -161,9 +161,7 @@ def _field(raw, ti, chain, name=None):
     found = [v for v in values if v]
     if not found:
         return next((v for v in values if v is not None), None)
-    if not all(isinstance(v, str) for v in found):
-        return found[0]
-    return "\n".join(dict.fromkeys(found))
+    return joined_text(found)
 
 
 #: `fields` keys that steer the extraction rather than naming an Event field.

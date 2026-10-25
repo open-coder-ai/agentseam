@@ -198,3 +198,30 @@ def test_content_rule_still_raises_keyerror_for_an_unrecorded_agent():
     for agent in UNRECORDED:
         with pytest.raises(KeyError):
             permissions.plan(agent, [ContentRule(ContentRule.TEXT, r"secret")])
+
+
+@pytest.mark.parametrize("specifier", ["curl *", "curl:*", "cu?l example.com", "curl 'unclosed"])
+def test_codex_reports_a_specifier_it_cannot_state_as_dropped(specifier):
+    result = permissions.plan("codex_cli", [Rule(DENY, SHELL, specifier)])
+    assert not result.complete
+    assert "prefix_rule" not in str(result.fragment)
+    assert [u.rule.specifier for u in result.unrepresentable] == [specifier]
+
+
+def test_codex_reads_a_quoted_specifier_as_one_token():
+    result = permissions.plan("codex_cli", [Rule(DENY, SHELL, "git commit -m 'a b'")])
+    assert result.complete
+    assert '"git", "commit", "-m", "a b"' in result.fragment
+
+
+@pytest.mark.parametrize("agent", ["claude_code", "gemini_cli"])
+def test_the_shell_tools_rendered_cover_every_shell_tool_the_vendor_records(agent):
+    from agentseam._data import load
+
+    recorded = set(load("vendors/%s.json" % agent)["tools"]["shell"])
+    assert recorded <= set(CAPABILITY[agent]["tools"]["shell"])
+
+
+def test_claude_code_shell_rules_render_for_powershell_too():
+    result = permissions.plan("claude_code", [Rule(DENY, SHELL, "curl *"), Rule(DENY, SHELL)])
+    assert result.fragment["permissions"]["deny"] == ["Bash(curl *)", "PowerShell(curl *)", "Bash", "PowerShell"]

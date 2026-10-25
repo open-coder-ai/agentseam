@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 
 from ._data import load
 from .permissions_data import ALLOW, ASK, CAPABILITY, DENY
@@ -72,6 +73,16 @@ def _render_gemini_cli(rules):
 _CODEX_DECISION = {ALLOW: "allow", ASK: "prompt", DENY: "forbidden"}
 
 
+def _prefix_tokens(specifier):
+    """The literal argv tokens a specifier names, or None when it holds a wildcard or will not split."""
+    if any(char in specifier for char in "*?"):
+        return None
+    try:
+        return shlex.split(specifier)
+    except ValueError:
+        return None
+
+
 def _render_codex_cli(rules):
     lines = []
     dropped = []
@@ -90,7 +101,17 @@ def _render_codex_cli(rules):
                 Unrepresentable(rule, "a prefix rule needs a command prefix; a bare shell rule matches nothing")
             )
             continue
-        pattern = ", ".join(json.dumps(token) for token in rule.specifier.split())
+        tokens = _prefix_tokens(rule.specifier)
+        if tokens is None:
+            dropped.append(
+                Unrepresentable(
+                    rule,
+                    "execpolicy matches literal command tokens, so a wildcard or an unquoted "
+                    "specifier cannot be stated: %r would never match" % (rule.specifier,),
+                )
+            )
+            continue
+        pattern = ", ".join(json.dumps(token) for token in tokens)
         lines.append(
             'prefix_rule(\n    pattern = [%s],\n    decision = "%s",\n)' % (pattern, _CODEX_DECISION[rule.action])
         )

@@ -7,7 +7,7 @@ import warnings
 
 from . import adapters, install_legacy
 from . import install_hook_dir as hook_dir
-from .install_atomic import locked
+from .install_atomic import locked, refuse_escape
 from .install_config import (
     BEGIN,
     END,
@@ -39,6 +39,15 @@ def config_path(agent, repo_root=".", owner="agentseam"):
     return resolve(adapters.get(agent), repo_root, owner)
 
 
+def _refuse_escapes(mod, path, repo_root):
+    """Every file this agent's wiring would touch under the repo stays inside it; a home config is not the repo's."""
+    if mod.CONFIG_PATH.startswith("~"):
+        return
+    refuse_escape(path, repo_root)
+    for rel in getattr(mod, "LEGACY_CONFIG_PATHS", ()):
+        refuse_escape(os.path.join(repo_root, rel), repo_root)
+
+
 def install(agent, events, command, repo_root=".", matcher=None, owner="agentseam", fail_closed=None, watch=None):
     """Wire `command` for `events` into `agent`'s config, bound to `agent`. Returns the path written."""
     mod = adapters.get(agent)
@@ -53,6 +62,7 @@ def install(agent, events, command, repo_root=".", matcher=None, owner="agentsea
         warnings.warn(why, UserWarning, stacklevel=2)
     extra = fail_closed_kwarg(mod, fail_closed)
     path = resolve(mod, repo_root, owner)
+    _refuse_escapes(mod, path, repo_root)
     if getattr(mod, "CONFIG_FORMAT", "json") == "hook_dir":
         hook_dir.write(path, mod.hook_config(events, command, matcher=matcher, **extra), owner)
         return path
@@ -73,6 +83,7 @@ def uninstall(agent, repo_root=".", owner="agentseam"):
     """Remove only our entries. Returns True when the file changed."""
     mod = adapters.get(agent)
     path = resolve(mod, repo_root, owner)
+    _refuse_escapes(mod, path, repo_root)
     legacy_changed = install_legacy.clean(mod, repo_root, owner)
     if not os.path.exists(path):
         return legacy_changed

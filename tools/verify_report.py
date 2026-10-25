@@ -35,24 +35,34 @@ def _read(path):
         return json.load(fh)
 
 
+def _plain(value, keep="\n"):
+    """`value` as printable text: control, format and bidi characters become visible escapes.
+
+    A report is pasted by strangers, and what it holds reaches the reviewer's terminal. A
+    field is escaped whole (`keep=""`), so it cannot forge a line of the review around it.
+    """
+    text = value if isinstance(value, str) else str(value)
+    return "".join(ch if ch in keep or ch.isprintable() else ch.encode("unicode_escape").decode("ascii") for ch in text)
+
+
 def review(report):
     """(ok, lines) -- the mechanical half of reviewing one submission."""
     lines = []
     try:
         evidence_report.validate(report)
     except evidence_report.InvalidReportError as exc:
-        return False, ["REJECTED: %s" % exc]
+        return False, ["REJECTED: %s" % _plain(exc, "")]
 
     agent = report["agent"]
     if agent not in EVIDENCE:
-        return False, ["REJECTED: %r is not an agent this matrix has a row for" % agent]
+        return False, ["REJECTED: %s is not an agent this matrix has a row for" % _plain(repr(agent), "")]
 
-    lines.append("report for %s: valid" % agent)
-    lines.append("  basis    %s (driver: %s)" % (report["basis"], report["driver"]))
-    lines.append("  version  %s" % report.get("version", "unrecorded"))
-    lines.append("  date     %s" % report["date"])
+    lines.append("report for %s: valid" % _plain(agent, ""))
+    lines.append("  basis    %s (driver: %s)" % (_plain(report["basis"], ""), _plain(report["driver"], "")))
+    lines.append("  version  %s" % _plain(report.get("version", "unrecorded"), ""))
+    lines.append("  date     %s" % _plain(report["date"], ""))
     if report.get("reporter"):
-        lines.append("  reporter %s" % report["reporter"])
+        lines.append("  reporter %s" % _plain(report["reporter"], ""))
 
     delta = evidence_report.diff_against(EVIDENCE[agent], report)
     if not delta["changes"]:
@@ -61,7 +71,7 @@ def review(report):
 
     lines.append("\nwould change:")
     for field, (old, new) in sorted(delta["changes"].items()):
-        lines.append("  %-10s %r -> %r" % (field, old, new))
+        lines.append("  %-10s %s -> %s" % (field, _plain(repr(old), ""), _plain(repr(new), "")))
 
     if delta["weakens_basis"]:
         # The change least likely to be intentional and least likely to be spotted in a
@@ -86,7 +96,7 @@ def main(argv=None):
         return 2
 
     ok, lines = review(report)
-    print("\n".join(lines))
+    print(_plain("\n".join(lines)))
     if ok and args.diff:
         print("\nproposed row:")
         print(json.dumps(evidence_report.to_evidence(report), indent=2, sort_keys=True))
