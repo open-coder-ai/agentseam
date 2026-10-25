@@ -154,3 +154,30 @@ def test_structural_values_outside_tool_input_still_survive():
     shaped = redact({"hook_event_name": "PreToolUse", "name": "Write", "tool_input": {"name": "Write"}})
     assert shaped["hook_event_name"] == "PreToolUse" and shaped["name"] == "Write"
     assert shaped["tool_input"]["name"] == "<str:5>"
+
+
+def test_structural_values_inside_what_a_tool_returned_are_redacted():
+    shaped = redact({"tool_response": {"file": {"content": '{"name": "internal-proj", "version": "1.2.3"}'}}})
+    assert "internal-proj" not in json.dumps(shaped)
+    assert "1.2.3" not in json.dumps(shaped)
+    shaped = redact({"tool_output": {"name": "internal-proj"}, "result": {"status": "acct-9"}})
+    assert "internal-proj" not in json.dumps(shaped)
+    assert "acct-9" not in json.dumps(shaped)
+
+
+def test_cline_parameters_are_tool_input():
+    shaped = redact({"preToolUse": {"parameters": {"name": "private-thing"}}})
+    assert "private-thing" not in json.dumps(shaped)
+
+
+def test_data_used_as_a_key_inside_tool_output_does_not_survive():
+    keys = ["alice@example.com", "@acme/private-pkg", "registry.internal.example", "tenant-1234"]
+    body = json.dumps({k: 1 for k in keys} | {"stdout": 1})
+    shaped = redact({"tool_response": {"file": {"content": body}}, "output": {k: 1 for k in keys}})
+    text = json.dumps(shaped)
+    assert not any(k in text for k in keys)
+    assert "stdout" in text
+
+
+def test_keys_of_tool_input_are_still_kept():
+    assert "tool_input.file_path" in keys_of(redact({"tool_input": {"file_path": "/x/y"}}))

@@ -209,6 +209,12 @@ def _read_payload(stream):
     return stream.read().lstrip("\ufeff")
 
 
+def _quiet_exit(exit):  # noqa: A002 (the same keyword run() takes)
+    if exit:
+        sys.exit(0)
+    return 0
+
+
 def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A002 (matches
     # sys.exit's name on purpose; every caller and the bundled runtime.py.tmpl's main() already
     # speak `exit=` as a keyword, so renaming it would be the breaking change, not keeping it)
@@ -218,12 +224,20 @@ def run(handler, agent=None, stdin=None, stdout=None, *, exit=True):  # noqa: A0
     out = stdout or sys.stdout
     try:
         raw = json.loads(_read_payload(stream))
-    except Exception:  # noqa: BLE001 (the outermost boundary before any handler runs: malformed
-        # or unreadable stdin is not the agent's fault to pay for, whatever shape the failure
-        # takes -- narrowing to JSONDecodeError would let a stdin read failure crash the host)
+    except json.JSONDecodeError:
+        # Text that is not JSON: the host's fault, not the agent's, so no verdict is given.
+        return _quiet_exit(exit)
+    except (ValueError, RecursionError, MemoryError):
+        # Valid JSON this process cannot decode (nested past the recursion limit, an integer
+        # past the digit limit): no Event can be built, so the one refusal left is the host's
+        # blocking exit code. A stdin that cannot be read at all is still no payload.
+        _report(traceback.format_exc())
         if exit:
-            sys.exit(0)
-        return 0
+            sys.exit(DISPATCH_FAILURE_EXIT)
+        return DISPATCH_FAILURE_EXIT
+    except Exception:  # noqa: BLE001 (the outermost boundary before any handler runs: an
+        # unreadable stdin is not the agent's fault to pay for, whatever shape the failure takes)
+        return _quiet_exit(exit)
     try:
         text, code, _event, decision = handle(raw, handler, agent)
     except Exception:  # noqa: BLE001 (past the handler, which handle() already answers for: an

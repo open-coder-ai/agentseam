@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 import re
 
-from .install_atomic import umask_mode, write_text
+from .install_atomic import refuse_escape, umask_mode, write_text
 
 BEGIN = "<!-- agentseam:begin -->"
 END = "<!-- agentseam:end -->"
@@ -144,6 +144,7 @@ def write(text, targets=None, repo_root=".", *, dry_run=False):
 
     for rel, agent in wanted:
         full = os.path.join(repo_root, rel)
+        refuse_escape(full, repo_root)
         existing = ""
         if os.path.exists(full):
             with open(full, encoding="utf-8") as fh:
@@ -175,6 +176,7 @@ def remove(targets=None, repo_root="."):
             full = os.path.join(repo_root, rel)
             if not os.path.exists(full):
                 continue
+            refuse_escape(full, repo_root)
             with open(full, encoding="utf-8") as fh:
                 existing = fh.read()
             try:

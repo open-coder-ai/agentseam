@@ -17,6 +17,8 @@ from ..contract import (
     UNKNOWN,
     VOUCH,
     Event,
+    joined_text,
+    single_target,
     tool_input_of,
 )
 from ._copilot_claims import (  # noqa: F401 (claims is this adapter's interface, defined
@@ -72,12 +74,12 @@ def parse(raw):
     if tool in MEMORY_TOOLS:
         if ti.get("command") in MEMORY_WRITE_COMMANDS:
             path = ti.get("path") or "/memories/"
-            content = ti.get("file_text") or ti.get("new_str") or ti.get("insert_text")
+            content = joined_text((ti.get("file_text"), ti.get("new_str"), ti.get("insert_text")))
         else:
             path = ti.get("path")
     else:
-        path = ti.get("filePath") or ti.get("file_path") or ti.get("path")
-        content = ti.get("content") or ti.get("newText") or ti.get("new_str") or ti.get("file_text")
+        path = single_target((ti.get("filePath"), ti.get("file_path"), ti.get("path")))
+        content = joined_text((ti.get("content"), ti.get("newText"), ti.get("new_str"), ti.get("file_text")))
     name = _name(raw) or _implied_name(raw)
     return Event(
         AGENT,

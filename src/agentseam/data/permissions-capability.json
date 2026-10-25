@@ -10,7 +10,8 @@
     "sandbox": null,
     "tools": {
       "shell": [
-        "Bash"
+        "Bash",
+        "PowerShell"
       ],
       "file_read": [
         "Read"

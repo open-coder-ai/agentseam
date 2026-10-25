@@ -27,6 +27,25 @@ def umask_mode():
     return 0o666 & ~mask
 
 
+class PathEscapesRepoError(ValueError):
+    """A repo-relative path resolves outside the repo, or through a link that points nowhere."""
+
+
+def refuse_escape(path, repo_root):
+    """Raise PathEscapesRepoError unless `path` stays inside `repo_root` once every link is followed.
+
+    A link that resolves inside the repo is fine (CLAUDE.md -> AGENTS.md); one that leaves it, or
+    dangles so that writing would create its target, is a path the repo's contents chose.
+    """
+    if os.path.islink(path) and not os.path.exists(path):
+        raise PathEscapesRepoError("%s is a dangling symlink; refusing to create its target." % path)
+    root = os.path.realpath(repo_root)
+    if os.path.commonpath([root, os.path.realpath(path)]) != root:
+        raise PathEscapesRepoError(
+            "%s resolves outside %s through a symlink; refusing to write through it." % (path, repo_root)
+        )
+
+
 def write_bytes(path, data, mode=None):
     """Replace `path` with `data` in one step; a failure leaves the old file and no temp file behind.
 

@@ -499,11 +499,11 @@ Exit code: `0`
 **Permissions** — `deny shell curl *` rendered into `~/.codex/config.toml`:
 
 ```
-prefix_rule(
-    pattern = ["curl", "*"],
-    decision = "forbidden",
-)
+
 ```
+
+> Not representable here: execpolicy matches literal command tokens, so a wildcard or an unquoted specifier cannot be stated: 'curl *' would never match
+
 
 **Packaging** — a one-skill bundle, rooted at `secrets-guard`:
 

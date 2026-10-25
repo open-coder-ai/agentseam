@@ -606,7 +606,8 @@ Exit code: `0`
 {
   "permissions": {
     "deny": [
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "PowerShell(curl *)"
     ]
   }
 }
