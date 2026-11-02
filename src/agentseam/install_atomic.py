@@ -150,7 +150,11 @@ def _lock_dir_candidates():
 
 
 def _checked_dir(path):
-    os.makedirs(path, mode=_LOCK_DIR_MODE, exist_ok=True)
+    try:
+        os.makedirs(path, mode=_LOCK_DIR_MODE, exist_ok=True)
+    except PermissionError:
+        if not os.path.isdir(path):
+            raise
     if not hasattr(os, "getuid"):
         return path
     info = os.lstat(path)
@@ -194,10 +198,6 @@ def locked(path):
         yield
         return
     with _open_lock(path) as fh:
-        if msvcrt is not None and fcntl is None:
-            fh.write(b"\0")
-            fh.flush()
-            fh.seek(0)
         _lock(fh)
         try:
             yield
