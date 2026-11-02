@@ -4,6 +4,17 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-11-02
+
+### Fixed
+- **Install locks live outside the repository.** `install_atomic.locked(path)` held its advisory lock on
+  `<config>.lock`, created beside the config and never removed, so every install left an untracked file next to
+  each hook config. The lock file now sits in a per-user directory, named by the sha256 of the config's realpath:
+  `$XDG_CACHE_HOME/agentseam/locks` or `~/.cache/agentseam/locks` on POSIX, `%LOCALAPPDATA%\agentseam\locks` on
+  Windows, else `agentseam-locks-<uid or username>` under the temp directory. The directory is created `0o700`,
+  the file opens with `O_NOFOLLOW` where the platform has it, and a lock directory that is a symlink or owned by
+  someone else is refused (POSIX).
+
 ## [0.4.0] - 2026-11-02
 
 ### Added

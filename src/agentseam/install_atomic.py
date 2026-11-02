@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import contextlib
+import getpass
+import hashlib
 import os
+import stat
 import tempfile
 import time
 
@@ -18,6 +21,7 @@ except ImportError:
 
 _DEFAULT_MODE = 0o600
 _LOCK_WAIT_SECONDS = 30
+_LOCK_DIR_MODE = 0o700
 
 
 def umask_mode():
@@ -124,23 +128,76 @@ def _unlock(fh):
         msvcrt.locking(fh.fileno(), msvcrt.LK_UNLCK, 1)
 
 
+class LockDirectoryError(OSError):
+    """The per-user lock directory is a link or belongs to someone else; locking there is refused."""
+
+
+def _owner_tag():
+    getuid = getattr(os, "getuid", None)
+    return str(getuid()) if getuid else getpass.getuser()
+
+
+def _lock_dir_candidates():
+    if os.name == "nt":
+        base = os.environ.get("LOCALAPPDATA")
+    else:
+        base = os.environ.get("XDG_CACHE_HOME")
+        if not base or not os.path.isabs(base):
+            base = os.path.join(os.path.expanduser("~"), ".cache")
+    candidates = [os.path.join(base, "agentseam", "locks")] if base else []
+    candidates.append(os.path.join(tempfile.gettempdir(), "agentseam-locks-" + _owner_tag()))
+    return candidates
+
+
+def _checked_dir(path):
+    try:
+        os.makedirs(path, mode=_LOCK_DIR_MODE, exist_ok=True)
+    except PermissionError:
+        if not os.path.isdir(path):
+            raise
+    if not hasattr(os, "getuid"):
+        return path
+    info = os.lstat(path)
+    if stat.S_ISLNK(info.st_mode) or not stat.S_ISDIR(info.st_mode):
+        raise LockDirectoryError("%s is a link or not a directory; refusing to lock there." % path)
+    if info.st_uid != os.getuid():
+        raise LockDirectoryError("%s is not owned by this user; refusing to lock there." % path)
+    if info.st_mode & 0o077:
+        os.chmod(path, _LOCK_DIR_MODE)
+    return path
+
+
+def lock_path(path):
+    """The lock file for `path`: the sha256 of its realpath inside a per-user directory outside any repo."""
+    digest = hashlib.sha256(os.path.realpath(path).encode("utf-8", "surrogatepass")).hexdigest()
+    failure = None
+    for directory in _lock_dir_candidates():
+        try:
+            return os.path.join(_checked_dir(directory), digest + ".lock")
+        except LockDirectoryError:
+            raise
+        except OSError as exc:
+            failure = exc
+    raise failure
+
+
+def _open_lock(path):
+    flags = os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_BINARY", 0)
+    return os.fdopen(os.open(lock_path(path), flags, _DEFAULT_MODE), "r+b")
+
+
 @contextlib.contextmanager
 def locked(path):
-    """Hold an exclusive advisory lock on `<path>.lock` for a read-modify-write of `path`.
+    """Hold an exclusive advisory lock, kept in a per-user directory, for a read-modify-write of `path`.
 
     Uses `fcntl` where present and `msvcrt` on Windows; a platform with neither gets no lock,
     only the atomic write, so two racing installs there can still lose one owner's entries.
+    The lock file never sits beside the config, so an install leaves nothing untracked in a repo.
     """
     if fcntl is None and msvcrt is None:
         yield
         return
-    target = os.path.realpath(path)
-    os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
-    with open(target + ".lock", "a+b") as fh:
-        if msvcrt is not None and fcntl is None:
-            fh.write(b"\0")
-            fh.flush()
-            fh.seek(0)
+    with _open_lock(path) as fh:
         _lock(fh)
         try:
             yield
