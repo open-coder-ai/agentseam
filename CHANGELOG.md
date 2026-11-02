@@ -4,6 +4,110 @@ All notable changes to this project are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-11-02
+
+### Added
+- **Five new adapters: `openhands` and `goose` (#180, #176), `factory_droid` and `mistral_vibe` (#192), `cline`
+  (#193).** 17 agents can now be installed and dispatched, up from 12. Each is built from the vendor's documentation
+  (basis `vendor-docs`, none tested against a live run), so grades stay at `best-effort` or below. Cline is the
+  first to use the new `{"cancel": true}` verdict dialect.
+- **The capability matrix covers 27 agents, up from 16.** Rows for `opencode` and `kilo_code` (#173), `cline`,
+  `roo_code` and `goose` (#176), `openhands`, `amp`, `kiro` and `factory_droid` (#180), and `mistral_vibe` and
+  `deepseek_harness` (#185), each with dated vendor links. Rows without an adapter record that no hook surface
+  can be written. `gemini_cli` is marked as superseded by `antigravity`; the figures, social preview and example
+  pages are regenerated.
+- **Transform at `pre_tool` for three more agents, written as each vendor documents it.** `antigravity` (#201)
+  sends `overwrite`, `mistral_vibe` (#194) sends `hook_specific_output.tool_input`, and `tabnine` (#203) sends
+  `hookSpecificOutput.tool_input`. A transform with no replacement input still blocks. All three rest on vendor
+  docs, not a live run.
+- **`install(..., fail_closed=True)` writes `strict = true` on `mistral_vibe`'s `pre_tool` rule (#194).** The
+  default install is unchanged, and `agentseam tier-table --fail-closed` reads the table for such an install.
+- **A per-agent `loads_claude_plugins` record (#209, #211, #212, #214, #216).** It states whether each agent loads
+  a Claude Code plugin, by what route, and whether its hooks and deny replies work, read through
+  `agentseam.vendor_config.loads_claude_plugins(agent)`. Witnessed runs are recorded for `grok`, `codex_cli`,
+  `vscode_copilot` (Copilot CLI and VS Code), `cursor` and `devin`; unknown stays unknown.
+- **Value-based detection for Factory Droid, Kiro and Grok Build (#191).** `detect()` now rejects values a vendor
+  never sends (Droid's `permission_mode` words, Kiro's tool aliases), so their payloads are no longer read as
+  `claude_code` or `vscode_copilot`.
+- **`tools/capture_fixtures.py --check` (#199)** fails when the committed golden payloads differ from a fresh
+  capture; a test pins the committed bytes to the source.
+- **A `windows-latest` CI job (#227)** runs the install, dispatch, capture and driver tests on pull requests.
+- **Windows and plugin-hook facts recorded in the matrix notes (#213, #215).** Goose spawns every plugin hook with
+  `sh -c` on Windows too, so a missing `sh` denies every call; Antigravity runs hook commands through `cmd.exe`.
+  Notes only; no capability changed.
+- **Figures and `llms.txt` counts come from one data-driven `make_family.py` (#170).**
+- **A commit-msg hook that rejects a commit with no `Signed-off-by`, plus a devcontainer and VS Code tasks
+  (#198).** `CONTRIBUTING.md` says why the hook rejects instead of adding the trailer (#203).
+
+### Changed
+- **The hook command `install` writes now ends in the agent's name (#217).** The handler reads `AGENTSEAM_AGENT`,
+  then that last argument, before it tries `detect()`; `detect()` stays the fallback for a hook wired by hand. A
+  re-install upgrades an older entry in place. A payload claimed by no adapter, or by several, used to pass in
+  silence on fail-open vendors; a gate event now refuses it.
+- **`install` on a config path with no tool matcher raises (#203).** `--matcher` on `cursor`, `windsurf`, `cline`
+  or `vscode_copilot` used to be dropped silently, so the hook ran on every tool. It now names the agent and
+  writes nothing; `install all --matcher` reports those agents as skipped.
+- **Windsurf is installed at `.devin/hooks.json` (#203),** the file the vendor reads first, and the legacy
+  `.windsurf/hooks.json` is cleaned on install and uninstall. Install refuses when the legacy file holds the
+  user's own hooks and the new file defines none.
+- **Windsurf payloads are read from `agent_action_name` and `tool_info` (#202),** so MCP and prompt events parse as
+  what they are.
+- **Antigravity writes `Stop` handlers bare in `hooks.json` (#208),** the form its schema accepts; before, it
+  rejected the file with `command hook must specify 'command'`.
+- **Published counts are derived (#225, #206).** `llms.txt` and the README guardrails section state counts that
+  tests recount from the matrix (27 agents, 324 cells), and Tabnine's tier now equals the one its cells earn.
+- **`README.md` is rewritten (#169, #171, #172),** with the adoption routes, a Quick start that reaches 17 agents
+  (#202), and counts kept in step with the matrix.
+
+### Fixed
+- **A guard sees every value the tool could apply (#223, #228).** Field chains are ordered most specific first;
+  `command` and `content` join every distinct value a chain finds, so a harmless key can no longer shadow a
+  dangerous one. Cursor reads `tool_input.edits`, Grok the Build snake_case shape, Tabnine `absolute_path` and
+  `new_str`. A present but empty value no longer lets a later key stand in for a path.
+- **Junie's `PermissionRequest` blocks instead of approving (#202).** `ask` and a rewrite exited 0 there, which
+  Junie reads as approval; both now block.
+- **Grok wires `PermissionDenied` beside `tool_failure` (#201), and claims unmapped events** by the twin key
+  pair, so vendor drift is visible instead of unread.
+- **Devin reads `PostToolUse` output from `tool_response` (#201).** The documented `SessionStart` is recorded as
+  undetected.
+- **Claude Code reads the documented `tool_response` and `error` keys (#200)** for post-tool results; before,
+  `event.output` was `None` on real payloads.
+- **VS Code Copilot reads `tool_result.text_result_for_llm` (#202)** for its VS Code-compatible `PostToolUse`.
+- **Cursor stays silent where it reads no post-hoc output (#200),** instead of printing an
+  `additional_context` body nobody reads while the consumer believed a flag had been raised.
+- **Tabnine no longer claims other vendors' payloads (#217)** that share its `timestamp` key.
+- **`install` refuses clearly (#221, #203):** unsafe `Part` and `Bundle` names, `install <unadapted agent>`
+  (prints the adapted agents, exits 2), reversed instruction markers, and `agentseam probe run --driver reference`
+  for an unmodelled agent (one line, exit 2, no traceback).
+- **`probe` no longer counts the reference driver's silence against a live-run claim (#202).**
+- **The suite is green on Windows (#227).** Fixture writes use LF, the experiment driver reads `cmd.exe`'s missing-
+  binary exit, and `installed()` compares a stored Cline block after normalising line endings.
+- **The capture redactor shapes every string inside a tool-input subtree (#204),** so a secret in
+  `{"tool_input": {"name": ...}}` no longer reaches a committed capture.
+- **Golden fixtures are reproducible (#199):** the `factory_droid` and `mistral_vibe` payloads are recaptured from
+  source.
+- **CI installs the tree with `--no-deps -e` in the demo-gif and quickstart workflows (#207), and the OpenSSF
+  Scorecard publishes its results (#205).**
+
+### Security
+- **SR-2a hardening (#228).** A transform that carries no replacement input is refused at every gate. The bundled
+  runtime renders the agent name as a literal and requires identifier names. Line breaks and marker text are
+  refused in the install command and owner, and marker text is refused inside managed instruction text, so
+  neither can forge or end a block and survive uninstall. The shadow check reads the config under the install
+  lock.
+- **SR-2g hardening (#229).** A payload or tool input that is valid JSON but cannot be decoded is refused (exit 2
+  or the deny path) in the dispatcher and the bundled runtime, not answered with silence. Joined fields normalise
+  every candidate before joining, Copilot content joins every candidate, and conflicting path keys are refused.
+  Claude Code shell rules render for PowerShell as well as Bash, and the Codex renderer reports a wildcard
+  specifier as dropped. `instructions` and `install` refuse paths that leave the repo through a symlink. The
+  capture redactor and the report printer treat tool output and report text as untrusted.
+- **An install never half-applies (#226).** Every config write goes through a temp file and `os.replace`, the
+  JSON and TOML read-modify-writes hold an advisory lock, a failed target write leaves the old hook in place, and
+  a new hook file is created exclusively, never through a link planted since. New config files are created
+  `0o600`; a new instruction file takes the umask default.
+- **Hook files are created owner-only and a symlinked hook file is refused (#193).**
+- **Upgraded pinned CI requirements to clear audited advisories (#236).**
+
 ## [0.3.5] - 2026-09-29
 
 ### Fixed
